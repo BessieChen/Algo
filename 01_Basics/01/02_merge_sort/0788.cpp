@@ -11,7 +11,7 @@ int n;
 LL merge_sort(int l, int r){ //易错!, 返回值不是int, 是LL!!, 否则返回值溢出,成了负数
     if(l >= r) return 0;
     
-    int mid = (r-l)/2 + l;
+    int mid = (r-l)/2 + l; 
     LL res = merge_sort(l, mid) + merge_sort(mid+1, r);
     
     int k = 0;
