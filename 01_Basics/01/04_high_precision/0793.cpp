@@ -7,7 +7,7 @@ vector<int> mul2(vector<int> &A, int b){
     int t = 0;
     for(unsigned int i = 0; i < A.size() || t ; i++) //合并了while
     {
-        if(i < A.size()) t = A[i] * b + t; //还有上一次的
+        if(i < A.size()) t = A[i] * b + t; // 还有上一次的
         C.push_back(t % 10);
         t /= 10;
     }
