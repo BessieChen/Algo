@@ -11,7 +11,7 @@ vector<int> mul2(vector<int> &A, int b){
         C.push_back(t % 10);
         t /= 10;
     }
-    
+     
     while(C.size() > 1 && C.back() == 0) C.pop_back();
 
     
