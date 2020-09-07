@@ -10,7 +10,7 @@ bool cmp(vector<int> &A, vector<int> &B){
     for(int i = A.size()-1; i >= 0; i--){
         if(A[i] != B[i])
             return A[i] > B[i]; //小心:不要写成 >=
-    }
+    } 
     
     return true;
 }
