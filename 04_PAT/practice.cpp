@@ -3865,9 +3865,28 @@
 				r4.
 				r5.
 
+	4. 2020年10月2日09:08:47
 		17. 1598. 求平均值	1108
 			0. bug
+				错误的认为: k + 1 >= 3 相当于 k >= 2 相当于 k > 3
+					这根本就是错的好吗!! k >= 2是 k > 1
+				同时,还有一个错的地方, 不是size - k + 1, 而是 s - k - 1
 			1. 笔记
+				1. 如何判断一个输入是否合法
+					合法输入数字指 [−1000,1000] 范围内的精确到不超过 2 个小数位的实数。
+					不合法的: aaa 9999 2.3.4 7.123
+				1. stof(): 可以将string转化成float
+					1. 如果是 aaa: 会报异常, 我们用try{}catch(...){} 其中catch(...)是捕捉任何异常
+					2. 如果是 3.12aaa: 会只读取前面的部分, 所以我们要比较
+						size_t idx;
+			            double x = stof(num, &idx); idx是传出一共读取了多少个字符,相当于是浮点数x的size(包括了整数,小数和浮点)
+			            if (idx < num.size()) success = false;
+				2. 我们判断有几位小数:
+					int k = num.find('.');
+        			if (k != -1 && num.size() - k - 1 >= 3) success = false;
+        			  k   s
+        			  |   |
+        			 2.123  所以中间的123的个数是 s - k - 1,因为是(k,s),而不是[k,s)
 			2. 注释
 				#include <iostream>
 
@@ -3922,7 +3941,795 @@
 				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
+					#include <iostream>
+					using namespace std;
+
+					int main(){
+						int n;
+						cin >> n;
+
+						int cnt = 0;
+						double sum = 0.0;
+						string a;
+						for(int i = 0; i < n; i++){
+							cin >> a;
+							double x = 0.0;
+
+							bool success = true;
+							try{
+								size_t ind;
+								x = stof(a, &ind);
+								if(ind < a.size()) success = false;
+							}
+							catch(...){
+								success = false;
+							}
+
+							if(x < -1000 || x > 1000) success = false;
+							int k = a.find('.');
+							if(k != -1 && a.size() - k - 1 >= 3) success = false;
+							if(!success){
+								printf("ERROR: %s is not a legal number\n", a.c_str());
+							}
+							else{
+								cnt ++;
+								sum += x;
+							}
+						}
+
+						if(cnt == 0) puts("The average of 0 numbers is Undefined");
+						else if (cnt == 1) printf("The average of 1 number is %.2lf", sum);
+						else printf("The average of %d numbers is %.2lf", cnt, sum / cnt);
+
+						return 0;
+					}
+
+
 				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						int n;
+						cin >> n;
+						string a;
+						double b;
+						bool success;
+						double sum;
+						int cnt;
+						for(int i = 0; i < n; i++){
+							cin >> a;
+							success = true;
+							b = 0.0;
+							try{
+								size_t ind;
+								b = stof(a, &ind);
+								if(ind < a.size()) success = false;
+							}
+							catch(...){
+								success = false;
+							}
+
+							if(b < -1000 || b > 1000) success = false;
+							int k = a.find('.');
+							if(k != -1 && a.size() - k - 1 >= 3) success = false;
+							if(!success) printf("ERROR: %s is not a legal number\n", a.c_str());
+							else{
+								sum += b;
+								cnt ++;
+							}
+						}
+
+						if(cnt == 0) puts("The average of 0 numbers is Undefined");
+						else if(cnt == 1) printf("The average of 1 number is %.2lf\n", sum);
+						else printf("The average of %d numbers is %.2lf\n", cnt, sum / cnt);
+
+						return 0;
+
+
+					}
 				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					bool check(string a, double &b){
+						b = 9999.;
+						try{
+							size_t ind;
+							b = stof(a, &ind);
+							if(ind != a.size()) return false;
+						}
+						catch(...){
+							return false;
+						}
+						if(b < -1000 || b > 1000) return false;
+						int k = a.find('.');
+						if(k != -1 && a.size() - k - 1 >= 3) return false;
+						return true;
+					}
+
+					int main(){
+						int n;
+						cin >> n;
+						string a;
+						bool success;
+						double sum = 0.0;
+						int cnt = 0;
+						for(int i = 0; i < n; i++){
+							cin >> a;
+							double b;
+							success = check(a, b);
+							if(!success) printf("ERROR: %s is not a legal number\n", a.c_str());
+							else{
+								cnt ++;
+								sum += b;
+							}
+						}
+						if(cnt == 0) puts("The average of 0 numbers is Undefined");
+						else if(cnt == 1) printf("The average of 1 number is %.2lf\n", sum);
+						else printf("The average of %d numbers is %.2lf\n", cnt, sum / cnt);
+
+						return 0;
+					}
+				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					bool check(string a, double &b){
+						try{
+							size_t ind;
+							b = stof(a, &ind);
+							if(ind < a.size()) return false;
+						}catch(...){
+							return false;
+						}
+
+						if(b < -1000 || b > 1000) return false;
+						int k = a.find('.');
+						if(k != -1 && a.size()-k-1 >= 3) return false;
+
+						return true; 
+					}
+					int main(){
+						int n;
+						cin >> n;
+
+						string a;
+						int cnt = 0;
+						double sum = 0.0;
+						for(int i = 0; i < n ; i++){
+							cin >> a;
+							double b;
+							if(check(a, b)) {
+								sum += b;
+								cnt ++;
+							}
+							else{
+								printf("ERROR: %s is not a legal number\n", a.c_str());
+							}
+						}
+
+						if(cnt == 0) puts("The average of 0 numbers is Undefined");
+						else if(cnt == 1) printf("The average of 1 number is %.2lf\n", sum);
+						else printf("The average of %d numbers is %.2lf\n", cnt , sum / cnt );
+
+						return 0;
+					}
+				r5.
+
+		18. 1617. 微博转发抽奖	1124
+			0. bug
+			1. 笔记
+				主要是unordered_set的使用:
+					1. set.count(name[i])
+					2. set.empty()
+					3. set.insert(name[i]);
+			2. 注释
+				#include <iostream>
+				#include <cstring>
+				#include <unordered_set>
+
+				using namespace std;
+
+				const int N = 1010;
+
+				int m, n, s;
+				string name[N];
+
+				int main()
+				{
+				    cin >> m >> n >> s;
+				    for (int i = 1; i <= m; i ++ ) cin >> name[i];
+
+				    unordered_set<string> hash;
+				    int k = s;
+				    while (k <= m)
+				    {
+				        if (hash.count(name[k])) k ++ ;
+				        else
+				        {
+				            cout << name[k] << endl;
+				            hash.insert(name[k]);
+				            k += n;
+				        }
+				    }
+
+				    if (hash.empty()) puts("Keep going...");
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/323472/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1100;
+					string name[N];
+
+					int main(){
+						int m, n, s;
+						for(int i = 1; i <= m; i++){
+							cin >> name[i];
+						}
+
+						unordered_set<string> set;
+						for(int i = s; i <= m ;){
+							if(set.count(name[i]))
+								i++;
+							else{
+								set.insert(name[i]);
+								cout << name[i] << endl;
+								i += n;
+							}
+						}
+
+						if(set.empty()) cout << "Keep going..." << endl;
+						return 0;
+					}
+				r2.
+					#include <iostream>
+					#include <unordered_set>
+
+					using namespace std;
+
+					const int N = 1010;
+					string name[N];
+
+					int main(){
+						int m, n, s;
+						cin >> m >> n >> s;
+						for(int i = 1; i <= m; i++){
+							cin >> name[i];
+						}
+
+						unordered_set<string> set;
+						for(int i = s; i <= m;){
+							if(set.count(name[i])) i++;
+							else{
+								set.insert(name[i]);
+								cout << name[i] << endl;
+								i += n;
+							}
+						}
+
+						if(set.empty()) puts("Keep going...");
+						return 0;
+
+					}
+				r3.
+					#include <iostream>
+					#include <unordered_set>
+
+					using namespace std;
+
+					const int N = 1010;
+					string name[N];
+
+					int main(){
+						int m, n, s;
+						cin >> m >> n >> s;
+						for(int i = 1; i <= m; i++){
+							cin >> name[i];
+						}
+
+						unordered_set<string> set;
+						for(int i = s; i <= m ; )
+						{
+							if(set.count(name[i])) i++;
+							else{
+								set.insert(name[i]);
+								cout << name[i] << endl;
+								i += n;
+							}
+						}
+
+						if(set.empty()) puts("Keep going...");
+
+						return 0;
+					}
 				r4.
 				r5.
+
+		19. 1634. PAT单位排行	1141
+			0. bug
+				double真的是一个很恶心的东西!
+					1. int不能 /除以一个数
+					2. double和int不能直接相加
+					3. double不能用来sort
+					4. double不能用来if(doubleA == doubleB)或者if(doubleA != doubleB)
+				1. 
+					错误的:
+						int g;
+						cin >> g;
+						hash[i].grade += g/1.5;
+						错误原因: 因为是/1.5, 不能用int来存input
+						其实非常容易出现bug, 因为在看input的形式的时候, 都是int, 所以我就会将g设置成int
+						我就会忘记后面需要 /1.5
+					正确:
+						double g; cin >> g; hash[i].grade += g/1.5;
+				2. %d一定是对应着int, 即便你把double cast成了int, 也不能当做int
+					错误的例如:
+						double a = (int)1.
+						printf("%d", a); 会输出很奇怪的东西, 即便你把double cast成了int
+					正确的:
+						double a = (int)1.
+						printf("%d", (int)a);
+				3. 容易出bug的地方!!
+					两个double之间的比较, 最好不要直接用 != ,而是记得将他们cast成int
+					例如,错误的:
+						grade是double
+						if(i >= 1 && res[i].grade != res[i-1].grade) rank = i + 1;
+					正确的:
+						if(i >= 1 && (int)res[i].grade != (int)res[i-1].grade) rank = i + 1;
+				4. 我之前觉得很奇怪的bug!但是我后来想明白了
+					见r3里面, 如果 s.grade = (int)(s.grade + 1e-8); 答案就是正确的
+					如果s.grade = (s.grade + 1e-8), 跑下面这个就是错误的
+						50
+						B35824 63 fi
+						A52262 89 PF
+						B70558 50 sl
+						A44244 55 pf
+						T42426 22 PF
+						B40552 0 agnEyk
+						B44608 1 FI
+						A79448 7 OhxoCy
+						A61658 43 pF
+						T96625 98 fI
+						B78998 42 sL
+						T61664 3 pf
+						A00053 90 sl
+						B27970 13 sl
+						B08683 38 JLSEC
+						B19045 25 OHxoCY
+						A28640 60 WUrX
+						A30426 94 VnFjR
+						T30492 14 VNfJr
+						B88357 6 pf
+						T32404 76 sL
+						A15074 40 wuRx
+						B14351 53 vNFjr
+						A09728 68 OHXoCY
+						B93722 46 FI
+						A24455 95 jLsEc
+						T49043 10 agNeyK
+						T26264 14 AGnEYK
+						B92183 36 oHXocy
+						A02532 0 aGNeyK
+						T86446 96 jlsEC
+						T88939 20 VnFJR
+						B33804 20 Sl
+						T30375 4 AgNeYK
+						T54489 20 JlSEc
+						B71801 87 wuRX
+						T50543 27 JlsEc
+						T28712 29 FI
+						T08625 33 JlSeC
+						T91944 72 FI
+						A14701 13 wUrx
+						A78235 33 wURX
+						B30779 8 OHXOcY
+						B99829 58 JlSec
+						B51449 57 OhxOCy
+						B64516 45 fI
+						B14527 37 Wurx
+						T67656 92 ohxOcy
+						T34618 62 SL
+						A13719 46 ohxocy
+					正确答案中
+						5 pf 228 6
+						5 wurx 228 6
+					但是我的答案却是
+						5 wurx 228 6
+						5 pf 228 6
+					是这样子的!!!!! 我们cast成int的目的是服务于后面的sort()
+						虽然我输出的时候,看上去的确是两个人的排名一样, 分数一样, 人数一样,但是这是我输出时候cast成了int
+						但是在sort(res.begin(), res.end())的时候,其实这两个是不一样的
+						为什么, 因为我s.grade = (s.grade + 1e-8)中s.grade是double, double进行sort很恶心的!
+			1. 笔记
+				0. 使用了struct + map + vector
+					struct:
+						一个聚合的类型:school
+						里面包含了很多内容:所以用struct存储这些内容
+					unordered_map:
+						因为每个聚合的类型, 我们需要用一个东西给存下来每一个聚合
+						所以用map<string, Struct>, 其中string就是每一个聚合的名字
+						我之前想过, 能不能直接将struct存入vector中,而不需要map用string来索引
+						但是不行,因为vector<>需要我们一次性的push_back()
+							但是我们的输入可能还会用到之前的的内容,例如grade, 我们的grade是一直是+=g的, 而不是一次性知道的
+						另外,使用unordered_map的原因是
+							我们的输出顺序是grade,而不是string
+						什么时候可以用map:
+							如果是string的话,我们可以用map给我们自动排好的顺序输出
+					vector:
+						因为我们需要排序, 但是map不能排序
+						所以就把map里的所有东西放出来,然后放到vector里面, 用sort()
+				1. 使用默认重构函数: School(): cnt(0), sum(0) {}
+					使用的原因: 我们在输入的时候, 不是一次性的获取全部结果,而是一次获取一点
+					所以我们直接用了hash[sch].sum += grade; 因为可以直接调用默认重构函数chool(): cnt(0), grade(0) {}, 然后在grade == 0的基础上 += grade;
+				2. 使用了map<string, Struct>, 使用了vector<Struct>存结果
+				3. 使用了重载<
+					使用了sort()
+				4. 读入如果出现除号,记得用double
+					以后遇到除法, 记得输入的是否是double, 否则出现bug
+				4. 精度问题
+					1. 我们希望的输出是: 加权总分 定义为 x.yyy 的整数部分
+						所以希望的是向下取整,也就是用(int)x.yyy, 就可以得到x
+						例如 (int)1.999 = 1
+					2. 但是, 有时候除法会导致的问题是, 我们的到的是1.99999999999, 这个时候我们不应该向下取整, 因为这个是精度问题导致的1.999999999,而实际上应该是2
+						所以我们会 + 1e-8
+						也就是(int)(1.999999999999 + 1e-8) = (int)2.0000000007 = 2
+				5. 将一个string变成小写.
+					因为tolower()只能处理char,所以我们要遍历string中的每一个char
+					需要使用引用,来修改string的每一个char
+						for (auto& c : sch) c = tolower(c);
+						结束之后, sch中的每一个char都得到了修改
+				6. 计算rank
+					0. 一定初始化rank = 1
+					1. rank不变的情况
+						1. 是第0个, rank还是rank,不变, 也就是rank == 1
+						2. 如果第i个(i >= 1) && g[i] == g[i-1]也就是==前面的, rank不变
+					2. rank更新
+						1. 如果第i个(i >= 1) && g[i] != g[i-1], 就一定要更新, 更新的值是就是我在队列里面的序号(假设从1开始)
+					3. 我们一般都只会处理rank更新的情况: 所以也就只有一句
+						int rank = 1;
+						for (int i = 0; i < s.size(); i ++ )
+					    {
+					        if (i && s[i] != s[i - 1]) rank = i + 1;
+					        cout << rank << endl;
+					    }
+			2. 注释
+				#include <iostream>
+				#include <cstring>
+				#include <unordered_map>
+				#include <vector>
+				#include <algorithm>
+
+				using namespace std;
+
+				struct School
+				{
+				    string name;
+				    int cnt;
+				    double sum;
+
+				    School(): cnt(0), sum(0) {}
+
+				    bool operator< (const School &t) const
+				    {
+				        if (sum != t.sum) return sum > t.sum;
+				        if (cnt != t.cnt) return cnt < t.cnt;
+				        return name < t.name;
+				    }
+				};
+
+				int main()
+				{
+				    int n;
+				    cin >> n;
+
+				    unordered_map<string, School> hash;
+				    while (n -- )
+				    {
+				        string id, sch;
+				        double grade;
+				        cin >> id >> grade >> sch;
+
+				        for (auto& c : sch) c = tolower(c);
+
+				        if (id[0] == 'B') grade /= 1.5;
+				        else if (id[0] == 'T') grade *= 1.5;
+
+				        hash[sch].sum += grade;
+				        hash[sch].cnt ++ ;
+				        hash[sch].name = sch;
+				    }
+
+				    vector<School> schools;
+				    for (auto item : hash)
+				    {
+				        item.second.sum = (int)(item.second.sum + 1e-8);
+				        schools.push_back(item.second);
+				    }
+
+				    sort(schools.begin(), schools.end());
+				    cout << schools.size() << endl;
+
+				    int rank = 1;
+				    for (int i = 0; i < schools.size(); i ++ )
+				    {
+				        auto s = schools[i];
+				        if (i && s.sum != schools[i - 1].sum) rank = i + 1;
+				        printf("%d %s %d %d\n", rank, s.name.c_str(), (int)s.sum, s.cnt);
+				    }
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/323490/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+					#include <map>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct School{
+						double grade;
+						int cnt;
+						int rank;
+						string name;
+
+						School() : grade(0), cnt(0), rank(-1){}
+
+						bool operator< (const School& t) const{
+							if(grade != t.grade) return grade > t.grade;
+							if(cnt != t.cnt) return cnt < t.cnt;
+							return name < t.name;
+						}
+					};
+
+					map<string, School> sMap;
+					int main(){
+						int n;
+						cin >> n;
+
+						string id, sch;
+						double g;
+						for(int i = 0; i < n; i++){
+							cin >> id >> g >> sch;
+							if(id[0] == 'B') g /= 1.5;
+							else if(id[0] == 'T') g *= 1.5;
+
+					    	for(auto &c : sch) c = tolower(c);
+							sMap[sch].grade += g;
+							sMap[sch].cnt ++;
+						}
+
+						vector<School> res;
+						for(auto item :sMap){
+							auto name = item.first;
+							auto school = item.second;
+					        // school.grade = 123.99999999999;
+					        // printf("%.5lf\n",school.grade);
+							school.grade = (int)(school.grade + 1e-8);
+					// 		printf("%.5lf\n",school.grade);
+							school.name = name;
+							res.push_back(school);
+						}
+
+						sort(res.begin(), res.end());
+						int rank = 1;
+						cout << res.size() << endl;
+						for(int i = 0; i < res.size(); i++){
+							//if(!i) rank = rank;
+							//if(i >= 1 && res[i].grade == res[i-1].grade) rank = rank;
+
+							if(i && res[i].grade != res[i-1].grade) rank = i+1;
+							printf("%d %s %d %d\n", rank, res[i].name.c_str(), (int)res[i].grade, res[i].cnt);
+
+						}
+						return 0;
+
+					}
+				r2.
+					#include <iostream>
+					#include <map>
+
+					using namespace std;
+
+
+
+					struct School{
+						string name;
+						double grade;
+						int cnt;
+
+						School(): grade(0), cnt(0) {}
+
+						bool operator< (const School& t) const{
+							if(grade != t.grade) return grade > t.grade;
+							if(cnt != t.cnt) return cnt < t.cnt;
+							return name < t.name;
+						}
+					};
+
+					map<string, School> schools;
+
+					int main(){
+						int n;
+
+						string id, name;
+						double g;
+						for(int i = 0; i < n; i++){
+							cin >> id >> g >> name;
+							if(id[0] == 'B') g /= 1.5;
+							else if(id[0] == 'T') g *= 1.5;
+
+							for(auto &c : name) c = tolower(c);
+							schools[name].grade += g;
+							schools[name].cnt++;
+							schools[name].name = name;
+						}
+
+						vector<School> res;
+						for(auto item : schools){
+							auto s = item.seconds;
+							s.grade = (int)(s.grade + 1e-8);
+							res.push_back(s);
+						}
+
+						sort(res.begin(), res.end());
+						cout << res.size() << endl;
+
+						int rank = 1;
+						for(int i = 0; i < res.size(); i++){
+							if(i != 0 && res[i].sum != res[i-1].sum) rank = i + 1;
+							auto t = res[i];
+							printf("%d %s %d %d\n",  rank,t.name.c_str(), t.sum, t.cnt);
+						}
+
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct School{
+						string name;
+						double grade;
+						int cnt;
+
+						School(): name(""), grade(0), cnt(0) {}
+
+						bool operator< (const School& t) const{
+							if(grade != t.grade) return grade > t.grade;
+							if(cnt != t.cnt) return cnt < t.cnt;
+							return name < t.name;
+						}
+					};
+
+					unordered_map<string, School> schools;
+
+					int main(){
+						int n;
+						cin >> n;
+
+						string id;
+						double g;
+						string name;
+						for(int i = 0; i < n ; i++){
+							cin >> id >> g >> name;
+
+							for(char &c : name) c = tolower(c);
+							if(schools[name].name == "") schools[name].name = name;
+							schools[name].cnt ++;
+
+							if(id[0] == 'B') g /= 1.5;
+							else if(id[0] == 'T') g *= 1.5;
+							schools[name].grade += g;
+						}
+
+
+						vector<School> res;
+						for(auto item : schools){
+							auto s = item.second;
+							s.grade = (int)(s.grade + 1e-8); //这是为了sort()才cast成int的
+							res.push_back(s);
+						}
+
+						sort(res.begin(), res.end());
+						cout << res.size() << endl;
+
+						int rank = 1;
+						for(int i = 0; i < res.size(); i++){
+							if(i >= 1 && res[i].grade != res[i-1].grade) rank = i + 1;
+							auto r = res[i];
+							printf("%d %s %d %d\n", rank, r.name.c_str(), (int)r.grade, r.cnt);
+						}
+
+						return 0;
+
+
+					}
+				r4.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct School{
+						string name;
+						double grade;
+						int cnt;
+
+						School(): name(""), grade(0), cnt(0) {}
+
+						bool operator< (const School& t) const{
+							if(grade != t.grade) return grade > t.grade;
+							if(cnt != t.cnt) return cnt < t.cnt;
+							return name < t.name;
+						}
+					};
+
+					unordered_map<string, School> school;
+
+					int main(){
+						int n;
+						cin >> n;
+
+						string id;
+						double grade;
+						string name;
+						for(int i = 0; i < n; i++){
+							cin >> id >> grade >> name;
+							if(id[0] == 'B') grade /= 1.5;
+							else if(id[0] == 'T') grade *= 1.5;
+
+							for(char &c : name) c = tolower(c);
+
+							school[name].grade += grade;
+							school[name].cnt ++;
+							if(school[name].name == "") school[name].name = name;
+						}
+
+						vector<School> res;
+						for(auto item : school){
+							auto s = item.second;
+							s.grade = (int)(s.grade + 1e-8);
+							res.push_back(s);
+						}
+
+						sort(res.begin(), res.end());
+						cout << res.size() << endl;
+						int rank = 1;
+						for(int i = 0; i < res.size(); i++){
+							auto s = res[i];
+							if(i && res[i].grade != res[i-1].grade) rank = i+1;
+							printf("%d %s %d %d\n", rank, s.name.c_str(), (int)s.grade, s.cnt);
+						}
+
+						return 0;
+					}
+
+				r5.
+
+		20. 
