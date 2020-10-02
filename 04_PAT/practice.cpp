@@ -3050,10 +3050,876 @@
 				r4.
 				r5.
 
+	3. 2020年10月1日13:26:24
 		12. 1546. 它们是否相等	1060
 			0. bug
 			1. 笔记
+				0. 题目要求的:
+					1. 关于幂次
+						总结:
+							找到'.'的前面,不包括'.',有a个数字
+							找到删除'.'之后的string,有b个前置零
+							k = a - b;
+						形式是0.xxx * 10^ yyy
+						可能的input有
+							1. 1234
+							2. 1234.
+							3. 0.0001234
+							4. 0000.001234
+							5. 123.1234
+						我们的目标:
+							让小数点的后一位变成非零的数字,也就是结果是:
+							1. 1234 -> 0.1234 * 10^4
+								因为没有'.',所以我们会在最后加上'.'
+								找到这个点的ind, k = 4在ind == 4的位置上
+								看没有'.'的时候长什么样: '1234'
+								去除前导0,每次除一个k--. 这里没有k--
+								所以 k == 4
+							2. 1234. -> 0.1234 * 10^4
+								找到这个点的ind, k = 4在ind == 4的位置上
+								看没有'.'的时候长什么样: '1234'
+								去除前导0,每次除一个k--. 这里没有k--
+								所以 k == 4
+							3. 0.0001234 -> 0.1234 * 10^(-3)
+								找到这个点的ind, k = 1在ind == 1的位置上
+								看没有'.'的时候长什么样: '00001234'
+								去除前导0,每次除一个k--. 祛除了4次,所以1-4=-3
+								所以 k == -3
+							4. 0000.001234 -> 0.1234 * 10^(-2)
+								找到这个点的ind, k = 4在ind == 4的位置上
+								看没有'.'的时候长什么样: '0000001234'
+								去除前导0,每次除一个k--. 祛除了6次,所以4-6=-2
+								所以 k == -2
+							5. 123.1234 -> 0.1231234 * 10^3
+								找到这个点的ind, k = 3在ind == 3的位置上
+								看没有'.'的时候长什么样: '1231234'
+								去除前导0,每次除一个k--.这里没有k--
+								所以 k == 3
+					2. 关于保留n位
+						如果不足n位,就补足'0'
+							a += string(n - a.size(), '0'); 
+						如果超过n位, 就删除后面的
+							 s = s.substr(0, n);
+
+
+				1. string
+					-1 总结:
+						取k前面的: a.substr(0, k)
+						取k+1和后面的: a.substr(k)
+					0. 找:
+						int k = a.find('.');
+						说明在'.'之前,不包括'.',有k个元素
+					1. 删
+						1. 删除第一个char:
+							a = a.substr(1);
+						2. 删除后面的char, 直到a.size() == n;
+							a = a.sustr(0, n);
+						3. 删除第k个char
+							a = a.substr(0, k) + a.substr(k+1);
+								也就是0到k-1, 和k+1之后的
+					2. 加
+						1. 往后面加入一个char
+							a += '0';
+						2. 往后面补充0, 补充到整个string长度为n, 假设现在string.size() < n
+							a += string(n - a.size(), '0'); 
+								string(len, 'c');
+					3. 可以直接return "0." + s + "*10^" + to_string(k);
+						而不采用sprintf()
+					
 			2. 注释
+				#include <iostream>
+				#include <cstring>
+
+				using namespace std;
+
+				string change(string a, int n)
+				{
+				    int k = a.find(".");
+				    if (k == -1) a += '.', k = a.find(".");
+
+				    string s = a.substr(0, k) + a.substr(k + 1);
+				    while (s.size() && s[0] == '0') s = s.substr(1), k -- ;
+
+				    if (s.empty()) k = 0;
+				    if (s.size() > n) s = s.substr(0, n);
+				    else s += string(n - s.size(), '0');
+
+				    return "0." + s + "*10^" + to_string(k);
+				}
+
+				int main()
+				{
+				    int n;
+				    string a, b;
+				    cin >> n >> a >> b;
+
+				    a = change(a, n);
+				    b = change(b, n);
+
+				    if (a == b) cout << "YES " << a << endl;
+				    else cout << "NO " << a << ' ' << b << endl;
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/317838/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+					using namespace std;
+
+					string change(int n, string a){
+
+						char res[110];
+						int k = a.find('.');
+						if(k == -1) a += '.'; k = a.find('.');
+						a = a.substr(0, k) + a.substr(k + 1);
+						
+						while(a.size() && a[0] == '0') a = a.substr(1), k--;
+						if(a.empty()) k = 0;
+						while(a.size() < n) a += '0';
+						if(a.size() > n) a = a.substr(0, n);
+						sprintf(res, "0.%s*10^%d", a.c_str(), k);
+						
+						return res;
+					}
+
+					int main(){
+						int n;
+						string a, b;
+						cin >> n >> a >> b;
+
+						string ac = change(n, a);
+						string bc = change(n, b);
+
+						if(ac == bc) cout << "YES " << ac << endl;
+						else cout << "NO " << ac << " " << bc << endl;
+
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					string change(int n , string a){
+						int k = a.find('.');
+						if(k == -1) a += '.', k = a.find('.');
+
+						string s = a.substr(0, k) + a.substr(k+1);
+						while(s.size() && s[0] == '0') s = s.substr(1), k--;
+						if(s.empty()) k = 0;
+
+						if(s.size() > n) s = s.substr(0, n);
+						else s += string(n - s.size(), '0');
+
+						return "0." + s + "*10^" + to_string(k);
+					}
+
+					int main(){
+						int n;
+						string a, b;
+						cin >> n >> a >> b;
+
+						string x = change(n, a);
+						string y = change(n, b);
+
+						if(x == y) cout <<"YES " << x << endl;
+						else cout << "NO " << x << " " << y << endl;
+						return 0;
+					}
+				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					string change(int n, string a){
+						int k = a.find('.');
+						if(k == -1) a += '.', k = a.find('.');
+
+						a = a.substr(0, k) + a.substr(k+1);
+						while(a.size() && a[0] == '0') a = a.substr(1), k--;
+						if(a.empty()) k = 0;
+
+						if(a.size() > n) a = a.substr(0, n);
+						else a += string(n - a.size(), '0');
+
+						return "0." + a + "*10^" + to_string(k);
+
+					}
+
+					int main(){
+						int n;
+						string a, b;
+						cin >> n >> a >> b;
+
+						a = change(n, a);
+						b = change(n, b);
+
+						if(a == b) cout << "YES " << a << endl;
+						else cout << "NO " << a << " " << b << endl;
+
+						return 0;
+					}
+				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					string change(int n, string a){
+						int k = a.find('.');
+						if(k == -1) a += '.', k = a.find('.');
+
+						a = a.substr(0, k) + a.substr(k + 1);
+						while(a.size() && a[0] == '0') a = a.substr(1), k--;
+						if(a.empty()) k = 0;
+
+						if(a.size() > n) a = a.substr(0, n);
+						else a += string(n - a.size(), '0');
+
+						return "0." + a + "*10^" + to_string(k);
+					}
+
+					int main(){
+						int n;
+						string a, b;
+						cin >> n >> a >> b;
+
+						a = change(n, a);
+						b = change(n, b);
+
+						if(a == b) cout << "YES " << a << endl;
+						else cout << "NO " << a << " " << b << endl;
+						return 0;
+					}
+				r5.
+					#include <iostream>
+
+					using namespace std;
+
+					string change(int n, string a){
+						int k = a.find('.');
+						if(k == -1) a += '.'; k = a.find('.');
+
+						a = a.substr(0, k) + a.substr(k+1);
+						while(a.size() && a[0] == '0') a = a.substr(1), k--;
+						if(a.empty()) k = 0;
+
+						if(a.size() > n) a = a.substr(0, n);
+						else a += string(n - a.size(), '0');
+
+						return "0." + a + "*10^" + to_string(k);
+					}
+
+					int main(){
+						int n;
+						string a, b;
+						cin >> n >> a >> b;
+
+						a = change(n, a);
+						b = change(n, b);
+
+						if(a == b) cout << "YES " << a << endl;
+						else cout << "NO " << a << " " << b << endl;
+						return 0;
+					}
+
+		13. 1559. 科学计数法	1073
+			0. bug
+			1. 笔记
+				0. 回忆:
+					 int to string: to_string()
+					 string to int: stoi()
+					 可以cout << 'c' + "string" << endl;	就是char和string加法
+				1. 其实非常简单
+					1. 举例: +1.23400E-03
+						0. 过程:
+							将1.23400*10^(-3)想象成0.123400 * 10^(-2)
+							取中间部分,去除'.'
+								123400
+							同时幂次+1
+								-3 + 1 = -2
+						1. 我们需要提取'E'之前和之后的部分:
+							1.23400
+								需要将'.'去除
+									 a = s[1] + s.substr(3, k - 3);
+									 因为ind == 0: +/-
+									 ind == 1: 一位数字
+									 ind == 2: '.'
+									 ind == 3: 剩余的始祖
+							-03
+								int b = stoi(s.substr(k + 1));
+								用stoi()读取
+								之后幂次++, b++;
+						2. 如果
+							1. 幂次b <= 0, 说明我们要在'0.' 和 '123400'之间添加b个'0' (string(-b, '0')), 如果b==0, string(0,'0')也就不会加'0';
+							2. 幂次b > 0,
+								1. 如果b >= a.size()
+									说明我们要在'1234000' 后面加上 b-a.size()个'0'. (b-a.size()可以==0,也就是不加'0')
+								2. 如果b < a.size()
+									说明要加小数点,也就是先取[0,b-1]共b个的字符, 然后加上'.',之后加上[b-N]的字符
+									 a = a.substr(0, b) + '.' + a.substr(b);
+			2. 注释
+				#include <iostream>
+
+				using namespace std;
+
+				int main()
+				{
+				    string s;
+				    cin >> s;
+
+				    if (s[0] == '-') cout << '-';
+
+				    int k = s.find("E");
+				    string a = s[1] + s.substr(3, k - 3);
+				    int b = stoi(s.substr(k + 1));
+				    b ++ ;
+
+				    if (b <= 0) a = "0." + string(-b, '0') + a;
+				    else if (b >= a.size()) a += string(b - a.size(), '0');
+				    else a = a.substr(0, b) + '.' + a.substr(b);
+
+				    cout << a << endl;
+
+				    return 0;
+				}
+
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/317851/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						string num;
+						cin >> num;
+
+						if(num[0] == '-') cout << '-';
+						int k = num.find('E');
+						string a = num[1] + num.substr(3, k-3);
+						int b = stoi(num.substr(k+1));
+						b++;
+
+						if(b <= 0)
+							cout << "0." + string(-b, '0') + a << endl;
+						else{
+							if(b >= a.size()) cout << a + string(b - a.size(), '0');
+							else cout << a.substr(0, b) + '.' + a.substr(b);
+						}
+
+						return 0;
+
+
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						string num;
+						cin >> num;
+
+						int k = num.find('E');
+						string a = num[1] + num.substr(3, k-3);
+						int b = stoi(num.substr(k+1)) + 1;
+
+						if(num[0] == '-') cout << '-';
+						if(b <= 0) cout << "0." + string(-b, '0') + a << endl;
+						else {
+							if(b < a.size()) cout << a.substr(0, b) + '.' + a.substr(b) << endl;
+							else cout << a + string(b-a.size(), '0') << endl;
+						}
+
+						return 0;
+					}
+				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						string num;
+						cin >> num;
+
+						int k = num.find('E');
+						string a = num[1] + num.substr(3, k - 3);
+						int b = stoi(num.substr(k+1)) + 1;
+
+						if(num[0] == '-') cout << '-';
+						if(b <= 0) cout << "0." + string(-b, '0') + a << endl;
+						else{
+							if(b < a.size()) cout << a.substr(0, b) + '.' + a.substr(b) << endl;
+							else{
+								cout << a + string(b-a.size(), '0') << endl;
+							}
+						} 
+
+						return 0;
+					}
+				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						string num;
+						cin >> num;
+
+						int k = num.find('E');
+						string a = num[1] + num.substr(3, k-3);
+						int b = stoi(num.substr(k+1)) + 1;
+
+						if(num[0] == '-') cout << '-';
+						if(b <= 0) cout << "0." + string(-b, '0') + a << endl;
+						else{
+							if(b < a.size()) cout << a.substr(0, b) + '.' + a.substr(b) << endl;
+							else cout << a + string(b-a.size(), '0') << endl;
+						}
+
+						return 0;
+					}
+				r5.
+
+
+
+
+		14. 1563. Kuchiguse	1077
+			0. bug
+				用getline(cin, s[i]);之前,记得getchar();
+			1. 笔记
+				1. 其实要找的是最长后缀,思路很简单
+					就是直接看每个string的后k个字符是否一样
+						比较的时候:
+							1. 确认target的长度是 > k的,否则就不可能取target的后k个字符
+							2. target的后k个字符 == 这k个字符
+					后k个,k是从大到小排列的
+				2. 因为题目的string长度最长是256, 一共只有100个string
+					假设最坏情况,判断了256次的k,(k从256到1),每次判断100个string
+					一共就256*100=2w
+				3. string
+					取最后a个char
+					string str = xx.substr(xx.size() - a);
+				4. 这道题的两个for loop里面的逻辑还是很有意思的
+					1. 内loop:
+						如果一旦发现不对劲, 设置is = false, break; 继续到外loop, 就是看下一个更短的k长度
+						如果很顺利,也是直接到外loop
+					2. 外loop: 
+						先检查is
+							如果是true, 就return(相当于break) 找到答案
+							如果是false, 继续外loop, 就是看下一个更短的k长度
+					3. 最后出来的肯定是全部都是false
+			2. 注释
+				#include <iostream>
+				using namespace std;
+
+				const int N = 110;
+
+				int n;
+				string s[N];
+
+				int main()
+				{
+				    cin >> n;
+				    getchar();
+				    for (int i = 0; i < n; i ++ ) getline(cin, s[i]);
+
+				    for (int k = s[0].size(); k; k -- )
+				    {
+				        string sf = s[0].substr(s[0].size() - k);
+				        bool is_matched = true;
+
+				        for (int i = 1; i < n; i ++ )
+				            if (k > s[i].size() || s[i].substr(s[i].size() - k) != sf)
+				            {
+				                is_matched = false;
+				                break;
+				            }
+
+				        if (is_matched)
+				        {
+				            cout << sf << endl;
+				            return 0;
+				        }
+				    }
+
+				    puts("nai");
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/317855/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						int n;
+						cin >> n;
+						string s[n];
+						getchar();
+						for(int i = 0; i < n; i++)
+						{
+							getline(cin, s[i]);
+						}
+
+						int k;
+						bool is_k = true;
+						for(k = s[0].size(); k; k--){
+							string comp = s[0].substr(s[0].size() - k);
+					// 		cout << comp << endl;
+							is_k = true;
+							for(int i = 1; i < n ; i++){
+								if(s[i].size() - k < 0){
+									is_k = false;
+									break;
+								}
+								
+								string target = s[i].substr(s[i].size() - k);
+					// 			cout << target << endl;
+								if(target != comp)
+								{
+									is_k = false;
+									break;
+								}
+							}
+							if(is_k){
+							    cout << comp << endl;
+							    break;
+							}
+						}
+
+						if(!is_k) cout << "nai" << endl;
+						
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					string s[N];
+
+					int main(){
+						cin >> n;
+						getchar();
+						for(int i = 0; i < n; i++){
+							getline(cin, s[i]);
+						}
+
+						for(int i = s[0].size(); i > 0; i--){
+							string cmp = s[0].substr(s[0].size() - i);
+					// 		cout << cmp << endl;
+
+							bool is_k = true;
+							for(int j = 1; j < n ; j++){
+								if(i > s[j].size() || s[j].substr(s[j].size() - i) != cmp) {
+								 //   cout << cmp << " " <<  s[j].substr(s[j].size() - i) << endl;
+									is_k = false;
+									break;
+								}
+							}
+							if(is_k) {
+								cout << cmp << endl;
+								return 0;
+							}
+						}
+						puts("nai");
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					string str[N];
+
+					int main(){
+						cin >> n;
+						getchar();
+						for(int i = 0; i < n ; i++){
+							getline(cin, str[i]);
+						}
+
+						for(int k = str[0].size(); k > 0 ; k--){
+							string comp = str[0].substr(str[0].size() - k);
+
+							bool is = true;
+							for(int i = 1; i < n; i++){
+								if( k > str[i].size() || str[i].substr(str[i].size() - k) != comp)
+								{
+									is = false;
+									break;
+								}
+							}
+							if(is){
+								cout << comp << endl;
+								return 0;
+							}
+						}
+
+						puts("nai");
+						return 0;
+					}
+				r4. 新方法, 记录minlen
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					string str[N];
+
+					int main(){
+						cin >> n;
+						getchar();
+						int minlen = 300;
+						for(int i = 0; i < n; i++){
+							getline(cin, str[i]);
+							minlen = str[i].size() < minlen ? str[i].size() : minlen;
+						}
+
+						for(int i = minlen; i > 0; i--){
+							string comp = str[0].substr(str[0].size() - i);
+
+							bool is_k = true;
+							for(int j = 1; j < n; j++){
+								if(str[j].substr(str[j].size() - i) != comp){
+									is_k = false;
+									break;
+								}
+							}
+							if(is_k){
+								cout << comp << endl;
+								return 0;
+							}
+						}
+
+						puts("nai");
+						return 0;
+
+
+					}
+				r5.
+					#include <iostream>
+					using namespace std;
+
+					const int N = 110;
+
+					int n;
+					string str[N];
+
+					int main(){
+						cin >> n;
+						getchar();
+						int minlen = 300;
+						for(int i = 0; i < n; i++){
+							getline(cin, str[i]);
+							minlen = min((int)str[i].size(), minlen);
+						}
+
+						for(int i = minlen; i > 0; i--){
+							string comp = str[0].substr(str[0].size() - i);
+
+							bool is_k = true;
+							for(int j = 1; j < n; j++){
+								if(str[j].substr(str[j].size() - i) != comp){
+									is_k = false;
+									break;
+								}
+							}
+							if(is_k) {
+								cout << comp << endl;
+								return 0;
+							}
+						}
+
+						puts("nai");
+						return 0;
+					}
+
+
+
+
+
+		15. 1568. 中文读数字	1082 #todo
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		16. 1570. 坏掉的键盘	1084
+			0. bug
+			1. 笔记
+				1. 因为字母和ascci码只有127个, 所以用len == 200的数组来当做set
+				2. 两个指针(像这种,要保持两个指针都合法的,可以考虑加哨兵)
+					第一个指针, 也就是我们想输入的string, 是不停的i++
+					第二个指针, 也就是实际输出的string, 是遇到==才会j++
+				3. 担心数组越界,所以会加一个哨兵
+					为什么会越界, 因为实际输出的string b一定是 <= 想输入的string a的长度
+					所以我们很有可能 b已经遍历到最后一位了,但是a还有
+					所以:
+						1. 可以给b加一个末尾: b += '#'
+						2. 在j++的时候判断: if(x == y && j + 1 < b.size()) 但是这样的话, 我们的y就一直是b的最后一个char,可能会出问题
+						所以最好是家哨兵.
+			2. 注释
+			3. 5次
+				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						string a, b;
+						cin >> a >> b;
+
+						b += '#';
+						int visited[200] = {0}; //因为字母和ascci码只有127个
+						for(int i = 0, j = 0; i < a.size(); i++){
+							char x = toupper(a[i]), y = toupper(b[j]);
+							if(x == y ) j++;
+							else{
+								if(!visited[x]){
+									cout << x;
+									visited[x] = 1;
+								}
+							}
+						}
+
+						cout << endl;
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						string a,b;
+						cin >> a >> b;
+
+						b += '#';
+						int visited[200] = {0};
+						for(int i = 0, j = 0; i < a.size(); i++){
+							char target = toupper(a[i]);
+							char act = toupper(b[j]);
+							if(target == act) j++;
+							else{
+								if(!visited[target]){
+									cout << target;
+									visited[target] = 1;
+								}
+							}
+						}
+
+						cout << endl;
+						return 0;
+					}
+				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						string a,b;
+						cin >> a >> b;
+
+						b += '#';
+						int v[200] = {0};
+						for(int i = 0, j = 0; i < a.size(); i ++){
+							char x = toupper(a[i]);
+							char y = toupper(b[j]);
+							if(x == y) j ++;
+							else{
+								if(!v[x]) {
+									cout << x;
+									v[x] = 1;
+								}
+							}
+						}
+						cout << endl;
+						return 0;
+					}
+				r4.
+				r5.
+
+		17. 1598. 求平均值	1108
+			0. bug
+			1. 笔记
+			2. 注释
+				#include <iostream>
+
+				using namespace std;
+
+				int main()
+				{
+				    int n;
+
+				    cin >> n;
+
+				    int cnt = 0;
+				    double sum = 0;
+
+				    while (n -- )
+				    {
+				        string num;
+				        cin >> num;
+				        double x;
+
+				        bool success = true;
+				        try
+				        {
+				            size_t idx;
+				            x = stof(num, &idx);
+
+				            if (idx < num.size()) success = false;
+				        }
+				        catch(...)
+				        {
+				            success = false;
+				        }
+
+				        if (x < -1000 || x > 1000) success = false;
+				        int k = num.find('.');
+				        if (k != -1 && num.size() - k > 3) success = false;
+
+				        if (success) cnt ++, sum += x;
+				        else printf("ERROR: %s is not a legal number\n", num.c_str());
+				    }
+
+				    if (cnt > 1) printf("The average of %d numbers is %.2lf\n", cnt, sum / cnt);
+				    else if (cnt == 1) printf("The average of 1 number is %.2lf\n", sum);
+				    else puts("The average of 0 numbers is Undefined");
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/323460/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
 				r2.
