@@ -4355,7 +4355,7 @@
 						但是在sort(res.begin(), res.end())的时候,其实这两个是不一样的
 						为什么, 因为我s.grade = (s.grade + 1e-8)中s.grade是double, double进行sort很恶心的!
 			1. 笔记
-				0. 使用了struct + map + vector
+				0. 使用了struct + unordered_map + vector
 					struct:
 						一个聚合的类型:school
 						里面包含了很多内容:所以用struct存储这些内容
@@ -4375,7 +4375,7 @@
 				1. 使用默认重构函数: School(): cnt(0), sum(0) {}
 					使用的原因: 我们在输入的时候, 不是一次性的获取全部结果,而是一次获取一点
 					所以我们直接用了hash[sch].sum += grade; 因为可以直接调用默认重构函数chool(): cnt(0), grade(0) {}, 然后在grade == 0的基础上 += grade;
-				2. 使用了map<string, Struct>, 使用了vector<Struct>存结果
+				2. 使用了unordered_map<string, Struct>, 使用了vector<Struct>存结果
 				3. 使用了重载<
 					使用了sort()
 				4. 读入如果出现除号,记得用double
@@ -4732,4 +4732,1497 @@
 
 				r5.
 
-		20. 
+	5. 2020年10月3日08:21:03
+		20. 1647. 解码PAT准考证	1153
+			0. bug
+				0. 注意, 有时候我可能会写成 if(char == string)但是我没发现,这会报错
+					可以改成if(char == string[0])
+				1. 因为type == 1的时候,我们是要grade降序, id升序输出, 所以我们要先sort(),再遍历我们所有的item
+
+			1. 笔记
+				1. 数据结构的使用
+					0. 为什么不用vector<pair<string, int>> 存string id和int grade. 因为我们可以将两个信息放到struct里, 构建vector<struct>
+					1. 为什么用了struct[]数组, 而不是vector<struct>?
+						因为vector<>的好处我们这里不需要
+							vector<>的好处在于我们在遍历的时候直接知道vector的size
+							但是这道题已经告诉我们有多少个输入,所以已经知道了struct[]的size
+					2. 为什么不用map<string, int>
+						因为map<string,int>的好处在于我们可以递进的获取信息,不需要一次性知道
+							例如: 
+								map["abc"]++;
+								注意,这里是可以直接++; 因为会直接初始化
+								而不需要判断if(map.count("abc") == 0) map["abc"] = 1;
+								else map["abc"]++;
+						vector<>需要我们一次性的push_back, 而这里可以我们一次性
+						struct[]也是需要我们一次性赋值
+					3. 但是,我保险起见,我会用vector<struct>,而不是struct[]数组
+				2. 数据结构的搭配
+					和之前的unordered_map + vector相似
+						因为我们不采用排序第一个关键字,所以不使用map(因为map是可以自动第一个关键字排序)
+							因为我们用map是为了给每个stirng name输入相关的info,如果用map,那就是以string name为第一关键字的升序
+							但是我们是以int grade为第一个关键字,所以不用map
+						所以我们采用unordered_map,因为unordered_map不能排序,所以我们把结果push斤vector里面,然后我们sort(),重载<
+				2. 关于排序
+					1. vector<aa>需要使用aa的<符号排序
+					2. vector<pair<aa,bb>> sort(vec.begin(), vec.end())的时候
+						会自动按照第一关键字aa的升序, 然后第二关键字bb升序
+						因为type == 3, 是按照int grade降序 + string name升序
+						所以我们{-grade, name}
+							第一关键字是-grade,即-grade的升序,grade的降序
+							第二关键字name,即name的升序
+					3. 会议其他
+						1. priority_queue<>自动sort,然后按照>符号排序
+							queue.top()就可以了
+						2. map<aa,bb>, 自动按照aa的升序排序
+							for(auto item : map)的时候就可以了
+
+
+			2. 注释
+				#include <iostream>
+				#include <cstring>
+				#include <unordered_map>
+				#include <algorithm>
+				#include <vector>
+
+				using namespace std;
+
+				const int N = 10010;
+
+				int n, m;
+				struct Person
+				{
+				    string id;
+				    int grade;
+
+				    bool operator< (const Person &t) const
+				    {
+				        if (grade != t.grade) return grade > t.grade;
+				        return id < t.id;
+				    }
+				}p[N];
+
+				int main()
+				{
+				    cin >> n >> m;
+				    for (int i = 0; i < n; i ++ ) cin >> p[i].id >> p[i].grade;
+
+				    for (int k = 1; k <= m; k ++ )
+				    {
+				        string t, c;
+				        cin >> t >> c;
+
+				        printf("Case %d: %s %s\n", k, t.c_str(), c.c_str());
+				        if (t == "1")
+				        {
+				            vector<Person> persons;
+				            for (int i = 0; i < n; i ++ )
+				                if (p[i].id[0] == c[0])
+				                    persons.push_back(p[i]);
+
+				            sort(persons.begin(), persons.end());
+
+				            if (persons.empty()) puts("NA");
+				            else
+				                for (auto person : persons) printf("%s %d\n", person.id.c_str(), person.grade);
+				        }
+				        else if (t == "2")
+				        {
+				            int cnt = 0, sum = 0;
+				            for (int i = 0; i < n; i ++ )
+				                if (p[i].id.substr(1, 3) == c)
+				                {
+				                    cnt ++ ;
+				                    sum += p[i].grade;
+				                }
+
+				            if (!cnt) puts("NA");
+				            else printf("%d %d\n", cnt, sum);
+				        }
+				        else
+				        {
+				            unordered_map<string, int> hash;
+				            for (int i = 0; i < n; i ++ )
+				                if (p[i].id.substr(4, 6) == c)
+				                    hash[p[i].id.substr(1, 3)] ++ ;
+
+				            vector<pair<int, string>> rooms;
+				            for (auto item : hash) rooms.push_back({-item.second, item.first});
+
+				            sort(rooms.begin(), rooms.end());
+				            if (rooms.empty()) puts("NA");
+				            else
+				                for (auto room : rooms)
+				                    printf("%s %d\n", room.second.c_str(), -room.first);
+				        }
+				    }
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/323501/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					struct Person{
+						string id;
+						int grade;
+					}
+
+					vector<Person> persons;
+					int main(){
+						int n, m;
+
+						string id;
+						int grade;
+						for(int i = 0 ; i < n ; i++){
+							cin >> id >> grade;
+							persons.push_back({id, grade});
+						}
+
+						int type;
+						string cmd;
+						for(int i = 0; i < m ;i ++){
+							cin >> type >> cmd;
+							printf("Case %d: %d %s\n", i+1, type, cmd.c_str());
+							if(type == 1){
+								int res = 0;
+								for(auto p : persons){
+									if(p.id[0] == cmd){
+										printf("%s %d\n", p.id.c_str(), p.grade);
+										if(!res) res = 1;
+									}
+								}
+								if(!res) puts("NA");
+							}
+							else if(type == 2){
+								int cnt = 0;
+								int sum = 0;
+								for(auto p :persons){
+									if(p.id.substr(1,3) == cmd){
+										cnt ++;
+										sum += p.grade;
+									}
+								}
+								if(!cnt) puts("NA");
+								else printf("%d %d\n", cnt, sum);
+							}
+							else{
+								unordered_map<string, int> map;
+								for(auto p :persons){
+									if(p.id.substr(4,6) == cmd){
+										map[p.id.substr(1,3)] ++;
+									}
+								}
+								vector<pair<int, string>> res;
+								for(auto item : map){
+									res.push_back({-item.second, item.first});
+								}
+								sort(res.begin(), res.end());
+								for(auto item : res){
+									printf("%s %d\n", item.second, -item.first);
+								}
+							}
+						}
+						return 0;
+					}
+				r2.
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					struct Person{
+						string id;
+						int grade;
+
+						bool operator< (const Person& t) const{
+							if(grade != t.grade) return grade > t.grade;
+							return id < t.id;
+						}
+					}persons[N];
+
+					int main(){
+						int n, m;
+						cin >> n >> m;
+
+						string id;
+						int grade;
+						for(int i = 0; i < n ; i++){
+							cin >> id >> grade;
+							persons[i] = {id, grade};
+						}
+
+						int type;
+						string cmd;
+						for(int i = 0; i < m; i++){
+							cin >> type >> cmd;
+							printf("Case %d: %d %s\n", i+1, type, cmd.c_str());
+
+							vector<Person> res1;
+							if(type == 1){
+								for(int i = 0; i < n; i++){
+									auto p = persons[i];
+									if(p.id[0] == cmd[0]){
+										res1.push_back(p);
+									}
+								}
+								if(res1.empty()) puts("NA");
+								else {
+								    sort(res1.begin(), res1.end());
+									for(auto p : res1)
+										printf("%s %d\n", p.id.c_str(), p.grade);
+								}
+							}
+							else if(type == 2){
+								int cnt = 0;
+								int sum = 0;
+								for(int i = 0; i < n; i++){
+									auto p = persons[i];
+									if(p.id.substr(1,3) == cmd){
+										cnt ++;
+										sum += p.grade;
+									}
+								}
+								if(cnt) printf("%d %d\n", cnt, sum);
+								else puts("NA");
+							}
+							else{
+							    unordered_map<string,int> map;
+								for(int i = 0; i < n ; i++){
+									auto p = persons[i];
+									if(p.id.substr(4,6) == cmd){
+										map[p.id.substr(1,3)]++;
+									}
+								}
+								if(map.empty()) puts("NA");
+									else{
+										vector<pair<int, string>> res;
+										for(auto item : map){
+											res.push_back({-item.second, item.first});
+										}
+										sort(res.begin(), res.end());
+										for(auto item: res){
+											printf("%s %d\n", item.second.c_str(), -item.first);
+										}
+									}
+							}
+						}
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					struct Person{
+						string id;
+						int grade;
+
+						bool operator< (const Person& t) const{
+							if(grade != t.grade) return grade > t.grade;
+							return id < t.id;
+						}
+					};
+
+					struct Record{
+						string id;
+						int cnt;
+
+						bool operator< (const Record& t) const{
+							if(cnt != t.cnt) return cnt > t.cnt;
+							return id < t.id;
+						}
+					};
+
+					int main(){
+						int n, m;
+						cin >> n >> m;
+
+						string id;
+						int grade;
+						vector<Person> persons;
+						for(int i = 0 ; i < n; i++){
+							cin >> id >> grade;
+							persons.push_back({id, grade});
+						}
+
+						int type;
+						string cmd;
+						for(int i = 0 ; i < m ; i++){
+							cin >> type >> cmd;
+							printf("Case %d: %d %s\n", i+1, type, cmd.c_str());
+							
+							if(type == 1){
+								sort(persons.begin(), persons.end());
+								bool b = false;
+								for(auto p : persons){
+									if(p.id[0] == cmd[0]){
+										printf("%s %d\n", p.id.c_str(), p.grade);
+										if(!b) b = true;
+									}
+								}
+								if(!b) puts("NA");
+							}
+							else if(type == 2)
+							{
+								int cnt = 0;
+								int sum = 0;
+								for(auto p : persons){
+									if(p.id.substr(1,3) == cmd){
+										cnt ++;
+										sum += p.grade;
+									}
+								}
+								if(cnt) printf("%d %d\n", cnt, sum);
+								else puts("NA");
+							}
+							else{
+								unordered_map<string, int> map;
+								vector<Record> res;
+								for(auto p : persons){
+									if(p.id.substr(4,6) == cmd){
+										map[p.id.substr(1,3)]++;
+									}
+								}
+								if(map.empty())puts("NA");
+								else{
+									for(auto item : map){
+										res.push_back({item.first, item.second});
+									}
+									sort(res.begin(), res.end());
+									for(auto item : res){
+										printf("%s %d\n", item.id.c_str(), item.cnt);
+									}
+								}
+							}
+						}
+						return 0;
+
+					}
+				r4.
+				r5.
+
+2. 高精度
+	5. 2020年10月3日13:24:07
+		21. 1474. 多项式 A + B 	1002
+			0. bug
+			1. 笔记
+				1. 不难,但是细心
+					就是读入的double
+					然后输出的时候是从幂次大的,而不是幂次小的地方输出
+					输出的时候保留一位小数
+				2. 多项式的加法,不涉及进位,因为完全可以 2*x^3 + 123*x^2 + 23*x + 234
+			2. 注释
+				#include <iostream>
+
+				using namespace std;
+
+				const int N = 1010;
+
+				double a[N], b[N], c[N];
+
+				int main()
+				{
+				    int k;
+
+				    cin >> k;
+				    while (k -- )  // 读入第一个多项式
+				    {
+				        int n;
+				        double v;
+				        cin >> n >> v;
+				        a[n] = v;
+				    }
+
+				    cin >> k;
+				    while (k -- )  // 读入第二个多项式
+				    {
+				        int n;
+				        double v;
+				        cin >> n >> v;
+				        b[n] = v;
+				    }
+
+				    // 求和
+				    for (int i = 0; i < N; i ++ ) c[i] = a[i] + b[i];
+
+				    k = 0;
+				    for (int i = 0; i < N; i ++ )
+				        if (c[i])
+				            k ++ ;
+
+				    cout << k;
+				    for (int i = N - 1; i >= 0; i -- )
+				        if (c[i])
+				            printf(" %d %.1lf", i, c[i]);
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/269747/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					double a1[N];
+					double a2[N];
+					double res[N];
+
+					int main(){
+						int n1;
+						cin >> n1;
+						int n;
+						double v;
+						while(n1--){
+							cin >> n >> v;
+							a1[n] = v;
+						}	
+					    
+						cin >> n1;
+						while(n1--){
+							cin >> n >> v;
+							a2[n] = v;
+						}
+					    
+						for(int i = 0; i < N; i ++) res[i] = a1[i] + a2[i];
+
+						int cnt = 0;
+						for(int i = 0; i < N; i++){
+							if(res[i]) cnt++;
+						}
+
+						cout << cnt;
+						for(int i = N-1; i >= 0; i--){
+							if(res[i]) printf(" %d %.1lf", i, res[i]);
+						}
+
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+					double a[N];
+					double b[N];
+					double res[N];
+
+					int main(){
+						int n;
+						cin >> n;
+
+						int k;
+						double v;
+						for(int i = 0; i < n; i++){
+							cin >> k >> v;
+							a[k] = v;
+						}
+
+						cin >> n;
+						for(int i = 0; i < n; i++){
+							cin >> k >> v;
+							b[k] = v;
+						}
+
+						int cnt = 0;
+						for(int i = 0; i < N; i++){
+							res[i] = a[i] + b[i];
+						}
+						for(auto i : res) if(i) cnt++;  
+
+						cout << cnt;
+						for(int i = N-1; i >= 0; i--){
+							if(res[i]) printf(" %d %.1lf", i, res[i]);
+						}
+
+						return 0;
+					}
+				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+					double a[N];
+					double b[N];
+					double res[N];
+
+					int main(){
+						int n;
+						cin >> n;
+
+						int k;
+						double v;
+						for(int i = 0; i <n ; i++){
+							cin >> k >> v;
+							a[k] = v;
+						}
+
+						cin >> n;
+						for(int i = 0; i < n ;i ++){
+							cin >> k >> v;
+							b[k] = v;
+						}
+
+						for(int i = 0; i < N; i++){
+							res[i] = a[i] + b[i];
+						}
+
+						int cnt = 0;
+						for(auto i : res) if(i) cnt++;
+
+						cout << cnt;
+						for(int i = N-1; i >= 0; i--){
+							if(res[i]) printf(" %d %.1lf", i, res[i]);
+						}
+
+						return 0;
+
+					}
+				r4.
+				r5.
+
+		22. 1481. 多项式乘积	1009
+			0. bug
+			1. 笔记
+				0. 需要修改值的时候, 函数需要传入引用
+					但是像是数组,本身就是指针,所以不需要用引用符号.而是
+					double a[];
+					void func(double a[]){xxx};
+					func(a);
+				1.这道题还是不难的
+					主要就是考察一个乘积的结果在哪一位
+					可以看老师的04:20的图: https://www.a c w ing.com/video/1009/
+					总之就是res[i+j] += a[i] * b[j]
+				2. 遍历的时候, 我们是全部都遍历,而不是输入了多少个就遍历多少个
+					也就是,错误的是for(int i = 0; i < n; i++)
+					而是 for(int i = 0; i < N; i++)
+				3. 多项式的乘法,不涉及进位,因为完全可以 2*x^3 + 123*x^2 + 23*x + 234
+			2. 注释
+				#include <iostream>
+
+				using namespace std;
+
+				const int N = 1010;
+
+				double a[N], b[N], c[N * 2];
+
+				void input(double a[])
+				{
+				    int k;
+				    cin >> k;
+				    while (k -- )
+				    {
+				        int n;
+				        double v;
+				        cin >> n >> v;
+				        a[n] = v;
+				    }
+				}
+
+				int main()
+				{
+				    input(a);
+				    input(b);
+
+				    // 做乘法
+				    for (int i = 0; i < N; i ++ )
+				        for (int j = 0; j < N; j ++ )
+				            c[i + j] += b[i] * a[j];
+
+				    int k = 0;
+				    for (int i = 0; i < N * 2; i ++ )
+				        if (c[i])
+				            k ++ ;
+
+				    cout << k;
+				    for (int i = N * 2 - 1; i >= 0; i -- )
+				        if (c[i])
+				            printf(" %d %.1lf", i, c[i]);
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/269766/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+					double a[N];
+					double b[N];
+					double res[2*N];
+
+					void input(double a[]){
+						int n;
+						cin >> n;
+						int k;
+						double v;
+						while(n--){
+							cin >> k >> v;
+							a[k] = v;
+						}
+					}
+
+					int main(){
+						input(a);
+						input(b);
+
+						for(int i = 0; i < N; i++){
+							for(int j = 0; j < N; j++){
+								res[i+j] += a[i] * b[j];
+							}
+						}
+
+						int cnt = 0;
+						for(int i = 0; i < 2*N; i++) if(res[i]) cnt++;
+
+						cout << cnt;
+						for(int i = 2*N-1; i >= 0 ; i--){
+							if(res[i]) printf(" %d %.1lf", i, res[i]);
+						}
+
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					double a[N];
+					double b[N];
+					double res[N*2];
+
+					void input(double a[]){
+						int n;
+						cin >> n;
+						while(n--){
+							int k;
+							double v;
+							cin >> k >> v;
+							a[k] = v;
+						}
+					}
+					int main(){
+						input(a);
+						input(b);
+
+						for(int i = 0; i < N; i++){
+							for(int j = 0; j < N ; j++)
+								res[i+j] += a[i] * b[j];
+						}
+
+						int cnt = 0;
+						for(int i = 0; i < 2*N; i++) if(res[i]) cnt++;
+						cout << cnt;
+
+						for(int i = 2*N-1 ; i >= 0; i--)
+							if(res[i]) printf(" %d %.1lf", i, res[i]);
+
+						return 0;
+					}
+				r3.
+				r4.
+				r5.
+
+		23. 1500. 趣味数字	1023
+			0. bug
+				1. string 转到vector的时候,忘记 - '0'
+				2. 从最后开始遍历的时候, 是int i = size-1, 而不是int i = size;
+			1. 笔记
+				1. 大数加法,两点比较重要:
+					1. 拿到一个string, 我们需要从最后一位(数字最低位)开始往vector里面push
+						这样我们就可以从vector的第0位(数字最低位)开始处理了
+					2. 我们加法的时候, 两个数字相加,然后再加上t, 并且最后判断t是否还有剩余
+					4. 每次计算好了一个数字之后,也是push到一个新的vector<> res
+					4. 最后我们从从最后一位(数字最低位)开始读res
+				2. 总结: 三明治: 尾+头+尾. 2个尾, 1个头
+					1. string -> vector<> a, 从string的尾开始push到vector<> a
+					2. vector<> a计算加法, 从a的头开始计算, 计算好后, 每次往res里面push
+					3. vector<> res, 从res的尾开始, 依次读取
+				3. 比较两个东西是否具有相同的元素
+					1. 一般的,使用set,或者开一个数组来当set
+					2. 如果两个东西是vector<int>, 我们可以用sort(), 然后看两者是否相同
+			2. 注释
+				#include <iostream>
+				#include <algorithm>
+				#include <vector>
+
+				using namespace std;
+
+				int main()
+				{
+				    string A;
+				    vector<int> a;
+
+				    cin >> A;
+				    for (int i = A.size() - 1; i >= 0; i -- ) a.push_back(A[i] - '0');
+
+				    vector<int> b;
+				    int t = 0;
+				    for (int i = 0; i < a.size(); i ++ )
+				    {
+				        int s = a[i] + a[i] + t;
+				        b.push_back(s % 10);
+				        t = s / 10;
+				    }
+				    if (t) b.push_back(t);
+				    vector<int> c = b;
+				    sort(a.begin(), a.end());
+				    sort(c.begin(), c.end());
+
+				    if (a == c) puts("Yes");
+				    else puts("No");
+
+				    for (int i = b.size() - 1; i >= 0; i -- ) cout << b[i];
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/269793/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					int main(){
+						string s;
+						cin >> s;
+
+						vector<int> a;
+						for(char c : s) a.push_back(c - '0');
+
+						int t = 0;
+						vector<int> res;
+						for(int i = a.size()-1; i >= 0 || t; i--){
+							t = a[i] + a[i] + t;
+							res.push_back( t % 10);
+							t /= 10;
+						}
+
+						vector<int> c = res;
+						sort(c.begin(), c.end());
+						sort(a.begin(), a.end());
+
+						if(c == a) puts("Yes");
+						else puts("No");
+						for(int i = res.size()-1; i >= 0; i--) cout << res[i];
+
+						return 0;
+					}
+				r2.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					int main(){
+						string a;
+						cin >> a;
+
+						vector<int> b;
+						for(int i = a.size()-1; i >= 0; i --) b.push_back(a[i] - '0');
+
+						int t = 0;
+						vector<int> res;
+						for(int i = 0; i < b.size() || t; i++){
+						   // cout << "b[i]" << b[i] << endl;
+							if(i < b.size()) t = b[i] + b[i] + t;
+					// 		cout << t << endl;
+							res.push_back( t % 10);
+							t = t / 10;
+						}
+
+						vector<int> copy = res;
+						sort(res.begin(), res.end());
+						sort(b.begin(), b.end());
+
+						if(res == b) puts("Yes");
+						else puts("No");
+
+						for(int i = copy.size()-1; i >= 0; i--) cout << copy[i];
+
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					int main()
+					{
+						string str;
+						cin >> str;
+
+						vector<int> a;
+						for(int i = str.size()-1; i >= 0; i--) a.push_back(str[i] - '0');
+
+						int t = 0;
+						vector<int> res;
+						for(int i = 0; i < a.size() || t; i++){
+							if(i < a.size()) t = a[i] + a[i] + t;
+							res.push_back(t % 10);
+							t /= 10;
+						}
+
+						string rres;
+						for(int i = res.size()-1; i >= 0; i--) rres += res[i]+'0';
+
+						sort(res.begin(), res.end());
+						sort(a.begin(), a.end());
+
+						if(res == a) puts("Yes");
+						else puts("No");
+
+						cout << rres << endl;
+						return 0;
+					}
+				r4.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					int main(){
+						string str;
+						cin >> str;
+
+						vector<int> a;
+						for(int i = str.size()-1; i >= 0; i--) a.push_back(str[i] - '0');
+
+						int t = 0;
+						vector<int> res;
+						for(int i = 0; i < a.size() || t; i++){
+							if(i < a.size()) t = a[i] + a[i] + t;
+							res.push_back(t % 10);
+							t /= 10;
+						}
+
+						string out;
+						for(int i = res.size()-1; i >= 0; i--) out += res[i] + '0';
+
+						sort(res.begin(), res.end());
+						sort(a.begin(), a.end());
+
+						if(res == a) puts("Yes");
+						else puts("No");
+
+						cout << out << endl;
+						return 0;
+					}
+				r5.
+
+		24. 1501. 回文数 1024
+			0. bug
+				1. 我的逻辑有点混乱, 不是if(isH(a)) cnt ++;
+					而是不管是否isH(a), cnt都要++
+				2. 因为得到的和res,我们还需要继续赋值给a的
+					的确老师的思路更清晰
+				3. for(int cnt = 0; cnt < k; cnt++){...; break}
+						因为:
+							break的时候, 走出for loop, cnt并没有++
+					例如:
+						int i = 0;
+						for(; i < 10; i++){
+						    cout << i << endl;
+						    if(i == 3) break;
+						}
+						cout << i << endl; 输出的是0 1 2 3 3
+						证明break之后, i没有++
+			1. 笔记
+				1. 这是更典型的大数相加, 参考23. 1500的三明治模型: 尾+头+尾
+				2. 翻转vector<>, 用reverse begin和end
+					vector<int> b(a.rbegin(), a.rend());
+				3. 如果vector是参数的话,更习惯将vector<>当成引用传入函数
+				4. 比较回文:注意我们的的截止条件可以是 i < j, 或者 i <= j. 但是i == j的时候, num[i]肯定==num[j], 所以没必要这么写
+						bool check(vector<int>& num)
+					{
+					    for (int i = 0, j = num.size() - 1; i < j; i ++, j -- )
+					        if (num[i] != num[j])
+					            return false;
+					    return true;
+					}
+				5. 那种给你k次机会,你慢慢试的题目,然后最后
+					最好用
+						int cnt = 0;
+						while(cnt < k) { ....; cnt ++}
+					最好别用
+						int cnt = 0;
+						for(int i = 0 ; i < k ; i++) {...; cnt++;}
+						因为:
+							1. int i几乎是累赘,不会用到
+							2. 我们最后需要cout << cnt, 但是int i是局部变量
+					不能用
+						int cnt = 0;
+						for(; cnt < k; cnt++){...; break}
+						因为:
+							break的时候, 走出for loop, cnt并没有++
+
+
+			2. 注释
+				#include <iostream>
+				#include <vector>
+
+				using namespace std;
+
+				bool check(vector<int>& num)
+				{
+				    for (int i = 0, j = num.size() - 1; i < j; i ++, j -- )
+				        if (num[i] != num[j])
+				            return false;
+				    return true;
+				}
+
+				vector<int> add(vector<int>& a, vector<int>& b)
+				{
+				    vector<int> c;
+				    for (int i = 0, t = 0; i < a.size() || i < b.size() || t; i ++ )
+				    {
+				        int s = t;
+				        if (i < a.size()) s += a[i];
+				        if (i < b.size()) s += b[i];
+				        c.push_back(s % 10);
+				        t = s / 10;
+				    }
+				    return c;
+				}
+
+				int main()
+				{
+				    string n;
+				    int k;
+				    cin >> n >> k;
+
+				    vector<int> a;
+				    for (int i = n.size() - 1; i >= 0; i -- ) a.push_back(n[i] - '0');
+
+				    int cnt = 0;
+				    if (!check(a))
+				    {
+				        while (cnt < k)
+				        {
+				            vector<int> b(a.rbegin(), a.rend());
+				            a = add(a, b);
+				            cnt ++ ;
+				            if (check(a)) break;
+				        }
+				    }
+
+				    for (int i = a.size() - 1; i >= 0; i -- ) cout << a[i];
+
+				    cout << endl << cnt << endl;
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/269816/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					bool isH(vector<int> &a){
+						for(int i = 0, j = a.size()-1; i < j; i++, j--){
+							if(a[i] != a[j]) return false;
+						}
+						return true;
+					}
+
+					int main(){
+						string num;
+						int k;
+						cin >> num >> k;
+
+						vector<int> a;
+						for(int i = num.size()-1; i >= 0; i --) a.push_back(num[i] - '0');
+
+						if(isH(a)){
+							cout << num << endl;
+							cout << 0 << endl;
+							return 0;
+						}
+
+						int cnt = 0;
+						vector<int> res;
+						while(cnt < k){
+							int t = 0;
+							vector<int> b(a.rbegin(), a.rend());
+							res.clear();
+							for(int i = 0; i < a.size() || i < b.size() || t; i++){
+								if(i < a.size()) t += a[i];
+								if(i < b.size()) t += b[i];
+								res.push_back(t % 10);
+								t /= 10;
+							}
+							cnt ++;
+							a = res;
+							if(isH(a)) break;
+						}
+
+						for(int i = a.size()-1 ; i >= 0; i--) cout << a[i];
+						cout << endl << cnt << endl;
+						
+						
+
+						return 0;
+
+						
+
+
+					}
+				r2.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					bool isH(vector<int> &a){
+						for(int i = 0, j = a.size()-1; i < j; i++, j--) if(a[i] != a[j]) return false;
+						return true;
+					}
+
+
+					int main(){
+						string num;
+						int k;
+						cin >> num >> k;
+
+						vector<int> a;
+						for(int i = num.size()-1; i >= 0; i--) a.push_back(num[i] - '0');
+
+						int cnt = 0;
+						if(!isH(a)){
+							for(int i = 0; i < k; i++){
+								vector<int> b(a.rbegin(), a.rend());
+
+								vector<int> res;
+								int t = 0;
+								for(int j = 0; j < a.size() || j < b.size() || t ; j++){
+									if(j < a.size()) t += a[j];
+									if(j < b.size()) t += b[j];
+									res.push_back(t % 10);
+									t /= 10;
+								}
+
+								a = res;
+
+								cnt ++;
+								if(isH(res)) break;
+							}
+						}
+
+						for(int i = a.size()-1; i >= 0; i--) cout << a[i];
+
+						cout << endl << cnt << endl;
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					bool isH(vector<int> &a){
+						for(int i = 0, j = a.size()-1; i < j ; i++, j--){
+							if(a[i] != a[j]) return false;
+						}
+						return true;
+					}
+
+					int main(){
+						string num;
+						int k;
+						cin >> num >> k;
+
+						vector<int> a;
+						for(int i = num.size()-1; i >= 0 ; i--) a.push_back(num[i] - '0');
+
+						if(isH(a)) 
+						{
+							cout << num << endl;
+							cout << 0 << endl;
+							return 0;
+						}
+
+						int cnt = 0;
+					    while(cnt < k){
+							vector<int> b(a.rbegin(), a.rend());
+							vector<int> res;
+							int t = 0;
+							for(int i = 0; i < a.size() || i < b.size() || t; i++){
+								if(i < a.size()) t += a[i];
+								if(i < b.size()) t += b[i];
+								res.push_back(t % 10);
+								t /= 10;
+							}
+							a = res;
+					        cnt ++;
+							if(isH(res)) break;
+						}
+						
+						
+
+						for(int i = a.size()-1; i >= 0; i--) cout << a[i];
+						cout << endl << cnt << endl;
+						return 0;
+					}
+
+
+				r4.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					bool isH(vector<int> &a){
+						for(int i = 0, j = a.size()-1; i < j; i++, j--) if(a[i] != a[j]) return false;
+						return true;
+					}
+
+					int main(){
+						string str;
+						int k;
+						cin >> str >> k;
+
+						vector<int> a;
+						for(int i = str.size()-1; i >= 0; i--) a.push_back(str[i] - '0');
+
+						if(isH(a)){
+							cout << str << endl;
+							cout << 0 << endl;
+							return 0;
+						}
+					   
+						int cnt = 0;
+						while(cnt < k){
+							vector<int> b(a.rbegin(), a.rend());
+							vector<int> res;
+							int t = 0;
+							for(int i = 0; i < a.size() || i < b.size() || t ; i++){
+								if(i < a.size()) t += a[i];
+								if(i < b.size()) t += b[i];
+								res.push_back(t % 10);
+								t /= 10;
+							}
+							cnt ++;
+							a = res;
+							if(isH(res)) break;
+						}
+
+						for(int i = a.size()-1; i >= 0 ;i --) cout << a[i];
+						cout << endl;
+						cout << cnt << endl;
+						return 0;
+					}
+				r5.
+
+		25. 1544. 霍格沃茨的 A + B 	1058
+			0. bug
+				我容易错写成:
+					a += b/17;
+					a %= 17;
+				应该是
+					a += b/17;
+					b %= 17;
+			1. 笔记
+				其实就是考察简单的进位问题:
+					1. 记得每个位都依次相加
+					2. 然后我们对最后一位向前进位, 也就是 / 进制, 得到的进位加到前一位
+					3. 最后最后一个 % 进制
+				只需要记住:
+					b += c / 29, c %= 29;
+					也就是先给b更新, 然后c更新
+			2. 注释
+				#include <iostream>
+
+				using namespace std;
+
+				int main()
+				{
+				    int a, b, c, d, e, f;
+				    scanf("%d.%d.%d %d.%d.%d", &a, &b, &c, &d, &e, &f);
+				    a += d, b += e, c += f;
+
+				    b += c / 29, c %= 29;
+				    a += b / 17, b %= 17;
+
+				    printf("%d.%d.%d\n", a, b, c);
+
+				    return 0;
+				}
+			3. 5次
+				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						int a, b, c, d, e, f;
+						scanf("%d.%d.%d %d.%d.%d", &a, &b, &c, &d, &e, &f);
+						a += d, b += e, c += f;
+
+						b += c / 29;
+						c %= 29;
+						a += b / 17;
+						b %= 17;
+
+						printf("%d.%d.%d", a, b, c);
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					int main(){
+						int a,b,c,d,e,f;
+						scanf("%d.%d.%d %d.%d.%d", &a, &b, &c, &d, &e, &f);
+
+						a += d;
+						b += e;
+						c += f;
+
+						 b += c / 29;
+						 c = c % 29;
+						 a += b / 17;
+						 b = b % 17;
+
+						 printf("%d.%d.%d", a,b,c);
+						 return 0;
+					}
+				r3.
+				r4.
+				r5.
+
+		26. 1629. 延迟的回文数	1136
+			0. bug
+				注意, cout的时候, 我用的是int a[i]
+				正确的是:
+					vector<int> a, cout << a[i];
+				错误的是:
+					vector<int> a, cout << (a[i] + '0'); 好像会输出很大的数字
+
+			1. 笔记
+				都是之前的综合,还是比较简单的
+				可以试一下老师的用myprint()来cout
+					老师用了四个逗号:
+						print(a), cout << " + ", print(b), cout << " = ";
+					void print(vector<int> &a){for(int i = a.size()-1; i >= 0; i--)cout << a[i];}
+			2. 注释
+				#include <iostream>
+				#include <cstring>
+				#include <vector>
+
+				using namespace std;
+
+				bool check(vector<int> A)
+				{
+				    for (int i = 0, j = A.size() - 1; i < j; i ++, j -- )
+				        if (A[i] != A[j])
+				            return false;
+				    return true;
+				}
+
+				void print(vector<int> A)
+				{
+				    for (int i = A.size() - 1; i >= 0; i -- ) cout << A[i];
+				}
+
+				vector<int> add(vector<int> A, vector<int> B)
+				{
+				    vector<int> C;
+				    for (int i = 0, t = 0; i < A.size() || i < B.size() || t; i ++ )
+				    {
+				        if (i < A.size()) t += A[i];
+				        if (i < B.size()) t += B[i];
+				        C.push_back(t % 10);
+				        t /= 10;
+				    }
+
+				    return C;
+				}
+
+				int main()
+				{
+				    string a;
+				    cin >> a;
+
+				    vector<int> A;
+				    for (int i = 0; i < a.size(); i ++ ) A.push_back(a[a.size() - 1 - i] - '0');
+
+				    for (int i = 0; i < 10; i ++ )
+				    {
+				        if (check(A)) break;
+				        vector<int> B(A.rbegin(), A.rend());
+
+				        print(A), cout << " + ", print(B), cout << " = ";
+				        A = add(A, B);
+
+				        print(A), cout << endl;
+				    }
+
+				    if (check(A)) print(A), cout << " is a palindromic number." << endl;
+				    else puts("Not found in 10 iterations.");
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/323515/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.	totally byb
+					#include <iostream>
+					#include <vector>
+					using namespace std;
+
+					bool isp(vector<int> &a){
+						for(int i = 0, j = a.size()-1; i < j; i++, j--) if(a[i]!=a[j]) return false;
+						return true;
+					}
+
+					string tostring(vector<int> &a){
+					    string res;
+					    for(int i = a.size()-1; i >= 0; i--) res += a[i] + '0';
+					    return res;
+					}
+
+					int main(){
+						string num;
+						cin >> num;
+
+						vector<int> a;
+						for(int i = num.size()-1; i >= 0; i--) a.push_back(num[i] - '0');
+
+						if(isp(a)){
+							printf("%s is a palindromic number.", num.c_str());
+							return 0;
+						}
+
+						int cnt = 0;
+						while(cnt < 10){
+							vector<int> b(a.rbegin(), a.rend());
+							vector<int> res;
+							int t = 0;
+							for(size_t i = 0; i < a.size() || i < b.size() || t; i++){
+								if(i < a.size()) t += a[i];
+								if(i < b.size()) t += b[i];
+								res.push_back(t % 10);
+								t /= 10;
+					  		}
+					  		string c = tostring(a);
+					  		string d = tostring(b);
+					  		string e = tostring(res);
+					  		printf("%s + %s = %s\n", c.c_str(), d.c_str(), e.c_str());
+					  		if(isp(res)){
+					  			printf("%s is a palindromic number.", e.c_str());
+								return 0;
+					  		}
+					  		cnt ++;
+					  		a = res;
+						}
+
+						puts("Not found in 10 iterations.");
+
+						return 0;
+					}
+				r2.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					bool isp(vector<int> &a){
+						for(int i = 0, j = a.size()-1; i < j; i++, j--) if(a[i] != a[j]) return false;
+						return true;
+					}
+
+					void print(vector<int> &a){
+						for(int i = a.size()-1; i >= 0; i--){
+							cout << a[i];
+						}
+					}
+
+					vector<int> add(vector<int> &a, vector<int> &b){
+						vector<int> res;
+						for(int i = 0, t = 0; i < a.size() || i < b.size() || t; i++){
+							if(i < a.size()) t += a[i];
+							if(i < b.size()) t += b[i];
+							res.push_back( t % 10);
+							t /= 10;
+					 	}
+					 	return res;
+					}
+
+					int main(){
+						string num;
+						cin >> num;
+
+						vector<int> a;
+						for(int i = num.size()-1; i >= 0; i--) a.push_back(num[i] - '0');
+
+						for(int i = 0; i < 10 ; i++){
+							if(isp(a)) break;
+
+							vector<int> b(a.rbegin(), a.rend());
+							print(a), cout << " + ", print(b), cout << " = ";
+							a = add(a, b);
+							print(a);
+							cout << endl;
+						}
+
+						if(isp(a)) print(a), cout << " is a palindromic number." << endl;
+						else cout << "Not found in 10 iterations." << endl;
+					}
+				r3.
+				r4.
+				r5.
+
+3. 进制
+	5. 2020年10月3日23:04:44
+		27. 1482. 进制	1010
