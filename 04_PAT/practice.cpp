@@ -6839,10 +6839,18 @@
 				r4.
 				r5.
 
-		30. 1590. 火星数字	1100
+		30. 1590. 火星数字 ****	1100
 			0. bug
-				r1,r2代码依旧很丑,逻辑很混乱. 对于if(line[0] <= '9'){的地球数字的情况
+				1. r1,r2代码依旧很丑,逻辑很混乱. 对于if(line[0] <= '9'){的地球数字的情况
 					我不应该先判断是否是 >= 13, 应该先判断是否 <= 12(这种才优雅)
+				2. 计算从mars到earth
+					int sum = 0;
+					for(int i = 0; i < 25; i++){
+						if(word == names[i]){
+							if(i <= 12) sum += i;
+							else sum += (i-12) * 13; 这里容易错, 例如mars的13, 相当于earth的十, (13-12)*13=13
+						}
+					}
 			1. 笔记
 				1. 这道题主要是输入的地方需要注意,因为格式比较复杂
 					1. getchar(); getline();
@@ -7175,5 +7183,52 @@
 						}
 						return 0;
 					}
-				r4.
+				r4. 一次过, 优雅简洁
+					#include <iostream>
+					#include <sstream>
+
+					char names[][5] = {
+					    "tret", "jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec",
+					    "tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou",
+					};
+
+
+					using namespace std;
+
+					int main(){
+						int n;
+						cin >> n;
+						getchar();
+
+						while(n--){
+							string input;
+							getline(cin, input);
+							stringstream ssin(input);
+
+							if(input[0] <= '9'){
+								int num;
+								ssin >> num;
+								if(num <= 12) {cout << names[num] << endl;}
+								else{
+									cout << names[num/13 - 1 + 13];
+									if(num % 13 == 0) cout << endl;
+									else cout << " " << names[num % 13] << endl;
+								}
+							}
+							else{
+								string word;
+								int sum = 0;
+								while(ssin >> word){
+									for(int i = 0; i < 25; i++){
+										if(word == names[i]){
+											if(i <= 12) sum += i;
+											else sum += (i-12)*13;
+										}
+									}
+								}
+								cout << sum << endl;
+							}
+						}
+						return 0;
+					}
 				r5.
