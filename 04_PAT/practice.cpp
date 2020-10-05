@@ -6224,5 +6224,956 @@
 				r5.
 
 3. 进制
-	5. 2020年10月3日23:04:44
+	6. 2020年10月5日12:51:34
+		
 		27. 1482. 进制	1010
+			0. bug
+				1. 我们的calc(string, LL), 那么传入的int一定要cast
+			1. 笔记
+				1. swap
+					我们使用swap(a,b),记得#include <algorithm>
+				3. l, r
+					l : 最小的可能的进制
+						是每一个数字中最大值+1
+							例如 78, 起码也是9进制
+					r: 最大可能的进制
+						例如 78, 最大的进制是79进制, 当然也可以是80进制,81进制
+						但是我们题目默认是求最小的那个进制
+					注意:
+						1. 题目输入的进制,最大是36
+						2. 但是我们结果输出的进制, 可以最大是(3,656,158,440,062,976 - 1)进制
+							3,656,158,440,062,976 - 1
+							因为最大的数字是zzzzzzzzzz(10个z)
+							如果zzzzzzzzzz+1 = 10000000000(10个0)
+							所以10000000000 = 36^10+0^9+0^8...+0 = 3,656,158,440,062,976
+							所以最大是16位数,我们可以用longlong存,因为longlong最大是19位
+				2. calc
+					题目是问a在r进制下和b在xx进制下相等
+					我们是将他们统一成世界语言,就是10进制
+						假设r进制的a在10进制下是res
+						LL res = 0;
+						for(char c : s){
+							res = res * 10 + get(c);
+						}
+						我们的res的最大值是 10个z(因为进制最大是36)
+					注意可能会溢出,溢出的情况:	
+						1. bv62a5i36a是35进制, 问9876543210是多少进制,假设n是多少
+							我们求出10进制的bv62a5i36a是937170408310020
+							然后我们的n的取值范围是 10到937170408310020+1
+								因为数字中最大是9,所以起码也是10进制
+						2. 如果我们计算calc(9876543210, 937170408310020+1)
+							很明显就会溢出LL了
+							所以我们看一下,如果快要溢出了, 我们就希望 r = mid, 也就是向左边,更小的进制考虑
+							所以采用了if ((double)res * r + get(c) > 1e16) return 1e18;
+								其中return 1e18, 是不会溢出longlong的
+								其中double是20位,相当于 unsigned long long
+								注意, 一定要写double, 否则的话, res * r即便溢出了,也会丢掉前面的数字, 例如99990000000,溢出了,但是丢了前面的数字,只剩下000000,就不可能 > 1e16了 
+							这个return 1e18中的1e18, 就是我们希望 == res的值
+								r进制的a在10进制下是res
+				3. 回忆二分法:
+					求最小的那个进制, 例如我们的target是78, 然后问1
+					while(l < r){	
+						LL mid = l + (r-l)/2;	mid是靠左的
+						if(res <= calc(b, mid)) r = mid;	mid靠左,所以r = mid
+						else l = mid + 1;	所以l = mid + 1;
+					}
+
+					if(calc(b, r) != res) puts("Impossible"); 最后==res可以是r也可以是l,因为(r==l)就会跳出,而且一般一步一步挪的话,最后就是(r==l),而不是一下子就变成了(r = l-1)
+				
+				4. LL
+					c/c++中int，long，long long的取值范围：
+					10位: 
+						2^32 = 4*10^10
+							unsigned   int   0～4294967295 
+							unsigned long 0～4294967295
+						2^32/2 = 2*10^10
+							int   -2147483648～2147483647 
+							long   -2147483648～2147483647
+					19位: 2^64/2 = 9*10^19
+						long long 的最大值：9223372036854775807
+						long long 的最小值：-9223372036854775808
+					20位: 2^64 = 1.8*10^20
+						unsigned long long 的最大值：18446744073709551615  //20位
+						double 的最大值：18446744073709551615  //20位
+					其他:
+						__int64的最大值：9223372036854775807
+						__int64的最小值：-9223372036854775808
+						unsigned __int64的最大值：18446744073709551615
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					typedef long long LL;
+
+
+					int get(char c)
+					{
+					    if (c <= '9') return c - '0';
+					    return c - 'a' + 10;
+					}
+
+
+					LL calc(string n, LL r)
+					{
+					    LL res = 0;
+					    for (auto c : n)
+					    {
+					        if ((double)res * r + get(c) > 1e16) return 1e18;
+					        res = res * r + get(c);
+					    }
+					    return res;
+					}
+
+
+					int main()
+					{
+					    string n1, n2;
+					    cin >> n1 >> n2;
+					    int tag, radix;
+					    cin >> tag >> radix;
+
+					    if (tag == 2) swap(n1, n2);
+					    LL target = calc(n1, radix);
+
+					    LL l = 0, r = max(target, 36ll);
+					    for (auto c : n2) l = max(l, (LL)get(c) + 1);
+
+					    while (l < r)
+					    {
+					        LL mid = l + r >> 1;
+					        if (calc(n2, mid) >= target) r = mid;
+					        else l = mid + 1;
+					    }
+
+					    if (calc(n2, r) != target) puts("Impossible");
+					    else cout << r << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/269858/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+
+					#include <iostream>
+					#include <algorithm> //包括了swap()
+
+					using namespace std;
+
+					typedef long long LL;
+
+					int get(char c){
+						if(c <= '9') return c - '0'; //bug, 记得减去0
+						else return c - 'a' + 10;
+					}
+
+					LL calc(string a, LL radit){ //bug!, radit必须是LL, 不嫩是int, 因为是为了计算calc(b, radit), 这里的radit可以很大, 而不仅仅是36
+						LL res = 0;
+						for(auto c : a){
+						    if((double)res * radit + get(c) > 1e17) return 1e18;  //按道理说,如果输入的a是zzzzzzzzzz,进制是36, 也才2*10^15, 所以如果return 1e18说明是输入的问题, 应该最后是impossible
+							res = res * radit + get(c);
+						}
+						return res;
+					}
+
+					int main(){
+						string a, b;
+						int tag, radit;
+						cin >> a >> b; 
+						cin >> tag >> radit;
+
+						if(tag == 2) swap(a, b);
+
+						LL target;
+						target = calc(a, radit);
+						
+						LL l = 0, r = max(target + 1, 36ll);
+						for(auto c : b)  //bug! 这里是从我们的b中遍历, 而不是我们的a !!
+							l = max(l, (LL)get(c) + 1);
+							
+						while( l < r){
+							LL mid = l + (r-l) / 2;
+							if(calc(b, mid) >= target) r = mid;
+							else l = mid + 1; 
+						}
+
+						if(calc(b, l) == target) cout << r << endl;
+						else puts("Impossible");
+
+						return 0;
+
+					}
+			3. 5次
+				r1.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					int get(char c){
+						if(c <= '9') return c - '0';
+						return c - 'a' + 10;
+					}
+
+					LL calc(string a, LL r){
+						LL res = 0;
+						for(char c : a){
+						    if ((double)res * r + get(c) > 1e16) return 1e18;
+							res = res * r + get(c);
+						}
+						return res;
+					}
+
+					int main(){
+						string a, b;
+						int type;
+						int radit;
+
+						cin >> a >> b >> type >> radit;
+						if(type == 2) swap(a, b);
+
+						LL res = calc(a, (LL)radit);
+						
+						LL l = 0, r = res + 1;
+						for(char c : b) l = max(l, (LL)get(c) + 1);
+
+						while(l < r){
+							LL mid = l + (r-l)/2;
+							if(res <= calc(b, mid)) r = mid;
+							else l = mid + 1;
+						}
+
+						if(calc(b, r) != res) puts("Impossible");
+						else cout << r << endl;
+
+						return 0; 
+					}
+				r2.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					int get(char c){
+						if(c <= '9') return c - '0';
+						return c - 'a' + 10;
+					}
+
+					LL calc(string a, LL radit){
+						LL res = 0;
+						for(char c : a){
+							if((double) res * radit > 1e16) return 1e18;
+					 		res = res * radit + get(c);
+						}
+						return res;
+					}
+
+					int main(){
+						string a, b;
+						int type, radit;
+
+						cin >> a >> b >> type >> radit;
+						if(type == 2) swap(a,b);
+
+						LL target = calc(a, (LL)radit);
+
+						LL l = 0, r = target + 1;
+						for(char c : b) l = max(l, (LL)get(c) + 1);
+
+						while(l < r){
+							LL mid = l + (r-l) / 2;
+							if(target <= calc(b, mid)) r = mid;
+							else l = mid + 1;
+						}
+
+						if(calc(b, r) != target) puts("Impossible");
+						else cout << r << endl;
+
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					int get(char c) {
+						if(c <= '9') return c - '0';
+						return c - 'a' + 10;
+					}
+
+					LL calc(string a, LL radit){
+						LL res = 0;
+						for(char c : a){
+							if((double) res * radit > 1e16) return 1e18;
+							res = res * radit + get(c);
+						}
+						return res;
+					}
+
+					int main(){
+						string a, b;
+						int type, radit;
+
+						cin >> a >> b >> type >> radit;
+
+						if(type == 2) swap(a,b);
+
+						LL target = calc(a, (LL)radit);
+
+						LL l = 0, r = target + 1;
+						for(char c : b) l = max(l, (LL)(get(c) + 1));
+
+						while(l < r) {
+							LL mid = l + (r-l)/2;
+							if(target <= calc(b, mid)) r = mid;
+							else l = mid + 1;
+						}
+
+						if(target == calc(b, r)) cout << r << endl;
+						else puts("Impossible");
+
+						return 0;
+					}
+				r4.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					int get(char c){
+						if(c <= '9') return c - '0';
+						return c - 'a' + 10;
+					}
+
+					LL calc(string a, LL radit){
+						LL res = 0;
+						for(char c : a){
+							if((double)res * radit > 1e16) return 1e18;
+							res = res * radit + get(c);
+						}
+						return res;
+					}
+
+
+					int main(){
+						string a,b;
+						int type, radit;
+
+						cin >> a >> b >> type >> radit;
+
+						if(type == 2) swap(a,b);
+						LL target = calc(a, (LL)radit);
+
+						LL l = 0, r = target + 1;
+						for(char c : b) l = max(l, (LL)get(c) + 1);
+
+						while(l < r){
+							LL mid = l + (r-l)/2;
+							if(target <= calc(b, mid)) r = mid;
+							else l = mid + 1;
+						}
+
+						if(target != calc(b, r)) puts("Impossible");
+						else cout << r <<endl;
+						return 0;
+					}
+
+				r5.
+
+		28. 1492. 可逆质数	1015
+			0. bug
+				一个n进制下的数字x, 变成10进制
+					res = res * n + (x的第一位数字)
+					但是很容易错写成: res = res * 10 + (x的第一位数字)
+						因为可能会想着,我要转化成10进制,所以*10,其实是*n
+			1. 笔记
+				1. 这道题的input类型不同, 是直接输入n,d然后最后以负数结尾, 所以我们用
+					int n, d; while(cin >> n >> d, n >= 1)
+				2. 底下的while,完成了了很多步骤
+					1. n % d: n转化成d进制的时候,假设结果是x, x最末尾的那个数字就是 n % d
+					2. 题目是将x翻转,所以 n % d就是x的第一位数字
+					3. 我们将x从d进制转化成10进制的时候, 采用的是 res * d + (x的第一位数字) == res * d + n % d
+					4. 所以一气呵成,  res * d + n % d
+				3. bug, 是n % i在计算质数的时候
+				4. 模板:
+					1. 质数:
+						bool isprime(int n){
+							if(n == 1) return false;
+							for(int i = 2; i <= n / i; i++) if(n % i == 0) return false;
+							return true;
+						}
+					2. 进制: d进制表示的a, 转化成10进制
+						string a, int d;
+						int res = 0;
+						for(char c : a) 
+							res = res * d + (c - '0');
+					3. 进制: 10进制表示的a, 转化成d进制
+						vector<int> res;
+						int a, int d;
+						while(a){
+							res.push_back(a % d);
+							a /= d;
+						}
+						最后res的第0位是数字的最低位
+			2. 注释
+				#include <iostream>
+
+				using namespace std;
+
+				typedef long long LL;
+
+				bool is_prime(int n)
+				{
+				    if (n == 1) return false;
+
+				    for (int i = 2; i * i <= n; i ++ )
+				        if (n % i == 0)
+				            return false;
+				    return true;
+				}
+
+				bool check(int n, int d)
+				{
+				    if (!is_prime(n)) return false;
+
+				    LL r = 0;
+				    while (n)
+				    {
+				        r = r * d + n % d;
+				        n /= d;
+				    }
+
+				    return is_prime(r);
+				}
+
+				int main()
+				{
+				    int n, d;
+				    while (cin >> n >> d, n >= 1)
+				    {
+				        if (check(n, d)) puts("Yes");
+				        else puts("No");
+				    }
+
+				    return 0;
+				}
+
+				作者：yxc
+				链接：https://www.acwing.com/activity/content/code/content/269922/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1. 很顺利
+					#include <iostream>
+
+					using namespace std;
+
+					bool isprime(int n){
+						if(n == 1) return false;
+						for(int i = 2; i <= n / i; i++){
+							if(n % i == 0) return false;
+						}
+						return true;
+					}
+
+					int convert(int n, int d){
+						int res = 0;
+						while(n){
+							res = res * d + n % d;
+							n /= d;
+						}
+						return res;
+					}
+					int main(){
+						int n, d;
+						while(cin >> n >> d, n >= 1){
+							if(!isprime(n) || !isprime(convert(n, d))){
+								puts("No");
+								continue;
+							}
+							puts("Yes");
+						}
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					bool isprime(int n){
+						if(n == 1) return false;
+						for(int i = 2; i <= n / i; i++) if(n % i == 0) return false;
+						return true;
+					}
+
+					int convert(int n, int d){
+						int res = 0;
+						while(n){
+							res = res * d + n % d;
+							n /= d;
+						}
+						return res;
+					}
+
+					int main(){
+						int n, d;
+						while(cin >> n >> d, n >= 1){
+							if(!isprime(n) || !isprime(convert(n, d))) {puts("No"); continue;}
+							puts("Yes");
+						}
+						return 0;
+					}
+				r3.
+				r4.
+				r5.
+
+		29. 1504. 火星颜色	1027
+			0. bug
+				如果不足2位,前面补足0, 例如4应该输出成04
+			1. 笔记
+				0. 人类的数字的最大值: 168 (对应着火星的CC = 12 * 13 + 12 = 168)
+				1. 这道题方便的地方在于, 取值范围是0-168, 所以转换成13进制,肯定只有两位数, 所以我们可以/ 13, % 13
+				2. 小心bug! 是 <= 9, 不是 <= '9'!
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					char get(int x)
+					{
+					    if (x <= 9) return '0' + x;
+					    return 'A' + x - 10;
+					}
+
+					int main()
+					{
+					    int a[3];
+					    for (int i = 0; i < 3; i ++ ) scanf("%d", &a[i]);
+
+					    cout << '#';
+
+					    for (int i = 0; i < 3; i ++ ) cout << get(a[i] / 13) << get(a[i] % 13);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/269939/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+
+					using namespace std;
+
+					char get(int a){
+						if(a <= 9) return a + '0'; //bug, 是 <= 9, 不是 <= '9'!
+						else return a - 10 + 'A'; //记得 - 10. 映射从10~12到0~2
+					}
+					int main(){
+						int a[3];
+						for(int i = 0; i < 3; i ++) scanf("%d", &a[i]);
+
+						cout << "#";
+						for(int i = 0; i < 3; i ++) cout << get(a[i] / 13) << get(a[i] % 13);
+
+						return 0;
+					}
+			3. 5次
+				r1. 挺顺的
+					#include <iostream>
+
+					using namespace std;
+
+					char print(int i){
+						if(i <= 9) return i + '0';
+						return i - 10 + 'A';
+					}
+
+					int main(){
+						int a[3];
+						cout << '#';
+						for(int i = 0; i < 3; i++) {
+							cin >> a[i];
+
+							cout << print(a[i] / 13) << print(a[i] % 13);
+						}
+
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					char print(int i){
+						if(i <= 9) return i + '0';
+						return i - 10 + 'A';
+					}
+
+					int main(){
+						int a[3];
+
+						cout << '#';
+						for(int i = 0; i < 3; i++){
+							cin >> a[i];
+							cout << print(a[i] / 13) << print(a[i] % 13);
+						}
+					}
+				r3.
+				r4.
+				r5.
+
+		30. 1590. 火星数字	1100
+			0. bug
+				r1,r2代码依旧很丑,逻辑很混乱. 对于if(line[0] <= '9'){的地球数字的情况
+					我不应该先判断是否是 >= 13, 应该先判断是否 <= 12(这种才优雅)
+			1. 笔记
+				1. 这道题主要是输入的地方需要注意,因为格式比较复杂
+					1. getchar(); getline();
+						刚开始的时候,一定要把/n干掉: getchar().
+						记得要读一整行,然后判断这一行是什么, 用getline(cin, xx)
+						模板:
+							getchar();
+							string input;
+							getline(cin, input);
+					2. stringstream();
+						用了ssin, 也就是将line可以当做我们cin的东西一个一个输出
+						模板:
+							stringstream ssin(input);
+							string word;
+							while(ssin >> word){}
+
+						另一个:
+							stringstream ssin(input);
+							int num;
+							ssin >> num; 
+								这个就相当于把string变成int
+								类似于:
+									stringstream ssin(input);
+									string str;
+									ssin >> str;
+									int num = stoi(str);
+
+				4. 这个火星文还是很神奇的,就是前13个数字("tret", "jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec"),一定是出现在火星文的个位, 后12个("tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou"), 地应出现在十位
+				5. get()里面小心bug, 一定记得(- 13 + 1), 因为我们是从name[13]开始,但是这个数字还要+1, 不然 0 * 13没东西..
+				6. 我可以用#include <sstream>的stringstream()来自己调试!!
+					#include <iostream>
+					#include <sstream>
+
+					using namespace std;
+
+					int main(){
+					    string input = 
+					    "5\n29\n5\n13\nelo nov\ntam\n"; 注意,一定要写到一行
+					    
+					    stringstream ssin(input);
+					    
+					    string word;
+					    while(ssin >> word) cout << word << endl;
+					    
+					    return 0;
+					}
+					输出结果就是我想要的
+				7. 这道题其实并不难,只要把
+					char names[][5] = {
+					    "tret", "jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec",
+					    "tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou",
+					};
+					想象成:
+						{0,1,2,..,9
+							10, 20, 30, ..., 90};
+				8. 其实下标还是很好判断的.
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <sstream>
+
+					using namespace std;
+
+					char names[][5] = {
+					    "tret", "jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec",
+					    "tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou",
+					};
+
+					int get(string word)
+					{
+					    for (int i = 0; i < 25; i ++ )
+					        if (names[i] == word)
+					        {
+					            if (i < 13) return i;
+					            return (i - 12) * 13;
+					        }
+					    return -1;  // 一定不会执行
+					}
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+					    getchar();
+
+					    while (n -- )
+					    {
+					        string line;
+					        getline(cin, line);
+
+					        stringstream ssin(line);
+					        if (line[0] <= '9')
+					        {
+					            int v;
+					            ssin >> v;
+					            if (v < 13) cout << names[v] << endl;
+					            else
+					            {
+					                cout << names[12 + v / 13];
+					                if (v % 13 == 0) cout << endl;
+					                else cout << ' ' << names[v % 13] << endl;
+					            }
+					        }
+					        else
+					        {
+					            int res = 0;
+					            string word;
+					            while (ssin >> word) res += get(word);
+					            cout << res << endl;
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/269965/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <sstream>
+
+					using namespace std;
+
+					char name[][5] = { //bug, 记得是char[][], 不是int[][]
+						"tret", "jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec",
+					    "tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou",
+					};
+
+					int get(string word){
+						for(int i = 0; i < 25; i++){
+							if(word == name[i]){
+								if(i <= 12) return i;
+								else return (i - 13 + 1) * 13; //bug, 一定记得-13 + 1, 因为我们是从name[13]开始,但是这个数字还要+1, 不然 0 * 13没东西..
+							}
+						}
+						return -1; //执行不到
+					}
+
+					int main(){
+						int n;
+						cin >> n;
+						getchar(); //一定要把/n干掉
+
+						while( n --){
+						    string input;
+					    	getline(cin, input); //bug, 记得要输入cin //读一整行
+					    
+					    	stringstream s(input);
+					    
+					    	if(input[0] <= '9'){ //说明是地球的文字
+					    		int num = 0;
+					    		s >> num; //很神奇,也就是将input,假设是string "91"变成了int 91
+					    		if(num <= 12) cout << name[num] << endl;
+					    		else{
+					    			cout << name[12 + num / 13] << " "; //bug, 记得要+ 12, 例如13, 应该输出tam(对应的是name[13]), num / 13 == 1 
+					    			if(num % 13 == 0) cout << endl; //bug!是%13, 不是/13. 例如是13, 我们就直接输出tam, 因为没有余数
+					    			else cout << name[num % 13] << endl; 
+					    		}
+					    	}
+					    	else{ //火星文
+					    		
+					    		//因为不确定到底会输入多少火星文,所以我们使用while
+					    		int num = 0; //bug!, 我发现,如果你只是写成int num; 之后在进入这个循环的时候, num并没有置为零!!
+					    		string word;
+					    		while(s >> word) {
+					    		    num += get(word); //一个字母, 老师通过判断是前12位还是后12位来判断是否*13
+					    		}
+					    		cout << num << endl;
+					    
+					    	}
+						}
+
+						return 0;
+					}
+			3. 5次
+				r1. 通过了,但是代码很不优雅.
+					#include <iostream>
+					#include <sstream>
+
+					using namespace std;
+
+					char name1[][4] = {"jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec"};
+					char name2[][4] = {"tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou"};
+
+					int main(){
+						int n;
+						cin >> n;
+						getchar();
+
+						string line;
+						while(n--){
+							getline(cin, line);
+							stringstream ssin(line);
+
+							if(line[0] <= '9'){
+								int num = stoi(line);
+								if(!num){
+								     cout << "tret" << endl;
+								     continue;
+								}
+								if(num % 13 == 0) cout << name2[num / 13 - 1] << endl;
+								else if (num < 13) cout << name1[num % 13-1] <<endl;
+								else cout << name2[num/13-1] << " " << name1[num % 13-1] <<endl;
+							}
+							else{
+								string word;
+								int cnt = 0;
+								int sum = 0;
+								while(ssin >> word){
+									if(word == "tret"){
+										break;
+									}
+									for(int i = 0; i < 12 && !cnt; i++){
+										if(word == name2[i]){
+											sum += (i+1) * 13;
+											break;
+										}	
+									}
+									cnt = 1;
+									for(int i = 0; i < 12 && cnt; i++){
+										if(word == name1[i]){
+											sum += (i+1);
+										}
+									}
+								}
+
+								cout << sum << endl;
+							}
+						}
+
+						return 0;
+					}
+				r2. 代码依旧很丑,逻辑很混乱. 对于if(line[0] <= '9'){的地球数字的情况
+						我不应该先判断是否是 >= 13, 应该先判断是否 <= 12(这种才优雅)
+					#include <iostream>
+					#include <sstream>
+
+					using namespace std;
+
+					char names[][5] = {
+					    "tret", "jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec",
+					    "tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou",
+					};
+
+					int main(){
+						int n;
+						cin >> n;
+						getchar();
+						
+						while(n--){
+							string line; getline(cin, line);
+							if(line[0] <= '9'){
+								int num = stoi(line);
+								bool visited = false;
+								if(num == 0) {cout << names[0] << endl; continue;}
+								if(num >= 13) {cout << names[num/13 - 1 + 13]; num %= 13; visited = true;}
+								if(num % 13 == 0) {cout << endl; continue;}
+								if(visited && num <= 12) cout << " " << names[num] << endl;
+								else cout << names[num] << endl;
+							}
+							else{
+								stringstream ssin(line);
+								string word;
+								int sum = 0;
+								while(ssin >> word){
+									for(int i = 0; i < 25; i++){
+										if(word == names[i]){
+											if(i <= 12){
+												sum += i;
+												break;
+											}
+											else{
+												sum += (i-12)*13;
+											}
+										}
+									}
+								}
+								cout << sum << endl;
+							}
+						}
+						return 0;
+					}
+				r3. 很顺利,一次过,优雅简洁.
+					#include <iostream>
+					#include <sstream>
+
+					using namespace std;
+
+					char names[][5] = {
+					    "tret", "jan", "feb", "mar", "apr", "may", "jun", "jly", "aug", "sep", "oct", "nov", "dec",
+					    "tam", "hel", "maa", "huh", "tou", "kes", "hei", "elo", "syy", "lok", "mer", "jou",
+					};
+
+					int main(){
+						int n;
+						cin >> n;
+						getchar();
+						while(n--){
+							string line;
+							getline(cin, line);
+							stringstream ssin(line);
+
+							if(line[0] <= '9'){
+								int num;
+								ssin >> num;
+								if(num <= 12) cout << names[num] << endl;
+								else{
+									cout << names[num / 13 - 1 + 13];
+									if(num % 13 == 0) //说明没有个位数
+										cout << endl;
+									else	
+										cout << " " << names[num % 13] << endl;
+								}
+							}
+							else{
+								string word;
+								int sum = 0;
+								while(ssin >> word){
+									for(int i = 0; i < 25; i++){
+										if(word == names[i]){
+											if(i <= 12) sum += i;
+											else sum += (i-12) * 13;
+										}
+									}
+								}
+								cout << sum << endl;
+							}
+						}
+						return 0;
+					}
+				r4.
+				r5.
