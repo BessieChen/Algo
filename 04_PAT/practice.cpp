@@ -7232,3 +7232,2005 @@
 						return 0;
 					}
 				r5.
+
+		31. 1496. 普通回文数	1019
+			0. bug
+				1. 一般过不去,小心个例,例如 n == 0.
+			1. 笔记
+				这道题就是进制转换
+					一般可以是int n -> vector<int> res
+						while(n){
+							res.push_back(n % d);
+							n /= d;
+						}
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					vector<int> nums;
+
+					bool check()
+					{
+					    for (int i = 0, j = nums.size() - 1; i < j; i ++, j -- )
+					        if (nums[i] != nums[j])
+					            return false;
+
+					    return true;
+					}
+
+					int main()
+					{
+					    int n, b;
+					    cin >> n >> b;
+
+					    if (!n) nums.push_back(0);
+					    while (n) nums.push_back(n % b), n /= b;
+
+					    if (check()) puts("Yes");
+					    else puts("No");
+
+					    cout << nums.back();
+					    for (int i = nums.size() - 2; i >= 0; i -- ) cout << ' ' << nums[i];
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/309977/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					bool isp(vector<int> res){
+						for(int i = 0, j = res.size()-1 ; i < j; i++, j--) if(res[i] != res[j]) return false;
+						return true;
+					}
+
+					int main(){
+						int n, d;
+						cin >> n >> d;
+
+					    vector<int> res;
+					    if(!n) res.push_back(n);
+						while(n){
+							res.push_back(n % d);
+							n /= d;
+						}
+						if(isp(res)) puts("Yes");
+						else puts("No");
+
+						cout << res[res.size()-1];
+						for(int i = res.size()-2 ; i >= 0; i--) cout << " " << res[i];
+
+						return 0;
+
+					}
+				r2.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					bool isp(vector<int> res){
+						for(int i = 0, j = res.size()-1; i < j; i++, j--) if(res[i] != res[j]) return false;
+						return true;
+					}
+					int main()
+					{
+						int n, d;
+						cin >> n >> d;
+
+						vector<int> res;
+						if(!n) res.push_back(n);
+						else{
+							while(n){
+								res.push_back(n % d);
+								n /= d;
+							}
+						}
+
+						if(isp(res)) puts("Yes");
+						else puts("No");
+
+						cout << res[res.size()-1];
+						for(int i = res.size()-2; i >= 0; i--) cout << " " << res[i];
+
+						cout << endl;
+						return 0;
+					}
+				r3.
+				r4.
+				r5.
+
+4. 排序(这个专题的题目都还挺简单的)
+	7. 2020年10月6日12:26:17
+		32. 1484. 最佳排名	1012
+			0. bug
+			1. 笔记
+				思路
+					1. 需要将id,3门成绩,平均分存到一个用户结构体
+					2. 然后将c成绩放到一个数组, 其他类似,所以一共有4个数组
+					3. 将四个数组排序
+					4. 看某个用户,它的四个成绩,在四个数组里面的排名,min求出最小排名
+
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <vector>
+					#include <cmath>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> grades;
+					vector<int> q[4];  // A: q[0], C: q[1], M: q[2], E: q[3]
+
+					int get_rank(vector<int>& a, int x)
+					{
+					    int l = 0, r = a.size() - 1;
+					    while (l < r)
+					    {
+					        int mid = l + r + 1 >> 1;
+					        if (a[mid] <= x) l = mid;
+					        else r = mid - 1;
+					    }
+					    return a.size() - r;
+					}
+
+					int main()
+					{
+					    int n, m;
+					    cin >> n >> m;
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        string id;
+					        int t[4] = {0};
+					        cin >> id;
+					        for (int j = 1; j < 4; j ++ )
+					        {
+					            cin >> t[j];
+					            t[0] += t[j];
+					        }
+					        t[0] = round(t[0] / 3.0);
+					        for (int j = 0; j < 4; j ++ )
+					        {
+					            q[j].push_back(t[j]);
+					            grades[id].push_back(t[j]);
+					        }
+					    }
+
+					    for (int i = 0; i < 4; i ++ ) sort(q[i].begin(), q[i].end());
+
+					    char names[] = "ACME";
+					    while (m -- )
+					    {
+					        string id;
+					        cin >> id;
+					        if (grades.count(id) == 0) puts("N/A");
+					        else
+					        {
+					            int res = n + 1;
+					            char c;
+					            for (int i = 0; i < 4; i ++ )
+					            {
+					                int rank = get_rank(q[i], grades[id][i]);
+					                if (rank < res)
+					                {
+					                    res = rank;
+					                    c = names[i];
+					                }
+					            }
+					            cout << res << ' ' << c << endl;
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272589/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <algorithm> //sort()
+					#include <vector>
+					#include <cmath> //round()
+					#include <unordered_map>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+					vector<int> grade[4]; //相当于是二维数组
+
+					int get_rank(int g, vector<int> &grades){ //这里用了引用&,所以会快
+					    int l = 0, r = grades.size()-1;
+
+					    while(l < r){
+					        int mid = 1 + l + (r-l) / 2;
+					        if(grades[mid] <= g) l = mid; //靶子是g,我们希望我们的探测点是在所有 <= g的部分
+					        else r = mid - 1;
+					    }
+
+					    return grades.size() - r; //r左侧一共有r个元素,数组一共有size()个元素,所以r包括自己是grades.size() - r. //假设是第一名, r会 == grades.size()- 1, 所以刚号 return 1;
+
+					}
+					int main()
+					{
+					    int n, m;
+					    cin >> n >> m;
+
+					    for(int i = 0; i < n ;i ++){//不用while(n --),因为后面还会用到n
+					        string id;
+					        cin >> id;
+
+					        int g[4] = {0}; //记得初始化, 用这个数组就不用写 cin >> a >> c >> m >> e这么麻烦了
+
+					        //填写要插入到unordered_map<string, vector<int>> 中的vector<int>的内容
+					        //vector<int>中 A:[0], C:[1], M:[2], E:[3]
+					        //这里是将id同学的所有3个成绩输入到g[i]中,然后计算平均值
+					        for(int i = 1; i < 4; i++){
+					            cin >> g[i]; //例如i==1的时候,输入的是c
+					            g[0] += g[i];
+					        }
+
+					        g[0] = round(g[0] / 3.0); //四舍五入,向上取整是ceil()
+
+					        //将4个成绩,分别插入student,和grade
+					        //注意: 我之前以为是一次性插入student[id].push_back({g[0],g[1],...})//其实也可以一个一个插入
+					        //这里grade[i] = g[i], 用i作为连接
+					        for(int i = 0; i < 4; i++){
+					            grade[i].push_back(g[i]);
+					            students[id].push_back(g[i]);
+					        }
+					    }
+
+					    //目前为止grade[0]是所有同学的a成绩, grade[1]是所有同学的c成绩
+					    //students[id]是id同学的acme成绩
+
+					    //四门成绩,都要sort一遍,最大成绩在最右侧
+					    for(int i = 0; i < 4 ; i ++) sort(grade[i].begin(), grade[i].end());
+
+					    //看要哪个id
+					    char names[] = "ACME"; //注意这里是char[]
+					    while(m --){
+					        string request;
+					        cin >> request;
+
+					        if(students.count(request) == 0) {
+					            cout << "N/A" << endl;
+					            continue;
+					        }
+
+					        string best_course;
+					        int best_rank = n + 1; //因为有n个学生
+					        for(int i = 0; i < 4; i++){
+					            int rank = get_rank(students[request][i], grade[i]); //找request学生的i成绩在i成绩单里面的排名
+					            if(rank < best_rank) 
+					            {
+					                best_rank = rank;
+					                best_course = names[i];
+					            }
+					        }
+
+					        cout << best_rank << " " << best_course << endl;
+					    }
+
+					    return 0;
+
+
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/485178/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		33. 1499. 数字图书馆	1022
+			0. bug
+			1. 笔记
+				思路:
+					1. 这道题主要是输入和输出
+					2. 老师用的是遍历的方法,就是如果题目要求符合xx条件的,老师写的代码会遍历所有用户看他是否有xx条件
+						1. 这个的复杂度M*N, M个请求, N个用户, 总之不超时
+
+					1. 是用vector<Book>, 而不是struct Book{}books[N]; 是因为不确定N
+					2. 没有设置成unordered_map<string(也就是id), Book>, 好像也没必要,因为题目不会问我们某某id的情况,而是让我们返回id
+
+
+					1. 小心bug, while()里面不能出现getchar().
+
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <set>
+					#include <vector>
+					#include <sstream>
+
+					using namespace std;
+
+					struct Book
+					{
+					    string id, name, author;
+					    set<string> keywords;
+					    string publisher, year;
+					};
+
+					int main()
+					{
+					    int n, m;
+					    cin >> n;
+
+					    vector<Book> books;
+					    while (n -- )
+					    {
+					        string id, name, author;
+					        cin >> id;
+					        getchar();
+					        getline(cin, name), getline(cin, author);
+					        string line;
+					        getline(cin, line);
+					        stringstream ssin(line);
+					        string keyword;
+					        set<string> keywords;
+					        while (ssin >> keyword) keywords.insert(keyword);
+					        string publisher, year;
+					        getline(cin, publisher);
+					        cin >> year;
+					        books.push_back({id, name, author, keywords, publisher, year});
+					    }
+
+					    cin >> m;
+					    getchar();
+					    string line;
+					    while (m -- )
+					    {
+					        getline(cin, line);
+					        cout << line << endl;
+					        string info = line.substr(3);
+					        char t = line[0];
+					        vector<string> res;
+					        if (t == '1')
+					        {
+					            for (auto& book : books)
+					                if (book.name == info)
+					                    res.push_back(book.id);
+					        }
+					        else if (t == '2')
+					        {
+					            for (auto& book : books)
+					                if (book.author == info)
+					                    res.push_back(book.id);
+					        }
+					        else if (t == '3')
+					        {
+					            for (auto& book : books)
+					                if (book.keywords.count(info))
+					                    res.push_back(book.id);
+					        }
+					        else if (t == '4')
+					        {
+					            for (auto& book : books)
+					                if (book.publisher == info)
+					                    res.push_back(book.id);
+					        }
+					        else
+					        {
+					            for (auto& book : books)
+					                if (book.year == info)
+					                    res.push_back(book.id);
+					        }
+
+					        if (res.empty()) puts("Not Found");
+					        else
+					        {
+					            sort(res.begin(), res.end());
+					            for (auto id : res) cout << id << endl;
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272621/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <sstream>
+					#include <vector>
+					#include <algorithm> //sort()
+					#include <set> //set<string> keywords
+
+					using namespace std;
+
+					struct Book{
+					    string id;
+					    string title;
+					    string author;
+					    set<string> keywords;
+					    string publisher;
+					    string year;
+					};
+					int main(){
+					    int n;
+					    cin >> n;
+
+					    vector<Book> books;
+					    for(int i = 0; i < n; i ++){
+					        string id;
+					        cin >> id;
+
+					        //以下是存在空格的,所以统一用getline()
+					        string title, author, keyword, publisher;
+					        getchar(); //读上一次的\n回车
+					        getline(cin, title);
+					        getline(cin, author);
+					        getline(cin , keyword);
+					        getline(cin, publisher);
+
+					        string year;
+					        cin >> year;
+
+					        set<string> keywords;
+					        stringstream kwcin(keyword);
+					        string kw;
+					        while( kwcin >> kw) keywords.insert(kw);
+
+					        books.push_back({id, title, author, keywords, publisher, year});
+					    }
+
+					    int m;
+					    cin >> m;
+					    getchar(); //getchar()应该出现一次,而不是出现在while里面,因为
+					    while(m --){
+
+					        string input; //因为input的格式有空格(2: Yue Chen),所以需要getline()
+					        //getchar(); //把\n读了, bug!! 不能每次都getchar()!!, 如果while里面出现getchar(),会发生第一个字符没了, 也就是本应是:"1: xxx", 但现在只剩": xxx""
+					        getline(cin, input); //会把\n也读了,所以后面不需要getchar();
+					        cout << input << endl;
+
+					        string content = input.substr(3); //我们需要的是从ind==3开始的字符: Yue Chen
+					        char request = input[0]; //如果是1, 说明要查title //bug, 注意是char, 不是string
+
+					        vector<string> res; //把所有结果的id都存在vector里面
+					        if(request == '1'){
+					            for(auto& b : books){ //注意我们用的是auto&, 而不是auto, 因为books式结构体,复制的话太慢,引用快
+					                if(b.title == content)
+					                    res.push_back(b.id); //存的是b书的id
+					            }
+					        }
+					        else if(request == '2'){
+					            for(auto& b : books){
+					                if(b.author == content)
+					                    res.push_back(b.id); //存的是b书的id
+					            }
+					        }
+					        else if(request == '3'){
+					            for(auto& b : books){
+					                if(b.keywords.count(content)) //这里是看b书的keyword包不包含content
+					                    res.push_back(b.id); //存的是b书的id
+					            }
+					        }
+					        else if(request == '4'){
+					            for(auto& b : books){
+					                if(b.publisher == content)
+					                    res.push_back(b.id); //存的是b书的id
+					            }
+					        }
+					        else{
+					            for(auto& b : books){
+					                if(b.year == content)
+					                    res.push_back(b.id); //存的是b书的id
+					            }
+					        }
+
+					        if(res.empty()) cout << "Not Found" << endl;
+					        else {
+					            sort(res.begin(), res.end());//对id排序
+					            for(auto id : res) cout << id << endl;
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/485312/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		34. 1502. PAT 排名	1025
+			0. bug
+			1. 笔记
+				思路
+					1. 读取student的内容(创建student struct,因为复杂的内容用struct处理会简单一些)
+					2. 创建n个分地区的vector,vector<stduent> local[N]
+					3. 创建1个总地区vecotr, vector<student> all;
+					4. 每次读取就分别向分和总插入(主义是分地区加工后,再加入总地区),分插入的时候按照ind来索引是哪个local[N]
+					5. 对分总排序.
+					6. 老师最后的计算排名的方法:
+						1. 假设是	0	1	2	3	4	5
+						2. 			100 99 	99	99	98	98
+						3. 排名		1	2	2	2	3	3
+						方法: 从0开始,假设不等于左侧:排名就是自己的ind+1, 如果等于左侧:就是左侧的排名
+
+					7. 关于重载标志服
+					    1. 只需要思考, 返回我优先: 因为我的grade大我优先, 所以return grade > t.grade
+					    2. 只需要思考, 返回我优先: 因为我的id小我优先, 所以return id < t.id
+					8. 其实没有我设想的vector<student> studnets; 创建了一个学生的vecotor,而都是地区的vector
+					9. 所以其实是一个学生的信息其实是复制了两次,一次给了local地区一个是global地区
+					10. 易错,我们是local进行加工之后,然后将id, grade, location, local_rank加入总
+					11. 最后是从总来打印
+					12. 
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 110;
+
+					struct Student
+					{
+					    string id;
+					    int grade;
+					    int location_number, local_rank, final_rank;
+
+					    bool operator< (const Student& t) const
+					    {
+					        if (grade != t.grade) return grade > t.grade;
+					        return id < t.id;
+					    }
+					};
+
+					vector<Student> grades[N];
+					vector<Student> all;
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        int k;
+					        cin >> k;
+					        for (int j = 0; j < k; j ++ )
+					        {
+					            string id;
+					            int grade;
+					            cin >> id >> grade;
+					            grades[i].push_back({id, grade, i});
+					        }
+
+					        auto& g = grades[i];
+					        sort(g.begin(), g.end());
+					        for (int i = 0; i < g.size(); i ++ )
+					        {
+					            if (!i || g[i].grade != g[i - 1].grade)
+					                g[i].local_rank = i + 1;
+					            else
+					                g[i].local_rank = g[i - 1].local_rank;
+					            all.push_back(g[i]);
+					        }
+					    }
+
+					    sort(all.begin(), all.end());
+					    for (int i = 0; i < all.size(); i ++ )
+					        if (!i || all[i].grade != all[i - 1].grade)
+					            all[i].final_rank = i + 1;
+					        else
+					            all[i].final_rank = all[i - 1].final_rank;
+
+					    cout << all.size() << endl;
+					    for (auto& s : all)
+					        cout << s.id << ' ' << s.final_rank << ' ' << s.location_number << ' ' << s.local_rank << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272643/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <algorithm> //sort
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 110; //最多100个地区
+					const int M = 310; //每个地区最多300人
+
+					//构建student
+					struct Student{
+					    string id;
+					    int grade;
+					    int location;
+					    int local_rank;
+					    int global_rank;
+
+					    bool operator< (const Student& t) const{ //用于sort()的时候比较Student
+					        if(grade != t.grade) return grade > t.grade; //返回的是我优先,如果我的grade大的话,就是我优先
+					        else return id < t.id; //返回的是我优先
+					    }
+					};
+
+					vector<Student> local[N]; //不能写成vector<int> local[N], 因为我们在sort()的时候不单单要
+					vector<Student> global;
+
+					int main(){
+					    int n;
+					    cin >> n;
+
+					    for(int i = 0; i < n; i ++){ //这里的i可以当做地区名
+					        int m;
+					        cin >> m;
+					        while(m--){
+					            string id;
+					            int g;
+					            cin >> id >> g;
+					            local[i].push_back({id, g, i + 1}); //后面的会自动补齐,也就是0, 注意: 地区编号按输入顺序依次为 1∼N
+					        }
+
+					        //加下来对i地区的人进行排名,然后local_rank记录进去
+					        auto& l = local[i]; //l是vector<Student>
+					        sort(l.begin(), l.end()); //这里会用到标志服重载,所以grade大的,id小的在前面
+					        for(int j = 0; j < l.size(); j++){
+					            if(!j || l[j].grade != l[j-1].grade)
+					                l[j].local_rank = j+1;
+					            else
+					                l[j].local_rank = l[j-1].local_rank;
+
+					            global.push_back(l[j]);//因为最后需要全部内容打印, 所以我们将global存了全部内容
+					            //注意,这里不是push_back({id, grade, local_rank}), 而是直接将l[j], 也就是一个studnet插入了里面
+					        }
+					    }
+
+					    sort(global.begin(), global.end());
+					    for(int j = 0; j < global.size(); j++){
+					            if(!j || global[j].grade != global[j-1].grade)
+					                global[j].global_rank = j+1;
+					            else
+					                global[j].global_rank = global[j-1].global_rank;
+					    }
+
+					    //目前为止,global里面的每个学生,拥有了global_rank,然后global本身的排序也是题目要的
+					    cout << global.size() << endl;
+					    for(auto& s : global){
+					        cout << s.id << " " << s.global_rank <<" " << s.location << " " << s.local_rank << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/485385/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		36. 1505. 列表排序	1028
+			0. bug
+			1. 笔记
+				思路:
+					1. 遇到复杂的结构,用结构体
+					2. 这道题需要用多种排序,但是重载标识符只能用一次,所以我们是自定了3个比较函数
+					3. sort()如果没有第三个参数,就是看容器(vector)里面的数据的小于操作符,如果有第三个参数,第三个参数就是比较函数
+					4. 什么时候用cin,cout/scanf(),printf()
+						1. 在数据量很小的时候用cin, cout
+						2. 在数据量很大(10^5)时候,用scanf(),printf().否则会超时.
+							注意,这里说的用scanf()和printf()是排他的用
+							也就是一个cin,cout都不能有!一个都不行
+							否则会因为什么同步?的问题,削弱scanf()
+						3. 在数据输入比较复杂的时候,用scanf(),printf()
+					5. cin,cout / scanf(), printf()
+						1. cin,cout可以输出输入string
+						2. 但是scanf()不能输入string,需要我们先输入成char xx[10], 然后再 = {xx} 来当做string push进去
+							记得scanf()输入%d的时候,需要 &, 例如scanf("%d", &yy);
+						3. printf()也不能输出string,需要我们printf("%s", xx.c_str()), 否则输出乱码
+					6. 定义结构体
+						1. 可以通过数组的方式: struct _xx{}XX[N];
+							1. 插入是: XX[i] = {a,b,c};
+							2. 适用于题目告诉我们size
+							3. 如果是用数组的话,我们记得就不要用while(n--), 而使用for(int i = 0; i < n ; i++) 因为一个我们需要XX[i] = xx, 另一个因为之后需要用n来知道XX的size
+					 	2. 可以通过vector的方式: struct _xx{}; vector<_xx> XX;
+					 		1. 插入是: XX.push_back({a,b,c});
+					 		2. 适用于题目没有告诉我们size,我们需要用.size(), 否则自己开新变量存size很麻烦
+					 		2. 使用于需要比较运算
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+
+					struct Row
+					{
+					    string id, name;
+					    int grade;
+					}rows[N];
+
+					bool cmp1(Row a, Row b)
+					{
+					    return a.id < b.id;
+					}
+
+					bool cmp2(Row a, Row b)
+					{
+					    if (a.name != b.name) return a.name < b.name;
+					    return a.id < b.id;
+					}
+
+					bool cmp3(Row a, Row b)
+					{
+					    if (a.grade != b.grade) return a.grade < b.grade;
+					    return a.id < b.id;
+					}
+
+					int main()
+					{
+					    int c;
+					    scanf("%d%d", &n, &c);
+					    char id[10], name[10];
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int grade;
+					        scanf("%s%s%d", id, name, &grade);
+					        rows[i] = {id, name, grade};
+					    }
+
+					    if (c == 1) sort(rows, rows + n, cmp1);
+					    else if (c == 2) sort(rows, rows + n, cmp2);
+					    else sort(rows, rows + n, cmp3);
+
+					    for (int i = 0; i < n; i ++ )
+					        printf("%s %s %d\n", rows[i].id.c_str(), rows[i].name.c_str(), rows[i].grade);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272659/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					struct Row{
+					    string id;
+					    string name;
+					    int grade;
+					}row[N];
+
+					bool cmp1(Row a, Row b){
+					    return a.id < b.id; 
+					}
+
+					bool cmp2(Row a, Row b){
+					    if(a.name != b.name) return a.name < b.name;
+					    return a.id < b.id;
+					}
+
+					bool cmp3(Row a, Row b){
+					    if(a.grade != b.grade) return a.grade < b.grade;
+					    return a.id < b.id;
+					}
+
+					int main(){
+					    int n, m;
+					    scanf("%d%d", &n, &m);
+
+					    char id[10], name[10]; //只能用char[]来用scanf()读
+					    int grade;
+					    for(int i = 0; i < n; i++)
+					    {
+					        scanf("%s %s %d", id, name, &grade);
+					        row[i] = {id, name, grade};
+					    }
+
+					    if(m == 1){
+					        sort(row, row + n, cmp1);
+					    }
+					    else if(m == 2){
+					        sort(row, row + n, cmp2);
+					    }
+					    else{
+					        sort(row, row + n, cmp3);
+					    }
+
+					    for(int i = 0; i < n; i++){
+					        printf("%s %s %d\n", row[i].id.c_str(), row[i].name.c_str(), row[i].grade);
+					    }
+
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/486517/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		37. 1523. 学生课程列表	1039
+			0. bug
+			1. 笔记
+				1. 其实这道题很简单,关键看你怎么存
+				2. 它的input是一个ind,后面包含了若干个string
+				3. 他需要的output是给一个string,你输出若干个int
+				4. 所以你存的时候,可以是一个string + 若干个int, 所以就是用map, 因为这里不涉及到排序,所以是unordered_map
+				5. 因为输出的int是升序的,所以记得用sort
+				6. 用auto的时候,想清楚这个到底是什么类型
+				7. 我们用cin, 因为输入是40000, 还不到10^5
+
+				本题时间限制比较紧，可以加上读入优化：ios::sync_with_stdio(false); cin.tie(0);。
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <vector>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+
+					int main()
+					{
+					    ios::sync_with_stdio(false);
+					    cin.tie(0);
+
+					    int n, k;
+					    cin >> n >> k;
+
+					    while (k -- )
+					    {
+					        int id, m;
+					        cin >> id >> m;
+					        while (m -- )
+					        {
+					            string name;
+					            cin >> name;
+					            students[name].push_back(id);
+					        }
+					    }
+
+					    while (n -- )
+					    {
+					        string name;
+					        cin >> name;
+
+					        auto& ls = students[name];
+					        cout << name << ' ' << ls.size();
+					        sort(ls.begin(), ls.end());
+
+					        for (auto l : ls) cout << ' ' << l;
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272679/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <unordered_map>
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+
+					    while(m--){
+					        int id, p;
+					        cin >> id >> p;
+					        while(p--){
+					            string name;
+					            cin >> name;
+					            students[name].push_back(id); //注意不是student[name] = p;
+					        }
+					    }
+
+					    //method 1
+					    /*
+					    for(auto& s : students){ //s是<string, vector<int>>, 所以记得是s.second
+					        sort(s.second.begin(), s.second.end());
+					    }
+
+					    while(n--){
+					        string name;
+					        cin >> name;
+					        cout << name << " " << students[name].size();
+					        for(auto& id : students[name]) //如果student[name]都没有就是不会走这个for loop
+					                cout << " " << id;
+					        cout << endl;
+					    }
+					    */
+
+					    //method 2
+					    while(n--){
+					        string name;
+					        cin >> name;
+
+					        cout << name << " " << students[name].size();
+					        sort(students[name].begin(), students[name].end());
+					        for(auto id : students[name]){
+					            cout << " " << id;
+					        }
+					        cout << endl;
+					    }
+
+					    //method 1,2 end
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/486519/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		38. 1538. 链表排序	1052
+			0. bug
+				1. 忘记加c_str()
+				2. printf("%s %d %s\n", vec[i].addr.c_str(), vec[i].val, vec[i+1].addr.c_str()); 
+					小心bug! 最后是s %d %s,不是s %d %d, 另一个bug, 最后输出的是vec[i+1].addr而不是vec[i].next;
+			1. 笔记
+				0. 将链表排序变成了数组排序, 有点投机取巧,但是方便
+				1. 这个代码厉害的地方在于, 我们用哈希表来找一个链表了
+					unordered_map<string, Node> student;
+					for(string i = head; i != "-1"; i = student[i].next) 
+				2. 找到链表之后,推入vector,对vector进行排序(需要重载Node的符号),最后输出
+				3. 这道题, N = 10^5, 所以不能用cin,cout
+				2. 老师说,我们之所以喜欢在算法比赛中,开一个结构体数组,是因为:
+					1. 时间短,只有1s,如果你一个结构体一个结构体的new, 时间不够
+						因为new本质上是malloc,new一次很快,但是很多次的话,就会超时
+					2. 如果我们开了一个结构体数组
+						相当于就只new了一次,但是new的空间很大
+						new的次数多对时间的影响大,但是new的空间大对时间影响不大
+					3. 在工程中,喜欢不停new,是因为没有时间限制
+						1. 假设来一个用户,new一次
+						2. 不可能1s中内,来10^5个客户(除了11.11)
+
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <vector>
+
+					using namespace std;
+
+					struct Node
+					{
+					    string address;
+					    int key;
+					    string next;
+
+					    bool operator< (const Node& t) const
+					    {
+					        return key < t.key;
+					    }
+					};
+
+					int main()
+					{
+					    int n;
+					    char head[10];
+					    scanf("%d%s", &n, head);
+
+					    unordered_map<string, Node> map;
+					    char address[10], next[10];
+					    while (n -- )
+					    {
+					        int key;
+					        scanf("%s%d%s", address, &key, next);
+					        map[address] = {address, key, next};
+					    }
+
+					    vector<Node> nodes;
+					    for (string i = head; i != "-1"; i = map[i].next) nodes.push_back(map[i]);
+
+					    printf("%d ", nodes.size());
+					    if (nodes.empty()) puts("-1");
+					    else
+					    {
+					        sort(nodes.begin(), nodes.end());
+					        printf("%s\n", nodes[0].address.c_str());
+					        for (int i = 0; i < nodes.size(); i ++ )
+					        {
+					            if (i + 1 == nodes.size())
+					                printf("%s %d -1\n", nodes[i].address.c_str(), nodes[i].key);
+					            else
+					                printf("%s %d %s\n", nodes[i].address.c_str(), nodes[i].key, nodes[i + 1].address.c_str());
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272708/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+					#include <unordered_map>
+
+					using namespace std;
+
+					struct Node{
+					    string addr;
+					    int val;
+					    string next;
+
+					    bool operator< (const Node& t) const{
+					        return val < t.val; //我优先(排在左边)的条件, 我的值更小
+					    }
+					};
+
+					int main(){
+					    int n;
+					    char head[6];
+					    scanf("%d %s", &n, head);
+
+					    char addr[10], next[10];
+					    int val;
+					    unordered_map<string, Node> map;
+					    while(n --){
+					        scanf("%s %d %s", addr, &val, next);
+					        map[addr] = {addr, val, next};
+					    }   
+
+					    //制作链表,把每个节点都推入vector
+					    vector<Node> vec;
+					    for(string i = head; i != "-1"; i = map[i].next ) vec.push_back(map[i]);
+
+					    printf("%d ", (int)vec.size());
+					    //对vec排序, 会用到Node的小于号
+					    if(vec.size())
+					    {
+					        sort(vec.begin(), vec.end());
+					        printf("%s\n", vec[0].addr.c_str()); //打印头结点地址, 注意要c_str()
+
+					        for(int i = 0; i < (int)vec.size(); i++){ //注意如何判断是否是最后一个节点
+					            if(i == (int)vec.size()-1)
+					                printf("%s %d %d\n", vec[i].addr.c_str(), vec[i].val, -1);  //尾结点的next是-1
+					            else
+					                printf("%s %d %s\n", vec[i].addr.c_str(), vec[i].val, vec[i+1].addr.c_str()); //小心bug! 最后是%s,不是%d, 另一个bug, 最后输出的是vec[i+1].addr而不是vec[i].next;
+					        }
+					    }
+					    else{
+					        puts("-1");
+					    }
+					    return 0;
+					}
+
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/486534/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		39. 1561. PAT 评测	1075
+			0. bug
+			1. 笔记
+				0. 经典的 unordered_map + vector
+				1. 数据规模只有10000, 10^4所以不用scanf()
+				2. 构造了一个struct, 其中有total总分, 也有cnt满分题目个数
+				3. 使用的技巧: 重载操作符, 构建函数
+				4. 因为需要排序, 所以要用到了vector<>
+				5. 在input的时候, 完成了记录一个人每道题的最大成绩
+				6. 之后,在遍历的时候,计算了一个人是否编译通过并提交过, 如果提交过, 就计算这个人的total,cnt, 最后将这个人push到vector
+				7. 用sort(),所以重载了操作符.  
+				8. 厉害的地方, 用grade = -2,-1,0,x分别代表了没有提交,编译错误,答案错,部分正确. 其中用Max(0,grade)来输出总分(因为没有提交和编译错误不算成负分), 用 if(grade >= 0)来判断是否提交过(因为-2和-1都是没有提交和编译错误)
+				9. 因为题目中grade只会是-1,0,x不会是-2,所以你设置成-2就有必要.我也想试试(不行,因为-2和-1在output严格区分了)
+				10. 超级容易错!
+				11. Student(string _id) : id(_id)，C++构造函数的列表初始化
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <vector>
+
+					using namespace std;
+
+					const int K = 6;
+
+					int n, k, m;
+					int p_score[K];
+
+					struct Student
+					{
+					    string id;
+					    int grade[K];
+					    int total, cnt;
+
+					    Student(){}
+					    Student(string _id) : id(_id)
+					    {
+					        for (int i = 1; i <= k; i ++ ) grade[i] = -2;
+					        total = cnt = 0;
+					    }
+
+					    void calc()
+					    {
+					        for (int i = 1; i <= k; i ++ )
+					        {
+					            total += max(0, grade[i]);
+					            if (grade[i] == p_score[i]) cnt ++ ;
+					        }
+					    }
+
+					    bool has_submit()
+					    {
+					        for (int i = 1; i <= k; i ++ )
+					            if (grade[i] >= 0)
+					                return true;
+					        return false;
+					    }
+
+					    bool operator< (const Student& t) const
+					    {
+					        if (total != t.total) return total > t.total;
+					        if (cnt != t.cnt) return cnt > t.cnt;
+					        return id < t.id;
+					    }
+					};
+
+					int main()
+					{
+					    unordered_map<string, Student> students;
+
+					    scanf("%d%d%d", &n, &k, &m);
+					    for (int i = 1; i <= k; i ++ ) scanf("%d", &p_score[i]);
+
+					    while (m -- )
+					    {
+					        string u_id;
+					        char u_id_s[6];
+					        int p_id, grade;
+					        scanf("%s%d%d", u_id_s, &p_id, &grade);
+					        u_id = u_id_s;
+
+					        if (students.count(u_id) == 0) students[u_id] = Student(u_id);
+					        students[u_id].grade[p_id] = max(students[u_id].grade[p_id], grade);
+					    }
+
+					    vector<Student> res;
+					    for (auto& item: students)
+					    {
+					        auto& s = item.second;
+					        if (s.has_submit())
+					        {
+					            s.calc();
+					            res.push_back(s);
+					        }
+					    }
+
+					    sort(res.begin(), res.end());
+
+					    for (int i = 0, rank = 1; i < res.size(); i ++ )
+					    {
+					        if (i && res[i].total != res[i - 1].total) rank = i + 1;
+					        printf("%d %s %d", rank, res[i].id.c_str(), res[i].total);
+					        for (int j = 1; j <= k; j ++ )
+					            if (res[i].grade[j] == -2) printf(" -");
+					            else printf(" %d", max(0, res[i].grade[j]));
+					        puts("");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272747/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <vector>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int K = 10; //最多5道题
+
+					int full_grade[K];
+					int n, k, m; //k要是全局变量,因为struct Student用到了
+
+					struct Student{
+					    string id;
+					    int grade[K]; //bug, 这里应该是K, 而不能是k, 因为k现在还不确定. 如果写k会报错:array bound is not an integer constant before ']' token
+					    int total; //总分
+					    int cnt; //满分个数
+					    int rank; //排名
+
+					    Student() {} //default初始
+					    Student(string _id) : id(_id){ //这里: id(_id)相当于直接初始了id
+					        total = 0;
+					        cnt = 0;
+					        rank = -1;
+					        for(int i = 0; i < k; i ++) grade[i] = -2; //必须是-2, 而不是-1. -2表示从未提交,-1表示编译错误, 题目中output是严格区分两者了
+					    }
+
+					    bool has_submit(){
+					        for(int i = 0; i < k; i++)
+					        {
+					            if(grade[i] >= 0){ //因为0和正整数都表示成功提交了
+					                return true;
+					            }
+					        }
+					        return false;
+					    }
+
+					    void calc(){
+					        for(int i = 0 ; i < k; i++){ 
+					            if(grade[i] >= 0) total += grade[i]; //bug, 小心-1是算作0加入总分的 
+					            if(grade[i] == full_grade[i]) cnt ++;
+					        }
+					    }
+
+					    bool operator< (const Student& t) const{
+					        if(total != t.total) return total > t.total;
+					        if(cnt != t.cnt) return cnt > t.cnt;
+					        return id < t.id;
+					    }
+					};
+
+					int main(){
+
+					    scanf("%d%d%d", &n, &k ,&m); //bug! 我之前写成&n, &m ,&k, 一直导致了segmentation fault
+
+					    //读满分
+					    for(int i = 0; i < k; i++){ 
+					        scanf("%d", &full_grade[i]);
+					    }
+
+					    //读提交
+					    unordered_map<string, Student> map;
+
+					    for(int i = 0; i < m; i ++){
+					        char u_id_s[10];
+					        int p_id, g;
+					        scanf("%s %d %d", u_id_s, &p_id, &g);
+					        string u_id = u_id_s;
+
+					        if(map.count(u_id) == 0) //如果学生没有遇见过,就初始化
+					        {
+					            map[u_id] = Student(u_id); //这里调用了初始化函数.
+					        }
+
+					        p_id--; //bug!, 因为题目K的编号是从1开始的!
+					        //之后我们判断题目p_id的成绩g是不是这个学生最好的成绩
+					        map[u_id].grade[p_id] = max(map[u_id].grade[p_id], g);
+					    }
+
+					    //到此为止, 所以学生都初始完了,并且都保留了最好成绩
+					    //接下来看哪些学生虽然初始化了,但是没有提交
+					    //提交的,计算total和cnt,并且push到vec里面
+					    vector<Student> vec; //将提交的学生放到vec中, 之后去排序
+					    for(auto& item : map){ //注意, 这里的item不是Studnet,而是<string, Student>
+					        auto& s = item.second;
+					        if(s.has_submit()){
+					            s.calc(); //计算total和cnt;
+					            vec.push_back(s);
+					        }
+					    }
+
+					    sort(vec.begin(), vec.end()); //用了操作符重载
+
+					    //计算排名
+					    for(int i = 0; i < (int)vec.size(); i++){
+					        if(!i || vec[i].total < vec[i-1].total)
+					            vec[i].rank = i + 1;
+					        else
+					            vec[i].rank = vec[i-1].rank;
+					    }
+
+					    //打印
+					    for(auto& s : vec){
+					        printf("%d %s %d", s.rank, s.id.c_str(), s.total);
+					        for(int i = 0 ; i < k ; i++) { 
+					            if(s.grade[i] == -2) cout << " -"; //bug, 题目说了(如果未提交就是-, 如果编译出错或者没有写对还是0)
+					            else cout << " " << max(0,s.grade[i]); //bug, 因为可能s.grade[i]依旧是初始值-2
+					        }
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/486781/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		40. 1588. 插入还是堆排序	1098
+			0. bug
+			1. 笔记
+				思路:
+					1. 老师说插入排序的特点: 左侧的元素都是拍好的(递增的),右侧的元素都是和原来的元素一样
+					2. 老师说堆排序的特点: 左侧是堆的顺序, 右侧是最大的前k个数. 总之,堆顶的元素i是 <= 右侧的所有元素的
+					3. 因为题目是保证唯一解, 所以肯定是分了左右侧,没有分左右侧说明排序完了,排序结束两种方法的结果都一样,所以即可以说是堆排序也可以说是插入排序,答案不唯一.
+					4. 回忆插入排序: 右侧的元素一直跟左侧的元素打擂台,一直到打不过
+					5. 回忆堆排序: 左侧的堆顶(最大值),插入到数组末尾,siftdown()之后,左侧的堆顶又是一个最大值,插入到数组末尾
+					6. 因为插入排序好判断(左侧有序,右侧原封不变),堆排序不好判断(需要看左侧是否满足堆还是比较麻烦的)
+					7. 所以,先判断是否是插入,是,就继续插入排序.不是,说明是堆排序,找到数组的左右两侧(by 堆顶的元素i是 <= 右侧的所有元素的),最后继续堆排序
+					8. 很多bug,很容易写错
+
+					y总为什么down操作是b[t] < b[u * 2]？
+					down操作不应该是把堆顶大的元素往下降吗。。。
+						大根堆小根堆都能实现从小到大排序，如果用小根堆，那每次把最小值放到序列开头；如果用大根堆，那就每次把最大值放到序列结尾。
+
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n;
+					int a[N], b[N];
+
+					void down(int u, int size)
+					{
+					    int t = u;
+					    if (u * 2 <= size && b[t] < b[u * 2]) t = u * 2;
+					    if (u * 2 + 1 <= size && b[t] < b[u * 2 + 1]) t = u * 2 + 1;
+					    if (t != u)
+					    {
+					        swap(b[t], b[u]);
+					        down(t, size);
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> a[i];
+					    for (int i = 1; i <= n; i ++ ) cin >> b[i];
+
+					    int p = 2;
+					    while (p <= n && b[p] >= b[p - 1]) p ++ ;
+					    int k = p;
+					    while (p <= n && a[p] == b[p]) p ++ ;
+					    if (p == n + 1)  // 说明是插入排序
+					    {
+					        puts("Insertion Sort");
+					        while (k > 1 && b[k] < b[k - 1]) swap(b[k], b[k - 1]), k -- ;
+					    }
+					    else  // 否则说明一定是堆排序
+					    {
+					        puts("Heap Sort");
+					        p = n;
+					        while (b[1] <= b[p]) p -- ;
+					        swap(b[1], b[p]);
+					        down(1, p - 1);
+					    }
+
+					    cout << b[1];
+					    for (int i = 2; i <= n; i ++ ) cout << ' ' << b[i];
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/272766/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int a[N];
+					int b[N];
+
+					void siftdown(int pos, int size){
+					    int t = pos;
+					    if(2*pos+1 < size && b[t] < b[2*pos+1]) t = 2*pos+1; //bug,主义是t = 2*pos+1, 而不是pos = 2*pos+1 //这句话:如果存在做儿子 && left儿子比自己大
+					    if(2*pos+2 < size && b[t] < b[2*pos+2]) t = 2*pos+2; //bug, 这里是b[t] < b[2*pos+1]而不是b[pos] < b[2*pos+1], 因为这里一共有两个if,所以上面的t = 2*pos+1 可以影响我们这个t, 所以假设上一句 left比自己大, 但是现在发现right 比 left大, 那么我们就要把父亲和right交换.
+					    if(t != pos ){//是否被修改过
+					        swap(b[t], b[pos]); //交换
+					        siftdown(t, size); //注意这里是size,因为堆的大小没变
+					    }
+					}
+					int main(){
+					    int n;
+					    cin >> n;
+
+
+
+					    for(int i = 0 ; i < n ; i ++) cin >> a[i];
+					    for(int i = 0 ; i < n ; i ++) cin >> b[i];
+
+					    //插入排序比较容易检查,所以检查插入
+					    int p = 1; 
+					    while(p < n && b[p-1] <= b[p]) p++; //bug, 注意是 b[p-1] <= b[p], 也就是可以相等或者单调递增
+
+					    //此时的p是指向右侧的第一个元素
+					    int k = p;
+					    while(p < n && a[p] == b[p]) p++;
+
+					    if(p == n){ //说明是插入排序, bug, 容易错, p如果指向数组的最后一个ind,应该是n-1, 所以n-1+1 = n, 而不是if(p == n+1)
+					        puts("Insertion Sort");
+
+					        //进行插入排序之后的事情,从k开始向左打雷
+					        while( k >= 1 && b[k-1] > b[k]) { //只有k左边有人才能打,所以k至少是ind == 1
+					            swap(b[k-1], b[k]);
+					            k--;
+					        }
+
+					    }
+					    else{ //因为一定有解,所以是堆排序
+					        //接下来确定右侧在哪里
+					        int top = b[0];
+					        int p = n-1;
+					        while(p >= 1 && b[p] >= top) p--;
+
+					        //此时p是左侧堆的最末尾的节点
+					        swap(b[0],b[p]); //bug! 注意是先将堆顶给移到后面,然后我们在对前面0到q-1索引的元素排序
+					        siftdown(0, p); //因为是0到p-1,所以size == p
+					        puts("Heap Sort");
+					    }
+
+					    cout << b[0];
+					    for(int i = 1; i < n; i ++) cout << " " << b[i];
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/486871/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		41. 1579. 插入还是归并	1089
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n;
+					int a[N], b[N];
+
+					bool check()
+					{
+					    for (int i = 0; i < n; i ++ )
+					        if (a[i] != b[i])
+					            return false;
+					    return true;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> a[i];
+					    for (int i = 0; i < n; i ++ ) cin >> b[i];
+
+					    int k = 0;
+					    while (b[k + 1] >= b[k]) k ++ ;
+
+					    bool match = true;
+					    for (int i = k + 1; i < n; i ++ )
+					        if (a[i] != b[i])
+					        {
+					            match = false;
+					            break;
+					        }
+
+					    if (match)
+					    {
+					        puts("Insertion Sort");
+					        sort(b, b + k + 2);
+					        cout << b[0];
+					        for (int i = 1; i < n; i ++ ) cout << ' ' << b[i];
+					        cout << endl;
+					    }
+					    else
+					    {
+					        puts("Merge Sort");
+
+					        int k = 1;
+					        while (true)
+					        {
+					            bool match = check();
+
+					            int len = 1 << k;
+					            for (int i = 0; i < n; i += len)
+					                sort(a + i, a + min(n, i + len));
+
+					            if (match) break;
+					            k ++ ;
+					        }
+
+					        cout << a[0];
+					        for (int i = 1; i < n; i ++ ) cout << ' '<< a[i];
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/323536/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		42. 789. 数的范围 模板题
+			0. bug
+			1. 笔记
+				1. 先直接上 int mid = l + r >> 1;
+					如果是r = mid, 不需要给mid + 1
+					如果是l = mid, 需要编程 mid = l + r + 1 >> 1;
+				2. 找到x的左边界
+					见图
+					该点的左侧 < x, 该点和点的右侧 >= x
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int  N = 100010;
+
+					int n, m;
+					int q[N];
+
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        scanf("%d", &q[i]);
+					        if (q[i] > 10000) puts("!");
+					    }
+
+					    while (m -- )
+					    {
+					        int x;
+					        scanf("%d", &x);
+
+					        int l = 0, r = n - 1;
+					        while (l < r)
+					        {
+					            int mid = l + r >> 1;
+					            if (q[mid] >= x) r = mid;
+					            else l = mid + 1;
+					        }
+
+					        if (q[r] != x) puts("-1 -1");
+					        else
+					        {
+					            int left = l;
+					            l = 0, r = n - 1;
+					            while (l < r)
+					            {
+					                int mid = l + r + 1 >> 1;
+					                if (q[mid] <= x) l = mid;
+					                else r = mid - 1;
+					            }
+
+					            int right = r;
+
+					            printf("%d %d\n", left, right);
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/273115/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int  N = 100010;
+
+					int n, m;
+					int q[N];
+
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        scanf("%d", &q[i]);
+					        if (q[i] > 10000) puts("!");
+					    }
+
+					    while (m -- )
+					    {
+					        int x;
+					        scanf("%d", &x);
+
+					        int l = 0, r = n - 1;
+					        while (l < r)
+					        {
+					            int mid = l + r >> 1;
+					            if (q[mid] >= x) r = mid;
+					            else l = mid + 1;
+					        }
+
+					        if (q[r] != x) puts("-1 -1");
+					        else
+					        {
+					            int left = l;
+					            l = 0, r = n - 1;
+					            while (l < r)
+					            {
+					                int mid = l + r + 1 >> 1;
+					                if (q[mid] <= x) l = mid;
+					                else r = mid - 1;
+					            }
+
+					            int right = r;
+
+					            printf("%d %d\n", left, right);
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/273115/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		43. 838. 堆排序 	模板题
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], cnt;
+
+					void down(int u)
+					{
+					    int t = u;
+					    if (u * 2 <= cnt && h[u * 2] < h[t]) t = u * 2;
+					    if (u * 2 + 1 <= cnt && h[u * 2 + 1] < h[t]) t = u * 2 + 1;
+					    if (u != t)
+					    {
+					        swap(h[u], h[t]);
+					        down(t);
+					    }
+					}
+
+
+
+
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 1; i <= n; i ++ ) scanf("%d", &h[i]);
+					    cnt = n;
+
+					    for (int i = n / 2; i; i -- ) down(i);
+
+					    while (m -- )
+					    {
+					        printf("%d ", h[1]);
+					        h[1] = h[cnt -- ];
+					        down(1);
+					    }
+
+					    puts("");
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/273116/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+5.  树
+	7. 2020年10月6日14:27:39
+		44. 1476. 数叶子结点	1004
+			0. bug
+			1. 笔记
+				1. dfs和bfs都可以写这道题,但是老师更倾向于dfs,因为bfs需要维护队列
+				2. 思路:
+					1. 存树的形状
+					3. 一般用dfs能做的bfs也能做,但是dfs代码短,不像bfs需要维护queue
+
+					1. 主要考察树: 
+					h[a]其实是a这个节点的叶子节点的token,这个token其实是ind,可以帮我们索引到一个链表,也就是说这个链表的所有元素,都是a这个节点的叶子节点
+					假设h[a] == ind, 那么e[ind] == b说明节点a的一个子节点是b
+					ne[ind] == ind2说明这个子节点b也有一个链表, 这个链表的token是ind2
+						因为之前设置的时候ne[ind] = h[b]?
+
+					故事是这样的,假设我们要给a节点的链表中插入一个b节点, 现在空余的token是ind
+					h[a]表示的是, a节点的链表的头结点的token, 我们要注意, 加的方式是新来的元素是插入头结点, 想象:
+					刚开始是h[a] = -1是什么都没有加过,之后分别加入cdf之后,链表是-1 -- c -- d -- f(头结点), 所以最后一个进入的f是在头结点
+					谁是谁的next!!! c是d的next, 所以这是我之前纠结的地方,next是在左边, 其实你如果想象成f -- d -- c -- -1就是next在右边了! 
+					所以假设d当时拿到的token是ind, ne[ind] == c的token!! 也就是b的next是c
+
+					 现在空余的token是ind,既然ind还没用过, 我们就用吧
+					e[ind] = b, 将e[ind]这个没有用过的地方, 放入b的值
+					ne[ind] = h[a], 也就是我们将b的next,设置为之前的老的头结点(h[a])
+					h[a] = ind++, 现在a节点的新的头节点是ind了!
+
+					我给一个例子吧, 刚开始ind == 0, h[]所有初始化是-1
+					void add(int a(8), int b(9))
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					    相当于是:
+					    e[0] = 9, ne[0] = -1, h[8] = 0, ind = 1;
+					}
+					void add(int a(8), int c(7))
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					    相当于是:
+					    e[1] = 7, ne[1] = 0, h[8] = 1, ind = 2;
+					}
+
+					遍历的时候:
+					for (int i = h[u]; ~i; i = ne[i]) //注意-1的0x是1111 1111,所以~(-1) == 0
+					        dfs(e[i]);
+					i = h[8] == 1
+					e[i] == e[1] 也就是c的值7
+					i = ne[i] == ne[1] == 0, 也就是去到token是0的地方
+					e[i] == e[0] 也就是b的值8
+					i = ne[i] == ne[0] == -1
+					结束
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n, m;
+					int h[N], e[N], ne[N], idx;
+					int cnt[N], max_depth;
+
+					void add(int a, int b)
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					void dfs(int u, int depth)
+					{
+					    if (h[u] == -1)  // 说明u是叶子节点
+					    {
+					        cnt[depth] ++ ;
+					        max_depth = max(max_depth, depth);
+					        return;
+					    }
+
+					    for (int i = h[u]; ~i; i = ne[i])
+					        dfs(e[i], depth + 1);
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    memset(h, -1, sizeof h);
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int id, k;
+					        cin >> id >> k;
+					        while (k -- )
+					        {
+					            int son;
+					            cin >> son;
+					            add(id, son);
+					        }
+					    }
+
+					    dfs(1, 0);
+
+					    cout << cnt[0];
+					    for (int i = 1; i <= max_depth; i ++ ) cout << ' ' << cnt[i];
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279623/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <cstring> // memset()
+
+					using namespace std;
+
+					const int N = 110;
+					int h[N], e[N], ne[N];
+					int ind; //全局变量初始是0
+					int cnt[N];
+					int maxdepth;// 需要记录maxdepth, 因为我们打印的时候, 需要打印cnt[N]的前maxdepth个元素
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					void dfs(int a, int depth){
+					    if(h[a] == -1) //叶子,所以要插入到我们的cnt中
+					    {
+					        cnt[depth]++;
+					        maxdepth = max(maxdepth, depth);
+					        return;
+					    }
+
+					    for(int i = h[a]; i != -1; i = ne[i]){
+					        dfs(e[i], depth+1);
+					    }
+					}
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+
+					    memset(h, -1, sizeof h);
+
+					    while(m--){
+					        int id, k;
+					        cin >> id >> k;
+					        while(k--){
+					            int son;
+					            cin >> son;
+					            add(id, son);//将b链接到a上
+					        }
+					    }
+
+					    dfs(1,0); //为什么是(1,0),因为题目说了根节点的值是01, 所以a==01==1, 然后第一层高度是0
+
+					    cout << cnt[0]; //一定能保证有一个叶子,因为如果只有一个根节点, 根节点就是叶子
+					    for(int i = 1; i <= maxdepth; i++) cout << " " << cnt[i];
+
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/487666/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
