@@ -3490,9 +3490,6 @@
 					}
 				r5.
 
-
-
-
 		14. 1563. Kuchiguse	1077
 			0. bug
 				用getline(cin, s[i]);之前,记得getchar();
@@ -3754,10 +3751,6 @@
 						puts("nai");
 						return 0;
 					}
-
-
-
-
 
 		15. 1568. 中文读数字	1082 #todo
 			0. bug
@@ -7943,7 +7936,7 @@
 				r4.
 				r5.
 
-		36. 1505. 列表排序	1028
+		35. 1505. 列表排序	1028
 			0. bug
 			1. 笔记
 				思路:
@@ -8099,7 +8092,7 @@
 				r4.
 				r5.
 
-		37. 1523. 学生课程列表	1039
+		36. 1523. 学生课程列表	1039
 			0. bug
 			1. 笔记
 				1. 其实这道题很简单,关键看你怎么存
@@ -8230,7 +8223,7 @@
 				r4.
 				r5.
 
-		38. 1538. 链表排序	1052
+		37. 1538. 链表排序	1052
 			0. bug
 				1. 忘记加c_str()
 				2. printf("%s %d %s\n", vec[i].addr.c_str(), vec[i].val, vec[i+1].addr.c_str()); 
@@ -8380,7 +8373,7 @@
 				r4.
 				r5.
 
-		39. 1561. PAT 评测	1075
+		38. 1561. PAT 评测	1075
 			0. bug
 			1. 笔记
 				0. 经典的 unordered_map + vector
@@ -8622,7 +8615,7 @@
 				r4.
 				r5.
 
-		40. 1588. 插入还是堆排序	1098
+		39. 1588. 插入还是堆排序	1098
 			0. bug
 			1. 笔记
 				思路:
@@ -8773,7 +8766,7 @@
 				r4.
 				r5.
 
-		41. 1579. 插入还是归并	1089
+		40. 1579. 插入还是归并	1089
 			0. bug
 			1. 笔记
 			2. 注释
@@ -8859,7 +8852,7 @@
 				r4.
 				r5.
 
-		42. 789. 数的范围 模板题
+		41. 789. 数的范围 模板题
 			0. bug
 			1. 笔记
 				1. 先直接上 int mid = l + r >> 1;
@@ -8994,7 +8987,7 @@
 				r4.
 				r5.
 
-		43. 838. 堆排序 	模板题
+		42. 838. 堆排序 	模板题
 			0. bug
 			1. 笔记
 			2. 注释
@@ -9059,9 +9052,215 @@
 
 5.  树
 	7. 2020年10月6日14:27:39
-		44. 1476. 数叶子结点	1004
+		43. 826. 单链表	模板题
 			0. bug
 			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int head, e[N], ne[N], idx;
+
+					void init()
+					{
+					    head = -1;
+					}
+
+					void add_head(int x)
+					{
+					    e[idx] = x, ne[idx] = head, head = idx ++ ;
+					}
+
+					void add_k(int k, int x)
+					{
+					    e[idx] = x, ne[idx] = ne[k], ne[k] = idx ++ ;
+					}
+
+					void remove(int k)
+					{
+					    ne[k] = ne[ne[k]];
+					}
+
+					int main()
+					{
+					    init();
+
+					    int m;
+					    cin >> m;
+					    while (m -- )
+					    {
+					        char op;
+					        int k, x;
+					        cin >> op;
+					        if (op == 'H')
+					        {
+					            cin >> x;
+					            add_head(x);
+					        }
+					        else if (op == 'I')
+					        {
+					            cin >> k >> x;
+					            add_k(k - 1, x);
+					        }
+					        else
+					        {
+					            cin >> k;
+					            if (!k) head = ne[head];
+					            else remove(k - 1);
+					        }
+					    }
+
+					    for (int i = head; i != -1; i = ne[i]) cout << e[i] << ' ';
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/280325/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int head, e[N], ne[N], idx;
+
+					void init()
+					{
+					    head = -1;
+					}
+
+					void add_head(int x)
+					{
+					    e[idx] = x, ne[idx] = head, head = idx ++ ;
+					}
+
+					void add_k(int k, int x)
+					{
+					    e[idx] = x, ne[idx] = ne[k], ne[k] = idx ++ ;
+					}
+
+					void remove(int k)
+					{
+					    ne[k] = ne[ne[k]];
+					}
+
+					int main()
+					{
+					    init();
+
+					    int m;
+					    cin >> m;
+					    while (m -- )
+					    {
+					        char op;
+					        int k, x;
+					        cin >> op;
+					        if (op == 'H')
+					        {
+					            cin >> x;
+					            add_head(x);
+					        }
+					        else if (op == 'I')
+					        {
+					            cin >> k >> x;
+					            add_k(k - 1, x);
+					        }
+					        else
+					        {
+					            cin >> k;
+					            if (!k) head = ne[head];
+					            else remove(k - 1);
+					        }
+					    }
+
+					    for (int i = head; i != -1; i = ne[i]) cout << e[i] << ' ';
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/280325/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		44. 836. 合并集合	模板题
+			0. bug
+			1. 笔记
+				0. 并查集是非常容易考到的数据结构
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int p[N];
+
+					int find(int x) // 返回x的祖宗节点 + 路径压缩
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					    while (m -- )
+					    {
+					        char op[2];
+					        int a, b;
+					        scanf("%s%d%d", op, &a, &b);
+
+					        if (op[0] == 'M') p[find(a)] = find(b);
+					        else
+					        {
+					            if (find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/280326/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		
+		45. 1476. 数叶子结点	1004
+			0. bug
+			1. 笔记
+				0. 因为这里的一个节点会有多个子节点, 所以我们不能只存左右子树, 而是用邻接表
 				1. dfs和bfs都可以写这道题,但是老师更倾向于dfs,因为bfs需要维护队列
 				2. 思路:
 					1. 存树的形状
@@ -9228,6 +9427,475 @@
 					链接：https://www.acwing.com/activity/content/code/content/487666/
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		46. 1497. 树的遍历	1020
+			0. bug
+			1. 笔记
+				0. 因为只有左右子树, 所以只存储左右子树就好了
+				1. 这道题经常考
+				2. 知识点: 如果知道前序+中序, 或者后续+中序, 是可以求出二叉树的. 但是知道前序 + 后序就不行.\
+				3. 求的过程
+					1. 后序的最后一个节点是root(前序是第一个节点是root)
+					2. 在中序中找到这个root, 左侧就是root的左子树(求出左侧长度n),右侧柚子树(求出右侧长度m)
+					3. 后续中,因为是左子树+右子树+root,所以可以知道左子树是哪一段(截取长度为n),右子树是哪一段
+					4. 后序中,左子树的最后一个节点是root
+					5. 重复到2.
+					老师用了递归
+				------------------
+				4. 重新构建二叉树方法:
+					1. 在在中序中找到这个root,就是已知值, 找index, 所以我们用哈希表存, 快, 知道某个值的下标是多少
+					2. 重建二叉树,是一个递归的过程. 返回当前子树的根节点.
+					3. 老师在构建二叉树的时候,没有使用链接表,而是使用了两个哈希表.其实非常好
+						1. 二叉树的重要内容就是, 某个节点(值)的左右儿子的ind是多少
+						2. 一个哈希表存某个节点(用值表示)的左子树,一个存右边的
+				------------------
+				5. 
+					1. build()两种思路: 
+						已知左子树在中序的ind是[il, k-1]
+						求左子树在后序的ind是[pl, ?]
+						1. 长度
+							因为在中序中, 左子树的长度是(k-il), 因为是[il, k), k是指向左子树最后一个节点的下一位
+							所以在后续中, 右子树的最后一个节点的下一位是 pl + (k-il)
+							但是我们要求的是右子树的最后一个节点的位置, 所以是 pl + (k-il) - 1;
+						2. 差相等
+							老师说 ? - pl == k - 1 - il
+							? == pl + (k - 1 - il)
+					2. 解释l[root] = build(il, k - 1, pl, pl + (k - 1 - il));
+						build(il, k - 1, pl, pl + (k - 1 - il))返回root的左子树的根
+						root的左子树的根,也就是root的左儿子
+				------------------
+				3. bfs()中,tt是指向了元素的,而不是元素的下一个
+
+				-----------------
+				4. 思考:
+				中序: 需要建立值和位置之间的map
+				后序: 不需要建立上面的map, 因为每次只要取最后一位.
+
+				5. 思考:
+				中序: 左子树+根+右子树
+				后序: 左子树+右子树+根
+
+				6. 思考:
+				build的参数传入的是相同的一个树,但是build()里面又有两个build()分别服务于左子树和右子树
+
+				7. 易错
+				右子树的后序的右侧节点是Pr-1,不是pr,因为pr是根节点
+				build(k+1, ir, (pr-1) + (k+1-ir), pr-1);//bug!容易错的地方,pr是root(回忆int root_val = postorder[pr]]),所以是pr-1!
+
+				8. 思考
+				重构二叉树,除了记录每个节点left,right,还需要知道root,最后通过root找左右,通过左右继续找左右.
+
+				9. 其他错误:
+				似乎不能用left,会和系统重名
+
+				10. 语法
+				1. 定义的时候
+					应该是 int h = 0, t = 0;
+					而不是int h = t = 0;
+				2. 如果已经定义了
+					int h,t;
+					h = t = 0;是没问题的
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+
+					int n;
+					int postorder[N], inorder[N];
+					unordered_map<int, int> l, r, pos;
+					int q[N];
+
+					int build(int il, int ir, int pl, int pr)
+					{
+					    int root = postorder[pr];
+					    int k = pos[root];
+					    if (il < k) l[root] = build(il, k - 1, pl, pl + (k - 1 - il));
+					    if (k < ir) r[root] = build(k + 1, ir, pl + (k - 1 - il) + 1, pr - 1);
+					    return root;
+					}
+
+					void bfs(int root)
+					{
+					    int hh = 0, tt = 0;
+					    q[0] = root;
+
+					    while (hh <= tt)
+					    {
+					        int t = q[hh ++ ];
+					        if (l.count(t)) q[ ++ tt] = l[t];
+					        if (r.count(t)) q[ ++ tt] = r[t];
+					    }
+
+					    cout << q[0];
+					    for (int i = 1; i < n; i ++ ) cout << ' ' << q[i];
+					    cout << endl;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> postorder[i];
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> inorder[i];
+					        pos[inorder[i]] = i;
+					    }
+
+					    int root = build(0, n - 1, 0, n - 1);
+
+					    bfs(root);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279654/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <unordered_map> //用户哈希表存LR
+
+					using namespace std;
+
+					const int N = 40;
+					int postorder[N];
+					int inorder[N];
+					unordered_map<int, int> pos; //给一个节点的值(节点的值都不相同),返回这个节点在inorder中的位置.
+					unordered_map<int, int> l, r; //因为我们要重构二叉树.但这里不用单链表,老师说是二叉,所以设置每个节点的左右孩子就好了.
+														//存的是左右孩子的值,而不是ind
+					int q[N];//用于bfs
+														
+					int build(int il, int ir, int pl, int pr){
+						//找root的值
+						int root_val = postorder[pr];//根节点的值
+						int k = pos[root_val];//知道根节点在中序中的位置
+
+						//判断有无左右子树, 通过看k在中序中的位置
+						if(il < k) //有left, 如果il == k说明没有left树
+						{
+							l[root_val] = build(il, k-1, pl, pl + (k-1-il));//见解释
+						}
+						if(k < ir)
+						{
+							r[root_val] = build(k+1, ir, (pr-1) + (k+1-ir), pr-1);//bug!容易错的地方,pr是root(回忆int root_val = postorder[pr]]),所以是pr-1!
+						}
+						return root_val; //返回根的值
+					}
+
+					void bfs(int root){
+						q[0] = root;
+						
+						int h, t;//queue的队首和队尾
+						h = t = 0;//或者直接://int h = 0, t = 0; 
+						
+						while(h <= t) //说明还有元素
+						{
+							int top = q[h ++]; //如果有元素, 取出, h指向下一个
+							if(l.count(top)) q[++t] = l[top]; //有左孩子, t移到空位, 放入孩子
+							if(r.count(top)) q[++t] = r[top];
+						}
+						//走到这里,q里面留下来了所有的顺序,注意这里不是真的pop掉了,所以q里面是有数据的.
+
+						cout << q[0];
+						for(int i = 1; i < h; i++) cout << ' ' << q[i]; //之所以写在这里,因为h是局部变量
+						cout << endl;
+					}
+
+					int main(){
+
+						int n;
+						cin >> n;
+						for(int i = 0; i < n; i++) cin >> postorder[i];
+						for(int i = 0; i < n; i++)
+						{
+							cin >> inorder[i];
+							pos[inorder[i]] = i; //给一个节点的值(节点的值都不相同),返回这个节点在inorder中的位置.
+						}
+
+						int root_val = build(0, n-1, 0, n-1);
+
+						bfs(root_val);
+
+						return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		47. 1498. 最深的根	1021
+			0. bug
+			1. 笔记
+				思路:
+					1. 老师这里是暴力枚举了所有点是否是正确答案,因为一共有10^4个点,但是有2s,足够用了
+					2. 考察了:
+						1. 连通分量
+							逻辑:如果a,b两个点不属于同一个,并且这次input中a,b是链接的,就会少一个连通分量
+							使用:并查集find()
+						2. 如果是树,若有N个点,一定是N-1条边,(不多不少),多了就有环,少了就不连通(存在多个连通分量)
+						3. 但是如果N个点,N-1条边,不一定是树. 例如:6个点,其中4个点是环,另2个点链接.虽然也是5条边,但是一个是环,一个是连通分量.
+
+					3. 老师说:
+						1. 可以用bfs来看某个节点的每个叶子节点到该节点的距离
+						2. 可以用dfs来遍历所有的叶子,然后返回值+1(因为高度+1)
+					4. 因为是无向图,所以在遍历的过程中,我们可能会遍历到过来的点.
+						例如,假设我们是认为a点是根节点,往下遍历
+						其中b点是a的子节点,我们会遍历b,但是遍历b的临点的时候也会遍历到a(因为无向图存储)
+						所以我们要判断b的子节点是否等于b的父亲a,如果等于,就continue
+					5. dfs()在本题中的语意是:参数是int u,也就是u的叶子节点中到u节点的最大高度.
+					6. dfs()中,叶子节点的高度是0, 如果是叶子结点,会返回depth == 0
+					7. 注意: h[a]中的a是节点的编号:从1-N,所以很多for(int i = 1; ...) 而不是for(int i = 0; ...)
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 10010, M = N * 2;
+
+					int n;
+					int h[N], e[M], ne[M], idx;
+					int p[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					void add(int a, int b)
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int dfs(int u, int father) 迭代
+					{
+					    int depth = 0;
+					    for (int i = h[u]; ~i; i = ne[i])
+					    {
+					        int j = e[i];
+					        if (j == father) continue;
+					        depth = max(depth, dfs(j, u) + 1);
+					    }
+					    return depth;
+					}
+
+					int main()
+					{
+					    cin >> n;
+
+					    memset(h, -1, sizeof h);
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					    int k = n;
+					    for (int i = 0; i < n - 1; i ++ )
+					    {
+					        int a, b;
+					        cin >> a >> b;
+					        if (find(a) != find(b))
+					        {
+					            k -- ;
+					            p[find(a)] = find(b);
+					        }
+					        add(a, b), add(b, a);
+					    }
+
+					    if (k > 1) printf("Error: %d components", k);
+					    else
+					    {
+					        vector<int> nodes;
+					        int max_depth = -1;
+
+					        for (int i = 1; i <= n; i ++ )
+					        {
+					            int depth = dfs(i, -1);
+					            if (depth > max_depth)
+					            {
+					                max_depth = depth;
+					                nodes.clear();
+					                nodes.push_back(i);
+					            }
+					            else if (depth == max_depth)
+					                nodes.push_back(i);
+					        }
+
+					        for (auto v : nodes) cout << v << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279675/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <vector> //因为要用到vector.clear(), 所以不用普通数组
+					#include <cstring> //memset()
+
+					using namespace std;
+
+					const int N = 10010, M = 2 * N; //因为边数是点数的2倍
+					int h[N], e[M], ne[M], ind; //因为h[N]是存储每个节点的token, e[M]是存储很多条边
+					int p[N]; //并查集
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					int find(int a){
+					    if(p[a] != a) p[a] = find(p[a]); //如果我的爸爸不是我的爷爷,就让我的爸爸成为我的爷爷,一直到我的爸爸是我的祖宗
+					    return p[a]; //这里返回的条件是 p[a] == a, 也就是a其实就是祖先.
+					}
+
+					int dfs(int cur, int source){
+					    int depth = 0;
+					    for(int i = h[cur]; ~i; i = ne[i]){
+					        int son = e[i];
+					        if(son == source) continue;
+					        depth = max(depth, dfs(son, cur) + 1);
+					    }
+					    return depth;
+					}
+					int main(){
+					    int n;
+					    cin >> n;
+
+					    //初始化单链表
+					    memset(h, -1, sizeof h);
+					    //初始化并查集
+					    for(int i = 1; i <= n; i++) p[i] = i;
+
+					    //读入n-1条边
+					    int k = n; //用于计算连通分量
+					    int a, b;
+					    for(int i = 0; i < n-1; i ++) {
+					        cin >> a >> b;
+					        add(a,b), add(b,a);
+					        if(find(a) != find(b)) //假如他们之前不是一个集合,但是现在input他们之间有边了
+					        {
+					            k--;
+					            p[find(a)] = find(b);
+					        }
+					    }   
+
+					    vector<int> res; //存output需要的节点
+					    int max_depth = -1;
+					    if(k >= 2){
+					        printf("Error: %d components", k);
+					    }
+					    else{
+					        for(int id = 1; id <= n; id ++){
+					            int depth = dfs(id, -1);
+					            if(max_depth < depth)
+					            {
+					                max_depth = depth;
+					                res.clear();
+					                res.push_back(id);
+					            }
+					            else if(max_depth == depth){
+					                res.push_back(id);
+					            }
+					        }
+					    }
+
+					    for(auto i : res) cout << i << endl;
+					    return 0;
+					}
+
+					作者：jackrrr
+					链接：https://www.acwing.com/activity/content/code/content/488211/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		48. 1527. 判断二叉搜索树	1043
+			0. bug
+			1. 笔记
+				1. build()
+					只要一边的子树不行,那res就是false
+					build()不能放在前面,否则就是无限循环了,应该是 
+						1. 终止条件
+						2. 做一些事
+						3. 递归:调用自己
+						4. 其他终止条件.
+				2. 知道了
+					1. 因为要后序所以是build(左), build(右), postorder[cnt++] = xx
+					2. 如果是中序, 应该就是build(左), postorder[cnt++] = xx, build(右)
+					3. 前序就是post, build(), build();
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					int preorder[N], inorder[N];
+					int postorder[N], cnt;
+
+					bool build(int il, int ir, int pl, int pr, int type)
+					{
+					    if (il > ir) return true;
+
+					    int root = preorder[pl];
+					    int k;
+					    if (type == 0)
+					    {
+					        for (k = il; k <= ir; k ++ )
+					            if (inorder[k] == root)
+					                break;
+					        if (k > ir) return false;
+					    }
+					    else
+					    {
+					        for (k = ir; k >= il; k -- )
+					            if (inorder[k] == root)
+					                break;
+					        if (k < il) return false;
+					    }
+
+					    bool res = true;
+					    if (!build(il, k - 1, pl + 1, pl + 1 + (k - 1 - il), type)) res = false;
+					    if (!build(k + 1, ir, pl + 1 + (k - 1 - il) + 1, pr, type)) res = false;
+
+					    postorder[cnt ++ ] = root;
+					    return res;
+					}
+
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279699/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
 			3. 5次
 				r1.
 				r2.
