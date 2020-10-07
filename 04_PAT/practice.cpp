@@ -7346,8 +7346,60 @@
 4. 排序(这个专题的题目都还挺简单的)
 	7. 2020年10月6日12:26:17
 		32. 1484. 最佳排名	1012
-			0. bug
+			0. bug(很多bug)
+				-1. 有时候真的是自己的逻辑出了问题!!
+					例如, 我要求出最小的rank, 初始的时候应该是rank = 人数 + 1
+					但是我错写成了Rank = 5. 因为我觉得只有4门课..
+				0. round()在cmath
+				1. 注意排名的问题
+					如果用sort()的方法, sort的结果是成绩大的在右侧, 也就是第一名在右侧
+					int get_rank(vector<int>& a, int x)
+						{
+						    int l = 0, r = a.size() - 1;
+						    while (l < r)
+						    {
+						        int mid = l + r + 1 >> 1;
+						        if (a[mid] <= x) l = mid;
+						        else r = mid - 1;
+						    }
+						    return a.size() - r; 为什么是这个? 因为
+						    	假设r = a.size() - 1. 说明是最后一个, 也就是第一名
+						    	所以 - 1 就是第一名
+						}
+				2. 因为题目说的是, 如果几个排名相同, 那么就按照 a > c > m > e来输出
+					所以我们村的时候, 最好是grade[0]存average. 这样更新rank的时候就可以保持average的优先级
+					for (int i = 0; i < 4; i ++ )
+		            {
+		                int rank = get_rank(q[i], grades[id][i]);
+		                if (rank < res)
+		                {
+		                    res = rank;
+		                    c = names[i];
+		                }
+		            }
+		        3. 老是犯的错误:
+		        	就是For(int j = ...) { g[i] ...} 应该是g[j]
+		        4. 思路上容易犯的错误:
+		        	1. 我可能会比较一个学生的最高分, 然后找到这个最高分是该科目的第几名
+		        		这是错误的
+		        	2. 为什么错?
+		        		假设一个学生的成绩是 40, 90, 91, 93
+		        		但是可能的是, 91的那个科目, 这个学生是第10名
+		        		但是40的那个科目, 学生是第1名
+		        	3. 所以正确的做法:
+		        		遍历所有的成绩, 看这个成绩在那个科目的排名
+		        		例如,得到的结果是1, 5, 10, 4
+		        		那么就输出1 
 			1. 笔记
+				数据结构
+					unordered_map<string, vector<int>> students; 每个学生 + 该学生的4个成绩
+					vector<int> grades[4]; vector数组, 4个vector<int>, 分别存4个成绩
+				求rank
+					1. 用二分
+						记得sort(), 然后看是二分的哪个模板
+						用二分的情况适用于, 只给了我一个数字, 让我求出在数组中的rank
+					2. 用if(xx[i] != xx[i-1])
+						适用于批量求每个元素在数组中的rank
 				思路
 					1. 需要将id,3门成绩,平均分存到一个用户结构体
 					2. 然后将c成绩放到一个数组, 其他类似,所以一共有4个数组
@@ -7530,13 +7582,361 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
-				r2.
-				r3.
-				r4.
-				r5.
+					#include <iostream>
+					#include <vector>
+					#include <cmath>
+					#include <algorithm>
 
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+					vector<int> grades[4];
+
+					int main(){
+						int n, q;
+						cin >> n >> q;
+						for(int i = 0; i < n ;i ++){
+							string id;
+							cin >> id;
+							int g[4];
+							int sum = 0;
+							for(int j = 1; j <= 3; j ++) 
+							{
+								cin >> g[j];
+								sum += g[j];
+							}
+							g[0] = round(sum / 3.0);
+
+							for(int j = 0; j < 4; j++){
+								grades[j].push_back(g[j]);
+								students[id].push_back(g[j]);
+							}
+						}
+
+						for(int i = 0; i < 4; i++) 
+							sort(grades[i].begin(), grades[i].end());
+
+						char name[5] = "ACME";
+						for(int i = 0; i < q; i ++){
+							string id;
+							cin >> id;
+					// 		cout << "hi " << i << " " << id << endl;
+							
+							if(students.count(id) == 0){
+								puts("N/A");
+								continue;
+							}
+							int rank = n + 1;
+							char res = name[0];
+							auto s = students[id];
+							for(int j = 0; j < 4; j++){
+								int g = s[j];
+								int l = 0, r = n - 1;
+								while(l < r){
+									int mid = l + (r-l)/2 + 1;
+									if(grades[j][mid] <= g) l = mid;
+									else r = mid - 1;
+								}
+								int temp = n - l;
+								if(rank > temp){
+								    rank = temp;
+								    res = name[j];
+								}
+							}
+							cout << rank << " " << res << endl; 
+							
+						}
+						return 0;
+					}
+				r2.
+					#include <iostream>
+					#include <vector>
+					#include <cmath>
+					#include <algorithm>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+					vector<int> grades[4];
+
+					int get(int g, vector<int> &grade){
+						int l = 0, r = grade.size() - 1;
+						while(l < r){
+							int mid = l + (r-l) / 2 + 1;
+							if(grade[mid] <= g) l = mid;
+							else r = mid - 1;
+						}
+						return grade.size() - l;
+					}
+
+					int main(){
+
+						int n, m;
+						cin >> n >> m;
+
+						for(int i = 0; i < n ; i++){
+							string id;
+							cin >> id;
+							int g[4];
+							int sum = 0;
+							for(int j = 1; j < 4; j++){
+								cin >> g[j];
+								sum += g[j];
+							}
+							g[0] = round(sum / 3.0);
+
+							for(int j = 0; j < 4; j++){
+								grades[j].push_back(g[j]);
+								students[id].push_back(g[j]);
+							}
+						}
+
+						for(int i = 0; i < 4 ; i++) sort(grades[i].begin(), grades[i].end());
+
+						for(int i = 0; i < m ; i++){
+							string id;
+							cin >> id;
+							if(students.count(id) == 0){
+								puts("N/A");
+								continue;
+							}
+
+							auto s = students[id];
+							char name[5] = "ACME";
+							int rank = n + 1;
+							char res = name[0];
+							for(int j = 0; j < 4; j ++){
+								int g = s[j];
+								int temp = get(g, grades[j]);
+								if(temp < rank){
+									rank = temp;
+									res = name[j];
+								}
+							}
+							cout << rank << " " << res << endl;
+						}
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					#include <vector>
+					#include <cmath>
+					#include <algorithm>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+					vector<int> grades[4];
+
+					int get(int g, vector<int>& grades){
+						int l = 0, r = grades.size()-1;
+						while(l < r){
+							int mid = l +(r-l) / 2 + 1;
+							if(grades[mid] <= g) l = mid;
+							else r = mid - 1;
+						}
+						return grades.size() - r;
+					}
+
+					int main(){
+						int n, m;
+						cin >> n >> m;
+
+						for(int i = 0; i < n; i++){
+							string id;
+							cin >> id;
+							int g[4];
+							int sum = 0;
+							for(int j = 1; j < 4; j++){
+								cin >> g[j];
+								sum += g[j];
+							}
+							g[0] = round(sum / 3.0);
+
+							for(int j = 0; j < 4; j ++){
+								grades[j].push_back(g[j]);
+								students[id].push_back(g[j]);
+							}
+						}
+
+						for(int i = 0; i < 4; i ++) sort(grades[i].begin(), grades[i].end());
+
+						for(int i = 0; i < m ; i++){
+							string id;
+							cin >> id;
+							if(students.count(id) == 0){
+								puts("N/A");
+								continue;
+							}
+
+							auto s = students[id];
+
+							char names[5] = "ACME";
+							int rank = n + 1;
+							char res = names[0];
+
+							for(int j = 0; j < 4; j++){
+								int g = s[j];
+								int temp = get(g, grades[j]);
+								if(temp < rank){
+									rank = temp;
+									res = names[j];
+								}
+							}
+
+							cout << rank << " " << res << endl;
+
+
+						}
+					}
+				r4.
+					#include <iostream>
+					#include <cmath>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+					vector<int> grades[4];
+
+					int main(){
+						int n, m;
+						cin >> n >> m;
+
+						for(int i = 0; i < n; i++){
+							string id;
+							cin >> id;
+
+							int g[4];
+							int sum = 0;
+							for(int j = 1; j < 4; j ++){
+								cin >> g[j];
+								sum += g[j];
+							}
+							g[0] = round(sum / 3.0);
+
+							for(int j = 0 ; j < 4; j++){
+								grades[j].push_back(g[j]);
+								students[id].push_back(g[j]);
+							}
+						}
+						
+						for(int i = 0; i < 4; i++) sort(grades[i].begin(), grades[i].end());
+						
+						while(m --){
+							string id;
+							cin >> id;
+							if(students.count(id) == 0){
+								puts("N/A");
+								continue;
+							}
+
+							auto s = students[id];
+							int rank = 2010;
+							char names[5] = "ACME";
+							char res = names[0];
+
+							for(int i = 0; i < 4; i++){
+								int g = s[i];
+								auto grade = grades[i];
+
+								int l = 0, r = grade.size()-1;
+								while(l < r){
+									int mid = l + (r-l)/2 + 1;
+									if(grade[mid] <= g) l = mid;
+									else r = mid - 1;
+								}
+								int temp = grade.size() - r;
+								if(temp < rank){
+									rank = temp;
+									res = names[i];
+								}
+							}
+
+							cout << rank << " " << res << endl;
+						}
+						return 0;
+					}
+				r5.
+					#include <iostream>
+					#include <cmath>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+					vector<int> grades[4];
+
+					int main(){
+						int n, m;
+						cin >> n >> m;
+
+						for(int i = 0; i < n; i ++){
+							string id;
+							cin >> id;
+
+							int g[4];
+							int sum = 0;
+							for(int j = 1; j < 4; j ++){
+								cin >> g[j];
+								sum += g[j];
+							}
+							g[0] = round(sum / 3.0);
+
+							for(int j = 0; j < 4; j++){
+								grades[j].push_back(g[j]);
+								students[id].push_back(g[j]);
+							}
+						}
+						
+						for(int i = 0; i < 4; i++) sort(grades[i].begin(), grades[i].end());
+
+						while(m--){
+							string id;
+							cin >> id;
+
+							if(students.count(id) == 0){
+								puts("N/A");
+								continue;
+							}
+
+							auto s = students[id];
+							int rank = 2020;
+							char names[5] = "ACME";
+							char res = names[0];
+							for(int i = 0; i < 4; i ++){
+								int g = s[i];
+								auto grade = grades[i];
+
+								int l = 0, r = grade.size() - 1;
+								while(l < r){
+									int mid = l + (r-l) /2 + 1;
+									if(grade[mid] <= g) l = mid;
+									else r = mid - 1;
+								}
+								int temp = grade.size() - r;
+								if(temp < rank){
+									rank = temp;
+									res = names[i];
+								}
+							}
+
+							cout << rank << " " << res << endl;
+						}
+						return 0;
+					}
+
+	8. 2020年10月7日13:26:46
 		33. 1499. 数字图书馆	1022
 			0. bug
+				1. 题目输出的时候,要求按升序顺序排列。
+					所以一定要sort
+				2. 如果要在 while 里面使用 getline() 一定注意, 把 getchar() 放在 while 外面
+				3. 如果TLE
+					1. 检查: cout 变成 printf()
+					2. 检查: for(auto x : xxx) 变成 for(auto &x : xxx)
 			1. 笔记
 				思路:
 					1. 这道题主要是输入和输出
@@ -7752,15 +8152,298 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <sstream>
+					#include <set>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct Book{
+						string id, name, author;
+						set<string> keywords;
+						string publisher;
+						string year;
+					};
+
+					vector<Book> books;
+
+					int main(){
+						int n;
+						cin >> n;
+
+						while(n--){
+							string id;
+							cin >> id;
+
+							string name;
+							getchar();
+							getline(cin, name);
+
+							string author;
+							getline(cin, author);
+
+							set<string> temp;
+							string read; 
+							getline(cin, read);
+							stringstream ssin(read);
+							string word;
+							while(ssin >> word){
+								temp.insert(word);
+							}
+
+							string publisher;
+							getline(cin, publisher);
+
+							string year;
+							cin >> year;
+
+							books.push_back({id, name, author, temp, publisher, year});
+						}
+
+						cin >> n;
+						getchar();
+
+						while(n--){
+							string line;
+							getline(cin, line);
+							cout << line << endl;
+
+							char a = line[0];
+							string cmd = line.substr(3);
+							vector<string> res;
+							if(a == '1'){
+								for(auto &b : books){
+									if(b.name == cmd){
+										res.push_back(b.id);
+									}
+								}
+							}
+							else if(a == '2'){
+								for(auto &b : books){
+									if(b.author == cmd){
+										res.push_back(b.id);
+									}
+								}
+							}
+							else if(a == '3'){
+								for(auto &b : books){
+									if(b.keywords.count(cmd)){
+										res.push_back(b.id);
+									}
+								}
+							}
+							else if(a == '4'){
+								for(auto &b : books){
+									if(b.publisher == cmd){
+										res.push_back(b.id);
+									}
+								}
+							}
+							else{
+								for(auto &b : books){
+									if(b.year == cmd){
+										res.push_back(b.id);
+									}
+								}
+							}
+
+							if(res.empty()) puts("Not Found");
+							else{
+							    sort(res.begin(), res.end());
+								for(auto i : res){
+									cout << i << endl;
+								}
+							}
+						}
+
+						return 0;
+
+
+					}
 				r2.
-				r3.
+					#include <iostream>
+					#include <vector>
+					#include <sstream>
+					#include <set>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct Book{
+						string id, title, author;
+						set<string> keywords;
+						string publisher, year;
+					};
+
+					vector<Book> books;
+
+					int main(){
+						int n, m;
+						cin >> n;
+						while(n--){
+							string id;
+							cin >> id;
+							string title, author;
+							getchar();
+							getline(cin, title), getline(cin, author);
+							string line;
+							getline(cin, line);
+							stringstream ssin(line);
+							string keyword;
+							set<string> keywords;
+							while(ssin >> keyword) keywords.insert(keyword);
+							string publisher;
+							getline(cin, publisher);
+							string year;
+							cin >> year;
+
+							books.push_back({id, title, author, keywords, publisher, year});
+						}
+
+						cin >> m;
+						getchar();
+						
+						while(m--){
+							string line;
+							getline(cin, line);
+							cout << line << endl;
+
+							char type = line[0];
+							string cmd = line.substr(3);
+							vector<string> res;
+							if(type == '1'){
+								for(auto &b : books){
+									if(b.title == cmd) res.push_back(b.id);
+								}
+							}
+							else if(type == '2'){
+								for(auto &b : books){
+									if(b.author == cmd) res.push_back(b.id);
+								}
+							}
+							else if(type == '3'){
+								for(auto &b : books){
+									if(b.keywords.count(cmd)) res.push_back(b.id);
+								}
+							}
+							else if(type == '4'){
+								for(auto &b : books){
+									if(b.publisher == cmd) res.push_back(b.id);
+								}
+							}
+							else{
+								for(auto &b : books){
+									if(b.year == cmd) res.push_back(b.id);
+								}
+							}
+
+							if(res.empty()) puts("Not Found");
+							else{
+								sort(res.begin(), res.end());
+								for(auto i : res) cout << i << endl;
+							}
+						}
+
+						return 0;
+					}
+				r3. 挑战 https://www.acwing.com/problem/content/submission/code_detail/2577028/
+					#include <iostream>
+					#include <vector>
+					#include <set>
+					#include <sstream>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct Book{
+					    string id, title, author;
+					    set<string> keywords;
+					    string publisher, year;
+					};
+
+					vector<Book> books;
+
+					int main(){
+					    
+					    int n, m;
+					    cin >> n;
+					    while(n --){
+					        string id;
+					        cin >> id;
+					        string title;
+					        getchar();
+					        getline(cin, title);
+					        string author;
+					        getline(cin, author);
+					        string line;
+					        getline(cin, line);
+					        stringstream ssin(line);
+					        string word;
+					        set<string> keywords;
+					        while(ssin >> word) keywords.insert(word);
+					        string publisher;
+					        getline(cin, publisher);
+					        string year;
+					        cin >> year;
+					        books.push_back({id, title, author, keywords, publisher, year});
+					    }
+					    
+					    cin >> m;
+					    getchar();
+					    while(m--){
+					        string line;
+					        getline(cin, line);
+					        cout << line << endl;
+					        
+					        char t = line[0];
+					        string cmd = line.substr(3);
+					        vector<string> res;
+					        if(t == '1'){
+					            for(auto &b : books){
+					                if(b.title == cmd) res.push_back(b.id);
+					            }
+					        }
+					        else if(t == '2'){
+					            for(auto &b : books){
+					                if(b.author == cmd) res.push_back(b.id);
+					            }
+					        }
+					        else if(t == '3'){
+					            for(auto &b : books){
+					                if(b.keywords.count(cmd)) res.push_back(b.id);
+					            }
+					        }
+					        else if(t == '4'){
+					            for(auto &b : books){
+					                if(b.publisher == cmd) res.push_back(b.id);
+					            }
+					        }
+					        else{
+					            for(auto &b : books){
+					                if(b.year == cmd) res.push_back(b.id);
+					            }
+					        }
+					        
+					        if(res.empty()) puts("Not Found");
+					        else{
+					            sort(res.begin(), res.end());
+					            for(auto i : res) cout << i << endl;
+					        }
+					    }
+					    
+					    return 0;
+					    
+					}
 				r4.
 				r5.
 
 		34. 1502. PAT 排名	1025
 			0. bug
 			1. 笔记
-				思路
+				思路1, by y
+					其实更简单,不像我那样,分成了两个部分.而是直接在grade里面处理
+						他依赖的一个性质: 最终要求要按照final_rank排名,这等价于按照grade排名
 					1. 读取student的内容(创建student struct,因为复杂的内容用struct处理会简单一些)
 					2. 创建n个分地区的vector,vector<stduent> local[N]
 					3. 创建1个总地区vecotr, vector<student> all;
@@ -7780,6 +8463,13 @@
 					10. 易错,我们是local进行加工之后,然后将id, grade, location, local_rank加入总
 					11. 最后是从总来打印
 					12. 
+				思路2, byb
+					1. 我用了4个数组:
+						vector<Student> students[N]; N个考场中的student
+						vector<Student> allS;	所有students
+						vector<int> local_grade[N];	N个考场的grade
+						vector<int> final_grade;	所有grade
+					2. 然后用了二分法, 就是先sort()grade, 然后遍历所有的student, 将每个s的成绩 看是sort之后的grade里面的第几名
 			2. 注释
 				1. y
 					#include <iostream>
@@ -7930,11 +8620,323 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 
 			3. 5次
-				r1.
+				r1. 很顺利
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 110;
+
+					struct Student{
+						string id;
+						int grade;
+						int loc;
+						int local_rank;
+						int final_rank;
+
+						bool operator< (const Student& t) const{
+							if(final_rank != t.final_rank) return final_rank < t.final_rank;
+							return id < t.id;
+						}
+					};
+
+					vector<Student> students[N];
+					vector<Student> allS;
+					vector<int> local_grade[N];
+					vector<int> final_grade;
+
+					int get(int g, vector<int> &grades){
+						int l = 0, r = grades.size()-1;
+						while(l < r){
+							int mid = l + (r-l)/2 + 1;
+							if(grades[mid] <= g) l = mid;
+							else r = mid - 1;
+						}
+						return grades.size() - r;
+					}
+
+					int main(){
+						int n;
+						cin >> n;
+						for(int i = 1; i <= n; i++){
+							int num;
+							cin >> num;
+							while(num --){
+								string id;
+								int grade;
+								cin >> id >> grade;
+
+								students[i].push_back({id, grade, i});
+								local_grade[i].push_back(grade);
+								final_grade.push_back(grade);
+							}
+
+							sort(local_grade[i].begin(), local_grade[i].end());
+							for(auto &s : students[i]){
+								s.local_rank = get(s.grade, local_grade[i]);
+								allS.push_back(s);
+							}
+						}
+
+						sort(final_grade.begin(), final_grade.end());
+						for(auto &s : allS){
+							s.final_rank = get(s.grade, final_grade);
+						}
+
+						sort(allS.begin(), allS.end());
+						cout << allS.size() << endl;
+						for(auto &s : allS){
+							cout << s.id << " " << s.final_rank << " " << s.loc << " " << s.local_rank << endl;
+						}
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+
+					using namespace std;
+
+					const int N = 210;
+
+
+					struct Student{
+					    string id;
+					    int grade;
+					    int location;
+					    int local_rank;
+					    int final_rank;
+					    
+					    bool operator< (const Student& t) const{
+					        if(final_rank != t.final_rank) return final_rank < t.final_rank;
+					        return id < t.id;
+					    }
+					};
+
+					vector<Student> students[N];
+					vector<Student> allS;
+					vector<int> grades[N];
+					vector<int> allG;
+
+					int get(int g, vector<int> &grades){
+					    int l = 0, r = grades.size()-1;
+					    while(l < r){
+					        int mid = l + (r-l)/2 + 1;
+					        if(grades[mid] <= g) l = mid;
+					        else r = mid - 1;
+					    }
+					    return grades.size() - r;
+					}
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    for(int i = 1; i <= n; i++){
+					        int m;
+					        cin >> m;
+					        while(m--){
+					            string id;
+					            int g;
+					            cin >> id >> g;
+					            students[i].push_back({id, g, i});
+					            grades[i].push_back(g);
+					            allG.push_back(g);
+					        }
+					        
+					        sort(grades[i].begin(), grades[i].end());
+					        for(auto &s : students[i]){
+					            s.local_rank = get(s.grade, grades[i]);
+					            allS.push_back(s);
+					        }
+					    }
+					    
+					    sort(allG.begin(), allG.end());
+					    for(auto &s : allS ){
+					        s.final_rank = get(s.grade, allG);
+					    }
+					    
+					    sort(allS.begin(), allS.end());
+					    cout << allS.size() << endl;
+					    for(auto &s : allS) cout << s.id << " " << s.final_rank << " " << s.location << " " <<s.local_rank << endl;
+
+					    
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					const int N = 210;
+
+					using namespace std;
+
+					struct Student{
+					    string id;
+					    int grade, location, local_rank, final_rank;
+					    
+					    bool operator< (const Student& t) const{
+					        if(grade != t.grade) return grade > t.grade;
+					        return id < t.id;
+					    }
+					};
+
+					vector<Student> students[N];
+					vector<Student> allS;
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    for(int i = 1; i <= n; i++){
+					        int m;
+					        cin >> m;
+					        while(m--){
+					            string id;
+					            int grade;
+					            cin >> id >> grade;
+					            students[i].push_back({id, grade, i});
+					        }
+					        
+					        sort(students[i].begin(), students[i].end());
+					        for(size_t j = 0, rank = 1; j < students[i].size(); j++){
+					            if(j && students[i][j].grade != students[i][j-1].grade) rank = j + 1;
+					            students[i][j].local_rank = rank;
+					            allS.push_back(students[i][j]);
+					        }
+					    }
+					    
+					    sort(allS.begin(), allS.end());
+					    int rank = 1;
+					    for(size_t i = 0; i < allS.size(); i++){
+					        if(i && allS[i].grade != allS[i-1].grade) rank = i + 1;
+					        allS[i].final_rank = rank;
+					    }
+					    
+					    cout << allS.size() << endl;
+					    for(auto &s : allS) cout << s.id << " " << s.final_rank << " " <<  s.location << " " << s.local_rank << endl;
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 210;
+
+					struct Student{
+					    string id;
+					    int grade, location, local_rank, final_rank;
+					    
+					    bool operator< (const Student& t) const{
+					        if(grade != t.grade) return grade > t.grade;
+					        return id < t.id;
+					    }
+					};
+
+					vector<Student> localS[N];
+					vector<Student> allS;
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    for(int i = 1; i <= n; i++){
+					        auto &ls = localS[i];
+					        int m;
+					        cin >> m;
+					        for(int j = 0; j < m; j++)
+					        {
+					            string id;
+					            int grade;
+					            cin >> id >> grade;
+					            ls.push_back({id, grade, i});
+					        }
+					        
+					        sort(ls.begin(), ls.end());
+					        for(int j = 0, rank = 1; j < m; j++)
+					        {
+					            if(j && ls[j].grade != ls[j-1].grade) rank = j + 1;
+					            ls[j].local_rank = rank;
+					            allS.push_back(ls[j]);
+					        }
+					    }
+					    
+					    sort(allS.begin(), allS.end());
+					    for(int i = 0, rank = 1; i < allS.size(); i++){
+					        if( i && allS[i].grade != allS[i-1].grade) rank = i + 1;
+					        allS[i].final_rank = rank;
+					    }
+					    
+					    cout << allS.size() << endl;
+					    for(auto &i : allS) cout << i.id << " " << i.final_rank << " " << i.location << " " << i.local_rank << endl;
+					    
+					    return 0;
+					}
 				r5.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 210;
+
+					struct Student{
+					    string id;
+					    int grade, location, local_rank, final_rank;
+					    
+					    bool operator< (const Student& t) const{
+					        if(grade != t.grade) return grade > t.grade;
+					        return id < t.id;
+					    }
+					};
+
+					vector<Student> localS[N];
+					vector<Student> allS;
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    
+					    for(int i = 1; i <= n; i++){
+					        int m;
+					        cin >> m;
+					        
+					        auto& ls = localS[i];
+					        while(m --){
+					            string id;
+					            int grade;
+					            cin >> id >> grade;
+					            
+					            ls.push_back({id, grade, i});
+					        }
+					        
+					        sort(ls.begin(), ls.end());
+					        for(int j = 0, rank = 1; j < (int)ls.size() ; j++)
+					        {
+					            if(j && ls[j].grade != ls[j-1].grade) rank = j + 1;
+					            ls[j].local_rank = rank;
+					            allS.push_back(ls[j]);
+					        }
+					    }
+					    
+					    sort(allS.begin(), allS.end());
+					    for(int i = 0, rank = 1; i < (int)allS.size() ; i++){
+					        if(i && allS[i].grade != allS[i-1].grade) rank = i + 1;
+					        allS[i].final_rank = rank;
+					    }
+					    
+					    cout << allS.size() << endl;
+					    for(auto &i : allS) cout << i.id << " " << i.final_rank << " " << i.location << " " << i.local_rank << endl;
+					    
+					    return 0;
+					}
 
 		35. 1505. 列表排序	1028
 			0. bug
@@ -7964,6 +8966,24 @@
 					 		1. 插入是: XX.push_back({a,b,c});
 					 		2. 适用于题目没有告诉我们size,我们需要用.size(), 否则自己开新变量存size很麻烦
 					 		2. 使用于需要比较运算
+					 7. 比较函数: 你可以用引用, 但是老师没有用.应该都可以
+					 	bool comp1(Rec &a, Rec &b){
+						    return a.id < b.id;
+						}
+
+						bool comp2(Rec &a, Rec &b){
+						    if(a.name != b.name) return a.name < b.name;
+						    return a.id < b.id;
+						}
+
+						bool comp3(Rec &a, Rec &b){
+						    if(a.grade != b.grade) return a.grade < b.grade;
+						    return a.id < b.id;
+						}
+
+						if(m == 1) sort(res.begin(), res.end(), comp1);
+					    else if(m == 2) sort(res.begin(), res.end(), comp2);
+					    else sort(res.begin(), res.end(), comp3);
 			2. 注释
 				1. y
 					#include <iostream>
@@ -8087,7 +9107,105 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct Record{
+						string id;
+						string name;
+						int grade;
+					};
+
+					vector<Record> rec;
+
+					bool cmp1(Record &r1, Record &r2){
+						return r1.id < r2.id;
+					}
+
+					bool cmp2(Record &r1, Record &r2){
+						if(r1.name != r2.name) return r1.name <= r2.name;
+						return r1.id < r2.id;
+					}
+
+					bool cmp3(Record &r1, Record &r2){
+						if(r1.grade != r2.grade) return r1.grade <= r2.grade;
+						return r1.id < r2.id;
+					}
+
+
+					int main(){
+						int n, m;
+						cin >> n >> m;
+						while(n--){
+							string id, name;
+							int grade;
+							cin >> id >> name >> grade;
+
+							rec.push_back({id, name, grade});
+						}
+						if(m == 1)
+							sort(rec.begin(), rec.end(), cmp1);
+						else if(m == 2)
+							sort(rec.begin(), rec.end(), cmp2);
+						else sort(rec.begin(), rec.end(), cmp3);
+
+						for(auto &i : rec){
+							printf("%s %s %d\n", i.id.c_str(), i.name.c_str(), i.grade);
+						}
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					struct Rec{
+					    string id;
+					    string name;
+					    int grade;
+					};
+
+					vector<Rec> res;
+
+					bool comp1(Rec &a, Rec &b){
+					    return a.id < b.id;
+					}
+
+					bool comp2(Rec &a, Rec &b){
+					    if(a.name != b.name) return a.name < b.name;
+					    return a.id < b.id;
+					}
+
+					bool comp3(Rec &a, Rec &b){
+					    if(a.grade != b.grade) return a.grade < b.grade;
+					    return a.id < b.id;
+					}
+
+					int main(){
+					    int n, m ;
+					    cin >> n >> m;
+					    while(n--){
+					        char id[10], name[10];
+					        int grade;
+					        scanf("%s %s %d", id, name, &grade);
+					        res.push_back({id, name, grade});
+					    }
+					    
+					    if(m == 1) sort(res.begin(), res.end(), comp1);
+					    else if(m == 2) sort(res.begin(), res.end(), comp2);
+					    else sort(res.begin(), res.end(), comp3);
+					    
+					    for(auto &s : res){
+					        printf("%s %s %d\n", s.id.c_str(), s.name.c_str(), s.grade);
+					    }
+					    
+					    return 0;
+					}
 				r3.
 				r4.
 				r5.
@@ -8855,12 +9973,48 @@
 		41. 789. 数的范围 模板题
 			0. bug
 			1. 笔记
-				1. 先直接上 int mid = l + r >> 1;
-					如果是r = mid, 不需要给mid + 1
-					如果是l = mid, 需要编程 mid = l + r + 1 >> 1;
-				2. 找到x的左边界
-					见图
-					该点的左侧 < x, 该点和点的右侧 >= x
+				1. 细节
+					1. 先直接上 int mid = l + (r-l) / 2;
+					2. 然后思考一个true的情况:
+						1. 画面中, xx[mid]是固定在xx数组中间的
+						2. 但是, 你的目标值是移动的,
+							想象如何变成true
+								1. 如果是求==target的起始位置
+									就想着: 这个位置的点有什么特点?
+										特点是, 这个位置右侧的点都 >= target
+										所以我们干脆就让xx[mid] >= target; 这样就满足了右侧的点的条件.
+										但是, 我们希望找最左边的右侧点, 所以缩小范围的时候, 向mid的左缩小.
+									no no no no target yes yes yes yes
+									所以就想着target在xx[mid]的左侧才是true
+										画面是 l ----- target -----xx[mid]固定 ---------------- r
+									所以就是If(target <= xx[mid])
+								2. 如果是求==target的终止位置
+									就想着: 这个位置的点有什么特点?
+										特点是, 这个位置左侧的点都 <= target
+										所以我们干脆就让xx[mid] <= target; 这样就满足了左侧的点的条件.
+										但是, 我们希望找最右边的左侧点, 所以缩小范围的时候, 向mid的右侧缩小.
+									yes yes yes target no no no
+									所以就想着target在xx[mid]的右侧才是true
+										画面是 l --------------xx[mid]固定 --------target---- r
+									所以就是If(xx[mid] <= target)
+					3. 如果是 true 的话, 有两种选择:
+						1. 如果我们的想要的区间在左侧[l, mid]. 例如求==target的起始位置, 就是希望继续往左边找
+							也就是从[l, r]变成[l, mid], 所以l不变, r = mid;
+							此时, 不用想, false 的情况就是l = mid + 1;
+								l 比 r 优越, 所以是 + 1
+
+						2. 如果我们的想要的区间在右侧[mid, r]. 例如求==target的终止位置, 就是希望继续往右边找
+							也就是从[l, r]变成[mid, r], 所以r不变, l = mid;
+							一旦l = mid; 二话不说, 将之前的mid加一: int mid = l + (r-l)/2 + 1;
+							此时, 不用想, false 的情况就是r = mid - 1;
+								r 比 l 低贱, 所以是 - 1
+				2. 总结: 右改mid(谐音, 又改mid)
+					1. 思考一个xx[mid]满足要求的情况, 也就是true的情况,
+						通过固定xx[mid], 移动target
+					2. 如果true, 你是想继续往左还是往右?
+						1. 往左. r = mid, l = mid + 1;
+						2. 往右, 小心啦!!, l = mid, r = mid - 1;
+					
 			2. 注释
 				1. y
 					#include <iostream>
