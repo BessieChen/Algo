@@ -9207,11 +9207,65 @@
 					    return 0;
 					}
 				r3.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct Rec{
+					    string id, name;
+					    int grade;
+					};
+
+					vector<Rec> res;
+
+					bool comp1(Rec &a, Rec &b){
+					    return a.id < b.id;
+					}
+
+					bool comp2(Rec &a, Rec &b){
+					    if(a.name != b.name) return a.name < b.name;
+					    return a.id < b.id;
+					}
+
+					bool comp3(Rec &a, Rec &b){
+					    if(a.grade != b.grade) return a.grade < b.grade;
+					    return a.id < b.id;
+					}
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+					    
+					    while(n--){
+					        char id[10], name[10];
+					        int grade;
+					        scanf("%s %s %d", id, name, &grade);
+					        
+					        res.push_back({id, name, grade});
+					    }
+					    
+					    if(m == 1) sort(res.begin(), res.end(), comp1);
+					    else if(m == 2) sort(res.begin(), res.end(), comp2);
+					    else sort(res.begin(), res.end(), comp3);
+					    
+					    for(auto &s : res) printf("%s %s %d\n", s.id.c_str(), s.name.c_str(), s.grade);
+					    
+					    return 0;
+					}
 				r4.
 				r5.
 
 		36. 1523. 学生课程列表	1039
 			0. bug
+				cin:
+					对于这样的情况, 输入是: aaa bbb ccc ddd
+					我们不一定要用getline(), stringstream() 来一个一个读
+					而是可以用cin 
+						就是string temp; while( cin >> temp) 这样也可以一个一个读
+				cout << vec.size() << endl;
+					如果是空的话, 会输出0, 所以不需要判断是否vec.empty();
 			1. 笔记
 				1. 其实这道题很简单,关键看你怎么存
 				2. 它的input是一个ind,后面包含了若干个string
@@ -9336,9 +9390,171 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <sstream>
+					#include <algorithm>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+
+					int main(){
+						int n, m;
+						cin >> n >> m;
+						while(m--){
+							int id, a;
+							cin >> id >> a;
+							while(a--){
+								string name;
+								cin >> name;
+								students[name].push_back(id);
+							}
+						}
+						
+						while(n--){
+							string line;
+							getline(cin, line);
+							stringstream ssin(line);
+
+							string query;
+							while(ssin >> query){
+								cout << query;
+								auto &s = students[query];
+								printf(" %d", s.size());
+								sort(s.begin(), s.end());
+								for(auto &item : s){
+									printf(" %d", item);
+								}
+								cout << endl;
+							}
+						}
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+					    while(m--){
+					        int id, k;
+					        cin >> id >> k;
+					        while(k--){
+					            string name;
+					            cin >> name;
+					            students[name].push_back(id);
+					        }
+					    }
+					    
+					    while(n--){
+					        string name;
+					        cin >> name;
+					        auto &s = students[name];
+					        sort(s.begin(), s.end());
+					        
+					        cout << name << " " << s.size();
+					        for(int i : s){
+					            cout << " " << i;
+					        }
+					        
+					        
+					        cout << endl;
+					    }
+					    
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+					    while(m--){
+					        int id, k;
+					        cin >> id >> k;
+					        while(k--){
+					            string name;
+					            cin >> name;
+					            students[name].push_back(id);
+					        }
+					    }
+					    
+					    while(n--){
+					        string name;
+					        cin >> name;
+					        auto &s = students[name];
+					        sort(s.begin(), s.end());
+					        
+					        cout << name << " " << s.size();
+					        for(int i : s){
+					            cout << " " << i;
+					        }
+					        
+					        
+					        cout << endl;
+					    }
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+					#include <unordered_map>
+
+					using namespace std;
+
+					unordered_map<string, vector<int>> students;
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+					    while(m--){
+					        int id;
+					        int num;
+					        cin >> id >> num;
+					        while(num--){
+					            string name;
+					            cin >> name;
+					            students[name].push_back(id);
+					        }
+					    }
+					    
+					    while(n--){
+					        string name;
+					        cin >> name;
+					        
+					        auto &s = students[name];
+					        sort(s.begin(), s.end());
+					        
+					        cout << name << " " << s.size();
+					        for(int i : s){
+					            cout << " " << i;
+					        }
+					        
+					        cout << endl;
+					    }
+					    
+					    return 0;
+					    
+					}
 				r5.
 
 		37. 1538. 链表排序	1052
@@ -9346,13 +9562,22 @@
 				1. 忘记加c_str()
 				2. printf("%s %d %s\n", vec[i].addr.c_str(), vec[i].val, vec[i+1].addr.c_str()); 
 					小心bug! 最后是s %d %s,不是s %d %d, 另一个bug, 最后输出的是vec[i+1].addr而不是vec[i].next;
+				3. 最后打印的时候:
+					应该是: 每个节点都要打印一次, 也就是打印size次, 其中最后一个节点的下一个是"-1"
+					我的错误写法: 只打印了size-1次, 因为我以为最后一个节点的下一个是"-1"所以我们应该少打一个,其实不应该
 			1. 笔记
+				-1. 这道题目的意思:
+					1. 给你很多节点的信息, 这些节点, 有些是连在一起的, 例如可能有10个节点, 最后可以有两个链表
+					2. 给了你一个head, 让你求出这个head引导下的链表.
+					3. 将这个链表的节点打散, 重新组合, 组合的条件就是按照key的顺序
+				2. printf()是不会给你自动换行的, 所以你可以用两个 printf()打印一行的内容
+					另外, 你可以用 printf()和 puts()搭配, 打印一行的内容, 因为 puts()可以换行
 				0. 将链表排序变成了数组排序, 有点投机取巧,但是方便
 				1. 这个代码厉害的地方在于, 我们用哈希表来找一个链表了
 					unordered_map<string, Node> student;
 					for(string i = head; i != "-1"; i = student[i].next) 
 				2. 找到链表之后,推入vector,对vector进行排序(需要重载Node的符号),最后输出
-				3. 这道题, N = 10^5, 所以不能用cin,cout
+				3. **** 这道题, N = 10^5, 所以不能用cin,cout
 				2. 老师说,我们之所以喜欢在算法比赛中,开一个结构体数组,是因为:
 					1. 时间短,只有1s,如果你一个结构体一个结构体的new, 时间不够
 						因为new本质上是malloc,new一次很快,但是很多次的话,就会超时
@@ -9424,6 +9649,7 @@
 					链接：https://www.acwing.com/activity/content/code/content/272708/
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
 				2. b
 					#include <iostream>
 					#include <algorithm>
@@ -9486,9 +9712,212 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					struct Node{
+						string addr;
+						int key;
+						string next;
+
+						bool operator< (const Node& t) const { return key < t.key; }
+					};
+
+					unordered_map<string, Node> map;
+
+					int main(){
+						int n;
+						char head[10];
+						scanf("%d %s", &n, head);
+						while(n--){
+							char addr[10], next[10];
+							int key;
+
+							scanf("%s %d %s", addr, &key, next);
+							map[addr] = {addr, key, next};
+						}
+
+						vector<Node> res;
+						for(string i = head; i != "-1"; i = map[i].next){
+							res.push_back(map[i]);
+						}
+
+						sort(res.begin(), res.end());
+						if(res.empty()) printf("0 -1");
+						else{
+							printf("%d %s\n", res.size(), res[0].addr.c_str());
+							for(int i = 0; i < res.size() ; i++){
+								auto s = res[i];
+								if(i != res.size() - 1) {auto sn = res[i+1]; printf("%s %d %s\n", s.addr.c_str(), s.key, sn.addr.c_str());}
+								else printf("%s %d -1\n", s.addr.c_str(), s.key);
+							}
+						}
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct Node{
+					    string addr;
+					    int key;
+					    string next;
+					    
+					    bool operator< (const Node& t) const{
+					        return key < t.key;
+					    }
+					};
+
+					unordered_map<string, Node> map;
+
+					int main(){
+					    int n;
+					    char head[10];
+					    scanf("%d %s", &n, head);
+					    
+					    while(n--){
+					        char addr[10];
+					        int key;
+					        char next[10];
+					        scanf("%s %d %s", addr, &key, next);
+					        
+					        map[addr] = {addr, key, next};
+					    }
+					    
+					    vector<Node> res;
+					    for(string i = head; i != "-1"; i = map[i].next){
+					        res.push_back(map[i]);
+					    }
+					    
+					    sort(res.begin(), res.end());
+					    printf("%d ", res.size());
+					    if(res.empty()) puts("-1");
+					    else{
+					        printf("%s\n", res[0].addr.c_str());
+					        
+					        for(int i = 0; i < res.size(); i++){
+					            if(i + 1 != res.size()) printf("%s %d %s\n", res[i].addr.c_str(), res[i].key, res[i+1].addr.c_str());
+					            else printf("%s %d -1\n", res[i].addr.c_str(), res[i].key);
+					        }
+					    }
+					    
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					struct Node{
+					    string addr;
+					    int key;
+					    string next;
+					    
+					    bool operator< (const Node &t) const{
+					        return key < t.key;
+					    }
+					};
+
+					unordered_map<string, Node> map;
+
+					int main(){
+					    int n;
+					    char head[10];
+					    scanf("%d %s", &n, head);
+					    
+					    while(n--){
+					        char addr[10];
+					        int key;
+					        char next[10];
+					        scanf("%s %d %s", addr, &key, next);
+					        
+					        map[addr] = {addr, key, next};
+					    }
+					    
+					    vector<Node> res;
+					    for(string i = head; i != "-1"; i = map[i].next){
+					        res.push_back(map[i]);
+					    }
+					    
+					    sort(res.begin(), res.end());
+					    printf("%d ",res.size());
+					    if(res.empty()) puts("-1");
+					    else{
+					        printf("%s\n", res[0].addr.c_str());
+					        
+					        for(int i = 0; i < res.size(); i++){
+					            if(i != res.size() - 1) printf("%s %d %s\n", res[i].addr.c_str(), res[i].key, res[i+1].addr.c_str());
+					            else printf("%s %d -1\n", res[i].addr.c_str(), res[i].key);
+					        }
+					    }
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					struct Node{
+					    string addr;
+					    int key;
+					    string next;
+					    
+					    bool operator< (const Node& t) const{
+					        return key < t.key;
+					    }
+					};
+
+					unordered_map<string, Node> map;
+
+					int main(){
+					    int n;
+					    char head[10];
+					    scanf("%d %s", &n, head);
+					    
+					    while(n--){
+					        char addr[10];
+					        int key;
+					        char next[10];
+					        scanf("%s %d %s", addr, &key, next);
+					        
+					        map[addr] = {addr, key, next};
+					    }
+					    
+					    vector<Node> res;
+					    for(string i = head; i != "-1"; i = map[i].next){
+					        res.push_back(map[i]);
+					    }
+					    
+					    sort(res.begin(), res.end());
+					    printf("%d ", res.size());
+					    if(res.empty()) puts("-1");
+					    else{
+					        printf("%s\n", res[0].addr.c_str());
+					        int i = 0;
+					        for(; i < res.size() - 1; i++){
+					            printf("%s %d %s\n", res[i].addr.c_str(), res[i].key, res[i+1].addr.c_str());
+					        }
+					        printf("%s %d -1\n", res[i].addr.c_str(), res[i].key);
+					    }
+					    
+					    return 0;
+					}
 				r5.
 
 		38. 1561. PAT 评测	1075
@@ -9506,6 +9935,42 @@
 				9. 因为题目中grade只会是-1,0,x不会是-2,所以你设置成-2就有必要.我也想试试(不行,因为-2和-1在output严格区分了)
 				10. 超级容易错!
 				11. Student(string _id) : id(_id)，C++构造函数的列表初始化
+				其他:
+					1. 构造函数
+						Student(){}
+						Student(string _id) : id(_id){
+							for(int i = 0; i < N; i++) grade[i] = -2;
+							total = 0;
+							cnt = 0;
+							submit = false; 注意!!!!! 如果没有初始化, 会认为是true
+							rank = M + 1;
+						}
+
+						为什么需要构造函数, 因为一步一步的更新信息
+						if(map.count(id) == 0) map[id] = Student(id);
+						map[id].grade[p] = max(map[id].grade[p], g);
+						if(!map[id].submit && g >= 0) map[id].submit = true;
+
+					2. unordered_map的使用:
+						1. 直接获取元素:
+							auto &s = map[id];
+
+						2. 用for()的话, 注意item.second才是元素
+							vector<Student> res;
+							for(auto &item : map){
+								auto &s = item.second;
+								s.calc();
+								if(s.submit) res.push_back(s); 
+							}
+
+					 3. printf()可以没有字母, 纯字符
+					 	printf(" -");
+					 4. puts()可以当做换行
+					 	puts("");
+					 5. 对于一行的情况, 输入给一个数组
+						for(int i = 1; i <= pnum; i++){
+							scanf("%d ", &full[i]);
+						}
 			2. 注释
 				1. y
 					#include <iostream>
@@ -9727,10 +10192,369 @@
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
-				r1.
+				r1. 
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 10;
+
+					const int M = 10010;
+
+					int n;
+					int m;
+
+
+					int full[N];
+
+					struct Student{
+						string id;
+						int grade[N];
+						bool sub;
+						int total;
+						int cnt;
+						int rank;
+
+						Student(){}
+						Student(string _id) : id(_id){
+							for(int i = 1; i <= m; i++) grade[i] = -2;
+							sub = false;
+							total = 0;
+							cnt = 0;
+							rank = M + 1;
+						}
+
+						void calc()
+						{
+							for(int i = 1; i <= m; i++)
+							{
+								total += max(grade[i], 0);
+								if(grade[i] == full[i]) cnt ++;
+							} 
+						}
+
+						bool operator< (const Student& t) const{
+							if(total != t.total) return total > t.total;
+							if(cnt != t.cnt) return cnt > t.cnt;
+							return id < t.id;
+						}
+					};
+
+
+					unordered_map<string, Student> input;
+					vector<Student> res;
+
+					int main(){
+						int k;
+						scanf("%d %d %d", &n, &m, &k);
+						for(int i = 1; i <= m; i++) cin >> full[i];
+
+						while(k--){
+							char id[10];
+							int q, g;
+							scanf("%s %d %d", id, &q, &g);
+
+							if(input.count(id) == 0) input[id] = Student(id);
+							input[id].grade[q] = max(input[id].grade[q], g);
+							if(g >= 0) input[id].sub = true;
+						}
+
+					    
+						for(auto &item : input){
+						    auto &s = item.second;
+							s.calc();
+							if(s.sub == true) res.push_back(s);
+						}
+
+						sort(res.begin(), res.end());
+						for(int i = 0, rank = 1; i < (int)res.size(); i++){
+							if(i && res[i].total != res[i-1].total) rank = i+1;
+							res[i].rank = rank;
+						}
+
+						for(int i = 1; i <= (int)res.size(); i++){
+							printf("%d %s %d", res[i-1].rank, res[i-1].id.c_str(), res[i-1].total);
+							for(int j = 1; j <= m; j++){
+								if(res[i-1].grade[j] >= -1) 
+									printf(" %d",max(0, res[i-1].grade[j]));
+								else{
+									printf(" -");
+								}
+							}
+							puts("");
+						}
+						
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 6;
+					const int M = 10010;
+
+					int full[N];
+
+					int snum, pnum, k;
+
+					struct Student{
+						string id;
+						int grade[N];
+						int total;
+						int cnt;
+						bool submit;
+						int rank;
+
+						Student(){}
+						Student(string _id) : id(_id){
+							for(int i = 0; i < N; i++) grade[i] = -2;
+							total = 0;
+							cnt = 0;
+							submit = false;
+							rank = M + 1;
+						}
+
+						void calc(){
+							for(int i = 1; i <= pnum; i++){
+								total += max(0, grade[i]);
+								if(grade[i] == full[i]) cnt ++;
+							}
+						}
+
+						bool operator< (const Student& t) const{
+							if(total != t.total) return total > t.total;
+							if(cnt != t.cnt) return cnt > t.cnt;
+							return id < t.id;
+						}
+					};
+
+					unordered_map<string, Student> map;
+
+					int main(){
+						
+						scanf("%d %d %d", &snum, &pnum, &k);
+
+						for(int i = 1; i <= pnum; i++){
+							scanf("%d ", &full[i]);
+						}
+
+						while(k--){
+							char id[10];
+							int p, g;
+							scanf("%s %d %d", id, &p, &g);
+
+							if(map.count(id) == 0) map[id] = Student(id);
+							map[id].grade[p] = max(map[id].grade[p], g);
+							if(!map[id].submit && g >= 0) map[id].submit = true;
+						}
+
+						vector<Student> res;
+						for(auto &item : map){
+							auto &s = item.second;
+							s.calc();
+							if(s.submit) res.push_back(s); 
+						}
+
+						sort(res.begin(), res.end());
+
+						for(int i = 0, rank = 1; i < (int)res.size(); i++){
+							if(i && res[i].total != res[i-1].total) rank = i + 1;
+							res[i].rank = rank;
+
+							printf("%d %s %d", rank, res[i].id.c_str(), res[i].total);
+							for(int j = 1; j <= pnum; j++){
+								if(res[i].grade[j] >= -1) printf(" %d", max(0, res[i].grade[j]));
+								else printf(" -");
+							}
+
+							puts("");
+
+						}
+
+						return 0;
+
+
+					}
+
 				r3.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 10;
+					const int M = 10010;
+
+					int snum, pnum, k;
+
+					int full[N];
+
+					struct Student{
+					    string id;
+					    int grade[N];
+					    int total;
+					    int cnt;
+					    bool submit;
+					    int rank;
+					    
+					    Student(){}
+					    Student(string _id) : id(_id){
+					        for(int i = 0; i < N; i++) grade[i] = -2;
+					        total = 0;
+					        cnt = 0;
+					        submit = false;
+					        rank = M + 1;
+					    }
+					    
+					    void calc(){
+					        for(int i = 1; i <= pnum; i++){
+					            total += max(0, grade[i]);
+					            if(grade[i] == full[i]) cnt++;
+					        }
+					    }
+					    
+					    bool operator< (const Student& t) const{
+					        if(total != t.total) return total > t.total;
+					        if(cnt != t.cnt) return cnt > t.cnt;
+					        return id < t.id;
+					    }
+					};
+
+
+					unordered_map<string, Student> map;
+
+					int main(){
+					    scanf("%d %d %d", &snum, &pnum, &k);
+					    for(int i = 1; i <= pnum; i++)
+					        scanf("%d ", &full[i]);
+					    while(k--){
+					        char id[10];
+					        int p, g;
+					        scanf("%s %d %d", id, &p, &g);
+					        
+					        if(map.count(id) == 0) map[id] = Student(id);
+					        auto &s = map[id];
+					        s.grade[p] = max(g, s.grade[p]);
+					        if(!s.submit && g >= 0) s.submit = true;
+					    }
+					    
+					    vector<Student> res;
+					    for(auto &item : map){
+					        auto &s = item.second;
+					        s.calc();
+					        if(s.submit) res.push_back(s);
+					    }
+					    
+					    sort(res.begin(), res.end());
+					    for(int i = 0, rank = 1; i < (int)res.size(); i++){
+					        if(i && res[i].total != res[i-1].total) rank = i + 1;
+					        res[i].rank = rank;
+					        
+					        printf("%d %s %d", rank, res[i].id.c_str(), res[i].total);
+					        for(int j = 1; j <= pnum; j++){
+					            if(res[i].grade[j] >= -1) printf(" %d", max(0, res[i].grade[j]));
+					            else printf(" -");
+					        }
+					        puts("");
+					    }
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 6;
+					const int M = 10010;
+
+					int snum, pnum, k;
+					int full[N];
+
+					struct Student{
+					    string id;
+					    int grade[N];
+					    int total;
+					    int cnt;
+					    bool submit;
+					    int rank;
+					    
+					    Student(){}
+					    Student(string _id) : id(_id){
+					        for(int i = 0; i < N; i++) grade[i] = -2;
+					        total = 0;
+					        cnt = 0;
+					        rank = M + 1;
+					        submit = false;
+					    }
+					    
+					    void calc(){
+					        for(int i = 1; i <= pnum; i++){
+					            total += max(0, grade[i]);
+					            if(grade[i] == full[i]) cnt ++;
+					        }
+					    }
+					    
+					    bool operator< (const Student& t) const{
+					        if(total != t.total) return total > t.total;
+					        if(cnt != t.cnt) return cnt > t.cnt;
+					        return id < t.id;
+					    } 
+					};
+
+					unordered_map<string, Student> map;
+
+					int main(){
+					    scanf("%d %d %d", &snum, &pnum, &k);
+					    for(int i = 1; i <= pnum; i++) 
+					        scanf("%d ", &full[i]);
+					        
+					    while(k--){
+					        char id[10];
+					        int p, g;
+					        scanf("%s %d %d",id, &p, &g);
+					        if(map.count(id) == 0) map[id] = Student(id);
+					        auto &s = map[id];
+					        s.grade[p] = max(g, s.grade[p]);
+					        if(!s.submit && g >= 0) s.submit = true;
+					    }
+					    
+					    // cout << res.size()
+					    vector<Student> res;
+					    for(auto &item : map){
+					        auto &s = item.second;
+					        s.calc();
+					        if(s.submit) res.push_back(s);
+					    }
+					    
+					    sort(res.begin(), res.end());
+					    for(int i = 0, rank = 1; i < (int)res.size(); i++){
+					        if(i && res[i].total != res[i-1].total) rank = i + 1;
+					        res[i].rank = rank;
+					    
+					        printf("%d %s %d", rank, res[i].id.c_str(), res[i].total);
+					        for(int j = 1; j <= pnum; j++){
+					            if(res[i].grade[j] >= -1) printf(" %d", max(0, res[i].grade[j]));
+					            else printf(" -");
+					        }
+					        puts("");
+					    }
+					    
+					    return 0;
+					    
+					}
 				r5.
 
 		39. 1588. 插入还是堆排序	1098
@@ -9878,11 +10702,83 @@
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
-				r1.
+				r1. 通过, 但是很不优雅
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int origin[N];
+					int after[N];
+
+					int n;
+
+					void down(int i, int size){
+						int t = i, l = t * 2 + 1, r = l + 1;
+						if(l < size && after[l] > after[t]) t = l;
+						if(r < size && after[r] > after[l]) t = r;
+						if(t != i){
+							swap(after[i], after[t]);
+							down(t, size);
+						}
+					}
+
+					int main(){
+
+						cin >> n;
+						
+
+						for(int i = 0; i < n; i++){
+							cin >> origin[i];
+						}
+						for(int i = 0; i < n; i++){
+							cin >> after[i];
+						}
+
+						int i = 0;
+						for(; i + 1 < n; i++){
+							if(after[i] > after[i+1]) break;
+						}
+
+						bool isInsert = true;
+						int next = i + 1;
+						while(next < n){
+							if(after[next] != origin[next]){
+								isInsert = false;
+								break;
+							}
+							next++;
+						}
+					    i++;
+						if(isInsert){
+							puts("Insertion Sort");
+							int t = after[i];
+							while(i >= 1 && after[i-1] > t){
+								after[i] = after[i-1];
+								i--;
+							}
+							after[i] = t;
+						}
+						else{
+							puts("Heap Sort");
+							int a = n - 1;
+							while(after[0] <= after[a]) a--;
+							swap(after[0], after[a]);
+							down(0, a);
+						}
+
+						cout << after[0];
+						for(int k = 1; k < n; k++) cout << " " << after[k];
+						cout << endl;
+						return 0;	
+					}
 				r2.
 				r3.
 				r4.
 				r5.
+
+	9. 2020年10月8日16:45:10
 
 		40. 1579. 插入还是归并	1089
 			0. bug
@@ -11044,9 +11940,180 @@
 					    return res;
 					}
 
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> preorder[i];
+					        inorder[i] = preorder[i];
+					    }
+
+					    sort(inorder, inorder + n);
+
+					    if (build(0, n - 1, 0, n - 1, 0))
+					    {
+					        puts("YES");
+					        cout << postorder[0];
+					        for (int i = 1; i < n; i ++ ) cout << ' ' << postorder[i];
+					        cout << endl;
+					    }
+					    else
+					    {
+					        reverse(inorder, inorder + n);
+					        cnt = 0;
+					        if (build(0, n - 1, 0, n - 1, 1))
+					        {
+					            puts("YES");
+					            cout << postorder[0];
+					            for (int i = 1; i < n; i ++ ) cout << ' ' << postorder[i];
+					            cout << endl;
+					        }
+					        else puts("NO");
+					    }
+
+					    return 0;
+					}
 
 					作者：yxc
 					链接：https://www.acwing.com/activity/content/code/content/279699/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279699/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		49. 1550. 完全二叉搜索树	1064
+			0. bug
+			1. 笔记
+				1. 排好序 -> 二叉搜索树的中序遍历
+				2. 按顺序填进去 -> 完全二叉树, 也就是left = x * 2, right = x * 2 + 1;
+				3. 瓶颈在排序上, sort(), 复杂度nlogn
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					int w[N], tr[N];
+
+					void dfs(int u, int& k) 
+					{
+					    if (u * 2 <= n) dfs(u * 2, k);
+					    tr[u] = w[k ++ ];  中序遍历
+					    if (u * 2 + 1 <= n) dfs(u * 2 + 1, k);
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> w[i];
+
+					    sort(w, w + n);
+
+					    int k = 0; 大家共用一个k, 来知道怎么填
+					    dfs(1, k);
+
+					    cout << tr[1];
+					    for (int i = 2; i <= n; i ++ ) cout << ' ' << tr[i];
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279716/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+			
+
+		50. 1576. 再次树遍历	1086
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <stack>
+
+					using namespace std;
+
+					const int N = 40;
+
+					int n;
+					int l[N], r[N];
+
+					void dfs(int u, int root)
+					{
+					    if (!u) return;
+
+					    dfs(l[u], root);
+					    dfs(r[u], root);
+
+					    cout << u;
+					    if (u != root) cout << ' ';
+					}
+
+					int main()
+					{
+					    cin >> n;
+
+					    int root;
+					    int last = 0, type;
+					    stack<int> stk;
+					    for (int i = 0; i < n * 2; i ++ )
+					    {
+					        string op;
+					        cin >> op;
+					        if (op == "Push")
+					        {
+					            int x;
+					            cin >> x;
+					            if (!last) root = x;
+					            else
+					            {
+					                if (type == 0) l[last] = x;
+					                else r[last] = x;
+					            }
+					            stk.push(x);
+					            last = x;
+					            type = 0;  // 表示push
+					        }
+					        else
+					        {
+					            last = stk.top();
+					            stk.pop();
+					            type = 1;  // 表示pop
+					        }
+					    }
+
+					    dfs(root, root);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279748/
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
