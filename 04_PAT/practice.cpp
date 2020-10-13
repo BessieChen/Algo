@@ -10559,6 +10559,40 @@
 
 		39. 1588. 插入还是堆排序	1098
 			0. bug
+				1. 插入排序: 注意是b[l-1] > temp
+					int temp = b[l];
+					while(l >= 2 && b[l-1] > temp) 注意是b[l-1] > temp, 不是b[l-1] > b[l], 假设是从b[1]开始有值
+					{
+						b[l] = b[l-1];
+						l--; //不能简写成 b[l] = b[--l];
+					}
+					b[l] = temp;
+				2. 比较的时候:
+					记得如果是全局变量的话, 最好要判断范围, 例如正确的:
+						while(k <= n && b[k-1] <= b[k]) k++;
+					    while(k <= n && b[k] == a[k]) k++;
+					错误的:
+						while(b[k-1] <= b[k]) k++;
+					    while(b[k] == a[k]) k++;
+					    因为全局变量中, k如果超出了n, 那么a[k], b[k]一定相等, == 0
+				3. 因为是判断是否用heap
+					所以从i == 1开始读取input, 而不是从 i == 0开始
+				4. 写 down() 的时候, 翻了错误:
+
+					void down(int u, int size)
+					{
+					    int l = u * 2, r = u * 2 + 1;
+						int t = u;
+						if(l <= size && b[l] > b[u]) t = l;
+						if(r <= size && b[r] > b[t]) t = r; 这里不能写成b[r] > b[l], 因为还是要和t比, 这里的t可能是l, 也可能是原来的u
+						if(t != u){
+							swap(b[u], b[t]);
+					        down(t, size); 我错写成了 down(1, size);
+					    }
+					}
+
+
+
 			1. 笔记
 				思路:
 					1. 老师说插入排序的特点: 左侧的元素都是拍好的(递增的),右侧的元素都是和原来的元素一样
@@ -10570,9 +10604,14 @@
 					7. 所以,先判断是否是插入,是,就继续插入排序.不是,说明是堆排序,找到数组的左右两侧(by 堆顶的元素i是 <= 右侧的所有元素的),最后继续堆排序
 					8. 很多bug,很容易写错
 
-					y总为什么down操作是b[t] < b[u * 2]？
-					down操作不应该是把堆顶大的元素往下降吗。。。
-						大根堆小根堆都能实现从小到大排序，如果用小根堆，那每次把最小值放到序列开头；如果用大根堆，那就每次把最大值放到序列结尾。
+				一个技巧:
+					int k = 2;
+					while(k <= n && b[k-1] <= b[k]) k++;
+					这样break的时候, k就是我们需要的了
+					而不是 
+						int k = 1;
+						while(k <= n && b[k] <= b[k+1]) k++;
+						break的时候, k+1才是我们需要的.
 
 			2. 注释
 				1. y
@@ -10717,7 +10756,7 @@
 					void down(int i, int size){
 						int t = i, l = t * 2 + 1, r = l + 1;
 						if(l < size && after[l] > after[t]) t = l;
-						if(r < size && after[r] > after[l]) t = r;
+						if(r < size && after[r] > after[t]) t = r;
 						if(t != i){
 							swap(after[i], after[t]);
 							down(t, size);
@@ -10774,15 +10813,257 @@
 						return 0;	
 					}
 				r2.
-				r3.
-				r4.
-				r5.
+					#include <iostream>
 
-	9. 2020年10月9日16:58:09
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N];
+					int b[N];
+
+					void down(int u, int size){
+						int l = u * 2, r = u * 2 + 1;
+						int t = u;
+						if(l <= size && b[l] > b[u]) t = l;
+						if(r <= size && b[r] > b[l]) t = r;
+						if(t != u){
+							swap(b[u], b[t]);
+							down(t, size);
+						}
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 1; i <= n; i++) cin >> a[i];
+						for(int i = 1; i <= n; i++) cin >> b[i];
+
+						int k = 2;
+						while(k <= n && b[k-1] <= b[k]) k++;
+					// 	cout << k;
+						int l = k;
+						while(k <= n && a[k] == b[k]) k++;
+						if(k == n + 1){ 
+							puts("Insertion Sort");
+							int temp = b[l];
+							while(l >= 2 && b[l-1] > temp){
+								b[l] = b[l-1];
+								l--;
+							}
+							b[l] = temp;
+						}
+						else{
+							puts("Heap Sort");
+							int j = n;
+							while(b[1] <= b[j]) j--;
+							swap(b[1], b[j]);
+							down(1, j-1);
+						}
+
+						cout << b[1];
+						for(int i = 2; i <= n; i++) cout << " " << b[i];
+						cout << endl;
+
+						return 0;
+					}
+				r3.
+					#include <iostream>
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N];
+					int b[N];
+
+					void down(int u, int size){
+					    int t = u, l = u * 2, r = l + 1;
+					    if(l <= size && b[l] > b[u]) t = l;
+					    if(r <= size && b[r] > b[l]) t = r;
+					    if(t != u){
+					        swap(b[u], b[t]);
+					        down(t, size);
+					    }
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 1; i <= n; i++) cin >> a[i];
+					    for(int i = 1; i <= n; i++) cin >> b[i];
+					    
+					    int k = 2;
+					    while(k <= n && b[k-1] <= b[k]) k++;
+					    int t = k;
+					    while(k <= n && b[k] == a[k]) k++;
+					    if(k == n+1){
+					        puts("Insertion Sort");
+					        int temp = b[t];
+					        while(b[t-1] > temp){
+					            b[t] = b[t-1];
+					            t--;
+					        }
+					        b[t] = temp;
+					    }
+					    else{
+					        puts("Heap Sort");
+					        int l = n;
+					        while(b[1] <= b[l]) l--;
+					        swap(b[1], b[l]);
+					        down(1, l-1);
+					    }
+					    
+					    cout << b[1];
+					    for(int i = 2; i <= n ; i++) cout << " " << b[i];
+					    cout << endl;
+					    return 0;
+					}
+				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N];
+					int b[N];
+
+					void down(int u, int size){
+					    int t = u, l = u * 2, r = l + 1;
+					    if(l <= size && b[l] > b[u]) t = l;
+					    if(r <= size && b[r] > b[l]) t = r;
+					    if(u != t){
+					        swap(b[u], b[t]);
+					        down(t, size);
+					    }
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 1; i <= n; i ++) cin >> a[i];
+					    for(int i = 1; i <= n; i ++) cin >> b[i];
+					        
+					    int k = 2;
+					    while(k <= n && b[k-1] <= b[k]) k++;
+					    int t = k;
+					    while(k <= n && b[k] == a[k]) k++;
+					    
+					    if(k == n+1){
+					        puts("Insertion Sort");
+					        int temp = b[t];
+					        while(t >= 2 && b[t-1] > temp){
+					            b[t] = b[t-1];
+					            t--;
+					        }
+					        b[t] = temp;
+					    }
+					    else{
+					        puts("Heap Sort");
+					        int l = n;
+					        while(b[1] <= b[l]) l--;
+					        swap(b[1], b[l]);
+					        down(1, l-1);
+					    }
+					    
+					    cout << b[1];
+					    for(int i = 2; i <= n; i++) cout << " " << b[i];
+					    cout << endl;
+					    
+					    return 0;
+					    
+					    
+					}
+				r5.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N], b[N];
+
+					void down(int u, int size){
+					    int t = u, l = u * 2, r = l + 1;
+					    if(l <= size && b[l] > b[u]) t = l;
+					    if(r <= size && b[r] > b[l]) t = r;
+					    if(u != t){
+					        swap(b[u], b[t]);
+					        down(t, size);
+					    }
+					}
+					int main(){
+					    cin >> n;
+					    for(int i = 1; i <= n; i++) cin >> a[i];
+					    for(int i = 1; i <= n; i++) cin >> b[i];
+					    
+					    int k = 2;
+					    while(k <= n && b[k-1] <= b[k]) k ++;
+					    int t = k;
+					    while(k <= n && b[k] == a[k]) k++;
+					    if(k == n + 1){
+					        puts("Insertion Sort");
+					        int temp = b[t];
+					        while(t >= 2 && b[t-1] > temp){
+					            b[t] = b[t-1];
+					            t--;
+					        }
+					        b[t] = temp;
+					    }
+					    else{
+					        puts("Heap Sort");
+					        int l = n;
+					        while(b[1] <= b[l]) l--;
+					        swap(b[1], b[l]);
+					        down(1, l-1);
+					    }
+					    
+					    cout << b[1];
+					    for(int i = 2; i <= n; i++) cout << " " << b[i];
+					    cout << endl;
+					    return 0;
+					    
+					    
+					}
+
+	9. 2020年10月13日08:28:53
 
 		40. 1579. 插入还是归并	1089
 			0. bug
 			1. 笔记
+				1. sort(), 用于数组[]
+					两个参数都是指针
+					例如我要处理[i,j]这个区间
+						sort(arr + i, arr + j + 1); 一定记得j+1
+					如果我要处理从i开始, 长度为len的区间, 也就是[i, i + len - 1]
+						sort(arr + i, arr + (i + len));
+				2. 模板, 每隔len的长度处理一次:
+					for(int i = 0; i < n; i += len){
+						sort(arr + i, arr + min(i + len, n)); 因为我们要保证指针不越界, 所以是min(i + len, n)
+					}
+				3. 我喜欢老师的这个逻辑:
+					int l = 1;
+					while(true)
+			        {
+			            bool match = check();
+			            
+			            int len = 1 << l;
+			            for(int i = 0; i < n; i += len){
+			                sort(a + i , a + min(n, i + len));
+			            }
+			            
+			            if(match){
+			                print(a);
+			                break;
+			            }
+			            l++;
+			        }
+			        1.
+				        也就是先用没有加工过的arr来判断是否是match
+				        然后不管有没有match,都进行往下迭代一次
+				        如果是match, 说明刚刚迭代的就是我们要的东西
+				        如果没有match, 然后再看下刚刚迭代的东西, 是不是match
+				    2. 从 l == 1开始的原因:
+				    	假设极端的, b数组 == a数组, 说明一次都没有迭代, 所以我们 l == 1, 就可以是迭代第一次
+
+
 			2. 注释
 				1. y
 					#include <iostream>
@@ -10861,10 +11142,302 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N], b[N];
+
+					bool check(){
+						for(int i = 0; i < n; i++){
+							if(a[i] != b[i]) return false;
+						}
+						return true;
+					}
+
+					void print(int* c){
+					    cout << c[0];
+						for(int i = 1; i < n; i++) cout << " " << c[i];
+						cout << endl;
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 0; i < n; i++) cin >> a[i];
+						for(int i = 0; i < n; i++) cin >> b[i];
+
+						int k = 1;
+						while(k < n && b[k-1] <= b[k]) k++;
+						int t = k;
+						while(k < n && b[k] == a[k]) k++;
+						if(k == n){
+							puts("Insertion Sort");
+							int temp = b[t];
+							while(t >= 1 && b[t-1] > temp){
+								b[t] = b[t-1];
+								t--;
+							}
+							b[t] = temp;
+							print(b);
+						}
+						else{
+							puts("Merge Sort");
+							int l = 1;
+							while(true){
+								bool match = check();
+								int len = 1 << l;
+
+								for(int i = 0; i < n; i += len){
+									sort(a + i, a + min(i + len, n));
+								}
+
+								if(match) break;
+								l++;
+							}
+							print(a);
+						}
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+					const int N = 110;
+					int n;
+					int a[N], b[N];
+
+					bool check(){
+					    for(int i = 0; i <n ; i++) if(a[i] != b[i]) return false;
+					    return true;
+					}
+
+					void print(int* c){
+					    cout << c[0];
+					    for(int i = 1; i < n ; i++) cout << " " <<c[i];
+					    cout << endl;
+					}
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    for(int i = 0; i < n ;i ++) cin >> b[i];
+					    
+					    int k = 1;
+					    while(k < n && b[k-1] <= b[k]) k++;
+					    int t = k;
+					    while(k < n && a[k] == b[k]) k++;
+					    
+					    if(k == n){
+					        puts("Insertion Sort");
+					        int temp = b[t];
+					        while(t-1 >= 0 && b[t-1] > temp){
+					            b[t] = b[t-1];
+					            t--;
+					        }
+					        b[t] = temp;
+					        print(b);
+					    }
+					    else{
+					        puts("Merge Sort");
+					        int l = 1;
+					        while(true){
+					            bool match = check();
+					            
+					            int len = 1 << l;
+					            for(int i = 0; i < n; i += len){
+					                sort(a + i, a + min(i + len, n));
+					            }
+					            
+					            if(match){
+					                print(a);
+					                break;
+					            }
+					            l ++;
+					        }
+					    }
+					    
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N], b[N];
+
+					void print(int* c){
+					    cout << c[0];
+					    for(int i = 1; i < n; i++) cout << " " << c[i];
+					    cout << endl;
+					}
+
+					bool check(){
+					    for(int i = 0; i < n; i++) if(a[i] != b[i]) return false;
+					    return true;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    for(int i = 0; i < n; i++) cin >> b[i];
+					    
+					    int k = 1;
+					    while(k < n && b[k-1] <= b[k]) k++;
+					    int t = k;
+					    while(k < n && a[k] == b[k]) k++;
+					    
+					    if(k == n){
+					        puts("Insertion Sort");
+					        sort(b, b + t + 1);
+					        print(b);
+					    }
+					    else{
+					        puts("Merge Sort");
+					        
+					        int l = 1;
+					        while(true)
+					        {
+					            bool match = check();
+					            
+					            int len = 1 << l;
+					            for(int i = 0; i < n; i += len){
+					                sort(a + i , a + min(n, i + len));
+					            }
+					            
+					            if(match){
+					                print(a);
+					                break;
+					            }
+					            l++;
+					        }
+					    }
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N], b[N];
+
+					void print(int* c){
+					    cout << c[0];
+					    for(int i = 1; i < n; i++) cout << " " <<c[i];
+					    cout << endl;
+					}
+
+					bool check(){
+					    for(int i = 0; i < n; i++) if(a[i] != b[i]) return false;
+					    return true;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    for(int i = 0; i < n; i++) cin >> b[i];
+					    
+					    int k = 1;
+					    while(k < n && b[k-1] <= b[k]) k++;
+					    int t = k;
+					    while(k < n && a[k] == b[k]) k++;
+					    
+					    if(k == n){
+					        puts("Insertion Sort");
+					        sort(b, b + t + 1);
+					        print(b);
+					    }
+					    else{
+					        puts("Merge Sort");
+					        
+					        int l = 1;
+					        while(true){
+					            bool match = check();
+					            int len = 1 << l;
+					            for(int i = 0; i < n; i += len){
+					                sort(a + i, a + min(i + len, n));
+					            }
+					            
+					            if(match){
+					                print(a);
+					                break;
+					            }
+					            l++;
+					        }
+					    }
+					    
+					    return 0;
+					}
 				r5.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+					int n;
+					int a[N], b[N];
+
+					void print(int *c){
+					    cout << c[0];
+					    for(int i = 1; i < n; i++) cout << " " << c[i];
+					    cout << endl;
+					}
+
+					bool check(){
+					    for(int i = 0; i <n; i++) if(a[i] != b[i]) return false;
+					    return true;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    for(int i = 0; i < n; i++) cin >> b[i];
+					    
+					    int k = 1;
+					    while(k < n && b[k-1] <= b[k]) k++;
+					    int t = k;
+					    while(k < n && a[k] == b[k]) k++;
+					    
+					    if(k == n){
+					        puts("Insertion Sort");
+					        sort(b, b + t + 1);
+					        print(b);
+					    }
+					    else{
+					        puts("Merge Sort");
+					        
+					        int l = 1;
+					        while(true){
+					            
+					            bool match = check();
+					            
+					            int len = 1 << l;
+					            for(int i = 0; i <n; i += len){
+					                sort(a + i, a + min(i + len, n));
+					            }
+					            
+					            if(match){
+					                print(a);
+					                break;
+					            }
+					            
+					            l++;
+					        }
+					    }
+					    
+					    return 0;
+					}
 
 		41. 789. 数的范围 模板题
 			0. bug
@@ -10907,9 +11480,9 @@
 				2. 总结: 右改mid(谐音, 又改mid)
 					1. 思考一个xx[mid]满足要求的情况, 也就是true的情况,
 						通过固定xx[mid], 移动target
-					2. 如果true, 你是想继续往左还是往右?
+					2. 如果true, 你是想继续往左还是往右? 就是想象画面,[l,mid]是左边和[mid,r]是右边,你要哪个
 						1. 往左. r = mid, l = mid + 1;
-						2. 往右, 小心啦!!, l = mid, r = mid - 1;
+						2. 往右, 小心啦!!, l = mid, r = mid - 1; mid = l + (r-l)/2 + 1;
 					
 			2. 注释
 				1. y
@@ -11031,11 +11604,230 @@
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
-				r1.
+				r1. 写的很顺利, 1c1a
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m;
+					int a[N];
+					int q;
+
+					int checkmin()
+					{
+						int l = 0, r = n-1;
+						while(l < r){
+							int mid = l + (r-l)/2;
+							if(q <= a[mid]) r = mid;
+							else l = mid + 1;
+						}
+						if(a[r] == q) return r;
+						return -1;
+					}
+
+					int checkmax(){
+						int l = 0, r = n - 1;
+						while(l < r){
+							int mid = l + (r-l)/2 + 1;
+							if(a[mid] <= q) l = mid;
+							else r = mid - 1;
+						}
+						if(a[r] == q) return r;
+						return -1;
+					}
+					int main(){
+						cin >> n >> m;
+						for(int i = 0; i < n; i++) cin >> a[i];
+
+
+						while(m--){
+							cin >> q;
+
+							int l = checkmin();
+							int r = checkmax();
+							cout << l << " " << r << endl;
+						}
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m;
+					int a[N];
+					int q;
+
+					int cmin(){
+					    int l = 0, r = n-1;
+					    while(l < r){
+					        int mid = l + (r-l)/2;
+					        if(q <= a[mid]) r = mid;
+					        else l = mid + 1;
+					    }
+					    if(a[r] == q) return r;
+					    return -1;
+					}
+
+					int cmax(){
+					    int l = 0, r = n - 1;
+					    while(l < r){
+					        int mid = l + (r-l)/2 + 1;
+					        if(a[mid] <= q) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(a[r] == q) return r;
+					    return -1;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < n ; i++) cin >> a[i];
+					    
+					    while(m--){
+					        cin >> q;
+					        int l = cmin();
+					        int r = cmax();
+					        cout << l << " " << r << endl;
+					    }
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m, q;
+					int a[N];
+
+					int cmin(){
+					    int l = 0, r = n-1;
+					    while(l <r){
+					        int mid = l + (r-l)/2;
+					        if(q <= a[mid]) r = mid;
+					        else l = mid + 1;
+					    }
+					    if(q == a[r]) return r;
+					    return -1;
+					}
+
+					int cmax(){
+					    int l = 0, r = n - 1;
+					    while(l < r){
+					        int mid = l + (r-l)/2 + 1;
+					        if(a[mid] <= q) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(q == a[r]) return r;
+					    return -1;
+					}
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    
+					    while(m--){
+					        cin >> q;
+					        int l = cmin();
+					        int r = cmax();
+					        cout << l << " " << r << endl;
+					    }
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m, q;
+					int a[N];
+
+					int cmin(){
+					    int l = 0, r = n-1;
+					    while(l < r){
+					        int mid = l + (r-l)/2;
+					        if(q <= a[mid]) r = mid;
+					        else  l = mid + 1;
+					    }
+					    if(q == a[r]) return r;
+					    return -1;
+					}
+
+					int cmax(){
+					    int l = 0, r = n - 1;
+					    while(l < r){
+					        int mid = l + (r-l)/2 + 1;
+					        if(a[mid] <= q) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(q == a[r]) return r;
+					    return -1;
+					}
+
+					int main(){
+					    
+					    cin >> n >> m;
+					    for(int i = 0; i <n ; i++) cin >>a[i];
+					    
+					    while(m--){
+					        cin >> q;
+					        int l = cmin();
+					        int r = cmax();
+					        cout << l << " " << r << endl;
+					     }
+					     
+					     return 0;
+					    
+					}
 				r5.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m, q;
+					int a[N];
+
+					int cmin(){
+					    int l = 0, r = n-1;
+					    while(l < r){
+					        int mid = l + (r-l)/2;
+					        if(q <= a[mid]) r = mid;
+					        else l = mid + 1;
+					    }
+					    if(q == a[r]) return r;
+					    return -1;
+					}
+
+					int cmax(){
+					    int l = 0, r = n-1;
+					    while(l < r){
+					        int mid = l + (r-l)/2 + 1;
+					        if(a[mid] <= q) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(a[r] == q) return r;
+					    return -1;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    
+					    while(m--){
+					        cin >> q;
+					        int l = cmin();
+					        int r = cmax();
+					        cout << l << " " << r << endl;
+					    }
+					    
+					    return 0;
+					}
 
 		42. 838. 堆排序 	模板题
 			0. bug
@@ -11063,9 +11855,6 @@
 					        down(t);
 					    }
 					}
-
-
-
 
 
 					int main()
