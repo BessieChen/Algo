@@ -7236,6 +7236,8 @@
 							res.push_back(n % d);
 							n /= d;
 						}
+				其实就是求n在b进制下的数字是多少
+				其实也就一行while(n) vec.push_back(n % b), n /= b, 但是如果是n==0需要特判
 			2. 注释
 				1. y
 					#include <iostream>
@@ -7275,6 +7277,40 @@
 					链接：https://www.acwing.com/activity/content/code/content/309977/
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					vector<int> nums;
+
+					bool check()
+					{
+					    for (int i = 0, j = nums.size() - 1; i < j; i ++, j -- ) 两个指针
+					        if (nums[i] != nums[j])
+					            return false;
+
+					    return true;
+					}
+
+					int main()
+					{
+					    int n, b;
+					    cin >> n >> b;
+
+					    if (!n) nums.push_back(0); 如果不写这一句, N == 0的时候, 下一句while(0)不走, nums会是空的, 所以会是segmentfault
+					    while (n) nums.push_back(n % b), n /= b;
+
+					    if (check()) puts("Yes");
+					    else puts("No");
+
+					    cout << nums.back();
+					    for (int i = nums.size() - 2; i >= 0; i -- ) cout << ' ' << nums[i];
+
+					    return 0;
+					}
+
 			3. 5次
 				r1.
 					#include <iostream>
@@ -11831,7 +11867,34 @@
 
 		42. 838. 堆排序 	模板题
 			0. bug
+				总是容易写错的地方:
+					1. 
+						void down(int u, int size){
+							int t = u, l = u * 2, r = l + 1;
+							if(l <= size && a[l] < a[t]) t = l; 容易错写成  a[l] < a[u]
+							if(r <= size && a[r] < a[t]) t = r; 容易错写成  a[r] < a[l]
+							if(t != u){
+								swap(a[t], a[u]);
+								down(t, size); 容易错写成 down(1, size);
+							}
+						}
+					2. heapify
+						for(int i = n/2; i; i--) down(i, size); 容易写错的地方: 是 down(i, size), 而不是 down(1, size)
+
 			1. 笔记
+				1. 堆排序:
+					1. 首先读取的时候一定是从index == 1开始读取
+					2. 其次, 先heapify, 也就是从最后一个非叶子节点读取, 
+						它的ind是 n / 2
+							举例, 节点是1, (2,3), (4). 那么的确 4/2 == 2是 最后一个非叶子节点
+							当节点是 1, (2,3), (4,5), (6, 7). 那么的确 7/2==3是 最后一个非叶子节点
+						for(int i = n/2; i; i--) down(i, size); 容易写错的地方: 是 down(i, size), 而不是 down(1, size)
+							其中i的意思是 i >= 1
+					3. 其中down()的时候, 是小的元素放到heap的顶部
+					4. heap排序, 我们只能保证top是最小的,所以要一个一个取出top,然后把
+						swap(a[1], a[size]);
+						size--;
+						之后down的时候, size的范围要缩小
 			2. 注释
 				1. y
 					#include <iostream>
@@ -11884,15 +11947,244 @@
 				2. b
 			3. 5次
 				r1.
-				r2.
-				r3.
-				r4.
-				r5.
+					#include <iostream>
 
-5.  树
+					using namespace std;
+
+					const int N = 100010;
+					int n, m;
+					int a[N];
+
+					void down(int u, int size){
+						int t = u, l = u * 2, r = l + 1;
+						if(l <= size && a[l] < a[u]) t = l;
+						if(r <= size && a[r] < a[t]) t = r;
+						if(t != u){
+							swap(a[u], a[t]);
+							down(t, size);
+						}
+					}
+
+					int main(){
+						scanf("%d %d", &n, &m);
+						int size = n;
+						for(int i = 1; i <= n; i++) scanf("%d ", &a[i]);
+						
+						
+
+						for(int i = n/2; i >= 1; i--) down(i, size);
+
+						for(int i = 0; i < m; i ++){
+							printf("%d ", a[1]);
+							a[1] = a[size--];
+					// 		size--;
+							down(1, size);
+						}
+
+					    puts("");
+						return 0;
+
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m;
+					int a[N];
+
+					void down(int u, int size){
+					    int t = u, l = u *2, r = l + 1;
+					    if(l <= size && a[l] < a[t]) t = l;
+					    if(r <= size && a[r] < a[t]) t = r;
+					    if(t != u){
+					        swap(a[t], a[u]);
+					        down(t, size);
+					    }
+					}
+
+					int main(){
+					    scanf("%d %d", &n, &m);
+					    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+					    int size = n;
+					    
+					    for(int i = n/2; i; i--) down(i, size);
+					    
+					    while(m--){
+					        printf("%d ", a[1]);
+					        swap(a[1], a[size--]);
+					        down(1, size);
+					    }
+					    puts("");
+					    return 0;
+					}
+				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m;
+					int a[N];
+
+					void down(int u, int size){
+					    int t = u, l = u *2 , r = l + 1;
+					    if(l <= size && a[l] < a[t]) t = l;
+					    if(r <= size && a[r] < a[t]) t = r;
+					    if(t != u){
+					        swap(a[t], a[u]);
+					        down(t, size);
+					    }
+					}
+					int main(){
+					    scanf("%d %d", &n, &m);
+					    int size = n;
+					    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+					    
+					    for(int i = n/2; i ; i--) down(i, size);
+					    
+					    for(int i = 0; i <m; i++){
+					        printf("%d ", a[1]);
+					        a[1] = a[size--];
+					        down(1, size);
+					    }
+					    
+					    puts("");
+					    return 0;
+					}
+				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m;
+					int a[N];
+
+					void down(int u, int size){
+					    int t = u, l = u *2, r = l +1;
+					    if(l <= size && a[l] < a[t]) t = l;
+					    if(r <= size && a[r] < a[t]) t = r;
+					    if(t != u){
+					        swap(a[u], a[t]);
+					        down(t, size);
+					    }
+					}
+
+					int main(){
+					    scanf("%d%d", &n, &m);
+					    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+					    int size = n;
+					    for(int i = n/2; i ; i--) down(i, size);
+					    while(m--){
+					        printf("%d ", a[1]);
+					        a[1] = a[size];
+					        size--;
+					        down(1, size);
+					    }
+					    puts("");
+					    return 0;
+					}
+				r5.	
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, m;
+					int a[N];
+
+					void down(int u, int size){
+					    int t = u, l = u *2 ,r = l + 1;
+					    if(l <= size && a[l] < a[t]) t = l;
+					    if(r <= size && a[r] < a[t]) t = r;
+					    if(t != u){
+					        swap(a[t], a[u]);
+					        down(t, size);
+					    }
+					}
+
+					int main(){
+					    
+					    scanf("%d%d", &n, &m);
+					    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+					    int size = n;
+					    for(int i = n/2; i ; i--) down(i, size);
+					    while(m--){
+					        printf("%d ", a[1]);
+					        a[1] = a[size];
+					        size--;
+					        down(1, size);
+					    }
+					    puts("");
+					    return 0;
+					}
+
+5. 树
 		43. 826. 单链表	模板题
 			0. bug
+				1. 这道题中, 如果是remove的k==0,说明删除头结点. 但是我总觉得怪怪的, 为什么不是1
+				2. 不要忘了init(){head = -1;} 我就忘了, 有时候是写了init(),但是忘记加入main()中了
+				3. 题目是说第k个后面add或者remove, 这个k是从1开始的, 记得是k-1. add(k-1, x), remove(k-1)
 			1. 笔记
+				1.
+					1. i != -1
+						for(xx; ~i; xx)
+					2. i >= 1 或者说 i > 0
+						for(xx; i ; xx);
+					3. i == 0
+						if(!i)
+				2. 要记的模板:
+					int head, e[N], ne[N];
+					int ind;
+
+					void init(){
+						head = -1;
+						ind = 0;
+					}
+
+					void add_head(int a){
+						e[ind] = a, ne[ind] = head, head = ind++;
+					}
+
+					//假设之前是 (头结点) a --> b --> c --> d --> -1, 其中b是a的next,现在要变成a --> b --> e --> c --> d --> -1
+					//其中b是第3个加入的节点, 在b的后面加上一个数, 这里的后面是next
+					void add_k(int a, int k){
+						e[ind] = a, ne[ind] = ne[k], ne[k] = ind++; //也就是我ind要指向你k的下一位,你k指向我
+					}
+
+
+					void remove(int k){ 
+						ne[k] = ne[ne[k]]; //我k不指向我的下一个了,我指向我next的next
+					}
+
+					void remove_head(){
+						head = ne[head];
+					}
+
+					add规律:
+						e[ind] = xx, ne[ind] = yy, yy = ind++;
+
+						想象: 我先创建一个新的节点, 这个节点的e, 和ne要设置好, 最后我要给这个节点一个名分, 也就是让yy链接它
+							
+						xx是元素
+						yy是head, 或者是ne[k]
+							e[ind] = xx, ne[ind] = head, head = ind++;
+								我ind的元素是xx, 我ind的下一个是旧头head, 新头head是我ind, 最后ind++
+							e[ind] = xx, ne[ind] = ne[k], ne[k] = ind++;
+								我ind的元素是xx, 我ind的下一个是它k的下一个ne[k], 它k的下一个现在是我ind, 最后ind++
+
+					remove规律:
+						yy = ne[yy]
+							ne[k] = ne[ne[k]]; 
+								k的下一个 是 k的下一个 的下一个
+							head = ne[head];
+								头 是 头的下一个
+
+					最后是遍历
+						for (int i = head; i != -1; i = ne[i]) cout << e[i] << ' ';
+
 			2. 注释
 				1. y
 					#include <iostream>
@@ -11965,84 +12257,372 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
 					#include <iostream>
-					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+					int head, e[N], ne[N];
+					int ind;
+
+					void init(){
+						head = -1;
+						ind = 0;
+					}
+
+					void add_head(int a){
+						e[ind] = a, ne[ind] = head, head = ind++;
+					}
+
+					假设之前是 (头结点) a --> b --> c --> d --> -1, 其中b是a的next,现在要变成a --> b --> e --> c --> d --> -1
+					其中b是第3个加入的节点, 在b的后面加上一个数, 这里的后面是next
+					void add_k(int a, int k){
+						e[ind] = a, ne[ind] = ne[k], ne[k] = ind++; 也就是我ind要指向你k的下一位,你k指向我
+					}
+
+
+					void remove(int k){
+						ne[k] = ne[ne[k]]; 我k不指向我的下一个了,我指向我next的next
+					}
+					int main(){
+
+						init();
+
+						int m;
+						cin >> m;
+						while(m--){
+							char op; 老师用的是char
+							int k, x;
+							cin >> op;
+							if(op == 'H'){
+								cin >> x;
+								add_head(x);
+							}
+							else if(op == 'I'){
+								cin >> k >> x;
+								add_k(x, k-1); 因为说的是第1个加入的元素,其实是ind==0的位置,所以k-1
+							}
+							else{
+								cin >> k;
+								if(!k) head = ne[head]; head的next是ne[head], 所以head变成head的next
+								remove(k-1); 因为说的是第1个加入的元素,其实是ind==0的位置,所以k-1
+							}
+						}
+
+						for(int i = head; ~i; i = ne[i]){
+							cout << e[i] << " ";
+						}
+						cout << endl;
+
+						return 0;
+
+					}
+			3. 5次
+				r1.
+					#include <iostream>
 
 					using namespace std;
 
 					const int N = 100010;
 
-					int head, e[N], ne[N], idx;
+					int m;
 
-					void init()
-					{
+					int head, e[N], ne[N], ind;
+
+					void add_head(int x){
+						e[ind] = x, ne[ind] = head, head = ind++;
+					}
+
+					void add(int x, int k){
+						e[ind] = x, ne[ind] = ne[k], ne[k] = ind++;
+					}
+
+					void remove(int k){
+						ne[k] = ne[ne[k]];
+					}
+
+					void init(){
+					    head = -1;
+					}
+
+					int main(){
+					    
+					    init();
+						cin >> m;
+						char t;
+						int x, k;
+						while(m--){
+							cin >> t;
+							if(t == 'H'){
+								cin >> x;
+								add_head(x);
+							}
+							else if(t == 'I'){
+								cin >> k >> x;
+								add(x, k-1);
+							}
+							else{
+								cin >> k;
+								if(k == 0) head = ne[head];
+								else remove(k-1);
+							}
+						}
+
+						for(int i = head; ~i; i = ne[i]){
+							cout << e[i] << " ";
+						}
+						cout << endl;
+						return 0;
+					}
+				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int head, e[N], ne[N], ind;
+
+					void init(){
+					    head = -1;
+					}
+
+					void add_head(int x){
+					    e[ind] = x, ne[ind] = head, head = ind++;
+					}
+
+					void add(int k, int x){
+					    e[ind] = x, ne[ind] = ne[k], ne[k] = ind++;
+					}
+
+					void remove_head(){
+					    head = ne[head];
+					}
+
+					void remove(int k){
+					    ne[k] = ne[ne[k]];
+					}
+
+					void print()
+					{   
+					    for(int i = head; ~i; i = ne[i]) cout << e[i] << " ";
+					    cout << endl;
+					}
+
+					int main(){
+					    init();
+					    int m;
+					    cin >> m;
+					    char c;
+					    int k, x;
+					    while(m--){
+					        cin >>c;
+					        if(c == 'H'){
+					            cin >> x;
+					            add_head(x);
+					        }
+					        else if(c == 'I'){
+					            cin >> k >> x;
+					            add(k-1, x);
+					        }
+					        else{
+					            cin >> k;
+					            if(!k) remove_head();
+					            else remove(k-1);
+					        }
+					    }
+					    
+					    print();
+					    return 0;
+					}
+				r3.
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 100010;
+						int head, e[N], ne[N], ind;
+
+						void init(){
+						    head = -1;
+						}
+
+						void add_head(int x)
+						{
+						    e[ind] = x, ne[ind] = head, head = ind++;
+						}
+
+						void add(int k, int x){
+						    e[ind] = x, ne[ind] = ne[k], ne[k] = ind++;
+						}
+
+						void remove(int k){
+						    ne[k] = ne[ne[k]];
+						}
+
+						void remove_head()
+						{
+						    head = ne[head];
+						}
+						    
+						int main(){
+						    
+						    init();
+						    int m;
+						    cin >> m;
+						    char c;
+						    int k, x;
+						    while(m--){
+						        cin >> c;
+						        if(c == 'H'){
+						            cin >> x;
+						            add_head(x);
+						        }else if(c == 'I'){
+						            cin >> k >> x;
+						            add(k-1, x);
+						        }else{
+						            cin >> k;
+						            if(!k) remove_head();
+						            else remove(k-1);
+						        }
+						    }
+						    
+						    for(int i = head; ~i; i = ne[i]) cout << e[i] << " ";
+						    cout << endl;
+						    return 0;
+						    
+						}
+				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int head, e[N], ne[N], ind;
+
+					void init(){
+					    head = -1;
+					}
+
+					void add_head(int x){
+					    e[ind] = x, ne[ind] = head, head = ind++;
+					}
+
+					void add(int k, int x){
+					    e[ind] = x, ne[ind] = ne[k], ne[k] = ind++;
+					}
+
+					void remove_head(){
+					    head = ne[head];
+					}
+
+					void remove(int k){
+					    ne[k] = ne[ne[k]];
+					}
+
+					int main(){
+					    
+					    init();
+					    int m;
+					    cin >> m;
+					    char c;
+					    int k, x;
+					    while(m--){
+					        cin >> c;
+					        if(c == 'H'){
+					            cin >> x;
+					            add_head(x);
+					        }else if(c == 'I'){
+					            cin >> k >> x;
+					            add(k-1, x);
+					        }else{
+					            cin >> k;
+					            if(!k) remove_head();
+					            else remove(k-1);
+					        }
+					    }
+					    
+					    for(int i = head;  ~i; i = ne[i]) cout << e[i] << " ";
+					    cout << endl;
+					    return 0;
+					}
+				r5.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int head, e[N], ne[N], ind;
+
+					void init(){
 					    head = -1;
 					}
 
 					void add_head(int x)
 					{
-					    e[idx] = x, ne[idx] = head, head = idx ++ ;
+					    e[ind] = x, ne[ind] = head, head = ind++;
 					}
 
-					void add_k(int k, int x)
-					{
-					    e[idx] = x, ne[idx] = ne[k], ne[k] = idx ++ ;
+					void add(int k, int x){
+					    e[ind] = x, ne[ind] = ne[k], ne[k] = ind++;
 					}
 
-					void remove(int k)
-					{
+					void remove_head(){
+					    head = ne[head];
+					}
+
+					void remove(int k){
 					    ne[k] = ne[ne[k]];
 					}
 
-					int main()
-					{
+					int main(){
 					    init();
-
 					    int m;
 					    cin >> m;
-					    while (m -- )
-					    {
-					        char op;
-					        int k, x;
-					        cin >> op;
-					        if (op == 'H')
-					        {
+					    
+					    char c;
+					    int k, x;
+					    while(m--){
+					        cin >> c;
+					        if(c == 'H'){
 					            cin >> x;
 					            add_head(x);
-					        }
-					        else if (op == 'I')
-					        {
+					        }else if( c == 'I'){
 					            cin >> k >> x;
-					            add_k(k - 1, x);
-					        }
-					        else
-					        {
+					            add(k-1, x);
+					        }else{
 					            cin >> k;
-					            if (!k) head = ne[head];
-					            else remove(k - 1);
+					            if(!k) remove_head();
+					            else remove(k-1);
 					        }
 					    }
-
-					    for (int i = head; i != -1; i = ne[i]) cout << e[i] << ' ';
+					    for(int i = head; ~i; i = ne[i]) cout << e[i] << " ";
 					    cout << endl;
-
 					    return 0;
+					    
 					}
-
-					作者：yxc
-					链接：https://www.acwing.com/activity/content/code/content/280325/
-					来源：AcWing
-					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
-			3. 5次
-				r1.
-				r2.
-				r3.
-				r4.
-				r5.
 
 		44. 836. 合并集合	模板题
 			0. bug
+				题目说节点编号是1-N
+				所以一定是 for (int i = 1; i <= n; i ++ ) p[i] = i;
+					而不是 for (int i = 0; i < n; i ++ ) p[i] = i;
+				否则之后merge的两个东西就是错的了. 不过其实这道题的merge 和find如果我写成for (int i = 0; i < n; i ++ ) p[i] = i; 也不会错, 但是小心以后吧
 			1. 笔记
 				0. 并查集是非常容易考到的数据结构
+				1. 模板:
+					1. 初始化
+						const int N = 100010;
+						int p[N];
+						for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					2. find
+						int find(int x) // 返回x的祖宗节点 + 路径压缩
+						{
+						    if (p[x] != x) p[x] = find(p[x]); 我x的父亲,是父亲的祖先
+						    return p[x]; 返回x的祖先
+						}
+
+					3. Merge
+						 p[find(a)] = find(b); a的祖宗的父亲 是 b的祖宗	
 			2. 注释
 				1. y
 					#include <iostream>
@@ -12090,10 +12670,165 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int p[N];
+					int n, m;
+
+					void init(){
+						for(int i = 0; i < n; i++) p[i] = i;
+					}
+
+					int find(int i){
+						if(i != p[i]){
+							p[i] = find(p[i]);
+						}
+						return p[i];
+					}
+
+					void merge(int i, int j){
+						p[find(i)] = find(j);
+					}
+
+					int main(){
+						cin >> n >> m;
+						init();
+
+						char c;
+						int a, b;
+						while(m--){
+							cin >> c >> a >> b;
+							if(c == 'M') merge(a,b);
+							else {
+								if(find(a) == find(b)) puts("Yes");
+								else puts("No");
+							}
+						}
+						return 0;
+					}
 				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int p[N];
+
+					int n, m;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < n; i++) p[i] = i;
+					    
+					    char c;
+					    int a, b;
+					    while(m--){
+					        cin >> c >> a >> b;
+					        if(c == 'M') p[find(a)] = find(b);
+					        else{
+					            if(find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int p[N];
+					int n, m;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < n; i++) p[i] = i;
+					    
+					    char c;
+					    int a, b;
+					    while(m--){
+					        cin >> c >> a >> b;
+					        if(c == 'M') p[find(a)] = find(b);
+					        else{
+					            if(find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int p[N];
+					int n, m;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 1; i <= n; i++) p[i] = i;
+					    
+					    char c;
+					    int a, b;
+					    while(m--){
+					        cin >> c >> a >> b;
+					        if(c == 'M') p[find(a)] = find(b);
+					        else{
+					            if(find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+					    return 0;
+					}
 				r5.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int p[N];
+					int n, m;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 1; i <= n; i++) p[i] = i;
+					    char c;
+					    int a, b;
+					    while(m--){
+					        cin >> c >> a >> b;
+					        if(c == 'M') p[find(a)] = find(b);
+					        else{
+					            if(find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+					    return 0;
+					}
 		
 		45. 1476. 数叶子结点	1004
 			0. bug
@@ -12784,9 +13519,25 @@
 		49. 1550. 完全二叉搜索树	1064
 			0. bug
 			1. 笔记
-				1. 排好序 -> 二叉搜索树的中序遍历
-				2. 按顺序填进去 -> 完全二叉树, 也就是left = x * 2, right = x * 2 + 1;
-				3. 瓶颈在排序上, sort(), 复杂度nlogn
+				1.
+					思考:
+						1. 瓶颈是sort() nlogn
+						2. 所有的dfs()递归调用的时候用的是一个k, 所以写成k的引用
+						3. 思路:
+							1. 因为题目要的是排好序的完全二叉树
+							2. 既然排好序,它的中序排列就是递增的
+							3. 我们知道所有val,就可以求出这个完全二叉树的中序遍历
+							4. 我们用中序遍历这个二叉树,将所有拍好序的值填进去就好了
+							5. 最神奇的地方,用数组从头遍历到尾,其实就是二叉树的层序遍历
+						4. 回忆:
+							0. 跟是1
+							1. 左子: n*2
+							2. 右子: n*2+1
+							3. 父亲: n/2(向下取整: 3/2 == 1)
+				2. 
+					1. 排好序 -> 二叉搜索树的中序遍历
+					2. 按顺序填进去 -> 完全二叉树, 也就是left = x * 2, right = x * 2 + 1;
+					3. 瓶颈在排序上, sort(), 复杂度nlogn
 			2. 注释
 				1. y
 					#include <iostream>
@@ -12839,6 +13590,19 @@
 		50. 1576. 再次树遍历	1086
 			0. bug
 			1. 笔记
+				0. 思路:
+					1. 方法一
+						1. 第一个进入的一定是根节点
+						2. 遇到一个a是push, 
+							如果上一个b也是push,则a是b的左孩子
+							如果上一个b是pop,则a是b的右孩子
+					2. 方法二
+						1. 如果是push进去的,就是先序遍历
+						2. 如果是pop出来的,就是中序遍历
+
+					1. type == 0是push
+					2. 如果不是根节点,就加空格
+					3. 老师也是使用了stack,来知道最后一个元素是什么. 但是如何判断last是push还是pop呢?
 				1. 规律:
 					当前是push[a]
 						如果上一个是push[b], 那么b的左子就是a :l[b] = a;
@@ -12867,10 +13631,8 @@
 					void dfs(int u, int root)
 					{
 					    if (!u) return;
-
 					    dfs(l[u], root);
 					    dfs(r[u], root);
-
 					    cout << u;
 					    if (u != root) cout << ' ';
 					}
@@ -12878,7 +13640,6 @@
 					int main()
 					{
 					    cin >> n;
-
 					    int root;
 					    int last = 0, type;
 					    stack<int> stk;
@@ -12915,6 +13676,4743 @@
 
 					作者：yxc
 					链接：https://www.acwing.com/activity/content/code/content/279748/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		51. 1589. 构建二叉搜索树	1099
+			0. bug
+			1. 笔记
+				思路:
+					1. 同样也是,排序好了之后,填进去
+					2. 用到了dfs和bfs
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n;
+					int l[N], r[N];
+					int a[N], w[N];
+					int q[N];
+
+					void dfs(int u, int& k)
+					{
+					    if (u == -1) return;
+
+					    dfs(l[u], k);
+					    w[u] = a[k ++ ];
+					    dfs(r[u], k);
+					}
+
+					void bfs()
+					{
+					    int hh = 0, tt = 0;
+					    q[0] = 0;
+
+					    while (hh <= tt)
+					    {
+					        int t = q[hh ++ ];
+					        if (l[t] != -1) q[ ++ tt] = l[t];
+					        if (r[t] != -1) q[ ++ tt] = r[t];
+					    }
+
+					    cout << w[q[0]];
+					    for (int i = 1; i < n; i ++ ) cout << ' ' << w[q[i]];
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> l[i] >> r[i];
+					    for (int i = 0; i < n; i ++ ) cin >> a[i];
+					    sort(a, a + n);
+
+					    int k = 0;
+					    dfs(0, k);
+					    bfs();
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279760/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		52. 1592. 反转二叉树	1102
+			0. bug
+			1. 笔记
+				思路:
+					1. 直接所有节点的左右儿子反过来
+					2. 用char输入是因为有'-'符号,不能读成int
+					3. 判断哪个点是根节点,看是否有父亲,没有就是根节点
+					4. 老师是用后序遍历来翻转,用其他可否?
+					5. 中序遍历, 因为不能输出最后一个空格, 老师用了一个输出多少个来判断是否是最后一个数.
+					6. 层序遍历就没有, 因为层序遍历不是用递归, 而是用queue
+
+
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 15;
+
+					int n;
+					int l[N], r[N];
+					int q[N];
+					bool has_father[N];
+
+					void dfs_reverse(int u)
+					{
+					    if (u == -1) return;
+
+					    dfs_reverse(l[u]);
+					    dfs_reverse(r[u]);
+					    swap(l[u], r[u]);
+					}
+
+					void bfs(int root)
+					{
+					    int hh = 0, tt = 0;
+					    q[0] = root;
+					    while (hh <= tt)
+					    {
+					        int t = q[hh ++ ];
+					        if (l[t] != -1) q[ ++ tt] = l[t];
+					        if (r[t] != -1) q[ ++ tt] = r[t];
+					    }
+
+					    cout << q[0];
+					    for (int i = 1; i < n; i ++ ) cout << ' ' << q[i];
+					    cout << endl;
+					}
+
+					void dfs(int u, int& k)
+					{
+					    if (u == -1) return;
+					    dfs(l[u], k);
+
+					    cout << u;
+					    if ( ++ k != n) cout << ' ';
+
+					    dfs(r[u], k);
+					}
+
+					int main()
+					{
+					    cin >> n;
+
+					    memset(l, -1, sizeof l);
+					    memset(r, -1, sizeof r);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        char lc, rc;
+					        cin >> lc >> rc;
+					        if (lc != '-') l[i] = lc - '0', has_father[l[i]] = true;
+					        if (rc != '-') r[i] = rc - '0', has_father[r[i]] = true;
+					    }
+
+					    int root = 0;
+					    while (has_father[root]) root ++ ;
+
+					    dfs_reverse(root);
+					    bfs(root);
+
+					    int k = 0;
+					    dfs(root, k);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/279781/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		53. 1600. 完全二叉搜索树 1110
+			0. bug
+			1. 笔记
+				思路:
+					1. 记录每个节点的左右子
+					2. 题目没有给根节点,需要通过是否有father来判断是否是根节点
+					3. 最大节点,maxk,maxid没有搞清楚
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 25;
+
+					int n;
+					int l[N], r[N];
+					bool has_father[N];
+					int maxk, maxid;
+
+					void dfs(int u, int k)
+					{
+					    if (u == -1) return;
+
+					    if (k > maxk)
+					    {
+					        maxk = k;
+					        maxid = u;
+					    }
+
+					    dfs(l[u], k * 2);
+					    dfs(r[u], k * 2 + 1);
+					}
+
+					int main()
+					{
+					    memset(l, -1, sizeof l);
+					    memset(r, -1, sizeof r);
+
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        string a, b;
+					        cin >> a >> b;
+					        if (a != "-") l[i] = stoi(a), has_father[l[i]] = true;
+					        if (b != "-") r[i] = stoi(b), has_father[r[i]] = true;
+					    }
+
+					    int root = 0;
+					    while (has_father[root]) root ++ ;
+
+					    dfs(root, 1);
+
+					    if (maxk == n) printf("YES %d\n", maxid);
+					    else printf("NO %d\n", root);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283547/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		54. 1605. 二叉搜索树最后两层结点数量	1115
+			0. bug
+			1. 笔记
+				1. 题目没有给编号,所以我们用ind来设置编号
+				2. 如果某个节点是0,意味着空的,我们传入&u是因为想改变它的值.
+					void insert(int& u, int w) 好厉害!
+					{
+					    if (!u) //如果是空的
+					    {
+					        u = ++ idx; //创建节点
+					        v[u] = w; //赋值
+					    }
+					    else if (w <= v[u]) insert(l[u], w); 
+					    else insert(r[u], w);
+					}
+				3. dfs()是前序遍历来计算max_depth
+				4. 二叉树老师喜欢用l[N],r[N], 而不是struct Node{int val; Node l, r;};
+
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					int l[N], r[N], v[N], idx;
+					int cnt[N], max_depth;
+
+					void insert(int& u, int w)
+					{
+					    if (!u)
+					    {
+					        u = ++ idx;
+					        v[u] = w;
+					    }
+					    else if (w <= v[u]) insert(l[u], w);
+					    else insert(r[u], w);
+					}
+
+					void dfs(int u, int depth)
+					{
+					    if (!u) return;
+					    cnt[depth] ++ ;
+					    max_depth = max(max_depth, depth);
+					    dfs(l[u], depth + 1);
+					    dfs(r[u], depth + 1);
+					}
+
+					int main()
+					{
+					    cin >> n;
+
+					    int root = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int w;
+					        cin >> w;
+					        insert(root, w);
+					    }
+
+					    dfs(root, 0);
+
+					    int n1 = cnt[max_depth], n2 = cnt[max_depth - 1];
+					    printf("%d + %d = %d\n", n1, n2, n1 + n2);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283562/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		55. 1609. 前序和后序遍历	1119
+			0. bug
+			1. 笔记
+				1. 
+					1. 暴力枚举左侧,右侧
+					2. 时间复杂度是阶乘
+						1. 假设第一层有11个,最左根节点,爆搜的是右边10个节点,但是有9中分割方式:例如左侧1个,右侧9个;左侧2个,右侧8个...
+						2. 搜第二层的时候, 例如左侧1个,右侧9个的: 右侧9个还分成了左侧1个,右侧8个;左侧2个,右侧7个...
+						3. 但是我们有很多限制,例如preorder的最左侧应该是postorder的最右侧.
+
+					3. in.pop_back();去掉string的最后一个空格
+					4. 我很喜欢那个传入string rin, lin, string& in. 这样就可以把之前的in都传给rin了
+					5. in = lin + to_string(pre[l1]) + ' ' + rin; //是因为中序遍历, 左子树 + 根节点 + 右子树
+					6. cnt += lcnt * rcnt;还不是很懂, 到时候画个图.
+					7. 注意build的里面: 
+						左子树中, preorder是不包括第一个点(因为是根节点).
+						右子树中, postorder是不包括最后一个点(因为是根节点).
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 40;
+
+					int n;
+					int pre[N], post[N];
+
+					int dfs(int l1, int r1, int l2, int r2, string& in)
+					{
+					    if (l1 > r1) return 1;
+					    if (pre[l1] != post[r2]) return 0;
+
+					    int cnt = 0;
+					    for (int i = l1; i <= r1; i ++ )  // 枚举左子树包含的节点数量
+					    {
+					        string lin, rin;
+					        int lcnt = dfs(l1 + 1, i, l2, l2 + i - l1 - 1, lin);
+					        int rcnt = dfs(i + 1, r1, l2 + i - l1 - 1 + 1, r2 - 1, rin);
+
+					        if (lcnt && rcnt)
+					        {
+					            in = lin + to_string(pre[l1]) + ' ' + rin;
+					            cnt += lcnt * rcnt;
+					            if (cnt > 1) break;
+					        }
+					    }
+
+					    return cnt;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> pre[i];
+					    for (int i = 0; i < n; i ++ ) cin >> post[i];
+
+					    string in;    
+					    int cnt = dfs(0, n - 1, 0, n - 1, in);
+
+					    if (cnt > 1) puts("No");
+					    else puts("Yes");
+
+					    in.pop_back();
+					    cout << in << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283585/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+				
+
+		56. 1620. Z 字形遍历二叉树	1127
+			0. bug
+			1. 笔记
+				1. 
+					1. 重构二叉树, 中序中找root是直接从左到右遍历, 复杂度ON, 因为这道题的输入小, 只有30所以没有必要优化
+					2. z字形,就是将depth==奇数的(根节点的depth==0)层翻转
+					3. 回忆: build(il, k - 1, pl, ?); 
+						1. 因为? - pl = (k-1)-il
+						2. 所以?就是pl 加上k-1和il的差值: pl + ( k - 1 - il )
+
+					4. 喜欢这一段:
+						void bfs(int root)
+						{
+						    int hh = 0, tt = 0;
+						    q[0] = root;
+
+						    int step = 0; 
+						    while (hh <= tt)
+						    {
+						        int head = hh, tail = tt; head和tail的含义是,树的某一整个层在q[]中的位置
+						        举例: 第一层是根节点, 所以head == tail == 0;
+						        第二层假设是2个节点,所以head == 1, tail == 2;
+						        第三层是4个节点, head == 3, tail = 6.
+						        while (hh <= tail) //tail是固定的,tt和hh是动态的.所以hh只能遍历到当前层结束
+						        {
+						            int t = q[hh ++ ];
+						            if (l.count(t)) q[ ++ tt] = l[t];
+						            if (r.count(t)) q[ ++ tt] = r[t];
+						        }
+
+						        if ( ++ step % 2) reverse(q + head, q + tail + 1);
+						        如果是奇数,就翻转这一层.
+						        例如根节点这一层, ++step是1, 所以if(1) reverse(根节点);
+						        例如第二层, ++step是2, 所以不翻转
+						        第三层, ++step是3, if(1) reverse(3, 6+1); //翻转第三层的所有元素.
+						    }
+						}
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					using namespace std;
+
+					const int N = 40;
+
+					int n;
+					unordered_map<int, int> l, r, pos;
+					int in[N], post[N];
+					int q[N];
+
+					int build(int il, int ir, int pl, int pr)
+					{
+					    int root = post[pr];
+					    int k = pos[root];
+
+					    if (il < k) l[root] = build(il, k - 1, pl, pl + k - 1 - il);
+					    if (k < ir) r[root] = build(k + 1, ir, pl + k - 1 - il + 1, pr - 1);
+
+					    return root;
+					}
+
+					void bfs(int root)
+					{
+					    int hh = 0, tt = 0;
+					    q[0] = root;
+
+					    int step = 0;
+					    while (hh <= tt)
+					    {
+					        int head = hh, tail = tt;
+					        while (hh <= tail)
+					        {
+					            int t = q[hh ++ ];
+					            if (l.count(t)) q[ ++ tt] = l[t];
+					            if (r.count(t)) q[ ++ tt] = r[t];
+					        }
+
+					        if ( ++ step % 2) reverse(q + head, q + tail + 1);
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    for (int i = 0; i < n; i ++ ) cin >> post[i];
+
+					    int root = build(0, n - 1, 0, n - 1);
+
+					    bfs(root);
+
+					    cout << q[0];
+					    for (int i = 1; i < n; i ++ ) cout << ' ' << q[i];
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283592/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		57. 1631. 后序遍历	1138
+			0. bug
+			1. 笔记
+				1. 
+					1. 题目之前都写过, 但是这里的输入是5万, 所以我们需要用哈希表Unordered_map来存储值和ind
+					2. 我喜欢的地方:
+						void build(int il, int ir, int pl, int pr)
+						{
+						    int root = pre[pl];
+						    int k = pos[root];
+
+						    if (il < k) build(il, k - 1, pl + 1, pl + 1 + k - 1 - il);
+						    if (k < ir) build(k + 1, ir, pl + 1 + k - 1 - il + 1, pr);
+
+						    if (!post) post = root; 我喜欢这一句
+							    这一句只会执行一次, 也就是说, 第一次执行这一句的时候,就已经是最左边的接地拿了
+								    题目要求的是后序遍历的第一个节点
+								    老师说了,写完了上面两个build()说明是遍历完所有的左子树和右子树了
+								    现在是看根节点了.其实这个根节点就是后序遍历的第一个节点,也就是树中最左边的节点
+							    不过要注意:
+							    	进入if(!post)执行post = root; 的时候,我发现,这个build()中的那两个build()是不执行的
+							    	也就是,这个build()里面 il == k, k == ir, 所以if(il < k)和if(k < ir)都是false, 那两个build()不执行
+							    	此时也就是树中最左边的点
+						}
+					3. 如果不优化,就会tle
+						例如, 把int k = pos[root]改成下面的:
+						int k;
+						for(int i = il; i <= ir; i++){
+							if(in[i] == root)
+							{
+								k = i;
+								break;
+							}
+						}
+
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 50010;
+
+					int n;
+					int pre[N], in[N];
+					unordered_map<int, int> pos;
+					int post;
+
+					void build(int il, int ir, int pl, int pr)
+					{
+					    int root = pre[pl];
+					    int k = pos[root];
+
+					    if (il < k) build(il, k - 1, pl + 1, pl + 1 + k - 1 - il);
+					    if (k < ir) build(k + 1, ir, pl + 1 + k - 1 - il + 1, pr);
+
+					    if (!post) post = root;
+					}
+
+					int main()
+					{
+					    cin >> n;
+
+					    for (int i = 0; i < n; i ++ ) cin >> pre[i];
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+
+					    build(0, n - 1, 0, n - 1);
+
+					    cout << post << endl;
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283601/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		58. 1552. AVL树的根	1160
+			0. bug
+			1. 笔记
+				1. 
+					1. avl 和 红黑树
+						avl需要学会判别,插入
+						红黑树学会判别,(插入需要100多行,所以不会考)
+
+					2. 
+					void update(int u) //这个是默认在u的左右节点更新完的基础上调用的
+					{
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+
+					void R(int& u) 右旋u, 注意要传引用
+					{
+					    int p = l[u]; 找到u的左子p
+					    l[u] = r[p], r[p] = u; 最后变成: p的右子 -成为->  u的左子, p没有右子了, u -成为-> p的右子 
+					    update(u), update(p); 注意现在u在下面,所以先更新u的高度,才能更新p的高度
+					    u = p; 最后u的位置由p代替
+					}
+
+					void L(int& u) 
+					{
+					    int p = r[u]; 找到u的右子p
+					    r[u] = l[p], l[p] = u; 最后变成: p的左子 -成为->  u的右子, p没有左子了, u -成为-> p的左子 
+					    update(u), update(p);
+					    u = p;
+					}
+
+					int get_balance(int u) 注意这里没有abs(),而是判断左边比右边高多少
+					{
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void insert(int& u, int w)
+					{
+					    if (!u) u = ++ idx, v[u] = w;
+					    else if (w < v[u])
+					    {
+					        insert(l[u], w);
+					        if (get_balance(u) == 2) 左边长, 说明有两种情况: /   或者   /
+					        {											  /           \
+					            if (get_balance(l[u]) == 1) R(u); 左边长, 说明是第1种情况
+					            else L(l[u]), R(u); 右边长, 说明是第2种情况
+					        }
+					    }
+					    else
+					    {
+					        insert(r[u], w);
+					        if (get_balance(u) == -2)左边长, 说明有两种情况: \   或者   \
+					        {											  	\         /
+					            if (get_balance(r[u]) == -1) L(u); 右边长, 说明是第1种情况
+					            else R(r[u]), L(u); 左边长, 说明是第2种情况
+					        }
+					    }
+
+					    update(u);
+					}
+
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 30;
+
+					int l[N], r[N], v[N], h[N], idx;
+
+					void update(int u)
+					{
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					void R(int& u)
+					{
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u)
+					{
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					int get_balance(int u)
+					{
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void insert(int& u, int w)
+					{
+					    if (!u) u = ++ idx, v[u] = w;
+					    else if (w < v[u])
+					    {
+					        insert(l[u], w);
+					        if (get_balance(u) == 2)
+					        {
+					            if (get_balance(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }
+					    else
+					    {
+					        insert(r[u], w);
+					        if (get_balance(u) == -2)
+					        {
+					            if (get_balance(r[u]) == -1) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+
+					    update(u);
+					}
+
+					int main()
+					{
+					    int n, root = 0;
+					    cin >> n;
+
+					    while (n -- )
+					    {
+					        int w;
+					        cin >> w;
+					        insert(root, w);
+					    }
+
+					    cout << v[root] << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283632/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		59. 1616. 判断完全 AVL树 	1123
+			0. bug
+			1. 笔记
+				1. 
+					1. 构建avl
+					2. 假设这个avl是完全二叉树, 记录每个节点在完全二叉树中的位置
+						例1, a节点有bc两个子节点, 我们就分别放入了ind = 1,2,3的位置, b只有右节点d, 放入了ind == 2*2+1 == 5 的位置
+						c有两个子节点ef, 分别放入了ind == 3*2 和 3*2+1 即 == 6,7的位置
+
+						例2, a节点有bc两个子节点, 我们就分别放入了ind = 1,2,3的位置, b有左右节点de, 放入了ind == 4,5 的位置
+						c只有右节点f, 分别放入了ind ==7的位置
+
+						例2, a节点有bc两个子节点, 我们就分别放入了ind = 1,2,3的位置, b有左右节点de, 放入了ind == 4,5 的位置
+						c只有左节点f, 分别放入了ind ==6的位置
+
+					3. 记录ind最大值, 判断这个ind和n的关系
+						例1,2: ind的最大值是7, 但是我们只有abcdef共6个节点,所以说明前面有空位,所以不是完全二叉树
+						例3: ind的最大值是6 == abcdef共6个节点,是完全二叉树
+
+					4.
+					int q[N]; q是bfs用到的队列
+					int pos[N];	pos是记录每个节点(值)的对应的ind
+					例如某个节点的值是99,它的ind是2,即pos[99]=2. 如果这个节点的左子的值是88, 它的ind就是2*2, 即pos[88] = 4
+					因为题目中说了所有的值都不同,所以可以用pos数组存.
+					bool bfs(int root)
+					{
+					    int hh = 0, tt = 0;
+					    q[0] = root;
+					    pos[root] = 1; 根节点对应的ind是1
+
+					    bool res = true;
+					    while (hh <= tt)
+					    {
+					        int t = q[hh ++ ];
+					        if (pos[t] > n) res = false; 这就是我们上面说的,只要一个超出了n,就说明前面有空位,说明不是完全二叉树
+
+					        if (l[t]) q[ ++ tt] = l[t], pos[l[t]] = pos[t] * 2; 插入左子, t的左子的ind是t的ind*2
+					        if (r[t]) q[ ++ tt] = r[t], pos[r[t]] = pos[t] * 2 + 1; 插入右子, t的右子的ind是t的ind*2+1
+					    }
+
+					    return res;
+					}
+
+
+			2. 注释
+				1. y
+					#include <iostream>
+					using namespace std;
+
+					const int N = 30;
+
+					int n;
+					int l[N], r[N], v[N], h[N], idx;
+					int q[N], pos[N];
+
+					void update(int u)
+					{
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					void R(int& u)
+					{
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u)
+					{
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					int get_balance(int u)
+					{
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void insert(int& u, int w)
+					{
+					    if (!u) u = ++ idx, v[u] = w;
+					    else if (w < v[u])
+					    {
+					        insert(l[u], w);
+					        if (get_balance(u) == 2)
+					        {
+					            if (get_balance(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }
+					    else
+					    {
+					        insert(r[u], w);
+					        if (get_balance(u) == -2)
+					        {
+					            if (get_balance(r[u]) == -1) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+
+					    update(u);
+					}
+
+					bool bfs(int root)
+					{
+					    int hh = 0, tt = 0;
+					    q[0] = root;
+					    pos[root] = 1;
+
+					    bool res = true;
+					    while (hh <= tt)
+					    {
+					        int t = q[hh ++ ];
+					        if (pos[t] > n) res = false;
+
+					        if (l[t]) q[ ++ tt] = l[t], pos[l[t]] = pos[t] * 2;
+					        if (r[t]) q[ ++ tt] = r[t], pos[r[t]] = pos[t] * 2 + 1;
+					    }
+
+					    return res;
+					}
+
+					int main()
+					{
+					    int root = 0;
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int w;
+					        cin >> w;
+					        insert(root, w);
+					    }
+
+					    bool res = bfs(root);
+
+					    cout << v[q[0]];
+					    for (int i = 1; i < n; i ++ ) cout << ' ' << v[q[i]];
+					    cout << endl;
+
+					    if (res) puts("YES");
+					    else puts("NO");
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283649/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		60. 1628. 判断红黑树	1135
+			0. bug
+				1.  left和right不赋初值0就会错呢
+					考虑到有k个测试案例，如果left与right不附初值0
+					那么当左子树或右子树为空不向下递归时则left与right没有更新，是之前测试案例的值
+			1. 笔记
+				1. 
+					1. 需要判断的东西:
+					1. 根节点是黑色(最后判断)
+					2. 红色节点的儿子都是黑色(递归的时候判断)
+					3. 每个节点到每个叶子节点,经过的黑色点的个数都是一样的(递归的时候判断)
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+
+					int pre[N], in[N];
+					unordered_map<int, int> pos;
+					bool ans;
+
+					int build(int il, int ir, int pl, int pr, int& sum)
+					{
+					    int root = pre[pl];
+					    int k = pos[abs(root)];
+
+					    if (k < il || k > ir)
+					    {
+					        ans = false;
+					        return 0;
+					    }
+
+					    int left = 0, right = 0, ls = 0, rs = 0;
+					    if (il < k) left = build(il, k - 1, pl + 1, pl + 1 + k - 1 - il, ls);
+					    if (k < ir) right = build(k + 1, ir, pl + 1 + k - 1 - il + 1, pr, rs);
+
+					    if (ls != rs) ans = false;
+					    sum = ls;
+					    if (root < 0)
+					    {
+					        if (left < 0 || right < 0) ans = false;
+					    }
+					    else sum ++ ;
+
+					    return root;
+					}
+
+					int main()
+					{
+					    int T;
+					    cin >> T;
+					    while (T -- )
+					    {
+					        int n;
+					        cin >> n;
+					        for (int i = 0; i < n; i ++ )
+					        {
+					            cin >> pre[i];
+					            in[i] = abs(pre[i]);
+					        }
+
+					        sort(in, in + n);
+
+					        pos.clear();
+					        for (int i = 0; i < n; i ++ ) pos[in[i]] = i;
+
+					        ans = true;
+					        int sum;
+					        int root = build(0, n - 1, 0, n - 1, sum);
+
+					        if (root < 0) ans = false;
+					        if (ans) puts("Yes");
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/283682/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+
+					int pre[N], in[N];
+					unordered_map<int, int> pos;
+					bool ans;
+
+					int build(int il, int ir, int pl, int pr, int& sum)  
+					sum的语意是,当前的这个根节点(不是全树的根节点)到每个叶子结点的经过的黑色节点的数量
+					我之前的疑问是: 既然是到每一个叶子结点,为什么只有一个sum(因为已经说过了经过的黑色节点数目相等,所以用一个变量就可以存了)
+					因为
+						1. 我们是递归的过程,经过了无数个build()之后,最后是先来到了叶子节点,叶子节点有两个null
+						2. 我们使用了两个build(),每个build都会返回一个ls和rs的值,这两个变量和sum的作用一样,都是记录经过黑色节点的数目. 
+						3. 如果ls,rs不相等,我们就不需要记录sum了,因为不是红黑树
+						3. 如果相等,ls赋值给sum,其实就只有一个sum就够了,因为ls == rs
+					{
+					    int root = pre[pl];
+					    int k = pos[abs(root)]; 因为在存pos的时候, 是用绝对值存的.
+
+					    if (k < il || k > ir)  不合法的情况
+					    	题目给的前序遍历不一定合法, 所以: k <= il-1 或者 k >= ir + 1就是不合法
+					    	但是如果 k == il 是合法的, 只不过没有左子树, 或者 k == ir也是合法的, 只不过没有右子树
+					    {
+					        ans = false; 全局变量变成false,说明不能构建红黑树
+					        return 0; 根节点是0, 表示是黑色
+					    }
+
+					    int left = 0, right = 0; 左右子,设置成0, 0代表着黑色. 红黑树默认是黑色,如果需要染色,染成红色[叶子结点的底下是null节点,也是黑色节点]
+					    int ls = 0, rs = 0; 去叶子节点经过的黑色节点数目.
+					    if (il < k) left = build(il, k - 1, pl + 1, pl + 1 + k - 1 - il, ls); 如果有左子, 它构建他.
+					    if (k < ir) right = build(k + 1, ir, pl + 1 + k - 1 - il + 1, pr, rs);
+
+					    上面因为有两个build(),所以是递归部分
+					    走到此时,说明是到了树的最底下左边的叶子节点, 叶子节点是不走上面两个build()的因为il == k == ir.
+					    此时ls == rs == 0. 
+
+					    if (ls != rs) ans = false;
+					    sum = ls; 相等就说明,叶子节点经过的黑色数目是0.
+
+					    if (root < 0) (如果是第一次走到这里,说明root就是叶子节点) root节点 < 0说明是红色
+					    {
+					        if (left < 0 || right < 0) ans = false; 如果两个儿子有一个是红色,就不是红黑树
+					    }
+					    else sum ++ ; 因为当前的root节点就是黑色的,所以递归回去的时候,需要告诉root的父亲, 现在又多了一个黑色节点(也就是root自己)
+
+					    return root;
+					}
+
+					int main()
+					{
+					    int T;
+					    cin >> T;
+					    while (T -- )
+					    {
+					        int n;
+					        cin >> n;
+					        for (int i = 0; i < n; i ++ )
+					        {
+					            cin >> pre[i]; 不用sort,因为我们不需要知道节点的具体的值,只需要知道节点在哪里就好了
+					            in[i] = abs(pre[i]); 因为我们要sort()所以我们要加入的是绝对值.
+					        }
+
+					        sort(in, in + n);
+
+					        pos.clear();
+					        for (int i = 0; i < n; i ++ ) pos[in[i]] = i;
+
+					        ans = true; 我们默认是true,而不是默认是false. 因为逻辑不是证明xx是红黑树,而是,如果xx只要不满足了某个性质就不是红黑树. 所以后面一直是推翻的逻辑.
+					        int sum; 这个是根节点到所有叶子节点经过的黑色节点的数目(因为说了经过的路线中,所有黑色节点个数都是相等,那就可以用一个值纪录个数,也就是一个sum就够了)
+					        int root = build(0, n - 1, 0, n - 1, sum); 重建二叉树, 求根节点.
+
+					        if (root < 0) ans = false;  最后判断根节点是不是黑色
+					        if (ans) puts("Yes"); 
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		61. 1539. 等重路径	1053
+			0. bug
+			1. 笔记
+				1. 
+					1. 用邻接矩阵存,而不是邻接表
+					2. pat很要求stl的使用,例如这道题需要使用vector<>的比较,你不需要自己实现小于号,很方便
+					3. 
+					因为N很小,所以老师用邻接矩阵存,老师说pat的很多题都可以邻接矩阵存.
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n, m, S;
+					int w[N];
+					bool g[N][N];
+					vector<vector<int>> ans;
+
+					void dfs(int u, int s, vector<int> &path)
+					{
+					    bool is_leaf = true;
+					    for (int i = 0; i < n; i ++ )
+					        if (g[u][i])
+					        {
+					            is_leaf = false;
+					            break;
+					        }
+
+					    if (is_leaf)
+					    {
+					        if (s == S) ans.push_back(path);
+					    }
+					    else
+					    {
+					        for (int i = 0; i < n; i ++ )
+					            if (g[u][i])
+					            {
+					                path.push_back(w[i]);
+					                dfs(i, s + w[i], path);
+					                path.pop_back();
+					            }
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> S;
+					    for (int i = 0; i < n; i ++ ) cin >> w[i];
+
+					    while (m -- )
+					    {
+					        int id, k;
+					        cin >> id >> k;
+					        while (k -- )
+					        {
+					            int son;
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+
+					    vector<int> path({w[0]});
+					    dfs(0, w[0], path);
+
+					    sort(ans.begin(), ans.end(), greater<vector<int>>());
+
+					    for (auto p : ans)
+					    {
+					        cout << p[0];
+					        for (int i = 1; i < p.size(); i ++ ) cout << ' ' << p[i];
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/294234/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n, m, S;
+					int w[N]; 每个点的权值
+					bool g[N][N]; 初始是false
+					vector<vector<int>> ans; 爆搜,村结果
+
+					void dfs(int u, int s, vector<int> &path) s的意思是到目前为止的权重之和(这个权重之和是包括了u点的). 因为需要修改path的值,所以我们要用引用
+					{
+					    bool is_leaf = true; 判断是否是叶子
+					    for (int i = 0; i < n; i ++ ) 爆搜矩阵,因为一共有n个点,所以是 i < n
+					        if (g[u][i])
+					        {
+					            is_leaf = false;
+					            break;
+					        }
+
+					    if (is_leaf)
+					    {
+					        if (s == S) ans.push_back(path); 
+					        说明是叶子结点, 之所以是(s == S)而不是(s + w[u] == S)是因为dfs()的参数s就是(这个权重之和是包括了u点,也就是这个叶子结点的的)
+					    	最后你看,path是vector<int>, 而ans是全局变量, 是vector<vector<int>> 之所以用vector,是因为题目要求升序输出.
+					    }
+					    else 不是叶子,就继续往下遍历
+					    {
+					        for (int i = 0; i < n; i ++ ) 
+					            if (g[u][i]) 如果存在这条路径
+					            {
+					                path.push_back(w[i]); 
+					                dfs(i, s + w[i], path); 这里把叶子结点的权值也加上了 s + w[i]
+					                path.pop_back(); 恢复现场,给下一个叶子使用
+					            }
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> S; 点数,边数,目标值
+					    for (int i = 0; i < n; i ++ ) cin >> w[i];
+
+					    while (m -- )
+					    {
+					        int id, k;
+					        cin >> id >> k;
+					        while (k -- )
+					        {
+					            int son;
+					            cin >> son;
+					            g[id][son] = true; 临界矩阵
+					        }
+					    }
+
+					    vector<int> path({w[0]}); 存一个路径, 这个路径的第一个元素是根的权重
+					    dfs(0, w[0], path); 从根节点开始搜, 最开始的总和是w[0](根的权重), 
+
+					    sort(ans.begin(), ans.end(), greater<vector<int>>()); 升序输出
+
+					    for (auto p : ans)
+					    {
+					        cout << p[0];
+					        for (int i = 1; i < p.size(); i ++ ) cout << ' ' << p[i];
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		62. 1584. 最大的一代	1094
+			0. bug
+			1. 笔记
+				1. 
+					1. 就是宽搜,老师没有用queue[]实现,而是vector<int> level[N];
+					2.
+						level[1].push_back(1);
+						    int l = 1;
+
+						    while (level[l].size())
+						    {
+						        for (auto ver : level[l]) 看这个level上的所有人
+						            for (int j = 1; j <= n; j ++ ) 这些人,每个人的儿子
+						                if (g[ver][j])
+						                    level[l + 1].push_back(j); 插入下一个
+						        l ++ ;
+						    }
+					3. 
+						如果bool g[N][N],如果N==100,占用的内存是0.01MB, int g[N][N] 会是4倍.
+						如果bool g[N][N],如果N==10010,占用的内存是95MB
+						如果bool g[N][N],如果N==7010,占用的内存是46MB
+						cout << (sizeof g) / 1024.0 / 1024.0 << endl;
+						但是如果只是g[N][N]但是没有用memset(g, 0, sizeof(g))的话,是不会说超空间的
+						因为只是定义g[N][N],系统会优化,不会真的用这么多内存
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n, m;
+					bool g[N][N];
+					vector<int> level[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    while (m -- )
+					    {
+					        int id, k;
+					        cin >> id >> k;
+					        while (k -- )
+					        {
+					            int son;
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+
+					    level[1].push_back(1);
+					    int l = 1;
+
+					    while (level[l].size())
+					    {
+					        for (auto ver : level[l])
+					            for (int j = 1; j <= n; j ++ )
+					                if (g[ver][j])
+					                    level[l + 1].push_back(j);
+					        l ++ ;
+					    }
+
+					    int k = 1;
+					    for(int i = 1; i < l; i ++ )
+					        if (level[i].size() > level[k].size())
+					            k = i;
+
+					    cout << level[k].size() << ' ' << k << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/294240/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		63. 1565. 供应链总销售额	1079
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					double P, R;
+					int p[N], f[N], c[N];
+
+					int dfs(int u)
+					{
+					    if (f[u] != -1) return f[u];
+
+					    if (p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main()
+					{
+					    cin >> n >> P >> R;
+
+					    memset(p, -1, sizeof p);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int k;
+					        cin >> k;
+					        for (int j = 0; j < k; j ++ )
+					        {
+					            int son;
+					            cin >> son;
+					            p[son] = i;
+					        }
+
+					        if (!k) cin >> c[i];
+					    }
+
+					    memset(f, -1, sizeof f);
+
+					    double res = 0;
+					    for (int i = 0; i < n; i ++ )
+					        if (c[i])
+					            res += c[i] * P * pow(1 + R / 100, dfs(i));
+
+					    printf("%.1lf\n", res);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/317063/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		64. 1580. 供应链最高价格	1090
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					double P, R;
+					int p[N], f[N];
+
+					int dfs(int u)
+					{
+					    if (f[u] != -1) return f[u];
+					    if (p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main()
+					{
+					    cin >> n >> P >> R;
+					    for (int i = 0; i < n; i ++ ) cin >> p[i];
+
+					    memset(f, -1, sizeof f);
+
+					    int res = 0, cnt = 0;
+					    for (int i = 0; i < n; i ++ )
+					        if (dfs(i) > res)
+					        {
+					            res = dfs(i);
+					            cnt = 1;
+					        }
+					        else if (dfs(i) == res) cnt ++ ;
+
+					    printf("%.2lf %d\n", P * pow(1 + R / 100, res), cnt);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/317068/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		65. 1596. 供应链最低价格	1106
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					double P, R;
+					int p[N], f[N];
+					bool is_leaf[N];
+
+					int dfs(int u)
+					{
+					    if (f[u] != -1) return f[u];
+					    if (p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main()
+					{
+					    cin >> n >> P >> R;
+
+					    memset(p, -1, sizeof p);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int k;
+					        cin >> k;
+					        for (int j = 0; j < k; j ++ )
+					        {
+					            int son;
+					            cin >> son;
+					            p[son] = i;
+					        }
+
+					        if (!k) is_leaf[i] = true;
+					    }
+
+					    memset(f, -1, sizeof f);
+
+					    int res = N, cnt = 0;
+					    for (int i = 0; i < n; i ++ )
+					        if (is_leaf[i])
+					        {
+					            if (res > dfs(i)) res = dfs(i), cnt = 1;
+					            else if (res == dfs(i)) cnt ++ ;
+					        }
+
+					    printf("%.4lf %d\n", P * pow(1 + R / 100, res), cnt);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/317077/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		66. 1649. 堆路径	1155
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					int h[N];
+					bool gt, lt;
+					vector<int> path;
+
+					void dfs(int u)
+					{
+					    path.push_back(h[u]);
+					    if (u * 2 > n)  // 叶节点
+					    {
+					        cout << path[0];
+					        for (int i = 1; i < path.size(); i ++ )
+					        {
+					            cout << ' ' << path[i];
+					            if (path[i] > path[i - 1]) gt = true;
+					            else if (path[i] < path[i - 1]) lt = true;
+					        }
+					        cout << endl;
+					    }
+
+					    if (u * 2 + 1 <= n) dfs(u * 2 + 1);
+					    if (u * 2 <= n) dfs(u * 2);
+
+					    path.pop_back();
+					} 不加return是为了执行函数最后一行的恢复现场操作。
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> h[i];
+
+					    dfs(1);
+
+					    if (gt && lt) puts("Not Heap");
+					    else if (gt) puts("Min Heap");
+					    else puts("Max Heap");
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/317791/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		67. 1623. 中缀表达式	1130
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 25;
+
+					int n;
+					int l[N], r[N];
+					string w[N];
+					bool st[N], is_leaf[N];
+
+					string dfs(int u)
+					{
+					    string left, right;
+					    if (l[u] != -1)
+					    {
+					        left = dfs(l[u]);
+					        if (!is_leaf[l[u]]) left = "(" + left + ")";
+					    }
+					    if (r[u] != -1)
+					    {
+					        right = dfs(r[u]);
+					        if (!is_leaf[r[u]]) right = "(" + right + ")";
+					    }
+
+					    return left + w[u] + right;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        cin >> w[i] >> l[i] >> r[i];
+					        if (l[i]) st[l[i]] = true;
+					        if (r[i]) st[r[i]] = true;
+
+					        if (l[i] == -1 && r[i] == -1) is_leaf[i] = true;
+					    }
+
+					    int root = 1;
+					    while (st[root]) root ++ ;
+
+					    cout << dfs(root) << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/317794/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		68. 1636. 最低公共祖先	1143
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int m, n;
+					int in[N], pre[N], seq[N];
+					unordered_map<int, int> pos;
+					int p[N], depth[N];
+
+					int build(int il, int ir, int pl, int pr, int d)
+					{
+					    int root = pre[pl];
+					    int k = root;
+
+					    depth[root] = d;
+
+					    if (il < k) p[build(il, k - 1, pl + 1, pl + 1 + (k - 1 - il), d + 1)] = root;
+					    if (k < ir) p[build(k + 1, ir, pl + 1 + (k - 1 - il) + 1, pr, d + 1)] = root;
+
+					    return root;
+					}
+
+					int main()
+					{
+					    cin >> m >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> pre[i];
+					        seq[i] = pre[i];
+					    }
+
+					    sort(seq, seq + n);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        pos[seq[i]] = i;
+					        in[i] = i;
+					    }
+
+					    for (int i = 0; i < n; i ++ ) pre[i] = pos[pre[i]];
+
+					    build(0, n - 1, 0, n - 1, 0);
+
+					    while (m -- )
+					    {
+					        int a, b;
+					        cin >> a >> b;
+
+					        if (pos.count(a) && pos.count(b))
+					        {
+					            a = pos[a], b = pos[b];
+					            int x = a, y = b;
+
+					            while (a != b)
+					                if (depth[a] < depth[b]) b = p[b];
+					                else a = p[a];
+
+					            if (a != x && a != y) printf("LCA of %d and %d is %d.\n", seq[x], seq[y], seq[a]);
+					            else if (a == x) printf("%d is an ancestor of %d.\n", seq[x], seq[y]);
+					            else printf("%d is an ancestor of %d.\n", seq[y], seq[x]);
+					        }
+					        else if (pos.count(a) == 0 && pos.count(b) == 0)
+					            printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if (pos.count(a) == 0)
+					            printf("ERROR: %d is not found.\n", a);
+					        else
+					            printf("ERROR: %d is not found.\n", b);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/317814/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		69. 1644. 二叉树中的最低公共祖先	1151
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int m, n;
+					int in[N], pre[N], seq[N];
+					unordered_map<int, int> pos;
+					int p[N], depth[N];
+
+					int build(int il, int ir, int pl, int pr, int d)
+					{
+					    int root = pre[pl];
+					    int k = root;
+
+					    depth[root] = d;
+
+					    if (il < k) p[build(il, k - 1, pl + 1, pl + 1 + (k - 1 - il), d + 1)] = root;
+					    if (k < ir) p[build(k + 1, ir, pl + 1 + (k - 1 - il) + 1, pr, d + 1)] = root;
+
+					    return root;
+					}
+
+					int main()
+					{
+					    cin >> m >> n;
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> seq[i];
+					        pos[seq[i]] = i;
+					        in[i] = i;
+					    }
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> pre[i];
+					        pre[i] = pos[pre[i]];
+					    }
+
+					    build(0, n - 1, 0, n - 1, 0);
+
+					    while (m -- )
+					    {
+					        int a, b;
+					        cin >> a >> b;
+					        if (pos.count(a) && pos.count(b))
+					        {
+					            a = pos[a], b = pos[b];
+					            int x = a, y = b;
+					            while (a != b)
+					                if (depth[a] > depth[b]) a = p[a];
+					                else b = p[b];
+
+					            if (a != x && a != y) printf("LCA of %d and %d is %d.\n", seq[x], seq[y], seq[a]);
+					            else if (a == x) printf("%d is an ancestor of %d.\n", seq[x], seq[y]);
+					            else printf("%d is an ancestor of %d.\n", seq[y], seq[x]);
+					        }
+					        else if (pos.count(a) == 0 && pos.count(b) == 0)
+					            printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if (pos.count(a) == 0)
+					            printf("ERROR: %d is not found.\n", a);
+					        else
+					            printf("ERROR: %d is not found.\n", b);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/317828/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+6. 图论
+		70. 849. Dijkstra求最短路 I 	模板题
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m;
+					int g[N][N];
+					int dist[N];
+					bool st[N];
+
+					int dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0;
+
+					    for (int i = 0; i < n - 1; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 1; j <= n; j ++ )
+					            if (!st[j] && (t == -1 || dist[t] > dist[j]))
+					                t = j;
+
+					        for (int j = 1; j <= n; j ++ )
+					            dist[j] = min(dist[j], dist[t] + g[t][j]);
+
+					        st[t] = true;
+					    }
+
+					    if (dist[n] == 0x3f3f3f3f) return -1;
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(g, 0x3f, sizeof g);
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+
+					        g[a][b] = min(g[a][b], c);
+					    }
+
+					    printf("%d\n", dijkstra());
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/308477/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m;
+					int g[N][N];
+					int dist[N];
+					bool st[N];
+
+					int dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0;
+
+					    for (int i = 0; i < n - 1; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 1; j <= n; j ++ )
+					            if (!st[j] && (t == -1 || dist[t] > dist[j]))
+					                t = j;
+
+					        if(t == n) break;
+					        for (int j = 1; j <= n; j ++ )
+					            {
+					                //cout << "t : " << t <<" i: "<< i << " dist[t]: " <<dist[t] << "g[t][j]: " << g[t][j] <<endl; 
+					                dist[j] = min(dist[j], dist[t] + g[t][j]);
+					                 
+					            }
+
+					        st[t] = true;
+					    }
+
+					    if (dist[n] == 0x3f3f3f3f) return -1;
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(g, 0x3f, sizeof g);
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+
+					        g[a][b] = min(g[a][b], c);
+					    }
+
+					    printf("%d\n", dijkstra());
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		71. 850. Dijkstra求最短路 II 	模板题
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					typedef pair<int, int> PII;
+
+					const int N = 1e6 + 10;
+
+					int n, m;
+					int h[N], w[N], e[N], ne[N], idx;
+					int dist[N];
+					bool st[N];
+
+					void add(int a, int b, int c)
+					{
+					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0;
+					    priority_queue<PII, vector<PII>, greater<PII>> heap;
+					    heap.push({0, 1});
+
+					    while (heap.size())
+					    {
+					        auto t = heap.top();
+					        heap.pop();
+
+					        int ver = t.second, distance = t.first;
+
+					        if (st[ver]) continue;
+					        st[ver] = true;
+
+					        for (int i = h[ver]; i != -1; i = ne[i])
+					        {
+					            int j = e[i];
+					            if (dist[j] > dist[ver] + w[i])
+					            {
+					                dist[j] = dist[ver] + w[i];
+					                heap.push({dist[j], j});
+					            }
+					        }
+					    }
+
+					    if (dist[n] == 0x3f3f3f3f) return -1;
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    cout << dijkstra() << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/308478/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		72. 1475. 紧急情况	1003
+			0. bug
+			1. 笔记
+				1. 
+					spfa,bellman ford在pat不考
+					1. spfa可以求最大值,可是不能用来计数,因为有些边会重复计数(某些边会被更新多次)
+					2. 用dikjstra算法,pat经常考
+					3. 如果点数是n在1000以下,可以用邻接矩阵. n>=1万,一定要用邻接表. n在中间值的话,自己衡量
+					4. dijkstra
+						1. 朴素版
+							for(){for(){}}
+							时间:O(n^2 + m)
+							适合于边数不多的时候
+								因为边数多的时候,m==n^2,O(n^2+n^2) ?
+						2. 堆优化
+							O(m*logn)
+							适合于边数多的时候
+								因为边数多的时候,m==n^2,O(n^2*logn)
+			2. 注释
+				1. y
+				2. b
+					#include <cstring>
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m, S, T;
+					int w[N]; 权重:点权
+					int d[N][N]; 用了邻接矩阵
+					int dist[N], cnt[N], sum[N]; 最短距离, 最短路的数量, 最大点权和
+					bool st[N]; 某个点是否用过
+
+					void dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[S] = 0; 先初始化起点的距离
+					    cnt[S] = 1; 从起点出发的路径只有一种
+					    sum[S] = w[S]; 起点的点权就是w[起点]
+
+					    for (int i = 0; i < n; i ++ ) 
+					    {
+					        int t = -1;
+					        for (int j = 0; j < n; j ++ )
+					            if (!st[j]当前的点j没有被用过 && (t == -1:还没有找到任何一个点|| dist[t] > dist[j] 当前的点j的距离更小))
+					                t = j; 找到了更新其他店的点j,赋值给t
+					        st[t] = true;
+
+					        for (int j = 0; j < n; j ++ ) 遍历所有的其他点
+					            if (dist[j] > dist[t] + d[t][j])	 dist[j]代表着从S到j点的最短距离
+					            {
+					                dist[j] = dist[t] + d[t][j];	
+					                cnt[j] = cnt[t]; 			这个相当于是说,因为走到j现在是一条新的最短路径,这条路径个数是cnt[t]
+					                sum[j] = sum[t] + w[j];
+					            }
+					            else if (dist[j] == dist[t] + d[t][j]) 又遇到了一个从S到j点的最短距离
+					            {
+					                cnt[j] += cnt[t]; 两个路径合并
+					                sum[j] = max(sum[j], sum[t] + w[j]); 取最小的权值
+					            }
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> S >> T; 读入点,边,起点,终点
+
+					    for (int i = 0; i < n; i ++ ) cin >> w[i]; 老师看到说城市编号是0开始的,所以用了int i = 0, 
+
+					    memset(d, 0x3f, sizeof d); 刚开始距离都是正无穷
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = min(d[a][b], c); 无向图,存的是最短的权
+					    }
+
+					    dijkstra();
+
+					    cout << cnt[T] << ' ' << sum[T] << endl;
+					    输出:最短路的数量
+					    如果有多个最短路,输出权值最大的最短路的权值
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		73. 1507. 旅行计划	1030
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m, S, T;
+					int d[N][N], c[N][N]; 记录临界矩阵,还有两个点之间的cost
+					int dist[N], cost[N], pre[N];  dist是S点到n点的最短距离, cost是S点到n点的最小话费, pre是
+					bool st[N]; 是否经过这个点
+
+					你会发现, d, c, dist, cost这四个都会初始化为正无穷
+
+					void dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost); 初始化
+
+					    dist[S] = 0, cost[S] = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 0; j < n; j ++ )
+					            if (!st[j] && (t == -1 || dist[t] > dist[j]))
+					                t = j;
+					        st[t] = true;
+
+					        for (int j = 0; j < n; j ++ )
+					            if (dist[j] > dist[t] + d[t][j]) 我们优先的是,dist更小的
+					            {
+					                dist[j] = dist[t] + d[t][j];
+					                cost[j] = cost[t] + c[t][j]; 即便之前的cost小,也要放弃,因为现在的路更短
+					                pre[j] = t; 记录路径
+					            }
+					            else if (dist[j] == dist[t] + d[t][j] && cost[j] > cost[t] + c[t][j]) 如果dist一样, 但是cost更小
+					            {
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> S >> T;
+					    memset(d, 0x3f, sizeof d);
+					    memset(c, 0x3f, sizeof c);
+
+					    while (m -- )
+					    {
+					        int a, b, x, y;
+					        cin >> a >> b >> x >> y; x:距离, y:话费
+					        if (x < d[a][b])
+					        {
+					            d[a][b] = d[b][a] = x;
+					            c[a][b] = c[b][a] = y;
+					        }
+					        else if (x == d[a][b] && y < c[a][b])
+					        {
+					            c[a][b] = c[b][a] = y;
+					        }
+					    }
+
+					    dijkstra();
+
+					    因为需要反向输出路径,所以依次插入vec,然后反向输出
+					    vector<int> path;
+					    for (int i = T; i != S; i = pre[i]) path.push_back(i); 插入了T,...,但是没有插入S
+
+					    cout << S;
+					    for (int i = path.size() - 1; i >= 0; i -- ) cout << ' ' << path[i]; 反向输出
+					    cout << ' ' << dist[T] << ' ' << cost[T] << endl;
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		74. 1518. 团伙头目 	1034
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+				2. b
+					#include <cstring>
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					int n, k;
+					unordered_map<string, vector<pair<string, int>>> g; string:每个人, vector<pair<string, int>>: 和string人的通话时间int
+					unordered_map<string, int> total; string人的总的通话时间total
+					unordered_map<string, bool> st; 判重数组, 因为题目可能有环,为了防止重复搜,所以设置这个
+
+					int dfs(string ver, vector<string> &nodes) 需要用引用
+					{
+					    st[ver] = true;
+					    nodes.push_back(ver);
+
+					    int sum = 0;
+					    for (auto edge : g[ver])
+					    {
+					        sum += edge.second; 需要用+=
+					        string cur = edge.first;
+					        if (!st[cur]) sum += dfs(cur, nodes); 需要用+=
+					    }
+
+					    return sum;
+					}
+
+					int main()
+					{
+					    cin >> n >> k;
+					    while (n -- )
+					    {
+					        string a, b;
+					        int t;
+					        cin >> a >> b >> t;
+					        g[a].push_back({b, t}); 将点b和边t都存储
+					        g[b].push_back({a, t});
+					        total[a] += t;	a的总权值+t
+					        total[b] += t;
+					    }
+
+					    vector<pair<string, int>> res; string是一个团队的头目,int是团队的人数
+					    for (auto item : total) 遍历所有的人
+					    {
+					        string ver = item.first; 人
+					        vector<string> nodes; 这个人所在的连通分量的所有的节点(人),会存到node里面
+					        int sum = dfs(ver, nodes) / 2;  返回的是以ver所在的连通分量中的这个分量的全部权值
+					        之后会解释,为什么:
+					        	1. 为什么for (auto item : total) 遍历所有的人
+					        		因为你从dfs的代码可以看出来,如果已经看到过的人,在dfs()中st[ver] == true的人,再经过(auto item : total)的时候,nodes.size() == 1,也就只有他自己
+					        	2. 为什么sum /= 2
+					        		因为在dfs()中,sum += edge.second;是不需要判断是否是st[ver]的
+					        		只有判断是否要继续递归找的时候,才会判断是否是st[ver]的
+					        		所以sum的确是加了2倍
+
+					        if (nodes.size() > 2 && sum > k) 需要满足题目的要求
+					        {
+					            string boss = nodes[0];
+					            for (string node : nodes)
+					                if (total[boss] < total[node])
+					                    boss = node;
+					            res.push_back({boss, (int)nodes.size()}); 注意,需要转换成(int)
+					        }
+					    }
+
+					    sort(res.begin(), res.end());
+
+					    cout << res.size() << endl;
+					    for (auto item : res) cout << item.first << ' ' << item.second << endl;
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		75. 1577. 条条大路通罗马	1087
+			0. bug
+			1. 笔记
+				1.
+					考察很全面
+						最短路
+							最短路的数量
+						最大点权
+						路径输出
+						最大点权的前提下,点数最少
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_map>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 210;
+
+					int n, m;
+					int w[N]; 某个点的权重
+					int d[N][N]; 点和点之间的距离
+					bool st[N]; 是否遍历过
+					int dist[N], cnt[N], cost[N], sum[N], pre[N];
+					// 最短距离，最短路数量，最大点权，最小点数, 最短路径的前一个点
+
+
+					string city[N];
+					unordered_map<string, int> mp;
+
+					void dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0, cnt[1] = 1;
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int t = -1; 也就是为灵魂t找到一个归宿j
+					        for (int j = 1; j <= n; j ++ )
+					            if (!st[j] && (t == -1 || dist[t] > dist[j]))  t没有归宿 || j是更好的归宿
+					                t = j;
+					        st[t] = true;
+
+					        for (int j = 1; j <= n; j ++ )
+					            if (dist[j] > dist[t] + d[t][j])
+					            {
+					                dist[j] = dist[t] + d[t][j]; t到j比之前的dist[j]更近
+					                cnt[j] = cnt[t]; 路径数量更新成t的
+					                cost[j] = cost[t] + w[j]; 权重也边了
+					                sum[j] = sum[t] + 1; 经过的节点数是sum[t]的基础上+1
+					                pre[j] = t; 上一个节点是t
+					            }
+					            else if (dist[j] == dist[t] + d[t][j])
+					            {
+					                cnt[j] += cnt[t]; 无论如何,都是多了cnt[t]条到j点的边, 这个不受信服度影响
+					                if (cost[j] < cost[t] + w[j]) 如果新的t到j的走法,幸福度更高
+					                {
+					                    cost[j] = cost[t] + w[j]; 更新信服度
+					                    sum[j] = sum[t] + 1; 因为信服度更高,所以肯定是走t->j这条路,所以是经过的节点数是sum[t]的基础上+1
+					                    pre[j] = t; 更新路径
+					                }
+					                else if (cost[j] == cost[t] + w[j]) 信服度相同
+					                {
+					                    if (sum[j] > sum[t] + 1) 看是否点数更少
+					                    {
+					                        sum[j] = sum[t] + 1; 更新点数
+					                        pre[j] = t; 更新路径
+					                    }
+					                }
+					                else
+					                	不作为
+					            }
+					            else
+					            	不作为
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> city[1];
+					    mp[city[1]] = 1;
+
+					    for (int i = 2; i <= n; i ++ )
+					    {
+					        cin >> city[i] >> w[i];
+					        mp[city[i]] = i;
+					    }
+
+					    memset(d, 0x3f, sizeof d);
+					    while (m -- )
+					    {
+					        string x, y;
+					        int c;
+					        cin >> x >> y >> c;
+					        int a = mp[x], b = mp[y];
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+
+					    dijkstra();
+
+					    int T = mp["ROM"];
+					    cout << cnt[T] << ' ' << dist[T] << ' ' << cost[T] << ' ' << cost[T] / sum[T] << endl;
+
+					    vector<int> path;
+					    for (int i = T; i != 1; i = pre[i]) path.push_back(i);
+
+					    cout << city[1];
+					    for (int i = path.size() - 1; i >= 0; i -- )
+					        cout << "->" << city[path[i]];
+					    cout << endl;
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		76. 1601. 在线地图 	1111
+			0. bug
+
+
+			1. 笔记
+			2. 注释
+				1. y
+				2. b
+					#include <cstring>
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m, S, T;
+					int d1[N][N], d2[N][N];
+					int dist1[N], dist2[N], pre[N];
+					bool st[N];
+
+					 返回最小值,路线.pair<int, string> dijkstra(int d1[][N], int d2[][N], int type) 
+					注意写法:int d1[][N], int d2[][N],但是老师解释:C++里函数参数为数组时，第一维的长度可以不写。
+					另外, d1,d2在这个函数中是局部变量, 虽然有全局变量也叫d1,d2,但是优先局部变量
+					{
+					    memset(dist1, 0x3f, sizeof dist1);
+					    memset(dist2, 0x3f, sizeof dist2);
+					    memset(st, 0, sizeof st); 因为dijkstra需要调用两次, 所以需要重新设置st
+					    dist1[S] = dist2[S] = 0;
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 0; j < n; j ++ )
+					            if (!st[j] && (t == -1 || dist1[t] > dist1[j]))
+					                t = j;
+					        st[t] = true;
+					        for (int j = 0; j < n; j ++ )
+					        {
+					            int w;
+					            if (type == 0) w = d2[t][j]; type == 0的时候, 第一权值也就是参数d1, 第二权值w是参数d2
+
+					            else w = 1; 如果最快路线不唯一，则输出经过路口最少的那条路线（保证唯一）。
+
+					            if (dist1[j] > dist1[t] + d1[t][j]) 第一个权值的比较
+					            {
+					                dist1[j] = dist1[t] + d1[t][j]; 这里的dist1, 是指的第一权值的dist, 也就是dist1[N]既可以是代表最短路,也可以代表最快路
+					                dist2[j] = dist2[t] + w; 无条件更新第二个权值. 
+					                如果第一个权值是 最短路线, 第二个权值 就是最快的路, w == d2[t][j]
+					                如果第一个权值是 最块路线, 第二个权值 就是经过路口最少的,也就是经过边数最少的路, w == 1                pre[j] = t;
+					            }
+					            else if (dist1[j] == dist1[t] + d1[t][j]) 第二个权值比较
+					            {
+					                if (dist2[j] > dist2[t] + w)
+					                {
+					                    dist2[j] = dist2[t] + w;
+					                    pre[j] = t;
+					                }
+					            }
+					        }
+					    }
+
+					    vector<int> path;
+					    for (int i = T; i != S; i = pre[i]) path.push_back(i); 反向推入
+
+					    pair<int, string> res; int是最短路是多长 或者 最快的路多块, string是路径
+					    res.first = dist1[T]; 从dist里面找到dist1[T], 也就是S到T的最短路是多长 或者 最快的路多块
+					    res.second = to_string(S); 将S从int变成string
+					    for (int i = path.size() - 1; i >= 0; i -- )
+					        res.second += " -> " + to_string(path[i]); 反向输出
+					    return res;
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    memset(d1, 0x3f, sizeof d1);
+					    memset(d2, 0x3f, sizeof d2);
+
+					    while (m -- )
+					    {
+					        int a, b, t, c, d;
+					        cin >> a >> b >> t >> c >> d;
+					        if (d1[a][b] > c) d1[a][b] = c, d2[a][b] = d;
+					        else if (d1[a][b] == c && d2[a][b] > d) d2[a][b] = d;
+					        if (!t)
+					        {
+					            if (d1[b][a] > c) d1[b][a] = c, d2[b][a] = d;
+					            else if (d1[b][a] == c && d2[b][a] > d) d2[b][a] = d;
+					        }
+					    }
+
+					    cin >> S >> T;
+
+					    auto A = dijkstra(d1, d2, 0);
+					    auto B = dijkstra(d2, d1, 1);
+
+					    if (A.second != B.second) 如果两种路径不一样,两个都输出: 一个输出的最快(不唯一就输出边数最少的), 一个输出的最短(不唯一就输出最快的)
+					    {
+					        printf("Distance = %d: %s\n", A.first, A.second.c_str());
+					        printf("Time = %d: %s\n", B.first, B.second.c_str());
+					    }
+					    else 路径相同
+					    {
+					        printf("Distance = %d; Time = %d: %s\n", A.first, B.first, A.second.c_str());
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		77. 1615. 哈密顿回路	1122
+			0. bug
+			1. 笔记
+				1.
+				 	哈密顿回路:
+						1. 既然是回路:起点与终点相同
+						2. 所有点走都一遍,都仅走一次
+						3. 所以一共走了n+1个点,因为起点走了两次
+						因为题目是给了路径, 所以我们还要判断路径是不是合法,也就是需要判断题目的两个点之间是否有边
+						另外老师判断了复杂度,是可以在0.3s之内完成的
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 210;
+
+					int n, m;
+					bool g[N][N], st[N];
+					int nodes[N * 2];
+
+					bool check(int cnt)
+					{
+					    if (nodes[0] != nodes[cnt - 1] 起点与终点不相同|| cnt != n + 1 是否一共走了n+1个点) return false;
+
+					    memset(st, 0, sizeof st);
+					    for (int i = 0; i < cnt - 1; i ++ )
+					    {
+					        st[nodes[i]] = true; 题目给的路径,都走了哪些点
+					        if (!g[nodes[i]][nodes[i + 1]]) 判断题目的两个点之间是否有边
+					            return false;
+					    }
+
+					    for (int i = 1; i <= n; i ++ )
+					        if (!st[i]) 如果有一个点没有走过,就是false
+					            return false;
+
+					    return true;
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+					    while (m -- )
+					    {
+					        int a, b;
+					        cin >> a >> b;
+					        g[a][b] = g[b][a] = true;
+					    }
+
+					    int k;
+					    cin >> k;
+					    while (k -- )
+					    {
+					        int cnt;
+					        cin >> cnt;
+					        for (int i = 0; i < cnt; i ++ ) cin >> nodes[i]; 讲题目给的路径上的所有点输入
+
+					        if (check(cnt)) puts("YES");
+					        else puts("NO");
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		78. 1619. 欧拉路径	1126
+			0. bug
+			1. 笔记
+				1. 
+					欧拉:每条边只能走一次,一笔画问题
+					欧拉回路:图是连通的,所有点的degree是偶数
+					欧拉路径:图是连通的,有两个点的degree是奇数,其余的点的degree是偶数
+					非欧拉:图不连通, 或者图是连通的但是三个点或以上的degree是奇数
+
+					图的连通:1. dfs 2.并查集
+			2. 注释
+				1. y
+				2. b
+					#include <cstring>
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m;
+					bool g[N][N], st[N];
+					int d[N];
+
+					int dfs(int u)
+					{
+					    st[u] = true;
+
+					    int res = 1; 因为一旦走入了dfs(u),就要把u这个点的个数算上, 所以是res = 1
+					    for (int i = 1; i <= n; i ++ ) 题目说了是编号是1-N,所以从1开始
+					        if (!st[i] && g[u][i]) 遍历临点,而且是没有走过的临点
+					            res += dfs(i);
+
+					    return res;
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a, b;
+					        cin >> a >> b; a,b的值都是>=1的,因为题目说了所有点的编号从 1∼N。
+					        g[a][b] = g[b][a] = true;
+					        d[a] ++, d[b] ++ ; a和b的degree都要++,即便题目输入了两次a,b我们认为ab之间有平行边,同样degree依旧要++
+					    }
+
+					    int cnt = dfs(1); 返回的是节点1开始走的连通分量的节点个数, 题目说了是编号是1-N,所以dfs(1)
+
+					    cout << d[1];
+					    for (int i = 2; i <= n; i ++ ) cout << ' ' << d[i];
+					    cout << endl;
+
+					    if (cnt == n) 图是连通的
+					    {
+					        int s = 0; s是计算degree是奇数的点的个数
+					        for (int i = 1; i <= n; i ++ )
+					            if (d[i] % 2)
+					                s ++ ; 
+
+					        if (s == 0) puts("Eulerian");
+					        else if (s == 2) puts("Semi-Eulerian");
+					        else puts("Non-Eulerian");
+					    }
+					    else puts("Non-Eulerian"); 说明不连通
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		79. 1624. 地铁地图	1131
+			0. bug
+			1. 笔记
+				1. 
+					0. 这道题的一个技巧在于, 
+					1. 整个地图是一个连通图,但是连通图里面的每个边也是有区别的,就是line线路的区别
+					2. 题目是想少换乘,所以希望是在同一个line上
+					3. 老师的加工在于,将同一个line上的所有点都两两链接了.
+						但是这不代表成为了稠密图
+						因为我们一共有n个点, 假设5条线的点数是abcde, 那么a+b+c+d+e == n
+						稠密图是n里面所有点两两链接, 因为n是1w(见下), 所以稠密图是10^8条边, 但是我们只有100w条边(见下), 所以是稠密图的百分之一,属于稀疏图
+						但是现在只是a,b,c,d,e分别地两两链接,并没有成为稠密图
+					4. 这样的话,少换乘,就可以变成:经过的节点较少的边,因为两两链接之后,可以同一个线路上的点a跨到点z(因为链接了)
+
+				1. 时间复杂度
+					首先看规模:
+						1. 最多100个line,每个line最多100个站
+						2. 所以最多100*100个站点,也就是1w个点
+						3. 每个line的站点可以链接100*99/2条边, 一共100个line,所以总共差不多100w条边(老师说100w不算多, 因为题目是0.4s, 我们允许千万级别的边)
+					如果是朴素dijkstra
+						1. n^2+m 是10^8, 因为站点有1w个, 会超时, 因为题目限制了0.4s
+					如果是堆优化:
+						1. m*logn, 也就是100w * 一个常数, 可以在0.4s完成
+				2. 空间复杂度
+					用邻接矩阵是不可以的: 因为有1w个点,需要开1w*1w的矩阵, 10^8, 用bool存是100MB, 超出了范围
+					用邻接表是可以的: 因为有100w条边,假设用bool存, 100w == 10^6 == 1MB(因为1M == 10^6)
+
+				3. 老师debug:
+					1. 用exit(0),判断到exit(0)的位置之前,有没有报错
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+					#include <queue>
+
+					#define x first  在使用pair的时候,喜欢用xy来代替first,second
+					#define y second
+
+					using namespace std;
+
+					typedef pair<int, int> PII;
+
+					const int N = 10010, M = 1000010;
+
+					int n;
+					int h[N], e[M], w[M], line[M] M边是属于第几号线, ne[M], idx; 用邻接表
+					int dist[N], cnt[N] 走过的边的数量 , pre[N];
+					int stops[N];
+					string info[N]; 从哪个线路过来的, 从线路的哪个点到哪个点
+					bool st[N];
+
+					string get_number(int x) 假设x是站点987, 但是我们需要输出的是0987
+					{
+					    char res[5];
+					    sprintf(res, "%04d", x);
+					    return res;
+					}
+
+					string get_number2(int x){
+						string res = to_string(x)
+						while(res.size() < 4) res = '0' + res; 注意是while
+						return res;
+					}
+					void add(int a, int b, int c, int id)
+					{
+						你的a是站点标号999
+						你通过h[a]获得了token:idx
+						通过idx可以知道e[idx],也就是999可以前往的其他站点号例如888
+						通过idx可以知道w[idx],也就是999到888的距离(也就是我们站点间隔:min(j - k, m - 1 - j + k);), 注意是只有999到888,如果是999到其他例如777的话是其他的token
+					    通过idx还可以知道999所属的line
+					    e[idx] = b, (w[idx] = c, line[idx] = id), ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					双关键词找路径:
+					1. 第一关键词, 两个站点的距离: 也就是min(j - k, m - 1 - j + k);
+					2. 距离相同, 找较少换乘的: 
+					void dijkstra(int start, int end)
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cnt, 0x3f, sizeof cnt); 因为我们要找最少换乘的,所以先设置成正无穷
+					    memset(st, 0, sizeof st);
+
+					    priority_queue<PII, vector<PII>, greater<PII>> heap; 小根堆,所以先退出距离某个站点最近的站点
+					    heap.push({0, start}); 加入n到起点的距离, 加入起点的临点n, 这里是初始化,所以n是起点,起点到起点的距离是0
+					    dist[start] = cnt[start] = 0; 是start点的cnt:走过的边的数量 初始为0
+
+					    我喜欢老师这个debug的方法, 在这里: int iii = 0;
+					    while (heap.size())
+					    {
+					        auto t = heap.top(); 堆顶
+					        heap.pop();
+
+					        int ver = t.y; ver是站点标号999
+					        if (ver == end) break;
+					        if (st[ver]) continue;
+					        st[ver] = true;
+
+					        if(++ iii > 3) exit(0); 我喜欢老师这个debug的方法, 也就是while走了3次就会break
+
+					        for (int i = h[ver]; ~i; i = ne[i]) ~i 是 i == -1
+					        {
+					            int j = e[i]; j也就是站点999的可到达站点888
+					            if (dist[j] > dist[ver] + w[i]) 第一关键词: w[i]是999和888之间的距离: min(j - k, m - 1 - j + k);
+					            {
+					                dist[j] = dist[ver] + w[i];
+					                cnt[j] = cnt[ver] + 1; 因为有更近的,所以即便要换乘,也是无条件的换
+					                						cnt是处理换乘逻辑的
+											                换乘的举例:
+											                假设一共4个线路, abcd是一个, ax是一个, xy是一个, yd是一个
+											                	   x --> y 
+											                	/			\   
+											                 a --> b --> c --> d
+											                 两种方法的距离都是一样的: abcd, axyd
+											                 但是其中abcd不需要换乘: 也就时cnt[d] = cnt[a] + 1 == 0 + 1 == 1, 因为建图的时候就已经存在一条ad直接连通的线了, 但是
+											                 但是我们将来计算axyd的时候, 因为是属于3条不同的线路, 所以ax虽然可以cnt[x] == 1,但是走xy的时候, cnt一定是增加的, 所以不会考虑xy这个走法
+					                pre[j] = ver;
+
+					                info[j] = "Take Line#" + to_string(line[i]) + " from " + 
+					                    get_number(ver) + " to " + get_number(j) + "."; 之所以这么写,是因为我们默认现在求到的就是最后路径打印的一部分.
+					                
+					                heap.push({dist[j], j}); 将距离push进去, 还有临点jpush进去
+					                因为第一判断条件:距离dist[j]更新了,所以需要push到heap中
+					            }
+					            else if (dist[j] == dist[ver] + w[i]) 
+					            {
+					                if (cnt[j] > cnt[ver] + 1)
+					                {
+					                    cnt[j] = cnt[ver] + 1;
+					                    pre[j] = ver;
+					                    info[j] = "Take Line#" + to_string(line[i]) + " from " + 
+					                        get_number(ver) + " to " + get_number(j) + ".";
+					                }
+					                else
+					            	不作为
+
+					                因为第一判断条件没有变,所以不需要push到heap
+					            }
+					            else
+					            	不作为
+					        }
+					    }
+
+					    cout << dist[end] << endl;
+					    vector<string> path;
+					    for (int i = end; i != start; i = pre[i])
+					        path.push_back(info[i]);
+
+					    for (int i = path.size() - 1; ~i; i -- )
+					        cout << path[i] << endl;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    memset(h, -1, sizeof h); 邻接表清空
+					    for (int i = 1; i <= n; i ++ ) n是线路line数
+					    {
+					        int m;
+					        cin >> m;
+					        for (int j = 0; j < m; j ++ ) cin >> stops[j]; 一个线路里面的每个站点,每次更新for(i++)后,stop会从stop[0]开始更新
+
+					        for (int j = 0; j < m; j ++ )
+					            for (int k = 0; k < j; k ++ ) 这里是k < j,也就是四个点会连6条边,0+1+2+3=6,4个点,6条边
+					            {
+					                int len;
+					                if (stops[0] != stops[m - 1]) len = j - k;
+					                else len = min(j - k, m - 1 - j + k);
+					                图像是这样的:
+					                0 -a-> k ----b---> j -c-> m-1
+					                所以b段是J-k, c段是m-1-j + (k-0) = m-1-j+k
+					                min(j - k, m - 1 - j + k);
+
+					                add(stops[j], stops[k], len, i); stop[i]是站点号,例如999, len是2者间隔,然后i是line数
+					                add(stops[k], stops[j], len, i); 双向边
+					            }
+					    }
+
+					    int k;
+					    cin >> k;
+					    while (k -- )
+					    {
+					        int start, end;
+					        cin >> start >> end;
+					        dijkstra(start, end);
+					    }
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		80. 1627. 顶点覆盖	1134
+			0. bug
+			1. 笔记
+				1.
+					1. 题目要求的是能否覆盖所有边的点, 什么意思呢?
+						举例:	
+							2,3,4,5构成了一个环, 然后2和6链接, 5和7链接
+								看上去像个机器人,一个环+两个触角
+								所以2,3,4,5就是覆盖所有边的
+							2,3,4,5构成了一个环, 2和6链接, 5和7链接, 7和8链接
+								看上去像个机器人,一个环+一个短触角+一个长触角
+								2,3,4,5不能覆盖所有的边,例如78之间的边就不能覆盖
+					2. 思路:
+						1. 遍历所有的边, 看是否边的两个端点, 至少有一个在题目给的点集合李曼
+					3. 复杂度:
+						1. 遍历所有边: 一共有1w条边
+						2. 一共100次询问
+						3. 总共100*1w = 100w的复杂度
+						4. 这个复杂度很低, 老师说,不涉及最短路的复杂度都很低
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n, m;
+					struct Edge
+					{
+					    int a, b;
+					}e[N];
+					bool st[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < m; i ++ ) cin >> e[i].a >> e[i].b;
+
+					    int k;
+					    cin >> k;
+					    while (k -- )
+					    {
+					        int cnt;
+					        cin >> cnt;
+
+					        memset(st, 0, sizeof st);
+					        while (cnt -- )
+					        {
+					            int x;
+					            cin >> x;
+					            st[x] = true;
+					        }
+
+					        int i;
+					        for (i = 0; i < m; i ++ )
+					            if (!st[e[i].a] && !st[e[i].b])  这道题默认我们的集合是对的, 如果发现两个端点都不满足就是false
+					                break;
+
+					        if (i == m) puts("Yes");
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		81. 1632. 第一次接触	1139
+			0. bug
+			1. 笔记
+				1.
+					1. 题目要求的: 找出两个人c,d; 构造出a,c,d,b的关系
+					2. ac一定是同性, db一定是同性. cd同不同性根据题目给出的ab同不同性
+					3. 复杂度:
+						时间
+							1. 因为一共存在300个人,所以a找c,有300种找法
+							2. c找d也有300种找法(d需要满足是c的朋友 && b的朋友)
+							3. 100次询问, 所以是300*300*100 = 9w次运算, 时间复杂度低
+						空间
+							1. 因为最多300人,所以可以通过邻接矩阵求
+					4. 这道题困难的地方在于处理输入输出
+						1. 首先,输入的是4位数编号, 而不是1-N的标号, 
+							老师用哈希表存了4位数编号到1-N编号的映射
+							同时用num[]存了从1-N标号到4位数编号的映射, 因为题目输出是4位数编号
+						2. 应该采用string读入4位编号,而不是用int读入4位编号
+							1. 因为存在-0000, 如果用int读的话, 不会读成-0, 可能会读成0, 就无法判断性别
+						3. 老师用了两个vec来存男女的数据
+
+					5. 总结:
+						1. 哈希表: 通过无性别4数, 得到1-N
+						2. num[]: 通过1-N, 获得无性别4数, 因为题目要求的数无性别的输出
+						3. g[][]: ind采用1-N编号
+						4. vec<int> 男女: int就是1-N编号
+					6. 所以:
+						1. 如果输入不恶心的话, 就直接当做普通题目处理, 只需要g[][], vec<int> boy, vec<int> girl
+						2. 但是题目输入恶心, 所以需要我们从4位数判断是男是女, 还需要映射到1-N, 还需要从1-N映射回来
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 310;
+
+					int n, m;
+					unordered_map<string, int> mp; 哈希表存了4位数编号到1-N编号的映射
+					string num[N]; num[]存了从1-N标号到4位数编号的映射, 因为题目输出是4位数编号
+					int id; 1-N编号
+					bool g[N][N]; 邻接矩阵
+					vector<int> boys, girls;
+
+					int main()
+					{
+					    cin >> n >> m;
+					    while (m -- )
+					    {
+					        string a, b;
+					        cin >> a >> b;
+					        string x = a, y = b;
+					        if (x.size() == 5) x = x.substr(1); 如果是5个字符,说明是负数,现在x = x.substr(1)之后x是不带有性别的
+					        if (y.size() == 5) y = y.substr(1);
+					        if (mp.count(x) == 0) mp[x] = ++ id, num[id] = x; 如果之前没有遇见过这个人x, 就插入mp和num. mp存的是不带性别的, num存的也是不带性别的
+					        if (mp.count(y) == 0) mp[y] = ++ id, num[id] = y;
+
+					        int px = mp[x], py = mp[y]; px,py是我们1-N编号
+					        g[px][py] = g[py][px] = true; 在邻接矩阵里面加入
+
+					        if (a[0] != '-') boys.push_back(px);  处理男女的时候, 插入的是1-N编号, 注意这里可能会重复插入
+					        else girls.push_back(px);
+					        if (b[0] != '-') boys.push_back(py);
+					        else girls.push_back(py);
+					    }
+
+					    sort(boys.begin(), boys.end()); 
+					    boys.erase(unique(boys.begin(), boys.end()), boys.end()); 删掉重复元素
+					    sort(girls.begin(), girls.end());
+					    girls.erase(unique(girls.begin(), girls.end()), girls.end());
+
+					    int k;
+					    cin >> k;
+
+					    while (k -- )
+					    {
+					        vector<pair<string, string>> res;
+					        string x, y;
+					        cin >> x >> y;
+
+					      	如果题目给的ab是男男,我们就要从男找c, 从男找d
+					      	如果题目给的ab是女女,我们就要从女找c, 从女找d
+					        vector<int> p = boys, q = boys; 先默认是都找男
+					        if (x[0] == '-') p = girls, x = x.substr(1); 改为找女, 并且x也变成没有性别的4位编号
+					        if (y[0] == '-') q = girls, y = y.substr(1);
+
+					        int a = mp[x], b = mp[y]; 变成1-N编号
+
+					        for (int c : p) 从p中取出所有的人, 注意这个人可能会是a, 所以后面有了c != a, 当然存在p==q也就是同找男男或者女女,所以我们需要 c!=b
+					            for (int d : q)
+					            {
+					                if (c != a && c != b && d != a && d != b && g[a][c] && g[c][d] && g[d][b]) 其实还可以加上 c!=d, 但是因为如果c==d的话g[c][d]肯定是false,所以加不加c!=d无所谓 
+					                    res.push_back({num[c], num[d]});
+					            }
+
+					        sort(res.begin(), res.end()); 也就是4位数的排序, 安排续输出. 第一关键词是第一个朋友的排序, 第二个关键词是第二个朋友
+					        cout << res.size() << endl;
+					        for (auto p : res) cout << p.first << ' ' << p.second << endl;
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		82. 1635. 最大团	1142
+			0. bug
+			1. 笔记
+				1. 
+					1. 题目要求: 
+						1. 是否是团: 看给定的点集中的所有点是否都和其他点相连接
+						2. 是否是最大团: 看剩余的点(就是全集中, 除了给定的点集之外的其他点), 是否和点集中的点全部链接
+							1. 是的话, 说明当前点集不是最大团
+							2. 不是: 当前点集是最大团
+					2. 复杂度:
+						1. 判断是否是团:199个点和其他198个点相比 : 199*198 所以可以两个forloop
+						2. 判断是否是最大团: 剩余的1个点 和 点集中的199个点比:  1*199
+						3. 100次询问: 100*(199*199) = 100*200*200 = 200w, 0.02s可以搞定
+
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 210;
+
+					int n, m;
+					bool g[N][N], st[N];
+					int vers[N];
+
+					bool check_clique(int cnt)
+					{
+					    for (int i = 0; i < cnt; i ++ )
+					        for (int j = 0; j < i; j ++ )
+					            if (!g[vers[i]][vers[j]]) 
+					                return false;
+					    return true;
+					}
+
+					bool check_maximum(int cnt)
+					{
+					    memset(st, 0, sizeof st);
+					    for (int i = 0; i < cnt; i ++ )
+					        st[vers[i]] = true;
+
+					    for (int i = 1; i <= n; i ++ )
+					        if (!st[i])  只处理点集之外的其他点
+					        {
+					            bool success = true;
+					            for (int j = 0; j < cnt; j ++ )
+					                if (!g[i][vers[j]])
+					                {
+					                    success = false; 我觉得也可以直接return false
+					                    break;
+					                }
+
+					            if (success) return false; 
+					        }
+
+					    return true;
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+					    while (m -- )
+					    {
+					        int a, b;
+					        cin >> a >> b;
+					        g[a][b] = g[b][a] = true;
+					    }
+
+					    int k;
+					    cin >> k;
+					    while (k -- )
+					    {
+					        int cnt;
+					        cin >> cnt;
+					        for (int i = 0; i < cnt; i ++ ) cin >> vers[i];
+					        if (check_clique(cnt))
+					        {
+					            if (check_maximum(cnt)) puts("Yes");
+					            else puts("Not Maximal");
+					        }
+					        else puts("Not a Clique");
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		83. 1639. 拓扑顺序	1146
+			0. bug
+			1. 笔记
+				1. 
+					1. 思路很简单
+						1. 首先我们知道有向图的每条边的信息, 记录每条边的起点和终点
+						2. 给了一个需要判断的序列, 我们存一个映射 p[点的id] = 顺序
+						3. 我们看每一条边, 是否p[起点id] < p[终点id]
+						4. 你可以画图, 是真的就是这个性质
+					2. 复杂度:
+						1. 一共10000条边, 每条边都要比较起点在p[]的顺序是不是在终点前面
+						2. 一共100次询问, 所以是100*10000 = 100w
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1010, M = 10010;
+
+					int n, m;
+					struct Edge
+					{
+					    int a, b;
+					}e[M];
+					int p[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < m; i ++ ) cin >> e[i].a >> e[i].b;
+
+					    int k;
+					    cin >> k;
+
+					    bool is_first = true; 如果是第一个要输出的询问次数, 前面就没有空格
+					    for (int i = 0; i < k; i ++ ) k次询问
+					    {
+					        for (int j = 1; j <= n; j ++ ) 将这次询问的每个点的顺序记录
+					        {
+					            int x;
+					            cin >> x;
+					            p[x] = j; p[点的id] = 顺序
+					        }
+
+					        bool success = true;
+					        for (int j = 0; j < m; j ++ )
+					            if (p[e[j].a] > p[e[j].b]) 对于不存在的边,也就没有必要判断了
+					            {
+					                success = false;
+					                break;
+					            }
+
+					        if (!success)
+					        {
+					            if (is_first) is_first = false; 只会执行一次,就是第一次
+					            else cout << ' ';
+					            cout << i; 所以最后的输出是"a b c d",即a的前面没有空格
+
+					        }
+					    }
+
+					    cout << endl;
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		84. 1643. 旅行商问题	1150
+			0. bug
+			1. 笔记
+				1.
+					简单回路: 
+						1. 两个点之间存在一条边
+						2. 每个点都遍历了
+						3. 起点 == 终点
+						4. 点数 == n+1
+					debug:
+						1. segmentfault: 数组越界
+
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 210, INF = 0x3f3f3f3f;
+
+					int n, m;
+					int d[N][N], vers[310];
+					bool st[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+					    memset(d, 0x3f, sizeof d);
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a, b, c;
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = c;
+					    }
+
+					    int k;
+					    cin >> k;
+
+					    int min_dist = INF, min_id;
+					    for (int T = 1; T <= k; T ++ )
+					    {
+					        int cnt;
+					        cin >> cnt;
+					        for (int i = 0; i < cnt; i ++ ) cin >> vers[i]; 读取询问的两个点
+
+					        int sum = 0;
+					        bool success = true;
+					        memset(st, 0, sizeof st);
+					        for (int i = 0; i + 1 < cnt; i ++ )
+					        {
+					            int a = vers[i], b = vers[i + 1];
+					            if (d[a][b] == INF) 如果这两个点没有链接
+					            {
+					                sum = -1; sum是成了-1,表示不是路
+					                success = false;
+					                break;
+					            }
+					            else sum += d[a][b]; 
+					            	有链接
+					            st[a] = true; 
+					            	我很好奇, 这不应该还剩一个最后一个st[]没有设置成true吗, 所以这里是cnt-1个设置成了true
+					        }
+					        st[vers[cnt-1]] = true; 我自己添加的.
+
+					        sum == -1
+					        	不是路
+					        	有两个点之间没有边
+
+					        sum > 0 但是 st[0]到st[n-1]存在false
+					        	没有走完所有点
+
+					        sum > 0 && cnt == n+1 && st[0]到st[n-1]都是true && vers[0] == vers[cnt-1]
+					        	简单回路
+					        	所以可以cnt中前cnt-1个设置成st[a] = true;
+
+					        sum > 0 && cnt > n+1 && st[0]到st[n-1]都是true
+					        	不是简单回路
+
+
+					        for (int i = 1; i <= n; i ++ )
+					            if (!st[i])
+					            {
+					                success = false;
+					                break;
+					            }
+
+					        if (vers[0] != vers[cnt - 1]) success = false;
+
+					        if (sum == -1) printf("Path %d: NA (Not a TS cycle)\n", T);
+					        else
+					        {
+					            if (!success) printf("Path %d: %d (Not a TS cycle)\n", T, sum);
+					            else
+					            {
+					                if (cnt == n + 1) printf("Path %d: %d (TS simple cycle)\n", T, sum);
+					                else printf("Path %d: %d (TS cycle)\n", T, sum);
+
+					                if (min_dist > sum)
+					                {
+					                    min_dist = sum;
+					                    min_id = T;
+					                }
+					            }
+					        }
+					    }
+
+					    printf("Shortest Dist(%d) = %d\n", min_id, min_dist);
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		85. 1648. 顶点着色	1154
+			0. bug
+			1. 笔记
+				1.
+					简单,因为询问是给出了颜色,让我们判断对错, 而不是让我们自己设计颜色
+					思路是:
+					1. 记录每条边的起点和终点
+					2. 判断这个起点和终点的颜色(因为询问中给出了每个点的颜色)
+					3. 如果颜色相同,就是false
+					4. 最后也需要输出颜色的种类数, 用unordered_set来存
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_set>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n, m;
+					struct Edge
+					{
+					    int a, b;
+					}e[N];
+					int color[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < m; i ++ ) cin >> e[i].a >> e[i].b; 起点终点
+
+					    int k;
+					    cin >> k;
+					    while (k -- )
+					    {
+					        for (int i = 0; i < n; i ++ ) cin >> color[i]; 询问
+
+					        bool success = true;
+					        for (int i = 0; i < m; i ++ )
+					            if (color[e[i].a] == color[e[i].b]) 判断是否颜色相同
+					            {
+					                success = false;
+					                break;
+					            }
+
+					        if (success)
+					        {
+					            unordered_set<int> S;
+					            for (int i = 0; i < n; i ++ ) S.insert(color[i]); 存颜色个数
+					            printf("%d-coloring\n", S.size());
+					        }
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		86. 1495. 公共自行车管理	1018
+			0. bug
+			1. 笔记
+				1. 题目中说明只会沿着最短路从起点走到终点，然后就不能进行其他操作了。
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 510, INF = 0x3f3f3f3f;
+
+					int C, n, S, m;
+					int c[N];
+					int g[N][N];
+					int dist[N];
+					bool st[N];
+
+					vector<int> path, ans;
+					int send = INF, bring = INF;
+
+					void dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[S] = 0;
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 0; j <= n; j ++ )
+					            if (!st[j] && (t == -1 || dist[j] < dist[t]))
+					                t = j;
+
+					        st[t] = true;
+					        for (int j = 0; j <= n; j ++ )
+					            dist[j] = min(dist[j], dist[t] + g[t][j]);
+					    }
+					}
+
+					void dfs(int u, int s, int mins)
+					{
+					    if (u)
+					    {
+					        s -= (C + 1) / 2 - c[u];
+					        mins = min(mins, s);
+					    }
+
+					    if (u == S)
+					    {
+					        int sd = abs(min(mins, 0));
+					        int bg = s + sd;
+
+					        if (sd < send) ans = path, send = sd, bring = bg;
+					        else if (sd == send && bg < bring) ans = path, bring = bg;
+
+					        return;
+					    }
+
+					    for (int i = 1; i <= n; i ++ )
+					        if (dist[u] == g[u][i] + dist[i])
+					        {
+					            path.push_back(i);
+					            dfs(i, s, mins);
+					            path.pop_back();
+					        }
+					}
+
+					int main()
+					{
+					    cin >> C >> n >> S >> m;
+					    for (int i = 1; i <= n; i ++ ) cin >> c[i];
+
+					    memset(g, 0x3f, sizeof g);
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int x, y, z;
+					        cin >> x >> y >> z;
+					        g[x][y] = g[y][x] = min(g[x][y], z);
+					    }
+
+					    dijkstra();
+
+					    path.push_back(0);   
+					    dfs(0, 0, 0);
+
+					    cout << send << ' ' << 0;
+					    for (int i = 1; i < ans.size(); i ++ )
+					        cout << "->" << ans[i];
+					    cout << " " << bring << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/323564/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		87. 1558. 加油站	1072
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1020, INF = 0x3f3f3f3f;
+
+					int n, m, k, D;
+					int g[N][N];
+					int dist[N];
+					bool st[N];
+
+					int get(string s)
+					{
+					    if (s[0] == 'G') return n + stoi(s.substr(1));
+					    return stoi(s);
+					}
+
+					void dijkstra(int start, int &mind, int &sumd)
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(st, 0, sizeof st);
+
+					    dist[start] = 0;
+					    for (int i = 0; i < n + m; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 1; j <= n + m; j ++ )
+					            if (!st[j] && (t == -1 || dist[j] < dist[t]))
+					                t = j;
+
+					        st[t] = true;
+
+					        for (int j = 1; j <= n + m; j ++ )
+					            dist[j] = min(dist[j], dist[t] + g[t][j]);
+					    }
+
+					    for (int i = 1; i <= n; i ++ )
+					        if (dist[i] > D)
+					        {
+					            mind = -INF;
+					            return;
+					        }
+
+					    mind = INF, sumd = 0;
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        mind = min(mind, dist[i]);
+					        sumd += dist[i];
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> k >> D;
+
+					    memset(g, 0x3f, sizeof g);
+					    while (k -- )
+					    {
+					        string a, b;
+					        int z;
+					        cin >> a >> b >> z;
+					        int x = get(a), y = get(b);
+
+					        g[x][y] = g[y][x] = min(g[x][y], z);
+					    }
+
+					    int res = -1, mind = 0, sumd = INF;
+					    for (int i = n + 1; i <= n + m; i ++ )
+					    {
+					        int d1, d2;
+					        dijkstra(i, d1, d2);
+
+					        if (d1 > mind) res = i, mind = d1, sumd = d2;
+					        else if (d1 == mind && d2 < sumd) res = i, sumd = d2;
+					    }
+
+					    if (res == -1) puts("No Solution");
+					    else printf("G%d\n%.1lf %.1lf\n", res - n, (double)mind, (double)sumd / n + 1e-8);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/323579/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		88. 1562. 微博转发 	1076
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <queue>
+
+					using namespace std;
+
+					const int N = 1010, M = 100010;
+
+					int n, m;
+					int h[N], e[M], ne[M], idx;
+					bool st[N];
+
+					void add(int a, int b)
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int bfs(int start)
+					{
+					    queue<int> q;
+					    memset(st, 0, sizeof st);
+
+					    q.push(start);
+					    st[start] = true;
+
+					    int res = 0;
+					    for (int step = 0; step < m; step ++ )
+					    {
+					        int sz = q.size();
+					        res += sz;
+
+					        for (int i = 0; i < sz; i ++ )
+					        {
+					            int t = q.front();
+					            q.pop();
+
+					            for (int j = h[t]; ~j; j = ne[j])
+					            {
+					                int k = e[j];
+					                if (!st[k])
+					                {
+					                    st[k] = true;
+					                    q.push(k);
+					                }
+					            }
+					        }
+					    }
+
+					    return res + q.size() - 1;
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        int cnt;
+					        scanf("%d", &cnt);
+					        while (cnt -- )
+					        {
+					            int x;
+					            scanf("%d", &x);
+					            add(x, i);
+					        }
+					    }
+
+					    int k;
+					    scanf("%d", &k);
+					    while (k -- )
+					    {
+					        int x;
+					        scanf("%d", &x);
+					        printf("%d\n", bfs(x));
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324375/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+7. 数学
+		89. 1533. 1 的个数	1049
+			0. bug
+			1. 笔记
+				1.	
+					1. 暴力枚举一定会超时:
+						1. 因为假设是判断最大的数字, 2^30 = 十几亿 = 10^9(因为2^31 = 30亿)
+						2. 那么我们要遍历从1到十几亿每个数字的1有多少个, 因为10^9有10位数
+						3. 所以10^9*10 = 10^10, 一定超时了
+					2. 思路
+						假设一个数字是bar(abcdefgh), 其中bar()就是代表一个数字上面加上-
+						我们需要一个一个遍历所有的数字, 假设我们当前遍历到了d
+						我们是判断, 比这个bar(abcdefgh)小的所有数字中,有多少是bar(abc1efgh)
+						有多少呢?需要分情况讨论:
+							1. 假设d == 0, 求比bar(abc0efgh)小的所有数字中,有多少是第4位数字是1, 也就是bar(___1____)
+								分析
+									前3位___的取值是bar(000)到bar(abc)-1, 因为如果是bar(abc)的话, bar(abc1____)肯定是大于我们题目给的bar(abc0efgh)
+										bar(000)到bar(abc)-1一共有bar(abc)个数字
+									后4位____的取值是bar(0)到bar(999), 例如, 假设bar(abc)是123, 题目给定的就是1230efgh, 比1230efgh要小的数字,就包括了12219999. 其中前三位是bar(abc)-1, 后4位是9999
+										bar(0)到bar(999)一共有10^4个数字
+								总结
+									bar(abc) * 10^4种可能
+
+							2. 假设d == 1, 求比bar(abc1efgh)小的所有数字中,有多少是第4位数字是1, 也就是bar(___1____)
+								分析
+									假设
+										前3位___的取值是bar(000)到bar(abc)-1, 那么后4位____的取值是bar(0000)到bar(9999)
+										因为前三位比我们题目给的数bar(abc1efgh)小, 所有后4位想怎么样都行
+										这种情况一共有bar(abc)*10^4种可能
+									假设
+										前3位___的取值是bar(abc), 那么后4位____的取值是bar(0000)到bar(efgh)
+										因为前三位比我们题目给的数等于bar(abc1efgh), 所有后4位必须<=bar(efgh)
+										这种情况一共有bar(efgh)+1种可能
+								总结
+									bar(abc)*10^4 
+									+ bar(efgh)+1 种可能
+							3. 假设d > 1, 例如d == 8, 求比bar(abc8efgh)小的所有数字中,有多少是第4位数字是1, 也就是bar(___1____)
+								分析:这个就很灵活了
+									前3位___的取值是bar(000)到bar(abc), 后4位____的取值是bar(0)到bar(9999), 怎么都不会超出bar(abc8efgh)
+								总结
+									(bar(abc)+1) * 10^4
+					3. 总结:
+						1. d == 0
+							bar(abc)*10^4
+						2. d == 1
+							bar(abc)*10^4 + bar(efgh)+1
+						3. d > 1
+							(bar(abc)+1) * 10^4
+					4. 所以我们预处理,需要bar(abc), bar(efgh), 后面的位数n
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					int calc(int n)
+					{
+					    vector<int> nums;
+					    while (n) nums.push_back(n % 10), n /= 10; 每次推入的是个位数, 所以个位数的ind == 0
+
+					    int res = 0;
+					    for (int i = nums.size() - 1; i >= 0; i -- ) 从最高位开始, 所以想想画面: ind == 0 (hgfedcba) ind == size-1
+					    {
+					        int d = nums[i];
+					        int left = 0, right = 0, power = 1; left就是上面的bar(abc), right就是bar(efgh), power就是后面的n位
+					        for (int j = nums.size() - 1; j > i; j -- ) left = left * 10 + nums[j]; 	获得bar(abc),就是先计算a,然后*10+b,*10+c. 其中a的ind == size-1
+					        for (int j = i - 1; j >= 0; j -- ) 
+					        {
+					            right = right * 10 + nums[j]; 或者bar(efgh),就是从e开始, *10+f, *10+g..., 所以是从i-1开始
+					            power *= 10; 后面有几位
+					        }
+
+					        同上的分析
+					        if (d == 0) res += left * power;
+					        else if (d == 1) res += left * power + right + 1;
+					        else res += (left + 1) * power;
+					    }
+
+					    return res;
+					}
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    cout << calc(n) << endl;
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		90. 1545. 质因子	1059
+			0. bug
+			1. 笔记
+				1. 给定一个整数 N，找出它的所有质因子
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    printf("%d=", n);
+					    if (n == 1) puts("1");
+					    else
+					    {
+					        bool is_first = true;
+					        for (int i = 2; i <= n / i; i ++ ) 就是从最小,找质因子
+					            if (n % i == 0) 说明i是n的一个质因子
+					            {
+					                int k = 0;
+					                while (n % i == 0) n /= i, k ++ ; 看有多少个这个质因子
+
+					                if (!is_first) cout << '*'; 因为第一个输出的数字前不能有乘号*
+					                else is_first = false;
+
+					                cout << i;
+					                if (k > 1) cout << "^" << k; 输入幂次
+					            }
+
+					        if (n > 1) 如果还剩一个n,说明n本身就是质因子, 因为我们上面的的是for (int i = 2; i <= n / i; i ++ ) ,所以i一定不会 == n
+					        {
+					            if (!is_first) cout << '*';
+					            cout << n;
+					        }
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		91. 1567. 有理数的和	1081
+			0. bug
+			1. 笔记
+				1.
+					思路: 就是求两个分数的和
+					debug: float point exception: 说明我们除0了
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					LL gcd(LL a, LL b)
+					{
+					    return b ? gcd(b, a % b) : a;
+					}
+
+					int main()
+					{
+					    LL a = 0, b = 1;
+
+					    int n;
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        LL c, d;
+					        scanf("%lld/%lld", &c, &d);
+
+					        LL t = gcd(c, d);
+					        c /= t, d /= t;
+
+					        t = gcd(b, d);
+					        a = d / t * a + b / t * c;
+					        b = b / t * d;
+
+					        t = gcd(a, b);
+					        a /= t, b /= t;
+					    }
+
+					    if (b == 1) cout << a;
+					    else
+					    {
+					        if (a >= b) printf("%lld ", a / b), a %= b;
+					        printf("%lld/%lld", a, b);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/310015/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					#include <iostream>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					LL gcd(LL a, LL b) 最大公约数
+					{
+					    return b ? gcd(b, a % b) : a; 辗转相除, 不是很清楚, 背吧
+					}
+
+					int main()
+					{
+					    LL a = 0, b = 1; 最开始的分子a和分母b, 其中b = 1, 否则float point exception
+
+					    int n;
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        LL c, d;
+					        scanf("%lld/%lld", &c, &d); 读入分子分母, 读入的时候是按照lld读入
+
+					        LL t = gcd(c, d); 最大公约数
+					        c /= t, d /= t;  分子分母约分
+
+					        a/b + c/d = (ad + bc) / bd, 最后将(ad+bc)赋值给a, bd赋值给b
+					        t = gcd(b, d);
+					        a = d / t * a + b / t * c; 担心bd分母溢出, 所以找出公约数, 然后分子(ad+bc)/t, 分母bd/t, 分子分母都除以t才能保证值不变
+					        b = b / t * d;
+
+					        t = gcd(a, b); 最后继续约分
+					        a /= t, b /= t;
+					    }
+
+					    if (b == 1) cout << a; 说明是整数
+					    else
+					    {
+					        if (a >= b) printf("%lld ", a / b), a %= b; 假分数
+					        printf("%lld/%lld", a, b);
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		92. 1578. 有理数运算	1088
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					LL gcd(LL a, LL b)
+					{
+					    return b ? gcd(b, a % b) : a;
+					}
+
+					void print(LL a, LL b)
+					{
+					    LL d = gcd(a, b);
+					    a /= d, b /= d;
+
+					    if (b < 0) a *= -1, b *= -1;
+					    bool is_minus = a < 0;
+
+					    if (is_minus) cout << "(";
+
+					    if (b == 1) cout << a;
+					    else
+					    {
+					        if (abs(a) >= b) printf("%lld ", a / b), a = abs(a) % b;
+					        printf("%lld/%lld", a, b);
+					    }
+
+					    if (is_minus) cout << ")";
+					}
+
+					void add(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " + ", print(c, d), cout << " = ";
+					    a = a * d + b * c;
+					    b = b * d;
+					    print(a, b), cout << endl;
+					}
+
+					void sub(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " - ", print(c, d), cout << " = ";
+					    a = a * d - b * c;
+					    b = b * d;
+					    print(a, b), cout << endl;
+					}
+
+					void mul(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " * ", print(c, d), cout << " = ";
+					    a = a * c;
+					    b = b * d;
+					    print(a, b), cout << endl;
+					}
+
+					void div(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " / ", print(c, d), cout << " = ";
+					    if (!c) puts("Inf");
+					    else
+					    {
+					        a = a * d;
+					        b = b * c;
+					        print(a, b), cout << endl;
+					    }
+					}
+
+					int main()
+					{
+					    LL a, b, c, d;
+					    scanf("%lld/%lld %lld/%lld", &a, &b, &c, &d);
+
+					    add(a, b, c, d);
+					    sub(a, b, c, d);
+					    mul(a, b, c, d);
+					    div(a, b, c, d);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/310030/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+					输入 long int ,也就是int, 而不是longlong
+					#include <iostream>
+
+					using namespace std;
+
+					typedef long long LL; 防止溢出
+
+					LL gcd(LL a, LL b)
+					{
+					    return b ? gcd(b, a % b) : a; 适用于负数
+					}
+
+					void print(LL a, LL b)
+					{
+					    LL d = gcd(a, b);
+					    a /= d, b /= d;
+
+					    if (b < 0) a *= -1, b *= -1; 如果分母是负数, 需要把符号挪到分子
+					    bool is_minus = a < 0;
+
+					    if (is_minus) cout << "("; 如果是负数, 需要输入括号
+
+					    if (b == 1) cout << a; 整数
+					    else
+					    {
+					        if (abs(a) >= b) printf("%lld ", a / b), a = abs(a) % b; 输出的是假分数
+					        printf("%lld/%lld", a, b);
+					    }
+
+					    if (is_minus) cout << ")";
+					}
+
+					void add(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " + ", print(c, d), cout << " = ";
+					    a = a * d + b * c;
+					    b = b * d;
+					    print(a, b), cout << endl;
+					}
+
+					void sub(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " - ", print(c, d), cout << " = ";
+					    a = a * d - b * c;
+					    b = b * d;
+					    print(a, b), cout << endl;
+					}
+
+					void mul(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " * ", print(c, d), cout << " = ";
+					    a = a * c;
+					    b = b * d;
+					    print(a, b), cout << endl;
+					}
+
+					void div(LL a, LL b, LL c, LL d)
+					{
+					    print(a, b), cout << " / ", print(c, d), cout << " = ";
+					    if (!c) puts("Inf");
+					    else
+					    {
+					        a = a * d;
+					        b = b * c;
+					        print(a, b), cout << endl;
+					    }
+					}
+
+					int main()
+					{
+					    LL a, b, c, d;
+					    scanf("%lld/%lld %lld/%lld", &a, &b, &c, &d);
+
+					    add(a, b, c, d);
+					    sub(a, b, c, d);
+					    mul(a, b, c, d);
+					    div(a, b, c, d);
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		93. 1586. 连续因子	1096
+			0. bug
+			1. 笔记
+				1.
+					思路:
+						1. 既然是要找出序列, 我们就枚举序列
+						2. 序列的枚举: 1. 需要第一个数, 2. 需要后面的n个数
+						3. 从2开始, 看后面3,4,5..是否可以整除
+						4. 如果2不行,再从3开始,看后面4,5,6..是否可以整除
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    vector<int> res;
+					    for (int i = 2; i <= n / i; i ++ ) 从2开始, 一直到sqrt(t)
+					        if (n % i == 0) 如果能整除,就继续看i+1, i+2
+					        {
+					            vector<int> seq; 
+					            for (int m = n, j = i; m % j == 0; j ++ ) j从i开始, m是被整除之后的剩下的数
+					            {
+					                seq.push_back(j); 将答案插入
+					                m /= j;
+					            }
+					            我们看样例630, 630=5*6*7 * 3 = 210*3
+					            所以j = 5,6,7, 当前的点j==7的时候, m /= j是 210 /= 7 == 3, 之后判断m%j == 1 % 8 == 1 != 0
+					            就一定会break
+
+					            假设j是从2开始, 点j==2的时候, m/=j 是630/=2 == 315, 之后判断m%j == 315 % 3 != 0
+					            也会break,但是break之后的seq.size()并不大
+
+					            假设后面遇到了新的j = x,y,z, 也可以满足630=x*y*z. 其中x > 5
+					            那么我们也不会更新res, 因为更新的条件是严格大于, 而不是大于等于
+					            这么做的原因: 题目要求,如果多个序列的长度相同, 那么取第一个数字最小的. 
+
+
+					            if (seq.size() > res.size()) res = seq; 是严格大于
+					        }
+
+					    if (res.empty()) res.push_back(n);
+
+					    cout << res.size() << endl;
+					    cout << res[0];
+					    for (int i = 1; i < res.size(); i ++ ) cout << '*' << res[i];
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		94. 1593. 整数分解	1103
+			0. bug
+			1. 笔记
+				1.	
+					这道题的正规解法是二维费用的背包问题
+					https://www.acwing.com/solution/content/13018/
+					https://www.acwing.com/problem/content/1595/
+
+					和: 169, 是体积(也就是其中一个限制条件)
+					几个数字: 5, 是重量(另一个限制条件)
+					每个数字: 1,4,9,16.., 也是体积
+					每个数字都看成一个空箱子, 例如数字1代表体积是1的空箱, 数字4代表体积是16的空箱
+					我们需要找到5个数字,让他们的体积之和 == 169
+
+					题目体积的取值是1-400, 假设只需要找一个数字, 那么我们找到数字20(它的体积是400)就已经足够了
+					所以我们能找的数字是1-20
+
+					所以,题目可以看成,你有20个物品(数字1-20),每个物品的价值是1-20(数字n的价值是n),每个物品的体积是1-400(数字n的体积是n*n),每个物品的重量是1
+					我们需要满足的限制条件是:选取k个物品,他们的体积之和是n,他们的重量之和是k.
+					在满足上面的限制的所有物品,求出物品价值最高的.
+					这是个完全背包问题,每个物品可以选多次.
+
+					而原来的题目是:给定一个数字n,要你分解成k个数字的平方和的形式,我们希望k个数字的和最大.一个数字可以选多次
+
+					复杂度:
+						1. 体积的取值是1-400, 选取的物品个数是1-400, 一共有最多20种物品, 所以复杂度是400*400*20=320w < 
+
+					状态表示
+					因为是两维度,所以我们需要3个参数
+					f(i,j,k)
+						表示了某个集合:
+							所有只考虑前i个物品
+						表示了该集合的属性:
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 410;
+
+					int n, k, p;
+					int f[21][N][N];
+
+					int power(int a, int b)
+					{
+					    int res = 1;
+					    for (int i = 0; i < b; i ++ ) res *= a;
+					    return res;
+					}
+
+					int main()
+					{
+					    cin >> n >> k >> p;
+
+					    memset(f, -0x3f, sizeof f); 初始化负无穷
+					    f[0][0][0] = 0; 唯一能取到的状态
+
+					    int m;
+					    for (m = 1; ; m ++ )
+					    {
+					        int v = power(m, p);
+					        if (v > n) break;
+
+					        for (int i = 0; i <= n; i ++ )
+					            for (int j = 0; j <= k; j ++ )
+					            {
+					                f[m][i][j] = f[m - 1][i][j];
+
+					                if (i >= v && j >= 1) f[m][i][j] = max(f[m][i][j], f[m][i - v][j - 1] + m);
+					            }
+					    }
+
+					    m -- ;
+
+					    if (f[m][n][k] < 0) puts("Impossible");
+					    else
+					    {
+					        printf("%d = ", n);
+					        bool is_first = true;
+					        while (m)
+					        {
+					            int v = power(m, p);
+					            while (n >= v && k && f[m][n - v][k - 1] + m == f[m][n][k])
+					            {
+					                if (is_first) is_first = false;
+					                else printf(" + ");
+
+					                printf("%d^%d", m, p);
+					                n -= v, k --;
+					            }
+
+					            m -- ;
+					        }
+					    }
+
+					    return 0;
+					}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		95. 1594. 数段之和	1104
+			0. bug
+			1. 笔记
+				1.
+					1. i * (n-i+1)
+						举例
+						
+					2. double 防止溢出
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+					    long double res = 0;
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        long double x;
+					        cin >> x;
+
+					        res += x * i * (n - i + 1);
+					    }
+
+					    printf("%.2Lf", res);
+
+					    return 0;
+					}
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		96. 1602. 卡住的键盘	1062
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 200;
+
+					int st[N];
+
+					int main()
+					{
+					    int k;
+					    string str;
+					    cin >> k >> str;
+
+					    for (int i = 0; i < str.size(); i ++ )
+					    {
+					        int j = i + 1;
+					        while (j < str.size() && str[j] == str[i]) j ++ ;
+					        int len = j - i;
+					        if (len % k) st[str[i]] = 1;
+					        i = j - 1;
+					    }
+
+					    string res;
+					    for (int i = 0; i < str.size(); i ++ )
+					    {
+					        if (!st[str[i]]) cout << str[i], st[str[i]] = 2;
+
+					        if (st[str[i]] == 1) res += str[i];
+					        else
+					        {
+					            res += str[i];
+					            i += k - 1;
+					        }
+					    }
+
+					    cout << endl << res << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324389/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		97. 1606. C 语言竞赛	1116
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int Rank[N];
+					int st[N];
+
+					void init()
+					{
+					    for (int i = 2; i < N; i ++ )
+					        if (!st[i])
+					        {
+					            st[i] = 1;
+					            for (int j = i * 2; j < N; j += i)
+					                st[j] = 2;
+					        }
+					}
+
+					int main()
+					{
+					    init();
+
+					    int n;
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        int id;
+					        cin >> id;
+					        Rank[id] = i;
+					    }
+
+					    int k;
+					    cin >> k;
+					    while (k -- )
+					    {
+					        int id;
+					        cin >> id;
+
+					        printf("%04d: ", id);
+					        if (!Rank[id]) puts("Are you kidding?");
+					        else if (Rank[id] == -1) puts("Checked");
+					        else
+					        {
+					            int t = st[Rank[id]];
+					            if (t == 0) puts("Mystery Award");
+					            else if (t == 1) puts("Minion");
+					            else puts("Chocolate");
+
+					            Rank[id] = -1;
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324400/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		98. 1646. 谷歌的招聘	1152
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1010, M = 40000;
+
+					int n, k;
+					bool st[M];
+					int primes[M], cnt;
+
+					void init()
+					{
+					    for (int i = 2; i < M; i ++ )
+					        if (!st[i])
+					        {
+					            primes[cnt ++ ] = i;
+					            for (int j = i * 2; j < M; j += i)
+					                st[j] = true;
+					        }
+					}
+
+					bool check(int x)
+					{
+					    for (int i = 0; primes[i] <= x / primes[i]; i ++ ) 注意还需要满足primes[i] < a，因为只能尝试比自己小的质因子。
+					        if (x % primes[i] == 0)
+					            return false;
+					    return true;
+					}
+
+					int main()
+					{
+					    init();
+
+					    string str;
+					    cin >> n >> k >> str;
+
+					    for (int i = 0; i + k <= n; i ++ )
+					    {
+					        int t = stoi(str.substr(i, k));
+					        if (check(t))
+					        {
+					            cout << str.substr(i, k) << endl;
+					            return 0;
+					        }
+					    }
+
+					    puts("404");
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324426/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+8. 动态规划
+		99. 1479. 最大子序列和	1007
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+				2. b
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n;
+					int w[N];
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> w[i];
+
+					    int res = -1, l, r;
+						我们是用f[i]来存右端点是i的所有子序列的最大值, 因为每次更新f[i]只用到了f[i-1],更早以前的信息都不会用到了
+						所以完全可以用一个变量f来存,而不是用一个数组来存
+					    for (int i = 1, f = -1, start; i <= n; i ++ )
+					    {
+					        if (f < 0) f = 0, start = i; 如果是负数,就重头再来. 或者写成 f = w[i] + max(0, f);
+					        f += w[i];
+					        if (res < f) 所有区间都没有交集, 否则就可以合并成更大的数
+					        {
+					            res = f;
+					            l = w[start], r = w[i];
+					        }
+					    }
+
+					    if (res < 0) res = 0, l = w[1], r = w[n];
+
+					    cout << res << ' ' << l << ' ' << r << endl;
+
+					    return 0;
+					}
+
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		100. 1529. 最佳彩色带	1045
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					图中的四个子集可以完全被这三个状态包含。
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 210, M = 10010;
+
+					int n, m, l;
+					int p[N], s[M];
+					int f[N][M]; 
+
+					int main()
+					{
+					    cin >> n;
+
+					    cin >> m;
+					    for (int i = 1; i <= m; i ++ ) cin >> p[i];
+
+					    cin >> l;
+					    for (int i = 1; i <= l; i ++ ) cin >> s[i];
+
+					    for (int i = 1; i <= m; i ++ )
+					        for (int j = 1; j <= l; j ++ )
+					        {
+					            f[i][j] = max(f[i - 1][j], f[i][j - 1]);
+					            if (p[i] == s[j]) f[i][j] = max(f[i][j], f[i][j - 1] + 1);
+					        }
+
+					    cout << f[m][l] << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311103/
 					来源：AcWing
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
