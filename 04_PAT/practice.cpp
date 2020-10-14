@@ -13785,6 +13785,17 @@
 							也就是把根当成了depth = 0,然后到叶子节点后, depth是>0, 然后修改cnt[depth]
 						现在是, 我不知道你的depth, 你最好自己生成, 然后告诉我, 所以是在dfs()里面有个 int depth = 0; depth = max(depth, dfs(e[i], a) + 1);
 							也就是把叶节点当成了depth = 0, 看最后返回到root的depth有多少
+							dfs(int a, int source)的语意是: 包括a点在内的高度. 不过这里的高度是从0开始的, 也就是说即便是一个节点,我们认为他的高度是0,而不是1. 所以max_depth是从-1开始的.
+								所以你可以:
+									int maxdepth = 0; 设置成0
+									int dfs(int a, int s){
+									    int depth = 1; 设置成1
+									    for(int i = h[a]; ~i; i = ne[i]){
+									        if(e[i] == s) continue;
+									        depth = max(depth, dfs(e[i], a) + 1);
+									    }
+									    return depth;
+									}
 
 				思路:
 					1. 老师这里是暴力枚举了所有点是否是正确答案,因为一共有10^4个点,但是有2s,足够用了
