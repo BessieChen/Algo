@@ -12830,55 +12830,67 @@
 					    return 0;
 					}
 		
+	10. 2020年10月14日01:31:21
+
 		45. 1476. 数叶子结点	1004
 			0. bug
+				0. 竟然忘了memset()!!!忘记初始化了,一旦忘记就会mem limit exceeded
+				1.  memset(h, -1, sizeof h); 不要写错, 并且要加上 #include <cstring>
+				2. 打印的时候:
+					 cout << cnt[0];
+					    for(int i = 1; i <= max_depth; i++) cout <<" " << cnt[i];
+					 注意是 i <= max_depth, 不是 i < max_depth;
 			1. 笔记
-				0. 因为这里的一个节点会有多个子节点, 所以我们不能只存左右子树, 而是用邻接表
-				1. dfs和bfs都可以写这道题,但是老师更倾向于dfs,因为bfs需要维护队列
-				2. 思路:
-					1. 存树的形状
-					3. 一般用dfs能做的bfs也能做,但是dfs代码短,不像bfs需要维护queue
+				1. 
+					1. 如何判断是否是叶节点
+						if(h[a] == -1)说民是叶节点
+				0.
+					0. 因为这里的一个节点会有多个子节点, 所以我们不能只存左右子树, 而是用邻接表
+					1. dfs和bfs都可以写这道题,但是老师更倾向于dfs,因为bfs需要维护队列
+					2. 思路:
+						1. 存树的形状
+						3. 一般用dfs能做的bfs也能做,但是dfs代码短,不像bfs需要维护queue
 
-					1. 主要考察树: 
-					h[a]其实是a这个节点的叶子节点的token,这个token其实是ind,可以帮我们索引到一个链表,也就是说这个链表的所有元素,都是a这个节点的叶子节点
-					假设h[a] == ind, 那么e[ind] == b说明节点a的一个子节点是b
-					ne[ind] == ind2说明这个子节点b也有一个链表, 这个链表的token是ind2
-						因为之前设置的时候ne[ind] = h[b]?
+						1. 主要考察树: 
+						h[a]其实是a这个节点的叶子节点的token,这个token其实是ind,可以帮我们索引到一个链表,也就是说这个链表的所有元素,都是a这个节点的叶子节点
+						假设h[a] == ind, 那么e[ind] == b说明节点a的一个子节点是b
+						ne[ind] == ind2说明这个子节点b也有一个链表, 这个链表的token是ind2
+							因为之前设置的时候ne[ind] = h[b]?
 
-					故事是这样的,假设我们要给a节点的链表中插入一个b节点, 现在空余的token是ind
-					h[a]表示的是, a节点的链表的头结点的token, 我们要注意, 加的方式是新来的元素是插入头结点, 想象:
-					刚开始是h[a] = -1是什么都没有加过,之后分别加入cdf之后,链表是-1 -- c -- d -- f(头结点), 所以最后一个进入的f是在头结点
-					谁是谁的next!!! c是d的next, 所以这是我之前纠结的地方,next是在左边, 其实你如果想象成f -- d -- c -- -1就是next在右边了! 
-					所以假设d当时拿到的token是ind, ne[ind] == c的token!! 也就是b的next是c
+						故事是这样的,假设我们要给a节点的链表中插入一个b节点, 现在空余的token是ind
+						h[a]表示的是, a节点的链表的头结点的token, 我们要注意, 加的方式是新来的元素是插入头结点, 想象:
+						刚开始是h[a] = -1是什么都没有加过,之后分别加入cdf之后,链表是-1 -- c -- d -- f(头结点), 所以最后一个进入的f是在头结点
+						谁是谁的next!!! c是d的next, 所以这是我之前纠结的地方,next是在左边, 其实你如果想象成f -- d -- c -- -1就是next在右边了! 
+						所以假设d当时拿到的token是ind, ne[ind] == c的token!! 也就是b的next是c
 
-					 现在空余的token是ind,既然ind还没用过, 我们就用吧
-					e[ind] = b, 将e[ind]这个没有用过的地方, 放入b的值
-					ne[ind] = h[a], 也就是我们将b的next,设置为之前的老的头结点(h[a])
-					h[a] = ind++, 现在a节点的新的头节点是ind了!
+						 现在空余的token是ind,既然ind还没用过, 我们就用吧
+						e[ind] = b, 将e[ind]这个没有用过的地方, 放入b的值
+						ne[ind] = h[a], 也就是我们将b的next,设置为之前的老的头结点(h[a])
+						h[a] = ind++, 现在a节点的新的头节点是ind了!
 
-					我给一个例子吧, 刚开始ind == 0, h[]所有初始化是-1
-					void add(int a(8), int b(9))
-					{
-					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
-					    相当于是:
-					    e[0] = 9, ne[0] = -1, h[8] = 0, ind = 1;
-					}
-					void add(int a(8), int c(7))
-					{
-					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
-					    相当于是:
-					    e[1] = 7, ne[1] = 0, h[8] = 1, ind = 2;
-					}
+						我给一个例子吧, 刚开始ind == 0, h[]所有初始化是-1
+						void add(int a(8), int b(9))
+						{
+						    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+						    相当于是:
+						    e[0] = 9, ne[0] = -1, h[8] = 0, ind = 1;
+						}
+						void add(int a(8), int c(7))
+						{
+						    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+						    相当于是:
+						    e[1] = 7, ne[1] = 0, h[8] = 1, ind = 2;
+						}
 
-					遍历的时候:
-					for (int i = h[u]; ~i; i = ne[i]) //注意-1的0x是1111 1111,所以~(-1) == 0
-					        dfs(e[i]);
-					i = h[8] == 1
-					e[i] == e[1] 也就是c的值7
-					i = ne[i] == ne[1] == 0, 也就是去到token是0的地方
-					e[i] == e[0] 也就是b的值8
-					i = ne[i] == ne[0] == -1
-					结束
+						遍历的时候:
+						for (int i = h[u]; ~i; i = ne[i]) //注意-1的0x是1111 1111,所以~(-1) == 0
+						        dfs(e[i]);
+						i = h[8] == 1
+						e[i] == e[1] 也就是c的值7
+						i = ne[i] == ne[1] == 0, 也就是去到token是0的地方
+						e[i] == e[0] 也就是b的值8
+						i = ne[i] == ne[0] == -1
+						结束
 			2. 注释
 				1. y
 					#include <cstring>
@@ -13002,78 +13014,358 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 110;
+					int h[N], e[N], ne[N], ind;
+					int n, m;
+
+					int cnt[N];
+					int max_depth;
+
+					void add(int a, int b){
+						e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					void dfs(int a, int depth){
+						if(h[a] == -1){
+							cnt[depth]++;
+							max_depth = max(max_depth, depth);
+							return;
+						}
+
+						for(int i = h[a]; ~i; i = ne[i]){
+							dfs(e[i], depth + 1);
+						}
+					}
+
+					int main(){
+						cin >> n >> m;
+						memset(h, -1, sizeof h);
+
+						int f, k, s;
+						for(int i = 0; i < m; i++){
+							cin >> f >> k;
+							while(k--){
+								cin >> s;
+								add(f, s);
+							}
+						}
+
+						dfs(1, 0);
+
+						cout << cnt[0];
+						for(int i = 1; i <= max_depth; i++) cout << " " << cnt[i];
+						cout << endl;
+						return 0;
+
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100;
+					int h[N], e[N], ne[N], ind;
+					int cnt[N], max_depth;
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					void dfs(int a, int depth){
+					    if(h[a] == -1){
+					        cnt[depth]++;
+					        max_depth = max(max_depth, depth);
+					        return;
+					    }    
+					    
+					    for(int i = h[a]; ~i; i = ne[i]){
+					        dfs(e[i], depth + 1);
+					    }
+					}
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+					    memset(h, -1, sizeof h);
+					    for(int i = 0; i < m ; i++){
+					        int f, k, s;
+					        cin >> f >> k;
+					        while(k--){
+					            cin >> s;
+					            add(f, s);
+					        }
+					    }
+					    
+					    dfs(1, 0);
+					    
+					    cout << cnt[0];
+					    for(int i = 1; i <= max_depth; i++) cout <<" " << cnt[i];
+					    
+					    cout << endl;
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 110;
+					int h[N], e[N], ne[N], ind;
+					int cnt[N], max_depth;
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					void dfs(int a, int depth){
+					    
+					    if(h[a] == -1){
+					        cnt[depth] ++;
+					        max_depth = max(depth, max_depth);
+					        return;
+					    }
+					    
+					    for(int i = h[a]; ~i; i = ne[i]){
+					        dfs(e[i], depth + 1);
+					    }
+					}
+
+
+					int main(){
+					    int n, m;
+					    cin >> n >> m;
+					    memset(h, -1, sizeof h);
+					    while(m--){
+					        int f, k, s;
+					        cin >> f >> k;
+					        while(k--){
+					            cin >> s;
+					            add(f, s);
+					        }
+					    }
+
+					    dfs(1, 0);
+					    
+
+					    cout << cnt[0];
+					    for(int i = 1; i <= max_depth; i++) cout << " " << cnt[i];
+					    cout << endl;
+					    return 0;
+					    
+					}
 				r4.
+						#include <iostream>
+						#include <cstring>
+
+						using namespace std;
+
+						const int N = 110;
+						int h[N], e[N], ne[N], ind;
+						int cnt[N], max_depth;
+
+						void add(int a, int b){
+						    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+						}
+
+						void dfs(int a, int depth){
+						    
+						    if(h[a] == -1){
+						        cnt[depth] ++;
+						        max_depth = max(depth, max_depth);
+						        return;
+						    }
+						    
+						    for(int i = h[a]; ~i; i = ne[i]){
+						        dfs(e[i], depth + 1);
+						    }
+						}
+
+
+						int main(){
+						    memset(h, -1, sizeof h);
+						    
+						    int n, m;
+						    cin >> n >> m;
+						    while(m--){
+						        int f, k, s;
+						        cin >> f >> k;
+						        while(k--){
+						            cin >> s;
+						            add(f, s);
+						        }
+						    }
+						    
+						    dfs(1, 0);
+						    
+						    cout << cnt[0];
+						    for(int i = 1; i <= max_depth; i++) cout << " " << cnt[i];
+						    cout << endl;
+						    return 0;
+						}
 				r5.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 110;
+					int h[N], e[N], ne[N], ind;
+					int cnt[N], max_depth;
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					void dfs(int a, int depth){
+					    if(h[a] == -1){
+					        cnt[depth] ++;
+					        max_depth = max(depth, max_depth);
+					        return;
+					    }
+					    
+					    for(int i = h[a]; ~i; i = ne[i]){
+					        dfs(e[i], depth + 1);
+					    }
+					}
+
+					int main(){
+					    
+					    memset(h, -1, sizeof h);
+					    
+					    int n, m;
+					    cin >> n >> m;
+					    
+					    while(m--){
+					        int f, k, s;
+					        cin >> f >> k;
+					        while(k--){
+					            cin >> s;
+					            add(f, s);
+					        }
+					    }
+					    
+					    dfs(1, 0);
+					    cout << cnt[0];
+					    for(int i = 1; i <= max_depth; i ++) cout << " " << cnt[i];
+					    cout << endl;
+					    return 0;
+					}
 
 		46. 1497. 树的遍历	1020
 			0. bug
 			1. 笔记
-				0. 因为只有左右子树, 所以只存储左右子树就好了
-				1. 这道题经常考
-				2. 知识点: 如果知道前序+中序, 或者后续+中序, 是可以求出二叉树的. 但是知道前序 + 后序就不行.\
-				3. 求的过程
-					1. 后序的最后一个节点是root(前序是第一个节点是root)
-					2. 在中序中找到这个root, 左侧就是root的左子树(求出左侧长度n),右侧柚子树(求出右侧长度m)
-					3. 后续中,因为是左子树+右子树+root,所以可以知道左子树是哪一段(截取长度为n),右子树是哪一段
-					4. 后序中,左子树的最后一个节点是root
-					5. 重复到2.
-					老师用了递归
-				------------------
-				4. 重新构建二叉树方法:
-					1. 在在中序中找到这个root,就是已知值, 找index, 所以我们用哈希表存, 快, 知道某个值的下标是多少
-					2. 重建二叉树,是一个递归的过程. 返回当前子树的根节点.
-					3. 老师在构建二叉树的时候,没有使用链接表,而是使用了两个哈希表.其实非常好
-						1. 二叉树的重要内容就是, 某个节点(值)的左右儿子的ind是多少
-						2. 一个哈希表存某个节点(用值表示)的左子树,一个存右边的
-				------------------
-				5. 
-					1. build()两种思路: 
-						已知左子树在中序的ind是[il, k-1]
-						求左子树在后序的ind是[pl, ?]
-						1. 长度
-							因为在中序中, 左子树的长度是(k-il), 因为是[il, k), k是指向左子树最后一个节点的下一位
-							所以在后续中, 右子树的最后一个节点的下一位是 pl + (k-il)
-							但是我们要求的是右子树的最后一个节点的位置, 所以是 pl + (k-il) - 1;
-						2. 差相等
-							老师说 ? - pl == k - 1 - il
-							? == pl + (k - 1 - il)
-					2. 解释l[root] = build(il, k - 1, pl, pl + (k - 1 - il));
-						build(il, k - 1, pl, pl + (k - 1 - il))返回root的左子树的根
-						root的左子树的根,也就是root的左儿子
-				------------------
-				3. bfs()中,tt是指向了元素的,而不是元素的下一个
+				0. 考点:
+					1. build(), 其实几句话就好了, 很简dan
+														
+						int build(int il, int ir, int pl, int pr){
+							//找root的值
+							int root_val = postorder[pr];//根节点的值
+							int k = pos[root_val];//知道根节点在中序中的位置
 
-				-----------------
-				4. 思考:
-				中序: 需要建立值和位置之间的map
-				后序: 不需要建立上面的map, 因为每次只要取最后一位.
+							//判断有无左右子树, 通过看k在中序中的位置
+							if(il < k) //有left, 如果il == k说明没有left树
+							{
+								l[root_val] = build(il, k-1, pl, pl + (k-1-il));//见解释
+							}
+							if(k < ir)
+							{
+								r[root_val] = build(k+1, ir, (pr-1) + (k+1-ir), pr-1);//bug!容易错的地方,pr是root(回忆int root_val = postorder[pr]]),所以是pr-1!
+							}
+							return root_val; //返回根的值
+						}
 
-				5. 思考:
-				中序: 左子树+根+右子树
-				后序: 左子树+右子树+根
+					2. 层序遍历. 背下模板, 很简单
+						int q[N];//用于bfs
+						void bfs(int root){
+							q[0] = root;
+							
+							int h, t;//queue的队首和队尾
+							h = t = 0;//或者直接://int h = 0, t = 0; 
+							
+							while(h <= t) //说明还有元素
+							{
+								int top = q[h ++]; //如果有元素, 取出, h指向下一个
+								if(l.count(top)) q[++t] = l[top]; //有左孩子, t移到空位, 放入孩子
+								if(r.count(top)) q[++t] = r[top];
+							}
+							//走到这里,q里面留下来了所有的顺序,注意这里不是真的pop掉了,所以q里面是有数据的.
 
-				6. 思考:
-				build的参数传入的是相同的一个树,但是build()里面又有两个build()分别服务于左子树和右子树
+							cout << q[0];
+							for(int i = 1; i < h; i++) cout << ' ' << q[i]; 这里是 < h, 而不是写成 < n. 因为q里面的元素并没有pop掉. 
+							cout << endl;
+						}
+				1.
+					0. 因为只有左右子树, 所以只存储左右子树就好了
+					1. 这道题经常考
+					2. 知识点: 如果知道前序+中序, 或者后续+中序, 是可以求出二叉树的. 但是知道前序 + 后序就不行.\
+					3. 求的过程
+						1. 后序的最后一个节点是root(前序是第一个节点是root)
+						2. 在中序中找到这个root, 左侧就是root的左子树(求出左侧长度n),右侧柚子树(求出右侧长度m)
+						3. 后续中,因为是左子树+右子树+root,所以可以知道左子树是哪一段(截取长度为n),右子树是哪一段
+						4. 后序中,左子树的最后一个节点是root
+						5. 重复到2.
+						老师用了递归
+					------------------
+					4. 重新构建二叉树方法:
+						1. 在在中序中找到这个root,就是已知值, 找index, 所以我们用哈希表存, 快, 知道某个值的下标是多少
+						2. 重建二叉树,是一个递归的过程. 返回当前子树的根节点.
+						3. 老师在构建二叉树的时候,没有使用链接表,而是使用了两个哈希表.其实非常好
+							1. 二叉树的重要内容就是, 某个节点(值)的左右儿子的ind是多少
+							2. 一个哈希表存某个节点(用值表示)的左子树,一个存右边的
+					------------------
+					5. 
+						1. build()两种思路: 
+							已知左子树在中序的ind是[il, k-1]
+							求左子树在后序的ind是[pl, ?]
+							1. 长度
+								因为在中序中, 左子树的长度是(k-il), 因为是[il, k), k是指向左子树最后一个节点的下一位
+								所以在后续中, 右子树的最后一个节点的下一位是 pl + (k-il)
+								但是我们要求的是右子树的最后一个节点的位置, 所以是 pl + (k-il) - 1;
+							2. 差相等
+								老师说 ? - pl == k - 1 - il
+								? == pl + (k - 1 - il)
+						2. 解释l[root] = build(il, k - 1, pl, pl + (k - 1 - il));
+							build(il, k - 1, pl, pl + (k - 1 - il))返回root的左子树的根
+							root的左子树的根,也就是root的左儿子
+					------------------
+					3. bfs()中,tt是指向了元素的,而不是元素的下一个
 
-				7. 易错
-				右子树的后序的右侧节点是Pr-1,不是pr,因为pr是根节点
-				build(k+1, ir, (pr-1) + (k+1-ir), pr-1);//bug!容易错的地方,pr是root(回忆int root_val = postorder[pr]]),所以是pr-1!
+					-----------------
+					4. 思考:
+					中序: 需要建立值和位置之间的map
+					后序: 不需要建立上面的map, 因为每次只要取最后一位.
 
-				8. 思考
-				重构二叉树,除了记录每个节点left,right,还需要知道root,最后通过root找左右,通过左右继续找左右.
+					5. 思考:
+					中序: 左子树+根+右子树
+					后序: 左子树+右子树+根
 
-				9. 其他错误:
-				似乎不能用left,会和系统重名
+					6. 思考:
+					build的参数传入的是相同的一个树,但是build()里面又有两个build()分别服务于左子树和右子树
 
-				10. 语法
-				1. 定义的时候
-					应该是 int h = 0, t = 0;
-					而不是int h = t = 0;
-				2. 如果已经定义了
-					int h,t;
-					h = t = 0;是没问题的
+					7. 易错
+					右子树的后序的右侧节点是Pr-1,不是pr,因为pr是根节点
+					build(k+1, ir, (pr-1) + (k+1-ir), pr-1);//bug!容易错的地方,pr是root(回忆int root_val = postorder[pr]]),所以是pr-1!
+
+					8. 思考
+					重构二叉树,除了记录每个节点left,right,还需要知道root,最后通过root找左右,通过左右继续找左右.
+
+					9. 其他错误:
+					似乎不能用left,会和系统重名
+
+					10. 语法
+					1. 定义的时候
+						应该是 int h = 0, t = 0;
+						而不是int h = t = 0;
+					2. 如果已经定义了
+						int h,t;
+						h = t = 0;是没问题的
 			2. 注释
 				1. y
 					#include <cstring>
@@ -13206,14 +13498,294 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+					int postorder[N], inorder[N];
+					unordered_map<int, int> l, r, pos;
+					int root;
+					int q[N];
+
+					int build(int il, int ir, int pl, int pr){
+						int root = postorder[pr];
+						int k = pos[root];
+
+						if(il < k){
+							l[root] = build(il, k-1, pl, pl + (k - 1 - il));
+						}
+						if(k < ir){
+							r[root] = build(k+1, ir, pl + (k - 1 - il) + 1, pr-1);
+						}
+
+						return root;
+					}
+
+					void bfs(){
+						q[0] = root;
+						int h, t;
+						h = t = 0;
+
+						while(h <= t){
+							int top = q[h++];
+							if(l.count(top)) q[++t] = l[top];
+							if(r.count(top)) q[++t] = r[top];
+						}
+
+						cout << q[0];
+						for(int i = 1; i < h; i++) cout << " " << q[i];
+						cout << endl;
+					}
+
+					int main(){
+						int n;
+						cin >> n;
+						for(int i = 0; i < n; i++) cin >> postorder[i];
+						for(int i = 0; i < n; i++)
+						{
+							int a;
+							cin >> a;
+							inorder[i] = a;;
+							pos[a] = i;
+						}
+
+						root = build(0, n-1, 0, n-1);
+
+						bfs();
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+					int post[N], in[N];
+					unordered_map<int, int> l, r, pos;
+					int root;
+					int q[N];
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    
+					    if(il < k){
+					        l[root] = build(il, k-1, pl, pl + (k-1-il));
+					    }
+					    if(k < ir){
+					        r[root] = build(k+1, ir, pl + (k-il), pr - 1);
+					    }
+					    
+					    return root;
+					}
+
+					void bfs()
+					{
+					    q[0] = root;
+					    int h, t;
+					    h = t = 0;
+					    
+					    while(h <= t){
+					        int top = q[h++];
+					        if(l.count(top)) q[++t] = l[top];
+					        if(r.count(top)) q[++t] = r[top];
+					    }
+					    
+					    cout << q[0];
+					    for(int i = 1; i < h; i++) cout << " " << q[i];
+					    cout << endl;
+					    
+					}
+					int main(){
+					    int n;
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    for(int i = 0; i < n; i++){
+					        int a;
+					        cin >> a;
+					        in[i] = a;
+					        pos[a] = i;
+					    }
+					    
+					    root = build(0, n-1, 0, n-1);
+					    
+					    bfs();
+					    
+					    return 0;
+					    
+					}
 				r3.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+					int post[N], in[N];
+					unordered_map<int, int> l, r, pos;
+					int root;
+					int q[N];
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl, pl+(k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl+(k-il), pr-1);
+					    return root;
+					}
+
+					void bfs()
+					{
+					    q[0] = root;
+					    int h, t;
+					    h = t = 0;
+					    
+					    while(h <= t){
+					        int top = q[h++];
+					        if(l.count(top)) q[++t] = l[top];
+					        if(r.count(top)) q[++t] = r[top];
+					    }
+					    
+					    cout << q[0];
+					    for(int i = 1; i < h; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    for(int i = 0; i < n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    
+					    root = build(0, n-1, 0, n-1);
+					    
+					    bfs();
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+					int post[N], in[N];
+					unordered_map<int, int> l, r, pos;
+					int root;
+					int q[N];
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl, pl+(k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl+(k-il), pr-1);
+					    return root;
+					}
+
+					void bfs()
+					{
+					    q[0] = root;
+					    int h, t;
+					    h = t = 0;
+					    
+					    while(h <= t){
+					        int top = q[h++];
+					        if(l.count(top)) q[++t] = l[top];
+					        if(r.count(top)) q[++t] = r[top];
+					    }
+					    
+					    cout << q[0];
+					    for(int i =1 ; i < h; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+					int main(){
+					    int n;
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    for(int i = 0; i < n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    
+					    root = build(0, n-1, 0, n-1);
+					    
+					    bfs();
+					    
+					    return 0;
+					}
 				r5.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+					int post[N], in[N];
+					unordered_map<int, int> l, r, pos;
+					int root;
+					int q[N];
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl, pl+(k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl+(k-il), pr-1);
+					    return root;
+					}
+
+					void bfs(){
+					    q[0] = root;
+					    int h, t;
+					    h = t = 0;
+					    while(h <= t){
+					        int top = q[h++];
+					        if(l.count(top)) q[++t] = l[top];
+					        if(r.count(top)) q[++t] = r[top];
+					    }
+					    cout << q[0];
+					    for(int i = 1; i < h; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    for(int i = 0; i <n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    
+					    root = build(0, n-1, 0, n-1);
+					    
+					    bfs();
+					    
+					    return 0;
+					}
 
 		47. 1498. 最深的根	1021
 			0. bug
+				1. 老师之前是暴力枚举, 所以每一次我们add(), 两条边都要add(): add(a,b),add(b,a)
+				2. dfs() 里面需要判断是不是从father来的, 因为之前是双向边
+				3. 注意往下递归的时候, father是dfs(int a, int father)中的a, 而不是 i ( i = h[a])
 			1. 笔记
+
+				0. 考察了:
+					1. 连通块个数: 并查集-int k, p[N];
+					2. 如何找最深高度: dfs-int h[N], e[N], ne[N], ind;
+						之前45.是, 我告诉你, 你现在的depth, 所以传入了depth数据给dfs(), 即dfs(int a, int depth)
+							也就是把根当成了depth = 0,然后到叶子节点后, depth是>0, 然后修改cnt[depth]
+						现在是, 我不知道你的depth, 你最好自己生成, 然后告诉我, 所以是在dfs()里面有个 int depth = 0; depth = max(depth, dfs(e[i], a) + 1);
+							也就是把叶节点当成了depth = 0, 看最后返回到root的depth有多少
+
 				思路:
 					1. 老师这里是暴力枚举了所有点是否是正确答案,因为一共有10^4个点,但是有2s,足够用了
 					2. 考察了:
@@ -13401,11 +13973,444 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 			3. 5次
 				r1.
-				r2.
-				r3.
-				r4.
-				r5.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
 
+					using namespace std;
+
+					const int N = 10010, M = N * 2;
+					int h[N], e[M], ne[M], ind;
+					int max_depth;
+					int p[N];
+
+					void add(int a, int b){
+						e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					// 之前是, 我告诉你, 你现在的depth, 所以传入了depth数据给dfs(), 即dfs(int a, int depth)
+					// 现在是, 我不知道你的depth, 你最好自己生成, 然后告诉我, 所以是在dfs()里面有个 int depth = 0;
+
+
+					int find(int a){
+						if(a != p[a]) p[a] = find(p[a]);
+						return p[a];
+					}
+
+					int dfs(int a, int father){
+						int depth = 0;
+						if(h[a] == -1) return depth;
+
+						for(int i = h[a]; ~i; i = ne[i]){
+						    if(e[i] == father) continue;
+							depth = max(depth, dfs(e[i], a) + 1);
+						}
+						return depth;
+					}
+
+
+					int main(){
+						memset(h, -1, sizeof h);
+						max_depth = -1;
+
+						int n;
+						cin >> n;
+
+						for(int i = 1; i <= n; i++) p[i] = i;
+						int k = n;
+
+						int a, b;
+						for(int i = 0; i < n-1; i++){
+							scanf("%d%d", &a, &b);
+							if(find(a) != find(b)){
+							    k--;
+							    p[find(b)] = find(a);
+							}
+							add(a, b);
+							add(b, a);
+						}
+						
+
+
+						if(k != 1){
+							printf("Error: %d components\n", k);
+							return 0;
+						}
+
+						int depth;
+						vector<int> res;
+						for(int i = 1; i <= n; i++){
+						    
+							depth = dfs(i, -1);
+								
+							if(depth > max_depth){
+								max_depth = depth;
+								res.clear();
+								res.push_back(i);
+							}
+							else if(depth == max_depth){
+								res.push_back(i);
+							}
+						}
+
+						for(int i = 0; i < res.size(); i++) cout << res[i] << endl;
+
+						return 0;
+
+
+
+					}
+				r2.
+					#include <iostream>
+					#include <vector>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 10010;
+					int h[N], e[N], ne[N], ind;
+					vector<int> res;
+					int p[N];
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					int dfs(int a, int source){
+					    int depth = 0;
+					    if(h[a] == -1) return depth;
+					    for(int i = h[a]; ~i ; i = ne[i]){
+					        if(e[i] == source) continue;
+					        depth = max(depth, dfs(e[i], a) + 1);
+					    }
+					    return depth;
+					}
+
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    
+					    memset(h, -1, sizeof h);
+					    for(int i = 1; i <= n; i ++) p[i] = i;
+					    
+					    int k = n;
+					    for(int i = 1; i <= n; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        if(find(a) != find(b)){
+					            k--;
+					            p[find(a)] = find(b);
+					        }
+					        add(a, b), add(b, a);
+					    }
+					    
+					    if(k != 1){
+					        printf("Error: %d components\n", k);
+					        return 0;
+					    }
+					    int depth;
+					    int max_depth = -1;
+					    for(int i = 1; i <= n; i++){
+					        depth = dfs(i, -1);
+					        if(depth > max_depth){
+					            max_depth = depth;
+					            res.clear();
+					            res.push_back(i);
+					        }else if(depth == max_depth){
+					            res.push_back(i);
+					        }
+					    }
+					    
+					    for(int i : res) cout << i << endl;
+					    return 0;
+					    
+					}
+				r3.
+					#include <iostream>
+					#include <vector>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 10010;
+					int h[N], e[N], ne[N], ind;
+					int k, p[N];
+					vector<int> res;
+
+					int n;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					int dfs(int a, int source){
+					    int depth = 0;
+					    if(h[a] == -1) return depth;
+					    for(int i = h[a]; ~i; i = ne[i]){
+					        if(e[i] == source) continue;
+					        depth = max(depth, dfs(e[i], a) + 1);
+					    }
+					    return depth;
+					}
+
+					int main(){
+					    cin >> n;
+					    k = n;
+					    for(int i = 1; i <= n; i++) p[i] = i;
+					    memset(h, -1, sizeof h);
+					    
+					    for(int i = 0; i < n; i ++){
+					        int a, b;
+					        cin >> a >> b;
+					        if(find(a) != find(b)){
+					            k--;
+					            p[find(a)] = find(b);
+					        }
+					        
+					        add(a, b), add(b, a);
+					    }
+					    
+					    if(k != 1){
+					        printf("Error: %d components\n", k);
+					        return 0;
+					    }
+					    
+					    int max_depth = -1;
+					    for(int i = 1; i <= n; i++){
+					        int depth = dfs(i, -1);
+					        if(depth > max_depth){
+					            max_depth = depth;
+					            res.clear();
+					            res.push_back(i);
+					        }
+					        else if(depth == max_depth){
+					            res.push_back(i);
+					        }
+					    }
+					    
+					    for(int i : res) cout << i << endl;
+					    return 0;
+					}
+				r4.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 10010;
+					int h[N], e[N], ne[N], ind;
+					int k, p[N];
+					vector<int> res;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					int dfs(int a, int source){
+					    int depth = 0;
+					    for(int i = h[a]; ~i; i = ne[i]){
+					        if(e[i] == source) continue;
+					        depth = max(depth, dfs(e[i], a) + 1);
+					    }
+					    return depth;
+					}
+
+					int main(){
+					    int n;
+					    cin >> n;
+					    
+					    k = n;
+					    for(int i = 1; i <= n; i++) p[i] = i;
+					    
+					    memset(h, -1, sizeof h);
+					    
+					    for(int i = 1; i <= n-1; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        if(find(a) != find(b)){
+					            k--;
+					            p[find(a)] = find(b);
+					        }
+					        add(a, b), add(b, a);
+					    }
+					    
+					    if(k != 1){
+					        printf("Error: %d components\n", k);
+					        return 0;
+					    }
+					    
+					    int max_depth = -1;
+					    for(int i = 1; i <= n; i++){
+					        int depth = dfs(i, -1);
+					        if(depth > max_depth){
+					            max_depth = depth;
+					            res.clear();
+					            res.push_back(i);
+					        }
+					        else if(depth == max_depth) res.push_back(i);
+					    }
+					    
+					    for(int i : res) cout << i << endl;
+					    return 0;
+					}
+				r5.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 10010;
+					int h[N], e[N], ne[N], ind;
+					int k, p[N];
+					vector<int> res;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					int dfs(int a, int s){
+					    int depth = 0;
+					    if(h[a] == -1) return depth;
+					    for(int i = h[a]; ~i; i = ne[i]){
+					        if(e[i] == s) continue;
+					        depth = max(depth, dfs(e[i], a) + 1);
+					    }
+					    return depth;
+					}
+
+
+					int main(){
+					    
+					    int n;
+					    cin >> n;
+					    
+					    for(int i = 1; i <= n; i++) p[i] = i;
+					    k = n;
+					    memset(h, -1, sizeof h);
+					    
+					    for(int i = 0; i < n-1; i ++){
+					        int a, b;
+					        cin >> a >> b;
+					        add(a, b), add(b, a);
+					        
+					        if(find(a) != find(b)){
+					            k--;
+					            p[find(a)] = find(b);
+					        }
+					    }
+					    
+					    if(k != 1){
+					        printf("Error: %d components\n", k);
+					        return 0;
+					    }
+					    
+					    int max_depth = -1;
+					    for(int i = 1; i <= n; i++){
+					        int depth = dfs(i, -1);
+					        if(max_depth < depth){
+					            max_depth = depth;
+					            res.clear();
+					            res.push_back(i);
+					        }else if(max_depth == depth) res.push_back(i);
+					    }
+					    
+					    for(int i : res) cout << i << endl;
+					    return 0;
+					    
+					}
+				r6.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 10010;
+					int h[N], e[N], ne[N], ind;
+					int k, p[N];
+					vector<int> res;
+
+					int find(int a){
+					    if(a != p[a]) p[a] = find(p[a]);
+					    return p[a];
+					}
+
+					void add(int a, int b){
+					    e[ind] = b, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					int dfs(int a, int s){
+					    int depth = 0;
+					    for(int i = h[a]; ~i; i = ne[i]){
+					        if(e[i] == s) continue;
+					        depth = max(depth, dfs(e[i], a) + 1);
+					    }
+					    return depth;
+					}
+
+
+					int main(){
+					    
+					    int n;
+					    cin >> n;
+					    
+					    memset(h, -1, sizeof h);
+					    for(int i = 1; i <= n; i++) p[i] = i;
+					    k = n;
+					    
+					    for(int i = 0; i < n-1; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        if(find(a) != find(b))
+					        {
+					            k--;
+					            p[find(a)] = find(b);
+					        }
+					        add(a, b), add(b, a);
+					    }
+					    
+					    if(k != 1){
+					        printf("Error: %d components\n", k);
+					        return 0;
+					    }
+					    
+					    int maxdepth = -1;
+					    for(int i = 1; i <= n; i++){
+					        int depth = dfs(i, -1);
+					        if(depth > maxdepth){
+					            maxdepth = depth;
+					            res.clear();
+					            res.push_back(i);
+					        }else if(depth == maxdepth) res.push_back(i);
+					    }
+					    
+					    for(int i : res) cout << i << endl;
+					    return 0;
+					    
+					}
 		48. 1527. 判断二叉搜索树	1043
 			0. bug
 			1. 笔记
@@ -18422,3 +19427,3868 @@
 				r3.
 				r4.
 				r5.
+
+		101. 1554. 找更多硬币	1068
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+
+					const int N = 10010, M = 110;
+
+					int n, m;
+					int a[N];
+					bool f[N][M];
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 1; i <= n; i ++ ) cin >> a[i];
+
+					    sort(a + 1, a + n + 1, greater<int>());
+
+					    f[0][0] = true;
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = 0; j <= m; j ++ )
+					        {
+					            f[i][j] = f[i - 1][j];
+					            if (j >= a[i]) f[i][j] |= f[i - 1][j - a[i]];
+					        }
+
+					    if (!f[n][m]) puts("No Solution");
+					    else
+					    {
+					        bool is_first = true;
+					        while (n)
+					        {
+					            if (m >= a[n] && f[n - 1][m - a[n]])
+					            {
+					                if (is_first) is_first = false;
+					                else cout << ' ';
+					                cout << a[n];
+					                m -= a[n];
+					            }
+
+					            n -- ;
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311120/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		102. 1583. PAT 计数		1093
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100010, MOD = 1e9 + 7;
+
+					int n;
+					char s[N], p[] = " PAT";
+					int f[N][4];
+
+					int main()
+					{
+					    cin >> s + 1;
+					    n = strlen(s + 1);
+
+					    f[0][0] = 1;
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = 0; j <= 3; j ++ ) 
+					        {
+					            f[i][j] = f[i - 1][j];
+					            if (s[i] == p[j]) f[i][j] = (f[i][j] + f[i - 1][j - 1]) % MOD;
+					        }
+
+					    cout << f[n][3] << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311139/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		103. 1591. 快速排序	1101
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 100010, INF = 2e9;
+
+					int n;
+					int a[N], l[N], r[N];
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> a[i];
+					    for (int i = 1; i <= n; i ++ ) l[i] = max(l[i - 1], a[i]);
+					    r[n + 1] = INF;
+					    for (int i = n; i; i -- ) r[i] = min(r[i + 1], a[i]);
+
+					    vector<int> res;
+					    for (int i = 1; i <= n; i ++ )
+					        if (l[i - 1] < a[i] && a[i] < r[i + 1])
+					            res.push_back(a[i]);
+
+					    cout << res.size() << endl;
+					    if (res.size())
+					    {
+					        cout << res[0];
+					        for (int i = 1; i < res.size(); i ++ ) cout << ' ' << res[i];
+					    }
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311152/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+9. 哈希表
+		104. 1532. 找硬币 	1048
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <unordered_set>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n, m;
+					    cin >> n >> m;
+
+					    unordered_set<int> S;
+					    int v1 = 1e9, v2;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int x;
+					        cin >> x;
+					        int y = m - x;
+					        if (S.count(y))
+					        {
+					            S.insert(x);
+					            if (x > y) swap(x, y);
+					            if (x < v1) v1 = x, v2 = y;
+					        }
+					        else S.insert(x);
+					    }
+
+					    if (v1 == 1e9) puts("No Solution");
+					    else cout << v1 << ' ' << v2 << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311167/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		105. 1549. 集合相似度	1063
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <unordered_set>
+
+					using namespace std;
+
+					const int N = 55;
+
+					int n;
+					unordered_set<int> S[N];
+
+					int main()
+					{
+					    scanf("%d", &n);
+
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        int m;
+					        scanf("%d", &m);
+					        while (m -- )
+					        {
+					            int x;
+					            scanf("%d", &x);
+					            S[i].insert(x);
+					        }
+					    }
+
+					    int k;
+					    scanf("%d", &k);
+					    while (k -- )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+					        int nc = 0;
+					        for (auto x : S[a]) nc += S[b].count(x);
+					        int nt = S[a].size() + S[b].size() - nc;
+					        printf("%.1lf%%\n", (double)nc / nt * 100);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311183/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		106. 1610. 朋友数	1120
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <set>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    set<int> S;
+					    while (n -- )
+					    {
+					        int x;
+					        cin >> x;
+					        int s = 0;
+					        while (x) s += x % 10, x /= 10;
+					        S.insert(s);
+					    }
+
+					    cout << S.size() << endl;
+
+					    bool is_first = true;
+					    for (auto x : S)
+					    {
+					        if (is_first) is_first = false;
+					        else cout << ' ';
+					        cout << x;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311187/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		107. 1637. 漏掉的数字	1144
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <unordered_set>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    unordered_set<int> S;
+					    while (n -- )
+					    {
+					        int x;
+					        cin >> x;
+					        S.insert(x);
+					    }
+
+					    int res = 1;
+					    while (S.count(res)) res ++ ;
+
+					    cout << res << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311198/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		108. 1642. 危险品装箱	1149
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <unordered_set>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n, m;
+					int a[N], b[N];
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 0; i < n; i ++ ) scanf("%d%d", &a[i], &b[i]);
+
+					    while (m -- )
+					    {
+					        int k;
+					        scanf("%d", &k);
+					        unordered_set<int> S;
+					        while (k -- )
+					        {
+					            int x;
+					            scanf("%d", &x);
+					            S.insert(x);
+					        }
+
+					        bool success = true;
+					        for (int i = 0; i < n; i ++ )
+					            if (S.count(a[i]) && S.count(b[i]))
+					            {
+					                success = false;
+					                break;
+					            }
+
+					        if (success) puts("Yes");
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/311212/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		109. 1564. 哈希 		1078
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int s, n;
+					int h[N];
+
+					bool is_prime(int x)
+					{
+					    if (x == 1) return false;
+
+					    for (int i = 2; i * i <= x; i ++ )
+					        if (x % i == 0)
+					            return false;
+
+					    return true;
+					}
+
+					int find(int x)
+					{
+					    int t = x % s;
+
+					    for (int k = 0; k < s; k ++ )
+					    {
+					        int i = (t + k * k) % s;
+					        if (!h[i]) return i;
+					    }
+
+					    return -1;
+					}
+
+					int main()
+					{
+					    cin >> s >> n;
+
+					    while (!is_prime(s)) s ++ ;
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int x;
+					        cin >> x;
+					        int t = find(x);
+
+					        if (t == -1) printf("-");
+					        else
+					        {
+					            h[t] = x;
+					            printf("%d", t);
+					        }
+
+					        if (i != n - 1) printf(" ");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/316841/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		110. 1630. 期终成绩	1137
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_map>
+					#include <algorithm>
+					#include <vector>
+					#include <cmath>
+
+					using namespace std;
+
+					struct Student
+					{
+					    string id;
+					    int p, m, f, s;
+
+					    Student(): p(-1), m(-1), f(-1), s(0) {}
+
+					    void calc()
+					    {
+					        if (f >= m) s = f;
+					        else s = round(m * 0.4 + f * 0.6);
+					    }
+
+					    bool operator< (const Student& t) const
+					    {
+					        if (s != t.s) return s > t.s;
+					        return id < t.id;
+					    }
+					};
+
+					int main()
+					{
+					    int p, m, n;
+					    cin >> p >> m >> n;
+
+					    unordered_map<string, Student> hash;
+					    string id;
+					    int s;
+					    for (int i = 0; i < p; i ++ )
+					    {
+					        cin >> id >> s;
+					        hash[id].id = id;
+					        hash[id].p = s;
+					    }
+
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        cin >> id >> s;
+					        hash[id].id = id;
+					        hash[id].m = s;
+					    }
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> id >> s;
+					        hash[id].id = id;
+					        hash[id].f = s;
+					    }
+
+					    vector<Student> students;
+					    for (auto item : hash)
+					    {
+					        auto stu = item.second;
+
+					        stu.calc();
+					        if (stu.p >= 200 && stu.s >= 60)
+					            students.push_back(stu);
+					    }
+
+					    sort(students.begin(), students.end());
+
+					    for (auto s : students)
+					        cout << s.id << ' ' << s.p << ' ' << s.m << ' ' << s.f << ' ' << s.s << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/316865/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		111. 1638. 哈希 - 平均查找时间	1145
+			0. bug
+			1. 笔记
+				1. 
+					在哈希表h[ ] ，插入完所有数之后，哈希表没有全部满
+					进行查询m个数字时
+
+					如果哈希表中不存在这个数字，但是
+					if (!h[i] || h[i] == x) return i;
+					刚刚这个地方是0，还是算 成功探测到这个数字嘛？
+
+					疑问就是，查询的数字不在哈希表里面，难道不应该是算Tsize + 1嘛？
+					yxc   4个月前     回复
+					PAT的某些题目确实很奇怪，不太清楚题目为何这样规定，但他就是这么来计算标准答案的。所以我们在题面中给大家特殊声明了这一点： 如果查找了 TSize 次，每次查找的位置上均有数，但都不等于要查找的数，则认为查找时间是 TSize+1。
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int s, n, m;
+					int h[N];
+
+					bool is_prime(int x)
+					{
+					    if (x == 1) return false;
+
+					    for (int i = 2; i * i <= x; i ++ )
+					        if (x % i == 0)
+					            return false;
+
+					    return true;
+					}
+
+					int find(int x, int &cnt)
+					{
+					    int t = x % s;
+
+					    cnt = 1;
+					    for (int k = 0; k < s; k ++, cnt ++ )
+					    {
+					        int i = (t + k * k) % s;
+					        if (!h[i] || h[i] == x) return i;
+					    }
+
+					    return -1;
+					}
+
+					int main()
+					{
+					    cin >> s >> n >> m;
+
+					    while (!is_prime(s)) s ++ ;
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int x, count;
+					        cin >> x;
+
+					        int t = find(x, count);
+					        if (t == -1) printf("%d cannot be inserted.\n", x);
+					        else h[t] = x;
+					    }
+
+					    int cnt = 0;
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int x, count;
+					        cin >> x;
+					        find(x, count);
+					        cnt += count;
+					    }
+
+					    printf("%.1lf\n", (double)cnt / m);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/316852/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+10. 并查集
+		112. 836. 合并集合 模拟题
+			0. bug
+			1. 笔记
+				1.
+					最后判断两个元素是否在一个集合中，直接使用p[x]==p[y]来判断为啥不行呢，
+					之前在合并路径压缩后p[x]和find(x)不应该是一个结果的吗。
+						p[x]不一定表示x的根节点。
+			2. 注释
+				1. y
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int p[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					    while (m -- )
+					    {
+					        char op;
+					        int x, y;
+					        cin >> op >> x >> y;
+					        if (op == 'M') p[find(x)] = find(y);
+					        else
+					        {
+					            if (find(x) == find(y)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/316906/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		113. 1485. 战争中的城市	1013
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1010, M = 500010;
+
+					int n, m, k;
+					int p[N];
+
+					struct Edge
+					{
+					    int a, b;
+					}e[M];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    scanf("%d%d%d", &n, &m, &k);
+
+					    for (int i = 0; i < m; i ++ ) scanf("%d%d", &e[i].a, &e[i].b);
+
+					    while (k -- )
+					    {
+					        int x;
+					        scanf("%d", &x);
+
+					        for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					        int cnt = n - 1;
+					        for (int i = 0; i < m; i ++ )
+					        {
+					            int a = e[i].a, b = e[i].b;
+					            if (a != x && b != x)
+					            {
+					                int pa = find(a), pb = find(b);
+					                if (pa != pb)
+					                {
+					                    p[pa] = pb;
+					                    cnt -- ;
+					                }
+					            }
+					        }
+
+					        printf("%d\n", cnt - 1);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/316877/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		114. 1604. 家产	1604
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n;
+					int p[N], c[N], hc[N], ha[N];
+					bool st[N];
+
+					struct Edge
+					{
+					    int a, b;
+					}e[N];
+
+					struct Family
+					{
+					    int id, c, hc, ha;
+
+					    bool operator< (const Family &t) const
+					    {
+					        // ha / c ? t.ha / t.c
+					        if (ha * t.c != t.ha * c) return ha * t.c > t.ha * c;
+					        return id < t.id;
+					    }
+					};
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    cin >> n;
+
+					    int m = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int id, father, mother, k;
+					        cin >> id >> father >> mother >> k;
+
+					        st[id] = true;
+					        if (father != -1) e[m ++ ] = {id, father};
+					        if (mother != -1) e[m ++ ] = {id, mother};
+					        for (int j = 0; j < k; j ++ )
+					        {
+					            int son;
+					            cin >> son;
+					            e[m ++ ] = {id, son};
+					        }
+
+					        cin >> hc[id] >> ha[id];
+					    }
+
+					    for (int i = 0; i < N; i ++ ) p[i] = i, c[i] = 1;
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a = e[i].a, b = e[i].b;
+
+					        st[a] = st[b] = true;
+					        int pa = find(a), pb = find(b);
+					        if (pa != pb)
+					        {
+					            if (pb > pa) swap(pa, pb);
+					            c[pb] += c[pa];
+					            hc[pb] += hc[pa];
+					            ha[pb] += ha[pa];
+					            p[pa] = pb;
+					        }
+					    }
+
+					    vector<Family> family;
+					    for (int i = 0; i < N; i ++ )
+					        if (st[i] && p[i] == i)
+					            family.push_back({i, c[i], hc[i], ha[i]});
+
+					    sort(family.begin(), family.end());
+
+					    cout << family.size() << endl;
+					    for (auto f : family)
+					        printf("%04d %d %.3lf %.3lf\n", f.id, f.c, (double)f.hc / f.c, (double)f.ha / f.c);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/316891/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		115. 1608. 森林里的鸟	1118
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n;
+					int birds[10];
+					int p[N];
+					bool st[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    scanf("%d", &n);
+
+					    for (int i = 0; i < N; i ++ ) p[i] = i;
+
+					    int cnt = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int k;
+					        scanf("%d", &k);
+					        for (int j = 0; j < k; j ++ )
+					        {
+					            scanf("%d", &birds[j]);
+					            st[birds[j]] = true;
+					        }
+
+					        for (int j = 1; j < k; j ++ )
+					        {
+					            int a = birds[j - 1], b = birds[j];
+					            a = find(a), b = find(b);
+					            if (a != b)
+					            {
+					                p[a] = b;
+					                cnt ++ ;
+					            }
+					        }
+					    }
+
+					    int tot = 0;
+					    for (int i = 0; i < N; i ++ ) tot += st[i];
+
+					    printf("%d %d\n", tot - cnt, tot);
+
+					    int q;
+					    scanf("%d", &q);
+					    while (q -- )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+					        if (find(a) == find(b)) puts("Yes");
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/316903/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		116. 1597. 社会集群	1107
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					vector<int> hobby[N];
+					int p[N];
+					int cnt[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int cnt;
+					        scanf("%d:", &cnt);
+					        while (cnt -- )
+					        {
+					            int h;
+					            cin >> h;
+					            hobby[h].push_back(i);
+					        }
+					    }
+
+					    for (int i = 0; i < n; i ++ ) p[i] = i;
+
+					    for (int i = 1; i <= 1000; i ++ )
+					        for (int j = 1; j < hobby[i].size(); j ++ )
+					        {
+					            int a = hobby[i][0], b = hobby[i][j];
+					            p[find(a)] = find(b);
+					        }
+
+					    for (int i = 0; i < n; i ++ ) cnt[find(i)] ++ ;
+
+					    sort(cnt, cnt + n, greater<int>());
+
+					    int k = 0;
+					    while (cnt[k]) k ++ ;
+
+					    cout << k << endl;
+					    cout << cnt[0];
+					    for (int i = 1; i < k; i ++ ) cout << ' ' << cnt[i];
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330505/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+11. 模拟
+		117. 1480. 电梯	1008
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    int res = 0;
+					    int last = 0;
+					    while (n -- )
+					    {
+					        int cur;
+					        cin >> cur;
+
+					        if (last < cur) res += (cur - last) * 6;
+					        else res += (last - cur) * 4;
+					        res += 5;
+
+					        last = cur;
+					    }
+
+					    cout << res << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324440/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		118. 1483. 世界杯投注	1011
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					int main()
+					{
+					    double res = 1;
+					    for (int i = 0; i < 3; i ++ )
+					    {
+					        double w, t, l;
+					        cin >> w >> t >> l;
+					        double x = max(w, max(t, l));
+					        if (x == w) cout << "W ";
+					        else if (x == t) cout << "T ";
+					        else cout << "L ";
+					        res *= x;
+					    }
+
+					    printf("%.2lf\n", (res * 0.65 - 1) * 2);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324452/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		119. 1486. 排队等候	1014
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <queue>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 20;
+
+					int n, m, k, Q;
+					int sum[N];
+					queue<int> q[N];
+
+					int main()
+					{
+					    cin >> n >> m >> k >> Q;
+
+					    unordered_map<int, int> hash;
+					    for (int i = 1; i <= k; i ++ )
+					    {
+					        int s;
+					        cin >> s;
+
+					        int t = 0;
+					        for (int j = 0; j < n; j ++ )
+					            if (i <= n * m)
+					            {
+					                if (q[j].size() < q[t].size()) t = j;
+					            }
+					            else
+					            {
+					                if (q[j].front() < q[t].front()) t = j;
+					            }
+
+					        sum[t] += s;
+					        if (i > n * m) q[t].pop();
+					        q[t].push(sum[t]);
+
+					        if (sum[t] - s < 540) hash[i] = sum[t];
+					    }
+
+					    while (Q -- )
+					    {
+					        int id;
+					        cin >> id;
+					        if (hash.count(id)) printf("%02d:%02d\n", hash[id] / 60 + 8, hash[id] % 60);
+					        else puts("Sorry");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324473/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		120. 1515. U 形 Hello World	1031
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100;
+
+					char g[N][N];
+
+					int main()
+					{
+					    string str;
+					    cin >> str;
+
+					    int n = str.size();
+					    int n1 = (n + 2) / 3;
+					    int n2 = n + 2 - n1 * 2;
+
+					    int k = 0;
+					    for (int i = 0; i < n1; i ++ ) g[i][0] = str[k ++ ];
+					    for (int i = 1; i < n2; i ++ ) g[n1 - 1][i] = str[k ++ ];
+					    for (int i = n1 - 2; i >= 0; i -- ) g[i][n2 - 1] = str[k ++ ];
+
+					    for (int i = 0; i < n1; i ++ )
+					    {
+					        for (int j = 0; j < n2; j ++ )
+					            if (g[i][j]) cout << g[i][j];
+					            else cout << ' ';
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324486/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		121. 1525. 独一无二	1041
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					int a[N], c[N];
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        cin >> a[i];
+					        c[a[i]] ++ ;
+					    }
+
+					    for (int i = 0; i < n; i ++ )
+					        if (c[a[i]] == 1)
+					        {
+					            cout << a[i] << endl;
+					            return 0;
+					        }
+
+					    puts("None");
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324522/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		122. 1526. 洗牌机	1042
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 60;
+
+					int k;
+					int q[N], p[N], w[N];
+
+					void print(int x)
+					{
+					    if (x <= 13) cout << 'S' << x;
+					    else if (x <= 26) cout << 'H' << x - 13;
+					    else if (x <= 39) cout << 'C' << x - 26;
+					    else if (x <= 52) cout << 'D' << x - 39;
+					    else cout << 'J' << x - 52;
+					}
+
+					int main()
+					{
+					    cin >> k;
+					    for (int i = 1; i <= 54; i ++ ) cin >> q[i];
+					    for (int i = 1; i <= 54; i ++ ) p[i] = i;
+
+					    while (k -- )
+					    {
+					        memcpy(w, p, sizeof w);
+					        for (int i = 1; i <= 54; i ++ ) p[q[i]] = w[i];
+					    }
+
+					    for (int i = 1; i <= 54; i ++ )
+					    {
+					        print(p[i]);
+					        if (i != 54) cout << ' ';
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324515/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		123. 1531. 课程学生列表	1047
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 2510;
+
+					int n, k;
+					vector<string> lesson[N];
+
+					int main()
+					{
+					    scanf("%d%d", &n, &k);
+
+					    char str[5];
+					    while (n -- )
+					    {
+					        int cnt;
+					        scanf("%s%d", str, &cnt);
+					        while (cnt -- )
+					        {
+					            int l;
+					            scanf("%d", &l);
+					            lesson[l].push_back(str);
+					        }
+					    }
+
+					    for (int i = 1; i <= k; i ++ )
+					    {
+					        printf("%d %d\n", i, lesson[i].size());
+					        sort(lesson[i].begin(), lesson[i].end());
+					        for (auto id : lesson[i])
+					            printf("%s\n", id.c_str());
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324513/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		124. 1540. 主导颜色	1054
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					int main()
+					{
+					    int n, m;
+					    scanf("%d%d", &n, &m);
+
+					    unordered_map<int, int> cnt;
+					    for (int i = 0; i < n * m; i ++ )
+					    {
+					        int x;
+					        scanf("%d", &x);
+					        if ( ++ cnt[x] > n * m / 2)
+					        {
+					            printf("%d\n", x);
+					            break;
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/324520/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		125. 1542. 老鼠和大米	1056
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n, m;
+					int w[N], ans[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < n; i ++ ) cin >> w[i];
+					    vector<int> cur(n);
+
+					    for (int i = 0; i < n; i ++ ) cin >> cur[i];
+
+					    while (cur.size() > 1)
+					    {
+					        vector<int> next;
+					        int remain = (cur.size() + m - 1) / m;
+
+					        for (int i = 0; i < cur.size();)
+					        {
+					            int j = min((int)cur.size(), i + m);
+
+					            int t = i;
+					            for (int k = i; k < j; k ++ )
+					                if (w[cur[k]] > w[cur[t]])
+					                     t = k;
+					            next.push_back(cur[t]);
+					            for (int k = i; k < j; k ++ )
+					                if (k != t)
+					                    ans[cur[k]] = remain + 1;
+
+					            i = j;
+					        }
+
+					        cur = next;
+					    }
+
+					    ans[cur[0]] = 1;
+
+					    cout << ans[0];
+					    for (int i = 1; i < n; i ++ ) cout << ' ' << ans[i];
+					    cout << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330514/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		126. 1548. 才华与德行	1062
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+
+					int n, L, H;
+					struct Person
+					{
+					    int id, moral, talent;
+					    int level;
+
+					    int total() const
+					    {
+					        return moral + talent;
+					    }
+
+					    bool operator< (const Person &t) const
+					    {
+					        if (level != t.level) return level < t.level;
+					        if (total() != t.total()) return total() > t.total();
+					        if (moral != t.moral) return moral > t.moral;
+					        return id < t.id;
+					    }
+					}p[N];
+
+					int main()
+					{
+					    scanf("%d%d%d", &n, &L, &H);
+
+					    int m = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int id, moral, talent;
+					        scanf("%d%d%d", &id, &moral, &talent);
+					        if (moral < L || talent < L) continue;
+					        int level;
+					        if (moral >= H && talent >= H) level = 1;
+					        else if (moral >= H && talent < H) level = 2;
+					        else if (moral < H && talent < H && moral >= talent) level = 3;
+					        else level = 4;
+
+					        p[m ++ ] = {id, moral, talent, level};
+					    }
+
+					    sort(p, p + m);
+
+					    printf("%d\n", m);
+					    for (int i = 0; i < m; i ++ )
+					        printf("%08d %d %d\n", p[i].id, p[i].moral, p[i].talent);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330521/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		127. 1551. A + B 和 C 1065
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					bool check(LL a, LL b, LL c)
+					{
+					    LL d = a + b;
+					    if (a >= 0 && b >= 0 && d < 0) return true;
+					    if (a < 0 && b < 0 && d >= 0) return false;
+					    return a + b > c;
+					}
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        LL a, b, c;
+					        scanf("%lld%lld%lld", &a, &b, &c);
+					        if (check(a, b, c)) printf("Case #%d: true\n", i);
+					        else printf("Case #%d: false\n", i);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330531/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		128. 1555. 数字黑洞	1069
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					vector<int> get(int n)
+					{
+					    int nums[4];
+					    for (int i = 0; i < 4; i ++ )
+					    {
+					        nums[i] = n % 10;
+					        n /= 10;
+					    }
+
+					    sort(nums, nums + 4);
+					    int a = 0;
+					    for (int i = 0; i < 4; i ++ ) a = a * 10 + nums[i];
+
+					    reverse(nums, nums + 4);
+					    int b = 0;
+					    for (int i = 0; i < 4; i ++ ) b = b * 10 + nums[i];
+
+					    return {b, a};
+					}
+
+					int main()
+					{
+					    int n;
+					    cin >> n;
+
+					    do
+					    {
+					        auto t = get(n);
+					        printf("%04d - %04d = %04d\n", t[0], t[1], t[0] - t[1]);
+
+					        n = t[0] - t[1];
+					    } while (n && n != 6174);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330537/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		129. 1566. 研究生入学	1080
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 40010, M = 110, K = 5;
+
+					int n, m, k;
+					int cnt[N];
+					int wish[N];
+					vector<int> uty[M];
+
+					struct Person
+					{
+					    int id, ge, gi;
+					    int wish[K];
+
+					    int total() const
+					    {
+					        return ge + gi;
+					    }
+
+					    bool operator< (const Person &t) const
+					    {
+					        if (total() != t.total()) return total() > t.total();
+					        return ge > t.ge;
+					    }
+
+					    bool operator== (const Person &t) const
+					    {
+					        return ge == t.ge && gi == t.gi;
+					    }
+					}p[N];
+
+					int main()
+					{
+					    scanf("%d%d%d", &n, &m, &k);
+					    for (int i = 0; i < m; i ++ ) scanf("%d", &cnt[i]);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        p[i].id = i;
+					        scanf("%d%d", &p[i].ge, &p[i].gi);
+
+					        for (int j = 0; j < k; j ++ )
+					            scanf("%d", &p[i].wish[j]);
+					    }
+
+					    sort(p, p + n);
+
+					    memset(wish, -1, sizeof wish);
+					    for (int i = 0; i < n;)
+					    {
+					        int j = i + 1;
+					        while (j < n && p[i] == p[j]) j ++ ;
+
+					        for (int t = i; t < j; t ++ )
+					            for (int u = 0; u < k; u ++ )
+					            {
+					                int w = p[t].wish[u];
+					                if (cnt[w] > uty[w].size())
+					                {
+					                    wish[t] = w;
+					                    break;
+					                }
+					            }
+
+					        for (int t = i; t < j; t ++ )
+					            if (wish[t] != -1)
+					                uty[wish[t]].push_back(p[t].id);
+
+					        i = j;
+					    }
+
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        if (uty[i].size())
+					        {
+					            sort(uty[i].begin(), uty[i].end());
+					            printf("%d", uty[i][0]);
+					            for (int j = 1; j < uty[i].size(); j ++ )
+					                printf(" %d", uty[i][j]);
+					        }
+					        puts("");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330563/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		130. 1569. 成绩单	1083
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n;
+					struct Person
+					{
+					    string name, id;
+					    int grade;
+
+					    bool operator< (const Person &t) const
+					    {
+					        return grade > t.grade;
+					    }
+					}p[N];
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> p[i].name >> p[i].id >> p[i].grade;
+
+					    int g1, g2;
+					    cin >> g1 >> g2;
+
+					    int m = 0;
+					    for (int i = 0; i < n; i ++ )
+					        if (p[i].grade >= g1 && p[i].grade <= g2)
+					            p[m ++ ] = p[i];
+
+					    if (!m) puts("NONE");
+					    else
+					    {
+					        sort(p, p + m);
+					        for (int i = 0; i < m; i ++ )
+					            cout << p[i].name << ' ' << p[i].id << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330572/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		131. 1582. 买还是不买	1092
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_map>
+
+					using namespace std;
+
+					int main()
+					{
+					    string a, b;
+					    cin >> a >> b;
+
+					    unordered_map<char, int> S;
+					    for (auto c : a) S[c] ++ ;
+					    for (auto c : b) S[c] -- ;
+
+					    int sp = 0, sn = 0;
+					    for (auto item : S)
+					        if (item.second > 0) sp += item.second;
+					        else sn -= item.second;
+
+					    if (sn) printf("No %d\n", sn);
+					    else printf("Yes %d\n", sp);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330578/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		132. 1585. 校园内的汽车	1095
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <vector>
+
+					using namespace std;
+
+					struct Event
+					{
+					    int tm, status;
+
+					    bool operator< (const Event &t) const
+					    {
+					        return tm < t.tm;
+					    }
+					};
+
+					int get(vector<Event>& ets)
+					{
+					    int res = 0;
+					    for (int i = 0; i < ets.size(); i += 2)
+					        res += ets[i + 1].tm - ets[i].tm;
+
+					    return res;
+					}
+
+					int main()
+					{
+					    int n, m;
+					    scanf("%d%d", &n, &m);
+
+					    unordered_map<string, vector<Event>> cars;
+
+					    char id[10], status[10];
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int hh, mm, ss;
+					        scanf("%s %d:%d:%d %s", id, &hh, &mm, &ss, status);
+					        int t = hh * 3600 + mm * 60 + ss;
+					        int s = 0;
+					        if (status[0] == 'o') s = 1;
+					        cars[id].push_back({t, s});
+					    }
+
+					    vector<Event> events;
+					    for (auto& item : cars)
+					    {
+					        auto& ets = item.second;
+					        sort(ets.begin(), ets.end());
+					        int k = 0;
+
+					        for (int i = 0; i < ets.size(); i ++ )
+					            if (ets[i].status == 0)
+					            {
+					                if (i + 1 < ets.size() && ets[i + 1].status == 1)
+					                {
+					                    ets[k ++ ] = ets[i];
+					                    ets[k ++ ] = ets[i + 1];
+					                    i ++ ;
+					                }
+					            }
+
+					        ets.erase(ets.begin() + k, ets.end());
+					        for (int i = 0; i < k; i ++ ) events.push_back(ets[i]);
+					    }
+
+					    sort(events.begin(), events.end());
+
+					    int k = 0, sum = 0;
+					    while (m -- )
+					    {
+					        int hh, mm, ss;
+					        scanf("%d:%d:%d", &hh, &mm, &ss);
+					        int t = hh * 3600 + mm * 60 + ss;
+
+					        while (k < events.size() && events[k].tm <= t)
+					        {
+					            if (events[k].status == 0) sum ++ ;
+					            else sum -- ;
+					            k ++ ;
+					        }
+
+					        printf("%d\n", sum);
+					    }
+
+					    int maxt = 0;
+					    for (auto& item : cars) maxt = max(maxt, get(item.second));
+
+					    vector<string> res;
+					    for (auto& item : cars)
+					        if (get(item.second) == maxt)
+					            res.push_back(item.first);
+
+					    sort(res.begin(), res.end());
+
+					    for (int i = 0; i < res.size(); i ++ ) printf("%s ", res[i].c_str());
+
+					    printf("%02d:%02d:%02d\n", maxt / 3600, maxt % 3600 / 60, maxt % 60);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330592/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		133. 1595. 螺旋矩阵	1105
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n;
+					int w[N];
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> w[i];
+
+					    sort(w, w + n, greater<int>());
+
+					    int r, c;
+
+
+					    for (int i = 1; i <= n / i; i ++ )
+					        if (n % i == 0)
+					        {
+					            r = n / i;
+					            c = i;
+					        }
+
+					    vector<vector<int>> res(r, vector<int>(c));
+
+					    int dx[] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+					    for (int i = 0, x = 0, y = 0, d = 1; i < n; i ++ )
+					    {
+					        res[x][y] = w[i];
+					        int a = x + dx[d], b = y + dy[d];
+					        if (a < 0 || a >= r || b < 0 || b >= c || res[a][b])
+					        {
+					            d = (d + 1) % 4;
+					            a = x + dx[d], b = y + dy[d];
+					        }
+					        x = a, y = b;
+					    }
+
+					    for (int i = 0; i < r; i ++ )
+					    {
+					        cout << res[i][0];
+					        for (int j = 1; j < c; j ++ )
+					            cout << ' ' << res[i][j];
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/330601/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		134. 1599. 合影	1109
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n, m;
+					struct Person
+					{
+					    string name;
+					    int h;
+					    bool operator< (const Person &t) const
+					    {
+					        if (h != t.h) return h > t.h;
+					        return name < t.name;
+					    }
+					}p[N];
+					string line[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    for (int i = 0; i < n; i ++ ) cin >> p[i].name >> p[i].h;
+					    sort(p, p + n);
+
+					    for (int i = 0, j = 0; i < m; i ++ )
+					    {
+					        int len = n / m;
+					        if (!i) len += n % m;  // 特判最后一排
+					        for (int r = len / 2 + 1, l = r - 1; l > 0 || r <= len; l --, r ++ )
+					        {
+					            if (r <= len) line[r] = p[j ++ ].name;
+					            if (l > 0) line[l] = p[j ++ ].name;
+					        }
+
+					        cout << line[1];
+					        for (int k = 2; k <= len; k ++ ) cout << ' ' << line[k];
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331536/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		135. 1614. 单身狗	1121
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <unordered_set>
+
+					using namespace std;
+
+					const int N = 50010, M = 10010;
+
+					struct Couple
+					{
+					    int a, b;
+					}c[N];
+					int ans[M];
+
+					int main()
+					{
+					    int n, m;
+					    scanf("%d", &n);
+					    for (int i = 0; i < n; i ++ ) scanf("%d%d", &c[i].a, &c[i].b);
+
+					    scanf("%d", &m);
+					    unordered_set<int> S;
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int id;
+					        scanf("%d", &id);
+					        S.insert(id);
+					    }
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int a = c[i].a, b = c[i].b;
+					        if (S.count(a) && S.count(b))
+					        {
+					            S.erase(a);
+					            S.erase(b);
+					        }
+					    }
+
+					    int k = 0;
+					    for (auto id : S) ans[k ++ ] = id;
+					    sort(ans, ans + k);
+
+					    printf("%d\n", k);
+
+					    if (k)
+					    {
+					        printf("%05d", ans[0]);
+					        for (int i = 1; i < k; i ++ ) printf(" %05d", ans[i]);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331549/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		136. 1621. N 皇后问题	1128
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					bool row[N], dg[N * 2], udg[N * 2];
+
+					int main()
+					{
+					    int T;
+					    scanf("%d", &T);
+
+					    while (T -- )
+					    {
+					        scanf("%d", &n);
+
+					        memset(row, 0, sizeof row);
+					        memset(dg, 0, sizeof dg);
+					        memset(udg, 0, sizeof udg);
+					        bool success = true;
+					        for (int y = 1; y <= n; y ++ )
+					        {
+					            int x;
+					            scanf("%d", &x);
+					            if (row[x] || dg[x + y] || udg[y - x + n]) success = false;
+					            row[x] = dg[x + y] = udg[y - x + n] = true;
+					        }
+
+					        if (success) puts("YES");
+					        else puts("NO");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331562/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		137. 1622. 推荐系统	1129
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 50010;
+
+					int n, m;
+					int cnt[N];
+					int top_k[11];
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    int k = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int id;
+					        scanf("%d", &id);
+					        if (i)
+					        {
+					            printf("%d:", id);
+					            for (int j = 0; j < k; j ++ ) printf(" %d", top_k[j]);
+					            puts("");
+					        }
+
+					        cnt[id] ++ ;
+
+					        bool exists = false;
+					        for (int j = 0; j < k; j ++ )
+					            if (top_k[j] == id)
+					            {
+					                exists = true;
+					                break;
+					            }
+					        if (!exists) top_k[k ++ ] = id;
+					        sort(top_k, top_k + k, [](int x, int y){
+					            if (cnt[x] != cnt[y]) return cnt[x] > cnt[y];
+					            return x < y;
+					        });
+
+					        k = min(k, m);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331589/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		138. 1625. 切整数	1132
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					int main()
+					{
+					    int T;
+					    cin >> T;
+
+					    while (T -- )
+					    {
+					        string number;
+					        cin >> number;
+
+					        int len = number.size() / 2;
+					        int left = stoi(number.substr(0, len));
+					        int right = stoi(number.substr(len));
+					        int n = stoi(number);
+
+					        if (left * right && n % (left * right) == 0) puts("Yes");
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331597/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		139. 1633. 外观数列	1140
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					int main()
+					{
+					    int d, n;
+					    cin >> d >> n;
+
+					    string cur = to_string(d);
+					    for (int k = 0; k < n - 1; k ++ )
+					    {
+					        string next;
+					        for (int i = 0; i < cur.size();)
+					        {
+					            int j = i + 1;
+					            while (j < cur.size() && cur[i] == cur[j]) j ++ ;
+					            next += cur[i] + to_string(j - i);
+					            i = j;
+					        }
+					        cur = next;
+					    }
+
+					    cout << cur << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331608/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		140. 1640. 堆 	1147
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					int h[N];
+
+					void dfs(int u)
+					{
+					    if (u * 2 <= n) dfs(u * 2);
+					    if (u * 2 + 1 <= n) dfs(u * 2 + 1);
+
+					    printf("%d", h[u]);
+					    if (u != 1) printf(" ");
+					}
+
+					int main()
+					{
+					    int T;
+					    scanf("%d%d", &T, &n);
+
+					    while (T -- )
+					    {
+					        for (int i = 1; i <= n; i ++ ) scanf("%d", &h[i]);
+
+					        bool lt = false, gt = false;
+					        for (int i = 1; i <= n; i ++ )
+					            for (int j = 0; j < 2; j ++ )
+					                if (i * 2 + j <= n)
+					                {
+					                    int a = h[i], b = h[i * 2 + j];
+					                    if (a < b) lt = true;
+					                    else gt = true;
+					                }
+
+					        if (lt && gt) puts("Not Heap");
+					        else if (lt) puts("Min Heap");
+					        else puts("Max Heap");
+
+					        dfs(1);
+					        puts("");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331617/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+12. 贪心
+		141. 1521. 魔术卷	1037
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int a[N], b[N];
+
+					int main()
+					{
+					    scanf("%d", &n);
+					    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+					    scanf("%d", &m);
+					    for (int i = 0; i < n; i ++ ) scanf("%d", &b[i]);
+
+					    sort(a, a + n);
+					    sort(b, b + m);
+
+					    int res = 0;
+					    for (int i = 0, j = 0; i < n && j < m && a[i] < 0 && b[j] < 0; i ++, j ++ )
+					        res += a[i] * b[j];
+
+					    for (int i = n - 1, j = m - 1; i >= 0 && j >= 0 && a[i] > 0 && b[j] > 0; i --, j -- )
+					        res += a[i] * b[j];
+
+					    printf("%d\n", res);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331627/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		142. 1522. 排成最小的数字		1038
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n;
+					string str[N];
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> str[i];
+
+					    sort(str, str + n, [](string a, string b) {
+					        return a + b < b + a;
+					    });
+
+					    string res;
+					    for (int i = 0; i < n; i ++ ) res += str[i];
+
+					    int k = 0;
+					    while (k + 1 < res.size() && res[k] == '0') k ++ ;
+
+					    cout << res.substr(k) << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331643/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		143. 1553. 用 Swap(0, i) 操作进行排序		1067
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					int p[N];
+
+					int main()
+					{
+					    scanf("%d", &n);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int id;
+					        scanf("%d", &id);
+					        p[id] = i;
+					    }
+
+					    int res = 0;
+					    for (int i = 1; i < n;)
+					    {
+					        while (p[0]) swap(p[0], p[p[0]]), res ++ ;
+					        while (i < n && p[i] == i) i ++ ;
+					        if (i < n) swap(p[0], p[i]), res ++ ;
+					    }
+
+					    printf("%d\n", res);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/331658/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		144. 1556. 月饼	1070
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n;
+					double m;
+					struct Cake
+					{
+					    double p, w;
+					    bool operator< (const Cake &t) const
+					    {
+					        return p / w > t.p / t.w;
+					    }
+					}c[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < n; i ++ ) cin >> c[i].w;
+					    for (int i = 0; i < n; i ++ ) cin >> c[i].p;
+
+					    sort(c, c + n);
+
+					    double res = 0;
+					    for (int i = 0; i < n && m > 0; i ++ )
+					    {
+					        double r = min(m, c[i].w);
+					        m -= r;
+					        res += c[i].p / c[i].w * r;
+					    }
+
+					    printf("%.2lf\n", res);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338404/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		145. 1603. 整数集合划分	1113
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					int a[N];
+
+					int main()
+					{
+					    scanf("%d", &n);
+					    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+					    sort(a, a + n);
+
+					    int s1 = 0, s2 = 0;
+					    for (int i = 0; i < n / 2; i ++ ) s1 += a[i];
+					    for (int i = n / 2; i < n; i ++ ) s2 += a[i];
+
+					    printf("%d %d\n", n % 2, s2 - s1);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338418/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		146. 1618. 结绳	1125
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					int n;
+					double a[N];
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> a[i];
+					    sort(a, a + n);
+
+					    for (int i = 1; i < n; i ++ ) a[0] = (a[0] + a[i]) / 2;
+
+					    printf("%d\n", (int)a[0]);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338438/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		147. 1517. 是否加满油	1033
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int c_max, d, d_avg, n;
+					struct Stop
+					{
+					    double p, d;
+
+					    bool operator< (const Stop& t) const
+					    {
+					        return d < t.d;
+					    }
+					}s[N];
+
+					int main()
+					{
+					    cin >> c_max >> d >> d_avg >> n;
+					    for (int i = 0; i < n; i ++ ) cin >> s[i].p >> s[i].d;
+					    s[n] = {0, (double)d};
+
+					    sort(s, s + n + 1);
+
+					    if (s[0].d)
+					    {
+					        puts("The maximum travel distance = 0.00");
+					        return 0;
+					    }
+
+					    double res = 0, oil = 0;
+					    for (int i = 0; i < n;)
+					    {
+					        int k = -1;
+					        for (int j = i + 1; j <= n && s[j].d - s[i].d <= c_max * d_avg; j ++ )
+					            if (s[j].p < s[i].p)
+					            {
+					                k = j;
+					                break;
+					            }
+					            else if (k == -1 || s[j].p < s[k].p)
+					                k = j;
+
+					        if (k == -1)
+					        {
+					            printf("The maximum travel distance = %.2lf\n", s[i].d + (double)c_max * d_avg);
+					            return 0;
+					        }
+
+					        if (s[k].p <= s[i].p)
+					        {
+					            res += ((s[k].d - s[i].d) / d_avg - oil) * s[i].p;
+					            i = k;
+					            oil = 0;
+					        }
+					        else
+					        {
+					            res += (c_max - oil) * s[i].p;
+					            oil = c_max - (s[k].d - s[i].d) / d_avg;
+					            i = k;
+					        }
+					    }
+
+					    printf("%.2lf\n", res);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338470/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+13. 链表
+		148. 1516. 共享	1032
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					int h1, h2, ne[N];
+					char e[N];
+					bool st[N];
+
+					int main()
+					{
+					    scanf("%d%d%d", &h1, &h2, &n);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int address, next;
+					        char data;
+					        scanf("%d %c %d", &address, &data, &next);
+					        e[address] = data, ne[address] = next;
+					    }
+
+					    for (int i = h1; i != -1; i = ne[i])
+					        st[i] = true;
+
+					    for (int i = h2; i != -1; i = ne[i])
+					        if (st[i])
+					        {
+					            printf("%05d\n", i);
+					            return 0;
+					        }
+
+					    puts("-1");
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338478/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		149. 1560. 反转链表	1074
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h, e[N], ne[N];
+
+					int main()
+					{
+					    scanf("%d%d%d", &h, &n, &m);
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int address, data, next;
+					        scanf("%d%d%d", &address, &data, &next);
+					        e[address] = data, ne[address] = next;
+					    }
+
+					    vector<int> q;
+					    for (int i = h; i != -1; i = ne[i]) q.push_back(i);
+
+					    for (int i = 0; i + m - 1 < q.size(); i += m)
+					        reverse(q.begin() + i, q.begin() + i + m);
+
+					    for (int i = 0; i < q.size(); i ++ )
+					    {
+					        printf("%05d %d ", q[i], e[q[i]]);
+					        if (i + 1 == q.size()) puts("-1");
+					        else printf("%05d\n", q[i + 1]);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338492/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		150. 1587. 链表重复数据删除	1097
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					int h, e[N], ne[N];
+					bool st[N];
+
+					int main()
+					{
+					    scanf("%d%d", &h, &n);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int address, key, next;
+					        scanf("%d%d%d", &address, &key, &next);
+					        e[address] = key, ne[address] = next;
+					    }
+
+					    vector<int> a, b;
+					    for (int i = h; i != -1; i = ne[i])
+					    {
+					        int v = abs(e[i]);
+					        if (st[v]) b.push_back(i);
+					        else
+					        {
+					            st[v] = true;
+					            a.push_back(i);
+					        }
+					    }
+
+					    for (int i = 0; i < a.size(); i ++ )
+					    {
+					        printf("%05d %d ", a[i], e[a[i]]);
+					        if (i + 1 == a.size()) puts("-1");
+					        else printf("%05d\n", a[i + 1]);
+					    }
+					    for (int i = 0; i < b.size(); i ++ )
+					    {
+					        printf("%05d %d ", b[i], e[b[i]]);
+					        if (i + 1 == b.size()) puts("-1");
+					        else printf("%05d\n", b[i + 1]);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338506/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		151. 1626. 链表元素分类	1133
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, k;
+					int h, e[N], ne[N];
+
+					int main()
+					{
+					    scanf("%d%d%d", &h, &n, &k);
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int address, key, next;
+					        scanf("%d%d%d", &address, &key, &next);
+					        e[address] = key, ne[address] = next;
+					    }
+
+					    vector<int> a, b, c;
+					    for (int i = h; i != -1; i = ne[i])
+					    {
+					        int v = e[i];
+					        if (v < 0) a.push_back(i);
+					        else if (v <= k) b.push_back(i);
+					        else c.push_back(i);
+					    }
+
+					    a.insert(a.end(), b.begin(), b.end());
+					    a.insert(a.end(), c.begin(), c.end());
+
+					    for (int i = 0; i < a.size(); i ++ )
+					    {
+					        printf("%05d %d ", a[i], e[a[i]]);
+					        if (i + 1 == a.size()) puts("-1");
+					        else printf("%05d\n", a[i + 1]);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338515/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+14. 基础算法和数据结构
+		152. 1506. 中位数	1029
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 200010;
+
+					int n, m;
+					int a[N], b[N], c[N * 2];
+
+					int main()
+					{
+					    scanf("%d", &n);
+					    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+					    scanf("%d", &m);
+					    for (int i = 0; i < m; i ++ ) scanf("%d", &b[i]);
+
+					    int k = 0, i = 0, j = 0;
+					    while (i < n && j < m)
+					        if (a[i] <= b[j]) c[k ++ ] = a[i ++ ];
+					        else c[k ++ ] = b[j ++ ];
+					    while (i < n) c[k ++ ] = a[i ++ ];
+					    while (j < m) c[k ++ ] = b[j ++ ];
+
+					    printf("%d\n", c[(n + m - 1) / 2]);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338526/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		153. 1530. 最短距离 	1046
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int s[N];
+
+					int main()
+					{
+					    scanf("%d", &n);
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        scanf("%d", &s[i]);
+					        s[i] += s[i - 1];
+					    }
+
+					    scanf("%d", &m);
+					    while (m -- )
+					    {
+					        int l, r;
+					        scanf("%d%d", &l, &r);
+					        if (l > r) swap(l, r);
+					        printf("%d\n", min(s[r - 1] - s[l - 1], s[n] - s[r - 1] + s[l - 1]));
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338531/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		154. 1571. 完美序列	1085
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, p;
+					int a[N];
+
+					int main()
+					{
+					    scanf("%d%d", &n, &p);
+					    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+
+					    sort(a, a + n);
+
+					    int res = 0;
+					    for (int i = 0, j = 0; i < n; i ++ )
+					    {
+					        while ((long long)a[j] * p < a[i]) j ++ ;
+					        res = max(res, i - j + 1);
+					    }
+
+					    printf("%d\n", res);
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/338548/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		155. 1581. 急性中风	1091
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <queue>
+
+					using namespace std;
+
+					const int M = 1286, N = 128, L = 60;
+
+					int m, n, l, T;
+					int g[L][M][N];
+					struct Node
+					{
+					    int x, y, z;
+					};
+
+					int d[][3] = {
+					    {1, 0, 0},
+					    {-1, 0, 0},
+					    {0, 1, 0},
+					    {0, -1, 0},
+					    {0, 0, 1},
+					    {0, 0, -1},
+					};
+
+					int bfs(int x, int y, int z)
+					{
+					    queue<Node> q;
+					    q.push({x, y, z});
+					    g[x][y][z] = 0;
+
+					    int cnt = 1;
+					    while (q.size())
+					    {
+					        auto t = q.front();
+					        q.pop();
+
+					        for (int i = 0; i < 6; i ++ )
+					        {
+					            int a = t.x + d[i][0], b = t.y + d[i][1], c = t.z + d[i][2];
+					            if (a >= 0 && a < l && b >= 0 && b < m && c >= 0 && c < n && g[a][b][c])
+					            {
+					                g[a][b][c] = 0;
+					                q.push({a, b, c});
+					                cnt ++ ;
+					            }
+					        }
+					    }
+
+					    return cnt;
+					}
+
+					int main()
+					{
+					    scanf("%d%d%d%d", &m, &n, &l, &T);
+
+					    for (int i = 0; i < l; i ++ )
+					        for (int j = 0; j < m; j ++ )
+					            for (int k = 0; k < n; k ++ )
+					                scanf("%d", &g[i][j][k]);
+
+					    int res = 0;
+					    for (int i = 0; i < l; i ++ )
+					        for (int j = 0; j < m; j ++ )
+					            for (int k = 0; k < n; k ++ )
+					                if (g[i][j][k])
+					                {
+					                    int t = bfs(i, j, k);
+					                    if (t >= T) res += t;
+					                }
+
+					    printf("%d\n", res);
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339316/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		156. 1641. 狼人杀-简单版	1148
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n;
+					int q[N];
+
+					int judge(int k, int i, int j)  // 如果是假话，返回1；如果是真话，返回0
+					{
+					    int t = q[k];
+					    if (t > 0)
+					    {
+					        if (t == i || t == j) return 1;
+					        return 0;
+					    }
+
+					    t = -t;
+					    if (t == i || t == j) return 0;
+					    return 1;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> q[i];
+
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = i + 1; j <= n; j ++ )
+					        {
+					            int s = judge(i, i, j) + judge(j, i, j);
+					            if (s != 1) continue;
+
+					            s = 0;
+					            for (int k = 1; k <= n; k ++ )
+					                s += judge(k, i, j);
+
+					            if (s != 2) continue;
+
+					            cout << i << ' ' << j << endl;
+					            return 0;
+					        }
+
+					    puts("No Solution");
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339329/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		157. 1535. 弹出序列	1051
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <stack>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int m, n, k;
+					int a[N];
+
+					bool check()
+					{
+					    stack<int> stk;
+					    for (int i = 1, j = 0; i <= n; i ++ )
+					    {
+					        stk.push(i);
+					        if (stk.size() > m) return false;
+
+					        while (stk.size() && stk.top() == a[j])
+					        {
+					            stk.pop();
+					            j ++ ;
+					        }
+					    }
+
+					    return stk.empty();
+					}
+
+					int main()
+					{
+					    scanf("%d%d%d", &m, &n, &k);
+					    while (k -- )
+					    {
+					        for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+					        if (check()) puts("YES");
+					        else puts("NO");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339339/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		158. 1541. 世界首富	1055
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 210;
+
+					int n, m;
+					struct Person
+					{
+					    string name;
+					    int age, w;
+
+					    bool operator< (const Person& t) const
+					    {
+					        if (w != t.w) return w > t.w;
+					        if (age != t.age) return age < t.age;
+					        return name < t.name;
+					    }
+					};
+
+					vector<Person> ages[N];
+					int idx[N];
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    char name[10];
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int age, w;
+					        scanf("%s%d%d", name, &age, &w);
+					        ages[age].push_back({name, age, w});
+					    }
+
+					    for (auto& age : ages) sort(age.begin(), age.end());
+
+					    for (int C = 1; C <= m; C ++ )
+					    {
+					        printf("Case #%d:\n", C);
+					        int cnt, a, b;
+					        scanf("%d%d%d", &cnt, &a, &b);
+
+					        memset(idx, 0, sizeof idx);
+					        bool exists = false;
+					        while (cnt -- )
+					        {
+					            int t = -1;
+					            for (int i = a; i <= b; i ++ )
+					                if (idx[i] < ages[i].size())
+					                {
+					                    if (t == -1 || ages[i][idx[i]] < ages[t][idx[t]])
+					                        t = i;
+					                }
+
+					            if (t == -1) break;
+					            auto& p = ages[t][idx[t]];
+					            idx[t] ++ ;
+
+					            printf("%s %d %d\n", p.name.c_str(), p.age, p.w);
+					            exists = true;
+					        }
+
+					        if (!exists) puts("None");
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339362/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		159. 1543. 栈 	1057
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <set>
+					#include <stack>
+
+					using namespace std;
+
+					stack<int> stk;
+					multiset<int> up, down;
+
+					void adjust()
+					{
+					    while (up.size() > down.size())
+					    {
+					        down.insert(*up.begin());
+					        up.erase(up.begin());
+					    }
+
+					    while (down.size() > up.size() + 1)
+					    {
+					        auto it = down.end();
+					        it -- ;
+					        up.insert(*it);
+					        down.erase(it);
+					    }
+					}
+
+					int main()
+					{
+					    int n;
+					    scanf("%d", &n);
+					    char op[20];
+					    while (n -- )
+					    {
+					        scanf("%s", op);
+					        if (strcmp(op, "Push") == 0)
+					        {
+					            int x;
+					            scanf("%d", &x);
+					            stk.push(x);
+					            if (up.empty() || x < *up.begin()) down.insert(x);
+					            else up.insert(x);
+					            adjust();
+					        }
+					        else if (strcmp(op, "Pop") == 0)
+					        {
+					            if (stk.empty()) puts("Invalid");
+					            else
+					            {
+					                int x = stk.top();
+					                stk.pop();
+					                printf("%d\n", x);
+					                auto it = down.end();
+					                it -- ;
+					                if (x <= *it) down.erase(down.find(x));
+					                else up.erase(up.find(x));
+
+					                adjust();
+					            }
+					        }
+					        else
+					        {
+					            if (stk.empty()) puts("Invalid");
+					            else
+					            {
+					                auto it = down.end();
+					                it -- ;
+					                printf("%d\n", *it);
+					            }
+					        }
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339383/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		160. 1607. 爱丁顿数	1117
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n;
+					int a[N];
+
+					int main()
+					{
+					    scanf("%d", &n);
+					    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+					    sort(a, a + n);
+
+					    for (int i = n; i; i -- )
+					        if (a[n - i] > i)
+					        {
+					            printf("%d\n", i);
+					            return 0;
+					        }
+
+					    puts("0");
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339399/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		161. 1528. 火星购物	1044
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100010, INF = 1e9;
+
+					int n, m;
+					int s[N];
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        scanf("%d", &s[i]);
+					        s[i] += s[i - 1];
+					    }
+
+					    int res = INF;
+					    for (int i = 1, j = 0; i <= n; i ++ )
+					    {
+					        while (s[i] - s[j + 1] >= m) j ++ ;
+					        if (s[i] - s[j] >= m) res = min(res, s[i] - s[j]);
+					    }
+
+					    for (int i = 1, j = 0; i <= n; i ++ )
+					    {
+					        while (s[i] - s[j + 1] >= m) j ++ ;
+					        if (s[i] - s[j] == res) printf("%d-%d\n", j + 1, i);
+					    }
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339426/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+		162. 1524. 最长回文子串	1040
+			0. bug
+			1. 笔记
+			2. 注释
+				1. y
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					int main()
+					{
+					    string str;
+					    getline(cin, str);
+
+					    int res = 0;
+					    for (int i = 0; i < str.size(); i ++ )
+					    {
+					        int l = i - 1, r = i + 1;
+					        while (l >= 0 && r < str.size() && str[l] == str[r]) l --, r ++ ;
+					        res = max(res, r - l - 1);
+
+					        l = i, r = i + 1;
+					        while (l >= 0 && r < str.size() && str[l] == str[r]) l --, r ++ ;
+					        res = max(res, r - l - 1);
+					    }
+
+					    cout << res << endl;
+
+					    return 0;
+					}
+
+					作者：yxc
+					链接：https://www.acwing.com/activity/content/code/content/339437/
+					来源：AcWing
+					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+				2. b
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+
+
+
+99. 其他
+	0. 注意
+		1. 行末尾空格
+		2. 模拟题,复杂的数据结构,复杂的几何题(pat没有),可以放在考试后面做
+
+	1. 模拟题(更像是工程的,题目已经规定好了应该怎么做,你去实现就好了)
+		1. 字符串问题
+	2. 优化题(更像是考察算法)
+		1. 排序
+			1. 快排
+			2. 归并
+			3. 冒泡
