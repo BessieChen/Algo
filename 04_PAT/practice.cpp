@@ -11478,6 +11478,7 @@
 		41. 789. 数的范围 模板题
 			0. bug
 			1. 笔记
+				0. 其他更加灵活的cmin和cmax (不再是从小到大,而是从大到小排), 见1527.
 				1. 细节
 					1. 先直接上 int mid = l + (r-l) / 2;
 					2. 然后思考一个true的情况:
@@ -14422,20 +14423,155 @@
 					    return 0;
 					    
 					}
-		48. 1527. 判断二叉搜索树	1043
+		
+	11. 2020年10月15日18:22:59
+		
+		48. 1527. 判断二叉搜索树	1043 很棒的题! *****
 			0. bug
+				1. 大bug
+					最后画出图来的时候, 才知道那里错了
+					题目的样例: ()是错误根源
+						8 6 5 7 (10 8 11)
+						5 6 7 8 (8 10 11) 
+					我在找第几个的时候错了. 例如, 我现在要找的是右子树
+						10 8 11
+						8 10 11 我要找的是8在第二行是第几个, 我的错代码告诉我输第3个(从0开始), 但实际上是第4个
+						因为我应该找的范围应该是[4,6], 而不是整个数组[0,6]
+					错误的根源:
+						int cmin(int a){
+							int l = 0, r = n-1;
+							while(l < r)
+							{
+								int mid = l + (r-l)/2;
+								if(a <= in[mid]) r = mid;
+								else l = mid + 1;
+							}
+							if(in[r] != a) return -1;
+							cout << "a: " << a << " min: " << r << endl;
+							return r; //肯定能够找到, 所以不是-1
+						}
+
+						int cmax(int a){
+							int l = 0, r = n-1;
+							while(l < r){
+								int mid = l + (r-l)/2 + 1;
+								if(in[mid] >= a) l = mid;
+								else r = mid - 1;
+							}
+							cout << "a: " << a << " max: " << r << endl;
+							if(in[r] != a) return -1;
+							return r;
+						}
+					应该是:
+						int cmin(int a, int il, int ir){
+							int l = il, r = ir-1;
+							while(l < r)
+							{
+								int mid = l + (r-l)/2;
+								if(a <= in[mid]) r = mid;
+								else l = mid + 1;
+							}
+							if(in[r] != a) return -1;
+							cout << "a: " << a << " min: " << r << endl;
+							return r; //肯定能够找到, 所以不是-1
+						}
+
+						int cmax(int a, int il, int ir){
+							int l = il, r = ir-1;
+							while(l < r){
+								int mid = l + (r-l)/2 + 1;
+								if(in[mid] >= a) l = mid;
+								else r = mid - 1;
+							}
+							cout << "a: " << a << " max: " << r << endl;
+							if(in[r] != a) return -1;
+							return r;
+						}
+				2. 注意, 可能存在cmin和cmax最后的r, 并不能满足 in[r] == target
+					我之前错误的认为 ,肯定能够在in[]找到target, 所以我没有设置return -1
+				3. 大bug
+					我都想mr了,耽误我好几个小时 debug!
+					bug是: 可能用type == 0的时候能填充一部分post order
+					但是记住, 到了type == 1之后, 要把之前的清空!!!! 所以要加上 cnt == 0!!!!
+				4. 小bug
+					因为是pre, 所以范围记得是 pl + 1开始. 不要和post混为一谈
 			1. 笔记
-				1. build()
-					只要一边的子树不行,那res就是false
-					build()不能放在前面,否则就是无限循环了,应该是 
-						1. 终止条件
-						2. 做一些事
-						3. 递归:调用自己
-						4. 其他终止条件.
-				2. 知道了
-					1. 因为要后序所以是build(左), build(右), postorder[cnt++] = xx
-					2. 如果是中序, 应该就是build(左), postorder[cnt++] = xx, build(右)
-					3. 前序就是post, build(), build();
+				0. 不要把什么翻转过后的二叉树想象很复杂,其实就是两种树:
+					1. 题目定义的: 二叉树, 左子 < 自己 <= 右子
+						例如:
+							题目给的例1: 8 6 5 7 10 8 11
+							中序后: 5 6 7 8 8 10 11
+					2. 翻转后的无非是: 左子 >= 自己 > 右子.
+						例如: 
+							题目给的例2: 8 10 11 8 6 7 5
+							中序后: 11 10 8 8 7 6 5 
+					3. 求树的方法
+						都是一模一样.
+				0. 
+					1. build()
+						只要一边的子树不行,那res就是false
+						build()不能放在前面,否则就是无限循环了,应该是 
+							1. 终止条件 (tree最底部)
+							2. 自己的结果 (自己的事情)
+							3. 自己子女返回的结果 (自己的孩子)
+							4. 自己返回给父亲 (给父亲)
+
+					2. 知道了
+						1. 因为要后序所以是build(左), build(右), postorder[cnt++] = xx
+						2. 如果是中序, 应该就是build(左), postorder[cnt++] = xx, build(右)
+						3. 前序就是post, build(), build();
+				1. 
+					找a在in[]中在第k个位置
+					1. 没有翻转:
+						需要找到最左侧的a, 因为本身是从小到大排, 所以就是正常的cmin
+					2. 翻找后:
+						需要找到最右侧的a, 但是因为翻转后是从大到小排, 所以需要灵活应对: true的条件是 in[mid] >= target, true 之后还是向右找
+				2.**** 如何在build()里面后序遍历填充:
+						三句:
+							if(!build(il, k-1, pl+1, pl+1 + (k-1-il), type)) res = false;
+							if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+							post[cnt++] = root;
+						解释:
+							第一次执行: post[cnt++] = root; 的时候, 就已经是遍历到tree的最左下角了
+							因为一直build(),build()一直都是早左侧的元素
+							第二次执行: post[cnt++] = root; 的时候, 就已经是遍历到tree的最左下角右侧的子树了
+							因为执行检测右子树的 if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+				3. 如何判断是否存在:
+					1. 如果是 if(il > ir) return true;
+						就是已经是修得正果了, 因为每次都找到了对的k, 才能走到这一句
+					2. if( k == -1) return false; 不能找到对的k, 就要false
+					3. 以上是我自己的, 我在看我的子树怎么样, 只要有一颗false, 我也就是false了
+						bool res = true;
+						if(!build(il, k-1, pl+1, pl+1 + (k-1-il), type)) res = false;
+						if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+					4. 最后把我的结果给我的父亲.
+
+				4. 对比1497的build: 因为保证唯一解, 所以可以正常找到左右子树
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl, pl+(k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl+(k-il), pr-1);
+					    return root;
+					}
+
+					我们这里的build: 需要判断是否存在, 我们假设存在, 就直接在 build()里面后序遍历填充.
+						bool build(int il, int ir, int pl, int pr, int type){
+							if(il > ir) return true;
+
+							int root = pre[pl];
+							int k;
+							if(!type) k = cmin(root, il, ir + 1);
+							else k = cmax(root, il , ir +);
+							if( k == -1 || k < il || k > ir) return false;
+
+							bool res = true;
+							if(!build(il, k-1, pl+1, pl+1 + (k-1-il), type)) res = false;
+							if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+							post[cnt++] = root;
+
+							return res;
+						}
 			2. 注释
 				1. y
 					#include <cstring>
@@ -14526,15 +14662,686 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
 			3. 5次
-				r1.
+				r0. 错误代码, 包含debug. 最后画出图来的时候, 才知道那里错了
+					题目的样例: ()是错误根源
+						8 6 5 7 (10 8 11)
+						5 6 7 8 (8 10 11) 
+					我在找第几个的时候错了. 例如, 我现在要找的是右子树
+						10 8 11
+						8 10 11 我要找的是8在第二行是第几个, 我的错代码告诉我输第3个(从0开始), 但实际上是第4个
+						因为我应该找的范围应该是[4,6], 而不是整个数组[0,6]
+					错误的根源:
+						int cmin(int a){
+							int l = 0, r = n-1;
+							while(l < r)
+							{
+								int mid = l + (r-l)/2;
+								if(a <= in[mid]) r = mid;
+								else l = mid + 1;
+							}
+							if(in[r] != a) return -1;
+							cout << "a: " << a << " min: " << r << endl;
+							return r; //肯定能够找到, 所以不是-1
+						}
+
+						int cmax(int a){
+							int l = 0, r = n-1;
+							while(l < r){
+								int mid = l + (r-l)/2 + 1;
+								if(in[mid] >= a) l = mid;
+								else r = mid - 1;
+							}
+							cout << "a: " << a << " max: " << r << endl;
+							if(in[r] != a) return -1;
+							return r;
+						}
+					应该是:
+						int cmin(int a, int il, int ir){
+							int l = il, r = ir-1;
+							while(l < r)
+							{
+								int mid = l + (r-l)/2;
+								if(a <= in[mid]) r = mid;
+								else l = mid + 1;
+							}
+							if(in[r] != a) return -1;
+							cout << "a: " << a << " min: " << r << endl;
+							return r; //肯定能够找到, 所以不是-1
+						}
+
+						int cmax(int a, int il, int ir){
+							int l = il, r = ir-1;
+							while(l < r){
+								int mid = l + (r-l)/2 + 1;
+								if(in[mid] >= a) l = mid;
+								else r = mid - 1;
+							}
+							cout << "a: " << a << " max: " << r << endl;
+							if(in[r] != a) return -1;
+							return r;
+						}
+
+
+
+					1. 
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int post[N], pre[N], in[N], cnt;
+					int n;
+
+					int cmin(int a, int il, int ir){
+						int l = il, r = ir-1;
+						while(l < r)
+						{
+							int mid = l + (r-l)/2;
+							if(a <= in[mid]) r = mid;
+							else l = mid + 1;
+						}
+						if(in[r] != a) return -1;
+						cout << "a: " << a << " min: " << r << endl;
+						return r; //肯定能够找到, 所以不是-1
+					}
+
+					int cmax(int a, int il, int ir){
+						int l = il, r = ir-1;
+						while(l < r){
+							int mid = l + (r-l)/2 + 1;
+							if(in[mid] >= a) l = mid;
+							else r = mid - 1;
+						}
+						cout << "a: " << a << " max: " << r << endl;
+						if(in[r] != a) return -1;
+						return r;
+					}
+
+					bool build(int il, int ir, int pl, int pr, int type){
+						if(il > ir) return true;
+
+					    // printf("%d %d %d %d\n", il ,ir, pl, pr);
+						int root = pre[pl];
+						int k;
+						if(!type) k = cmin(root, il, ir + 1);
+						else k = cmax(root, il , ir + 1);
+						if( k == -1 || k < il || k > ir){
+						    printf("Why false, %d %d %d\n", k, il, ir);
+						    return false;
+						} 
+					    // printf("%d %d %d %d %d\n", il ,ir, pl, pr, k);
+						bool res = true;
+						printf("a %d %d %d %d\n", il, k-1, pl+1, pl+1 + (k-1-il));
+						printf("b %d %d %d %d\n", k+1, ir, pl+1+(k-il), pr);
+						if(!build(il, k-1, pl+1, pl+1 + (k-1-il), type)) res = false;
+						if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+						post[cnt++] = root;
+						return res;
+					}
+
+					void print(){
+						puts("Yes");
+						cout << post[0];
+						for(int i = 1; i < n; i++) cout << " " << post[i];
+						cout << endl;
+					}
+
+					int main()
+					{
+						cin >> n;
+						for(int i = 0; i < n; i++){
+							cin >> pre[i];
+							in[i] = pre[i];
+						}
+
+					    sort(in, in + n);
+					    for(int i = 0; i < n; i++) cout << in[i] << " ";
+					    cout << endl;
+						if(build(0, n-1, 0, n-1, 0)){
+							print();
+							return 0;
+						}
+
+					    
+						reverse(in, in + n);
+						for(int i = 0; i < n; i++) cout << in[i] << " ";
+					    cout << endl;
+						if(build(0, n-1, 0, n-1, 1)){
+							print();
+							return 0;
+						}
+
+						puts("No");
+						return 0;
+
+					}
+				r0-2. 错误代码, 包含debug. 又一个bug, 忘记加cnt = 0清空
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int post[N], pre[N], in[N], cnt;
+					int n;
+
+					int cmin(int a, int il, int ir){
+						int l = il, r = ir;
+						while(l < r)
+						{
+							int mid = l + (r-l)/2;
+							if(a <= in[mid]) r = mid;
+							else l = mid + 1;
+						}
+						if(in[r] != a) return -1;
+					// 	cout << "a: " << a << " min: " << r << endl;
+						return r; //肯定能够找到, 所以不是-1
+					}
+
+					int cmax(int a, int il, int ir){
+					    cout << "heyyyyyyyyyyyyyyyy" << endl;
+						int l = il, r = ir;
+						while(l < r){
+							int mid = l + (r-l)/2 + 1;
+							if(in[mid] >= a) l = mid;
+							else r = mid - 1;
+						}
+						cout << "a: " << a << " max: " << r << endl;
+						if(in[r] != a) return -1;
+						return r;
+					}
+
+					bool build(int il, int ir, int pl, int pr, int type){
+						if(il > ir) return true;
+
+					    printf("%d %d %d %d %d\n", il ,ir, pl, pr, type);
+					    
+						int root = pre[pl];
+						cout << "root: " << root << " pl: " << pl <<endl;
+						int k;
+						if(!type) k = cmin(root, il, ir);
+						else k = cmax(root, il , ir);
+						if( k == -1 || k < il || k > ir){
+						    printf("Why false, %d %d %d\n", k, il, ir);
+						    return false;
+						} 
+					    // printf("%d %d %d %d %d\n", il ,ir, pl, pr, k);
+						bool res = true;
+						printf("a %d %d %d %d\n", il, k-1, pl+1, pl+1 + (k-1-il));
+						printf("b %d %d %d %d\n", k+1, ir, pl+1+(k-il), pr);
+					    // if(!type)
+					    // {
+					    //     if(!build(il, k-1, pl+1, pl+1 + (k-1-il), type)) res = false;
+					    // 	if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;}
+					    // 	else{
+					    	    
+					    // 	    if(!build(il, k-1, pl+1+(k-il), pr, type)) res = false;
+					    // 	    if(!build(k+1, ir, pl+1, pl+1 + (k-1-il), type)) res = false;
+					    // 	}
+					    
+					    if(!build(il, k-1, pl+1, pl+1 + (k-1-il), type)) res = false;
+					    	if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+						cout << " hi " << cnt << " root " << root << endl;
+						post[cnt++] = root;
+						
+						return res;
+					}
+
+					void print(){
+						puts("YES");
+						cout << post[0];
+						for(int i = 1; i < n; i++) cout << " " << post[i];
+						cout << endl;
+					}
+
+					int main()
+					{
+						cin >> n;
+						for(int i = 0; i < n; i++){
+							cin >> pre[i];
+							in[i] = pre[i];
+						}
+
+					    sort(in, in + n);
+					//     for(int i = 0; i < n; i++) cout << in[i] << " ";
+					//     cout << endl;
+						if(build(0, n-1, 0, n-1, 0)){
+							print();
+							return 0;
+						}
+
+					    
+						reverse(in, in + n);
+						for(int i = 0; i < n; i++) cout << in[i] << " ";
+						cnt = 0;
+					    cout << endl;
+						if(build(0, n-1, 0, n-1, 1)){
+							print();
+							return 0;
+						}
+
+						puts("NO");
+						return 0;
+
+					}
+				r1. 这次写很顺
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int pre[N], in[N], post[N];
+					int cnt;
+					int n;
+
+					void print(){
+						puts("YES");
+						cout << post[0];
+						for(int i = 1; i < n; i++) cout << " " << post[i];
+						cout << endl;
+						return;
+					}
+
+					int fl(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r-l)/2;
+					        if(a <= in[mid]) r = mid;
+					        else l = mid + 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					int fr(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r-l)/2 + 1;
+					        if(in[mid] >= a) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					bool build(int il, int ir, int pl, int pr, int type){
+						if(il > ir) return true;
+						int root = pre[pl];
+						int k;
+						if(!type) k = fl(root, il, ir);
+						else k = fr(root, il, ir);
+						if(k == -1) return false;
+
+						bool res = true;
+						if(!build(il, k-1, pl+1, pl+1+(k-1-il), type)) res = false;
+						if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+						post[cnt++] = root;
+
+						return res;
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 0; i < n; i++){
+							cin >> pre[i];
+							in[i] = pre[i];
+						}
+
+						sort(in, in + n);
+						if(build(0, n-1, 0, n-1, 0)){
+							print();
+							return 0;
+						}
+
+						cnt = 0;
+						reverse(in, in + n);
+						if(build(0, n-1,0, n-1, 1)){
+							print();
+							return 0;
+						}
+
+						puts("NO");
+						return 0;
+					} 
 				r2.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int pre[N], in[N], post[N], cnt;
+					int n;
+
+					int findl(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r-l)/2;
+					        if(a <= in[mid]) r = mid;
+					        else l = mid + 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					int findr(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r-l)/2 + 1;
+					        if(in[mid] >= a) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					void print(){
+					    puts("YES");
+					    cout << post[0];
+					    for(int i = 1; i < n; i++) cout << " " << post[i];
+					    cout << endl;
+					    return ;
+					}
+
+					bool build(int il, int ir, int pl, int pr, int type){
+					    if(il > ir) return true;
+					    
+					    int root = pre[pl];
+					    int k;
+					    if(type == 0) k = findl(root, il, ir);
+					    else k = findr(root, il, ir);
+					    if(k == -1) return false;
+					    
+					    bool res = true;
+					    if(!build(il, k-1, pl+1, pl+1+(k-1-il), type)) res = false;
+					    if(!build(k+1, ir, pl+1+(k-il), pr, type)) res = false;
+					    post[cnt++] = root;
+					    return res;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        in[i] = pre[i];
+					    }
+					    
+					    sort(in, in + n);
+					    if(build(0, n-1, 0, n-1, 0)){
+					        print();
+					        return 0;
+					    }
+					    
+					    reverse(in, in + n);
+					    cnt = 0;
+					    if(build(0, n-1, 0, n-1, 1)){
+					        print();
+					        return 0;
+					    }
+					    
+					    puts("NO");
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int pre[N], in[N], post[N], cnt;
+					int n;
+
+					int findl(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r-l)/2;
+					        if(a <= in[mid]) r = mid;
+					        else l = mid +1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					int findr(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r-l) / 2 + 1;
+					        if(in[mid] >= a) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					void print(){
+					    puts("YES");
+					    cout << post[0];
+					    for(int i = 1; i < n; i++) cout << ' ' << post[i];
+					    cout << endl;
+					    return;
+					}
+
+					bool build(int il, int ir, int pl, int pr, int type){
+					    if(il > ir) return true;
+					    int root = pre[pl];
+					    int k;
+					    if(!type) k = findl(root, il, ir);
+					    else k = findr(root, il, ir);
+					    if(k == -1) return false;
+					    
+					    bool res = true;
+					    if(!build(il, k - 1, pl + 1, pl + 1 + ( k - 1 - il), type)) res = false;
+					    if(!build(k + 1, ir, pl + 1 + ( k - il), pr, type)) res = false;
+					    post[cnt++] = root;
+					    
+					    return res;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        in[i] = pre[i];
+					    }
+					    
+					    sort(in, in + n);
+					    if(build(0, n - 1, 0, n - 1, 0)){
+					        print();
+					        return 0;
+					    }
+					    
+					    reverse(in, in + n);
+					    cnt = 0;
+					    if(build(0, n - 1, 0 , n - 1, 1)){
+					        print();
+					        return 0;
+					    }
+					    
+					    puts("NO");
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int pre[N], in[N], post[N], cnt;
+					int n;
+
+					int findl(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r-l)/2;
+					        if(a <= in[mid]) r = mid;
+					        else l = mid + 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					int findr(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l +(r-l)/ 2 + 1;
+					        if(in[mid] >= a) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					void print(){
+					    puts("YES");
+					    cout << post[0];
+					    for(int i = 1; i < n; i++) cout << " " << post[i];
+					    cout << endl;
+					    return;
+					}
+
+					bool build(int il, int ir, int pl, int pr, int type){
+					    if(il > ir) return true;
+					    
+					    int root = pre[pl];
+					    int k;
+					    if(!type) k = findl(root, il, ir);
+					    else k = findr(root, il, ir);
+					    if(k == -1) return false;
+					    
+					    bool res = true;
+					    if(!build(il, k-1, pl + 1, pl + 1 + (k - 1 - il), type)) res = false;
+					    if(!build( k + 1, ir, pl + 1 + (k - il), pr, type)) res = false;
+					    post[cnt++] = root;
+					    
+					    return res;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        in[i] = pre[i];
+					    }
+					    
+					    sort(in, in + n);
+					    if(build(0, n - 1, 0, n - 1, 0)){
+					        print();
+					        return 0;
+					    }
+					    
+					    reverse(in, in + n);
+					    cnt = 0;
+					    if(build(0, n - 1, 0, n - 1, 1)){
+					        print();
+					        return 0;
+					    }
+					    
+					    puts("NO");
+					    return 0;
+					}
 				r5.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+
+					const int N = 1010;
+					int pre[N], in[N], post[N], cnt;
+					int n;
+
+					int findl(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + ( r- l) /2;
+					        if(a <= in[mid]) r = mid;
+					        else l = mid + 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					int findr(int a, int il, int ir){
+					    int l = il, r = ir;
+					    while(l < r){
+					        int mid = l + (r- l) /2 + 1;
+					        if(in[mid] >= a) l = mid;
+					        else r = mid - 1;
+					    }
+					    if(in[r] == a) return r;
+					    return -1;
+					}
+
+					void print(){
+					    puts("YES");
+					    cout << post[0];
+					    for(int i = 1; i < n; i++) cout << " " << post[i];
+					    cout << endl;
+					    return;
+					}
+
+					bool build(int il, int ir, int pl, int pr, int type){
+					    if(il > ir) return true;
+					    
+					    int root = pre[pl];
+					    int k;
+					    if(!type) k = findl(root, il, ir);
+					    else k =  findr(root, il, ir);
+					    if(k == -1) return false;
+					    
+					    bool res = true;
+					    if(!build(il, k - 1, pl + 1, pl + 1 + (k - 1 - il), type)) res = false;
+					    if(!build(k + 1, ir, pl + 1 + ( k - il), pr, type)) res = false;
+					    post[cnt++] = root;
+					    
+					    return res;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        in[i] = pre[i];
+					    }
+					    
+					    sort(in, in + n);
+					    if(build(0, n - 1, 0, n - 1, 0)){
+					        print();
+					        return 0;
+					    }
+					    
+					    reverse(in, in + n);
+					    cnt = 0;
+					    if(build(0, n - 1, 0, n - 1, 1)){
+					        print();
+					        return 0;
+					    }
+					    
+					    puts("NO");
+					    return 0;
+					}
 
 		49. 1550. 完全二叉搜索树	1064
 			0. bug
+				1.我们填充的时候, 是tree[u] = in[k++]. 我错写成了tree[k++] = in[u]. 我写的时候a[]代表in[], b[]代表tree[]
+					u指的是 递归时候的当前根节点的编号,  k指的是,该用中序遍历的第k个数字了
+				2. 完全二叉树,可以从ind == 1开始, 但是中序遍历的值, 可以从in的 ind == 0开始, 所以k也是从0开始, 输出也是从cin >> in[0]开始
 			1. 笔记
+				0. 
+					1.dfs()遍历左右子树:
+						之前的做法是:
+							dfs(自己){
+								if(有左子) dfs(左子)
+								func(自己): 可以是打印自己, 或者像这道题一样, 把一个数字放入自己
+								if(有右子) dfs(右子)
+							}
+						以前表示左右使用l[xx], r[xx]. 这里用的是 完全二叉树的 u*2, u*2+1
+					2. 完全二叉树的一个性质:
+						从0开始打印, 相当于是层序遍历
 				1.
 					思考:
 						1. 瓶颈是sort() nlogn
@@ -14550,6 +15357,7 @@
 							1. 左子: n*2
 							2. 右子: n*2+1
 							3. 父亲: n/2(向下取整: 3/2 == 1)
+							4. 最后一个非叶子节点: n / 2
 				2. 
 					1. 排好序 -> 二叉搜索树的中序遍历
 					2. 按顺序填进去 -> 完全二叉树, 也就是left = x * 2, right = x * 2 + 1;
@@ -14597,41 +15405,187 @@
 				2. b
 			3. 5次
 				r1.
-				r2.
-				r3.
-				r4.
-				r5.
-			
+					#include <iostream>
+					#include <algorithm>
 
+					using namespace std;
+
+					const int N = 1010;
+					int a[N], b[N];
+					int n;
+					int k;
+
+					void dfs(int u){
+						int l = u * 2, r = l + 1;
+						if(l <= n) dfs(l);
+						b[u] = a[k++]; //b[k++] = a[u];
+						if(r <= n) dfs(r);
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 0; i < n; i++) cin >> a[i];
+						sort(a, a + n);
+
+						dfs(1);
+
+						cout << b[1];
+						for(int i = 2; i <= n; i++) cout << " " << b[i];
+						cout << endl;
+						return 0;
+					}
+				r2.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int a[N], b[N];
+					int n;
+					int k;
+
+					void dfs(int u){
+					    int l = u * 2, r = l + 1;
+					    if(l <= n) dfs(l);
+					    b[u] = a[k++];
+					    if(r <= n) dfs(r);
+					}
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    
+					    sort(a, a + n);
+					    dfs(1);
+					    
+					    cout << b[1];
+					    for(int i = 2; i <= n; i ++) cout << " " << b[i];
+					    cout << endl;
+					    return 0;
+					}
+				r3.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int a[N], b[N];
+					int n, k;
+
+					void dfs(int u){
+					    int l = u * 2, r = l + 1;
+					    if(l <= n) dfs(l);
+					    b[u] = a[k++];
+					    if(r <= n) dfs(r);
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    
+					    sort(a, a + n);
+					    dfs(1);
+					    
+					    cout << b[1];
+					    for(int i = 2; i<= n; i++) cout << " " << b[i];
+					    cout << endl;
+					    return 0;
+					}
+				r4.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int a[N], b[N];
+					int n, k;
+
+					void dfs(int u){
+					    int l = u * 2, r = l + 1;
+					    if(l <= n) dfs(l);
+					    b[u] = a[k++];
+					    if(r <= n) dfs(r);
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    sort(a, a + n);
+					    dfs(1);
+					    cout << b[1];
+					    for(int i = 2; i <= n; i++) cout << " " << b[i];
+					    cout << endl;
+					    return 0;
+					}
+				r5.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int a[N], b[N];
+					int n, k;
+
+					void dfs(int u){
+					    int l = u * 2, r = l + 1;
+					    if(l <= n) dfs(l);
+					    b[u] = a[k++];
+					    if(r <= n) dfs(r);
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> a[i];
+					    sort(a, a + n);
+					    dfs(1);
+					    cout << b[1];
+					    for(int i = 2; i <= n; i++) cout << ' ' << b[i];
+					    cout << endl;
+					    return 0;
+					}
+			
 		50. 1576. 再次树遍历	1086
 			0. bug
+				1.输入的时候出错了, 因为pop是没有接数字的
+					我错在了直接写: cin >> type >> node;
+					应该先判断type是不是push, 然后再cin >> node
 			1. 笔记
-				0. 思路:
-					1. 方法一
-						1. 第一个进入的一定是根节点
-						2. 遇到一个a是push, 
-							如果上一个b也是push,则a是b的左孩子
-							如果上一个b是pop,则a是b的右孩子
-					2. 方法二
-						1. 如果是push进去的,就是先序遍历
-						2. 如果是pop出来的,就是中序遍历
+				0. 我的方法和老师的完全不同:
+					方法一: 在build()里面填充l, r. 之后dfs()
+						我是先将pre[]和in[]填充好, 然后build(), build()的过程中每个节点的l,r都会记录下来
+						之后用dfs()进行后序遍历,将结果存入res,最后输出res,也就是后序遍历
+					方法二: 直接在build()里面后序遍历填充
+						注意一定要有终止条件 if(il > ir) return;
+				1.
+					0. 思路:
+						1. 方法一
+							1. 第一个进入的一定是根节点
+							2. 遇到一个a是push, 
+								如果上一个b也是push,则a是b的左孩子
+								如果上一个b是pop,则a是b的右孩子
+						2. 方法二
+							1. 如果是push进去的,就是先序遍历
+							2. 如果是pop出来的,就是中序遍历
 
-					1. type == 0是push
-					2. 如果不是根节点,就加空格
-					3. 老师也是使用了stack,来知道最后一个元素是什么. 但是如何判断last是push还是pop呢?
-				1. 规律:
-					当前是push[a]
-						如果上一个是push[b], 那么b的左子就是a :l[b] = a;
-						如果上一个是pop(), pop掉的元素的b, 那么b的右子就是a : r[b] = a
-					当前是pop, pop掉的是a
-						那么记录下, 这次是pop, pop的是a, 供下一次push使用
-				2. 规律:
-					push()是前序遍历
-					pop()是中序遍历
-					举例: push(1); push(2); push(3); pop(); pop(); push(4); pop(); pop(); push(5); push(6); pop(); pop()。
-						前序: 1,2,3,4,5,6
-						中序: 3,2,4,1,6,5
-						是真的也!
+						1. type == 0是push
+						2. 如果不是根节点,就加空格
+						3. 老师也是使用了stack,来知道最后一个元素是什么. 但是如何判断last是push还是pop呢?
+					1. 规律:
+						当前是push[a]
+							如果上一个是push[b], 那么b的左子就是a :l[b] = a;
+							如果上一个是pop(), pop掉的元素的b, 那么b的右子就是a : r[b] = a
+						当前是pop, pop掉的是a
+							那么记录下, 这次是pop, pop的是a, 供下一次push使用
+					2. 规律:
+						push()是前序遍历
+						pop()是中序遍历
+						举例: push(1); push(2); push(3); pop(); pop(); push(4); pop(); pop(); push(5); push(6); pop(); pop()。
+							前序: 1,2,3,4,5,6
+							中序: 3,2,4,1,6,5
+							是真的也!
 			2. 注释
 				1. y
 					#include <iostream>
@@ -14696,14 +15650,360 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
 			3. 5次
-				r1.
-				r2.
-				r3.
-				r4.
-				r5.
+				r1. 方法一: 在build()里面填充l, r. 之后dfs()
+					#include <iostream>
+					#include <stack>
+					#include <unordered_map>
+					#include <vector>
 
+					using namespace std;
+
+					const int N = 100;
+
+					int pre[N], in[N];
+					unordered_map<int, int> l, r, pos;
+					stack<int>  stk;
+					vector<int> res;
+					int n;
+
+					int build(int il, int ir, int pl, int pr){
+						int root = pre[pl];
+						int k = pos[root];
+						if(il < k) l[root] = build(il, k-1, pl+1, pl+1+(k-1-il));
+						if(k < ir) r[root] = build(k+1, ir, pl+1+(k-il), pr);
+						return root;
+					}
+
+					void dfs(int a){
+						if(l.count(a)) dfs(l[a]);
+						if(r.count(a)) dfs(r[a]);
+						res.push_back(a);
+					}
+
+					void print(){
+						cout << res[0];
+						for(int i = 1; i < n; i++) cout << " " << res[i];
+						cout << endl;
+						return;
+					}
+
+					int main(){
+						cin >> n;
+
+						int pi = 0;
+						int ii = 0;
+						for(int i = 0; i < 2*n; i++){
+							char type[10];
+							int node;
+							cin >> type;
+							if(type[1] == 'u'){
+							    cin >> node;
+								stk.push(node);
+								pre[pi++] = node;
+							}
+							else{
+								int top = stk.top();
+								stk.pop();
+								in[ii] = top;
+								pos[top] = ii++;
+							}
+							
+						}
+
+						int root = build(0, n-1, 0, n-1);
+						dfs(root);
+						print();
+						return 0;
+					}
+				r2. 方法二: 直接在build()里面后序遍历填充
+					#include <iostream>
+					#include <stack>
+					#include <unordered_map>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 100;
+
+					int pre[N], in[N];
+					unordered_map<int, int> l, r, pos;
+					stack<int>  stk;
+					vector<int> post;
+					int n;
+
+					void build(int il, int ir, int pl, int pr){
+					    if(il > ir) return;
+						int root = pre[pl];
+						int k = pos[root];
+						build(il, k-1, pl+1, pl+1+(k-1-il));
+						build(k+1, ir, pl+1+(k-il), pr);
+						post.push_back(root);
+					}
+
+					void print(){
+						cout << post[0];
+						for(int i = 1; i < n; i++) cout << " " << post[i];
+						cout << endl;
+						return;
+					}
+
+					int main(){
+						cin >> n;
+
+						int pi = 0;
+						int ii = 0;
+						for(int i = 0; i < 2*n; i++){
+							char type[10];
+							int node;
+							cin >> type;
+							if(type[1] == 'u'){
+							    cin >> node;
+								stk.push(node);
+								pre[pi++] = node;
+							}
+							else{
+								int top = stk.top();
+								stk.pop();
+								in[ii] = top;
+								pos[top] = ii++;
+							}
+							
+						}
+
+						build(0, n-1, 0, n-1);
+						print();
+						return 0;
+					}
+				r3. 一:
+					#include <iostream>
+					#include <vector>
+					#include <unordered_map>
+					#include <stack>
+
+					using namespace std;
+
+					const int N = 40;
+
+					int cnt;
+					vector<int> pre, in, post;
+					unordered_map<int, int> pos;
+					stack<int> stk;
+					int n;
+
+					void build(int il, int ir, int pl, int pr){
+					    if(il > ir) return;
+					    int root = pre[pl];
+					    int k = pos[root];
+					    if(il < k) build(il, k-1, pl+1, pl+1+(k-1-il));
+					    if(k < ir) build(k+1, ir, pl+1+(k-il), pr);
+					    post.push_back(root);
+					}
+
+
+					int main(){
+					    cin >> n;
+					    int ii = 0;
+					    for(int i = 0; i < 2 * n ; i++){
+					        char type[10];
+					        int node;
+					        cin >> type;
+					        
+					        if(type[1] == 'u'){
+					            cin >> node;
+					            stk.push(node);
+					            pre.push_back(node);
+					        }else{
+					            int top = stk.top();
+					            stk.pop();
+					            in.push_back(top);
+					            pos[top] = ii++;
+					        }
+					    }
+					    
+					    build(0, n-1, 0, n-1);
+					    
+					    cout << post[0];
+					    for(int i = 1; i < n; i++) cout << " " << post[i];
+					    cout << endl;
+					    
+					    return 0;
+					}
+				r4. 一:
+					#include <iostream>
+					#include <vector>
+					#include <unordered_map>
+					#include <stack>
+
+					using namespace std;
+
+					vector<int> pre, in, post;
+					stack<int> stk;
+					unordered_map<int, int> pos;
+					int n;
+
+					void build(int il, int ir, int pl, int pr){
+					    if(il > ir) return;
+					    int root = pre[pl];
+					    int k = pos[root];
+					    if(il < k) build(il, k-1, pl+1, pl+1+(k-1-il));
+					    if(k < ir) build(k+1, ir, pl+1+(k-il), pr);
+					    post.push_back(root);
+					}
+
+					int main(){
+					    cin >> n;
+					    
+					    int ii = 0;
+					    for(int i = 0; i < 2 * n; i++){
+					        char type[10];
+					        cin >> type;
+					        if(type[1] == 'u'){
+					            int node;
+					            cin >> node;
+					            pre.push_back(node);
+					            stk.push(node);
+					        }else{
+					            int top = stk.top();
+					            stk.pop();
+					            in.push_back(top);
+					            pos[top] = ii++;
+					        }
+					    }
+					    
+					    build(0, n-1, 0, n-1);
+					    
+					    cout <<post[0];
+					    for(int i = 1; i < n; i++) cout << " " << post[i];
+					    cout << endl;
+					    return 0;
+					}
+				r5. 二:
+					#include <iostream>
+					#include <vector>
+					#include <unordered_map>
+					#include <stack>
+
+					using namespace std;
+
+					vector<int> pre, in, post;
+					unordered_map<int, int> l, r, pos;
+					stack<int> stk;
+					int n;
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = pre[pl];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl+1, pl+1+(k-1-pl));
+					    if(k < ir) r[root] = build(k+1, ir, pl+1+(k-il), pr);
+					    return root;
+					}
+
+					void dfs(int a){
+					    if(l.count(a)) dfs(l[a]);
+					    if(r.count(a)) dfs(r[a]);
+					    post.push_back(a);
+					}
+
+					int main(){
+					    cin >> n;
+					    int ii = 0;
+					    for(int i = 0; i < 2 * n; i++){
+					        char type[10];
+					        cin >> type;
+					        if(type[1] == 'u'){
+					            int node;
+					            cin >> node;
+					            pre.push_back(node);
+					            stk.push(node);
+					        }else{
+					            int top = stk.top();
+					            stk.pop();
+					            in.push_back(top);
+					            pos[top] = ii++;
+					        }
+					    }
+					    
+					    int root = build(0, n-1, 0, n-1);
+					    dfs(root);
+					    cout << post[0];
+					    for(int i = 1; i < n; i++) cout << " " << post[i];
+					    cout << endl;
+					    return 0;
+					}
+				r6: 二:
+					#include <iostream>
+					#include <vector>
+					#include <unordered_map>
+					#include <stack>
+
+					using namespace std;
+
+					vector<int> pre, in, post;
+					unordered_map<int, int> l, r, pos;
+					stack<int> stk;
+					int n;
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = pre[pl];
+					    int k = pos[root];
+					    if(il <k) l[root] = build(il, k-1, pl+1, pl+1+(k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl+1+(k-il), pr);
+					    return root;
+					}
+
+					void dfs(int a){
+					    if(l.count(a)) dfs(l[a]);
+					    if(r.count(a)) dfs(r[a]);
+					    post.push_back(a);
+					}
+
+					int main(){
+					    cin >> n;
+					    
+					    int ii = 0;
+					    for(int i = 0; i < 2 * n; i++){
+					        char t[10];
+					        cin >> t;
+					        if(t[1] == 'u'){
+					            int node;
+					            cin >> node;
+					            pre.push_back(node);
+					            stk.push(node);
+					        }else{
+					            int top = stk.top();
+					            stk.pop();
+					            in.push_back(top);
+					            pos[top] = ii++;
+					        }
+					    }
+					    
+					    int root = build(0, n-1, 0, n-1);
+					    dfs(root);
+					    cout << post[0];
+					    for(int i = 1; i < n; i++) cout << " " << post[i];
+					    cout << endl;
+					    return 0;
+					}
+		
 		51. 1589. 构建二叉搜索树	1099
 			0. bug
+				1. 
+					不能写成:
+						for(int i = 0; i < n; i++){
+							cin >> a >> b;
+							l[i] = a;
+							r[i] = b;
+						}
+					而应该是:
+						for(int i = 0; i < n; i++){
+							cin >> a >> b;
+							
+							if(a != -1) l[i] = a;
+							if(b != -1) r[i] = b;
+						}
+
+					或者用老师的方法也是可以的, 老师直接用了 int l[N], int r[N], 而不是我的unordered_map<int,int> 
+				2. 虽然输出是层序遍历, 但是填入的时候是中序遍历, 所以用到了dfs和bfs
 			1. 笔记
 				思路:
 					1. 同样也是,排序好了之后,填进去
@@ -14768,11 +16068,310 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
 			3. 5次
-				r1.
-				r2.
-				r3.
-				r4.
-				r5.
+				r1. 方法一: 用<unordered_map> 存l, r
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					unordered_map<int, int> l, r;
+					int temp[N];
+					int n;
+					int q[N], res[N];
+					int cnt;
+
+					void dfs(int root){
+					    if(l.count(root)) dfs(l[root]);
+					    res[root] = temp[cnt++];
+					    if(r.count(root)) dfs(r[root]);
+					}
+
+					void bfs(int root){
+						q[0] = root;
+						int h, t;
+						h = t = 0;
+						while(h <= t){
+							int top = q[h++];
+							if(l.count(top)) q[++t] = l[top];
+							if(r.count(top)) q[++t] = r[top];
+						}
+						cout << res[q[0]];
+						for(int i = 1; i < h; i++) cout << " " << res[q[i]];
+						cout << endl;
+					}
+
+					int main(){
+						cin >> n;
+						int a, b;
+						for(int i = 0; i < n; i++){
+							cin >> a >> b;
+							if(a != -1) l[i] = a;
+							if(b != -1) r[i] = b;
+						}
+						for(int i = 0 ; i < n; i++) cin >> temp[i];
+						sort(temp, temp + n);
+
+					    dfs(0);
+						bfs(0);
+
+						return 0;
+
+
+					}
+				r2. 一:
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					unordered_map<int, int> l, r;
+					int nums[N];
+					int res[N];
+					int q[N];
+					int n;
+					int cnt;
+
+					void dfs(int a){
+					    if(l.count(a)) dfs(l[a]);
+					    res[a] = nums[cnt++];
+					    if(r.count(a)) dfs(r[a]);
+					}
+
+					void bfs(int a){
+					    q[0] = a;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while( hh <= tt){
+					        int top = q[hh++];
+					        if(l.count(top)) q[++tt] = l[top];
+					        if(r.count(top)) q[++tt] = r[top];
+					    }
+					    cout << res[q[0]];
+					    for(int i = 1; i < hh; i++) cout << " " << res[q[i]];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        if(a != -1) l[i] = a;
+					        if(b != -1) r[i] = b;
+					    }
+					    
+					    for(int i = 0; i <n; i++) cin >> nums[i];
+					    sort(nums, nums + n);
+					    
+					    dfs(0);
+					    bfs(0);
+					    
+					    return 0;
+					}
+				r3. 一:
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					unordered_map<int, int> l, r;
+					int nums[N], cnt;
+					int res[N];
+					int q[N];
+					int n;
+
+					void dfs(int a){
+					    if(l.count(a)) dfs(l[a]);
+					    res[a] = nums[cnt++];
+					    if(r.count(a)) dfs(r[a]);
+					}
+
+					void bfs(int a){
+					    q[0] = a;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while(hh <= tt){
+					        int top = q[hh++];
+					        if(l.count(top)) q[++tt] = l[top];
+					        if(r.count(top)) q[++tt] = r[top];
+					    }
+					    cout << res[q[0]];
+					    for(int i = 1; i < hh; i ++) cout << " " << res[q[i]];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        if(a != -1) l[i] = a;
+					        if(b != -1) r[i] = b;
+					    }
+					    for(int i = 0; i < n; i++) cin >> nums[i];
+					    sort(nums, nums + n);
+					    
+					    dfs(0);
+					    bfs(0);
+					    
+					    return 0;
+					}
+				r4. 一:
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					unordered_map<int, int> l, r;
+					int nums[N], cnt;
+					int res[N];
+					int q[N];
+					int n;
+
+					void dfs(int a){
+					    if(l.count(a)) dfs(l[a]);
+					    res[a] = nums[cnt++];
+					    if(r.count(a)) dfs(r[a]);
+					}
+
+					void bfs(int a){
+					    q[0] = a;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while(hh <= tt){
+					        int top = q[hh++];
+					        if(l.count(top)) q[++tt] = l[top];
+					        if(r.count(top)) q[++tt] = r[top];
+					    }
+					    cout << res[q[0]];
+					    for(int i = 1; i < hh; i++) cout << " " << res[q[i]];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i< n; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        if(a != -1) l[i] = a;
+					        if(b != -1) r[i] = b;
+					    }
+					    for(int i = 0; i<n; i++) cin >> nums[i];
+					    sort(nums, nums +n);
+					    
+					    dfs(0);
+					    bfs(0);
+					    return 0;
+					}
+				r5. 二:
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int l[N], r[N];
+					int nums[N], cnt;
+					int res[N];
+					int q[N];
+					int n;
+
+					void dfs(int a){
+					    if(l[a] != -1) dfs(l[a]);
+					    res[a] = nums[cnt++];
+					    if(r[a] != -1) dfs(r[a]);
+					}
+
+					void bfs(int a){
+					    q[0] = a;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while(hh <= tt){
+					        int top = q[hh++];
+					        if(l[top] != -1) q[++tt] = l[top];
+					        if(r[top] != -1) q[++tt] = r[top];
+					    }
+					    cout << res[q[0]];
+					    for(int i = 1; i < hh; i++) cout << " " << res[q[i]];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        l[i] = a, r[i] = b;
+					    }
+					    for(int i = 0; i < n; i++) cin >> nums[i];
+					    sort(nums, nums + n);
+					    
+					    dfs(0);
+					    bfs(0);
+					    return 0;
+					    
+					}
+				r6: 一:
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int l[N], r[N];
+					int nums[N], cnt;
+					int res[N];
+					int q[N];
+					int n;
+
+					void dfs(int a){
+					    if(l[a] != -1) dfs(l[a]);
+					    res[a] = nums[cnt++];
+					    if(r[a] != -1) dfs(r[a]);
+					}
+
+					void bfs(int a){
+					    q[0] = a;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while(hh <= tt){
+					        int top = q[hh++];
+					        if(l[top] != -1) q[++tt] = l[top];
+					        if(r[top] != -1) q[++tt] = r[top];
+					    }
+					    cout << res[q[0]];
+					    for(int i = 1; i < hh; i++) cout << " " <<res[q[i]];
+					    cout << endl;
+					}
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i <n; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        l[i] = a, r[i] = b;
+					    }
+					    for(int i = 0; i < n; i++) cin >>nums[i];
+					    sort(nums, nums + n);
+					    
+					    dfs(0);
+					    bfs(0);
+					    
+					    return 0;
+					}
 
 		52. 1592. 反转二叉树	1102
 			0. bug
@@ -14784,7 +16383,6 @@
 					4. 老师是用后序遍历来翻转,用其他可否?
 					5. 中序遍历, 因为不能输出最后一个空格, 老师用了一个输出多少个来判断是否是最后一个数.
 					6. 层序遍历就没有, 因为层序遍历不是用递归, 而是用queue
-
 
 			2. 注释
 				1. y
@@ -14950,6 +16548,8 @@
 		54. 1605. 二叉搜索树最后两层结点数量	1115
 			0. bug
 			1. 笔记
+				0.
+					1. 编号从1开始, 因为0有特殊含义: 空节点
 				1. 题目没有给编号,所以我们用ind来设置编号
 				2. 如果某个节点是0,意味着空的,我们传入&u是因为想改变它的值.
 					void insert(int& u, int w) 好厉害!
@@ -15046,6 +16646,10 @@
 					7. 注意build的里面: 
 						左子树中, preorder是不包括第一个点(因为是根节点).
 						右子树中, postorder是不包括最后一个点(因为是根节点).
+
+				2.
+					1. 这道题并没有用bool
+						用int, 即可以当成是bool: lcnt && rcnt, 又可以计算出合法子树的数量
 			2. 注释
 				1. y
 					#include <iostream>
@@ -15059,8 +16663,8 @@
 
 					int dfs(int l1, int r1, int l2, int r2, string& in)
 					{
-					    if (l1 > r1) return 1;
-					    if (pre[l1] != post[r2]) return 0;
+					    if (l1 > r1) return 1; 空树一定是1个合法方案
+					    if (pre[l1] != post[r2]) return 0; 说明这个已经不合法了
 
 					    int cnt = 0;
 					    for (int i = l1; i <= r1; i ++ )  // 枚举左子树包含的节点数量
@@ -15069,10 +16673,10 @@
 					        int lcnt = dfs(l1 + 1, i, l2, l2 + i - l1 - 1, lin);
 					        int rcnt = dfs(i + 1, r1, l2 + i - l1 - 1 + 1, r2 - 1, rin);
 
-					        if (lcnt && rcnt)
+					        if (lcnt && rcnt) 说明左右子树都是合法的, 那么我也是合法的
 					        {
-					            in = lin + to_string(pre[l1]) + ' ' + rin;
-					            cnt += lcnt * rcnt;
+					            in = lin + to_string(pre[l1]) + ' ' + rin; 
+					            cnt += lcnt * rcnt; 因为我们是暴力枚举 for (int i = l1; i <= r1; i ++ ) , 所以cnt可能会变成2,3..
 					            if (cnt > 1) break;
 					        }
 					    }
@@ -15087,9 +16691,9 @@
 					    for (int i = 0; i < n; i ++ ) cin >> post[i];
 
 					    string in;    
-					    int cnt = dfs(0, n - 1, 0, n - 1, in);
+					    int cnt = dfs(0, n - 1, 0, n - 1, in); 当前节点有多少个合法的二叉树
 
-					    if (cnt > 1) puts("No");
+					    if (cnt > 1) puts("No"); 说明答案不唯一
 					    else puts("Yes");
 
 					    in.pop_back();
@@ -15334,6 +16938,12 @@
 					}
 
 
+						x 					  y
+					   / \					/  \
+					  y   a			       c    x
+					 /\      			       / \ 
+					c  b      变成             b  a
+
 					void R(int& u) 右旋u, 注意要传引用
 					{
 					    int p = l[u]; 找到u的左子p
@@ -15341,6 +16951,12 @@
 					    update(u), update(p); 注意现在u在下面,所以先更新u的高度,才能更新p的高度
 					    u = p; 最后u的位置由p代替
 					}
+
+						x 					 y
+					   / \					/ \
+					  a   y 			   x    c
+					     / \			  / \  
+					    b    c  变成      a  b
 
 					void L(int& u) 
 					{
@@ -15364,7 +16980,7 @@
 					        if (get_balance(u) == 2) 左边长, 说明有两种情况: /   或者   /
 					        {											  /           \
 					            if (get_balance(l[u]) == 1) R(u); 左边长, 说明是第1种情况
-					            else L(l[u]), R(u); 右边长, 说明是第2种情况
+					            else L(l[u]), R(u); 右边长, 说明是第2种情况, 就是把下面的 \ 向左侧旋转, 变成? , 然后就是第一种情况了 
 					        }
 					    }
 					    else
@@ -15373,7 +16989,7 @@
 					        if (get_balance(u) == -2)左边长, 说明有两种情况: \   或者   \
 					        {											  	\         /
 					            if (get_balance(r[u]) == -1) L(u); 右边长, 说明是第1种情况
-					            else R(r[u]), L(u); 左边长, 说明是第2种情况
+					            else R(r[u]), L(u); 左边长, 说明是第2种情况, 就是把下面的/ 向右侧旋转, 变成\, 然后就是第一种情况了 
 					        }
 					    }
 
@@ -15631,12 +17247,36 @@
 				r4.
 				r5.
 
-		60. 1628. 判断红黑树	1135
+		60. 1628. 判断红黑树	1135  ***** 
 			0. bug
 				1.  left和right不赋初值0就会错呢
 					考虑到有k个测试案例，如果left与right不附初值0
 					那么当左子树或右子树为空不向下递归时则left与right没有更新，是之前测试案例的值
 			1. 笔记
+				0. 
+					1. build() 包含了两种信息: 两个儿子的颜色, 两个儿子(两个路径)的黑色节点数量
+						1. 两个儿子的颜色: 也就是用left 和 right传回来的, 如果父亲是红色, 此时如果l,r有一个是红色, 那么就是false, 不是红黑树 
+							if(root < 0 ) if (left < 0 || right < 0) ans = false;
+						2. 两个儿子(两个路径)的黑色节点:
+							if (ls != rs) ans = false; 只要tree的最下面递归回来的时候有两个路径的黑色节点数目不一样, 就是false
+						    sum = ls;
+						    更新黑色节点的高度: if(root > 0) sum++;
+					2. build()和以前一样, 是满足几个条件的:
+						1. 递归到底:
+							因为最底层的情况是 null, 也就是相当于跳过了两个build(), 直接走到最后一句 return root. 并且已经有一个sum++;
+						2. 判断自己:
+							if (k < il || k > ir) res = false;
+						3. 看两个儿子:
+							1. 两个儿子的颜色
+								if(root < 0 ) if (left < 0 || right < 0) ans = false;
+							2. 两个儿子(两个路径)的黑色节点:
+								if (ls != rs) ans = false; 只要tree的最下面递归回来的时候有两个路径的黑色节点数目不一样, 就是false
+
+						4. 将自己的信息传给父亲:
+							sum = ls;
+							if(root > 0) sum++; 自己是黑色, 黑色数量 + 1
+							return root;
+
 				1. 
 					1. 需要判断的东西:
 					1. 根节点是黑色(最后判断)
@@ -15748,7 +17388,7 @@
 					    	但是如果 k == il 是合法的, 只不过没有左子树, 或者 k == ir也是合法的, 只不过没有右子树
 					    {
 					        ans = false; 全局变量变成false,说明不能构建红黑树
-					        return 0; 根节点是0, 表示是黑色
+					        return 0; 老师说, 随便return一个值就可以. 因为反正都是false了, 也没有必要在 返回一个宏结点或者嘿节点去 继续判断什么了. 
 					    }
 
 					    int left = 0, right = 0; 左右子,设置成0, 0代表着黑色. 红黑树默认是黑色,如果需要染色,染成红色[叶子结点的底下是null节点,也是黑色节点]
@@ -15761,7 +17401,7 @@
 					    此时ls == rs == 0. 
 
 					    if (ls != rs) ans = false;
-					    sum = ls; 相等就说明,叶子节点经过的黑色数目是0.
+					    sum = ls; 相等就说明,叶子节点经过的黑色数目是sum.
 
 					    if (root < 0) (如果是第一次走到这里,说明root就是叶子节点) root节点 < 0说明是红色
 					    {
@@ -15812,6 +17452,25 @@
 		61. 1539. 等重路径	1053
 			0. bug
 			1. 笔记
+				0. 
+					1. 考察了 dfs() 来搜索每一个从根到叶子的路径
+						其中是先从 最开始的时候, 传入根节点的信息: 权值, 和path
+					2. dfs() 一个很重要的性质: 恢复现场
+						终止条件是:
+							if (is_leaf)
+						    {
+						        if (s == S) ans.push_back(path);
+						    }
+						因为for (int i = 0; i < n; i ++ )
+				            if (g[u][i])
+				            {
+				                path.push_back(w[i]); 
+				                dfs(i, s + w[i], path);
+				                path.pop_back();
+				            }
+				        你看这个for()循环, 当你自己的节点要去儿子节点的时候, 首先把这个儿子节点的信息给他备好: 儿子的权重: s + w[i], 儿子的path: path.push_back(w[i]); 
+				        	如果这个儿子, 是叶子节点, 遇到终止条件就会return会自己节点
+				        然后你在去你下一个儿子的节点,也就是for()的下一个,所以你要把你当前儿子的信息给pop掉, 给新儿子准备信息
 				1. 
 					1. 用邻接矩阵存,而不是邻接表
 					2. pat很要求stl的使用,例如这道题需要使用vector<>的比较,你不需要自己实现小于号,很方便
