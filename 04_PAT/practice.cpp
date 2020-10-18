@@ -16373,15 +16373,59 @@
 					    return 0;
 					}
 
+	12. 2020年10月18日14:19:51
+	
 		52. 1592. 反转二叉树	1102
 			0. bug
+				1.题目没有说谁是根节点, 你不能默认0是root
+					计算谁是root: 
+						首先hf[] = true
+							if (a != '-') l[i] = a - '0', has_father[l[i]] = true;
+						其次找没有father的节点
+							int root = 0;
+							while (has_father[root]) root ++ ;
+				2. 传引用的时候, 一定是传变量, 而不是常数:
+					例如void xx(int &a);
+					要写成:
+						int i = 0;
+						xx(i);
+					而不能写成:
+						xx(0)
+				3. dfs()
+					两种方式终止:
+						1.
+							void dfs_r(int u){
+								if(l[u] != -1) dfs_r(l[u]);
+								if(r[u] != -1) dfs_r(r[u]);
+								swap(l[u], r[u]);
+							}
+						2. 
+							void dfs_reverse(int u)
+							{
+							    if (u == -1) return;
+							    dfs_reverse(l[u]);
+							    dfs_reverse(r[u]);
+							    swap(l[u], r[u]);
+							}
+
 			1. 笔记
 				思路:
-					1. 直接所有节点的左右儿子反过来
+					1. 从最底部开始, 所有节点的左右儿子反过来. 因为是最底部开始, 所以是后序遍历翻转. 就像是删除一个树, 是后序遍历先把左右子树删除, 最后删除自己
 					2. 用char输入是因为有'-'符号,不能读成int
 					3. 判断哪个点是根节点,看是否有父亲,没有就是根节点
-					4. 老师是用后序遍历来翻转,用其他可否?
+					4. 老师是用后序遍历来翻转,用其他可否? 最好还是后序遍历, 先处理好左右子树, 最后是自己
 					5. 中序遍历, 因为不能输出最后一个空格, 老师用了一个输出多少个来判断是否是最后一个数.
+						传引用 int& k, 因为大家都要用到这个数
+						void dfs(int u, int& k)
+						{
+						    if (u == -1) return;
+						    dfs(l[u], k);
+
+						    cout << u;
+						    if ( ++ k != n) cout << ' ';
+
+						    dfs(r[u], k);
+						}
 					6. 层序遍历就没有, 因为层序遍历不是用递归, 而是用queue
 
 			2. 注释
@@ -16468,9 +16512,269 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 20;
+					int l[N], r[N];
+					bool hf[N];
+					int n;
+					int q[N];
+
+					void dfs_r(int u){
+						if(l[u] != -1) dfs_r(l[u]);
+						if(r[u] != -1) dfs_r(r[u]);
+						swap(l[u], r[u]);
+					}
+
+					void dfs(int u, int& i){
+						if(u == -1) return;
+						dfs(l[u], i);
+						if(++i != n) cout << u << " ";
+						else cout << u << endl;
+						dfs(r[u], i);
+					}
+
+					void bfs(int u){
+						q[0] = u;
+						int hh, tt;
+						hh = tt = 0;
+						while(hh <= tt){
+							int top = q[hh++];
+							if(l[top] != -1) q[++tt] = l[top];
+							if(r[top] != -1) q[++tt] = r[top];
+						}
+						cout << q[0];
+						for(int i = 1; i < hh; i++) cout << " " << q[i];
+						cout << endl;
+					}
+
+					int main(){
+						cin >> n;
+
+						memset(l, -1, sizeof l);
+						memset(r, -1, sizeof r);
+						for(int i = 0; i < n; i++){
+							char a, b;
+							cin >> a >> b;
+							if(a != '-') l[i] = a - '0', hf[l[i]] = true;
+							if(b != '-') r[i] = b - '0', hf[r[i]] = true;
+						}
+
+					    int root = 0;
+					    while(hf[root]) root++;
+					    
+						dfs_r(root);
+						
+						bfs(root);
+						
+						int i = 0;
+						dfs(root, i);
+						
+						
+
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 20;
+					int l[N], r[N];
+					bool hf[N];
+					int q[N];
+					int n;
+
+					void dfsr(int u){
+					    if(u == -1) return;
+					    dfsr(l[u]);
+					    dfsr(r[u]);
+					    swap(l[u], r[u]);
+					}
+
+					void bfs(int u){
+					    q[0] = u;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while(hh <= tt){
+					        int top = q[hh++];
+					        if(l[top] != -1) q[++tt] = l[top];
+					        if(r[top] != -1) q[++tt] = r[top];
+					    }
+					    cout << q[0];
+					    for(int i = 1; i < hh; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+
+					void dfs(int u, int& i){
+					    if(u == -1) return;
+					    dfs(l[u], i);
+					    
+					    cout << u;
+					    if(++i != n) cout << " ";
+					    else cout << endl;
+					    
+					    dfs(r[u], i);
+					    
+					}
+
+					int main(){
+					    cin >> n;
+					    
+					    memset(l, -1, sizeof l);
+					    memset(r, -1, sizeof r);
+					    
+					    for(int i = 0; i < n; i++){
+					        char a, b;
+					        cin >> a >> b;
+					        if(a != '-') l[i] = a - '0', hf[l[i]] = true;
+					        if(b != '-') r[i] = b - '0', hf[r[i]] = true;
+					    }
+					    
+					    int root = 0;
+					    while(hf[root]) root++;
+					    
+					    dfsr(root);
+					    
+					    bfs(root);
+					    
+					    int i = 0;
+					    dfs(root, i);
+					    
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 40;
+					int l[N], r[N];
+					bool hf[N];
+					int q[N];
+					int n;
+
+
+					void dfsr(int u){
+					    if(u == -1) return;
+					    dfsr(l[u]);
+					    dfsr(r[u]);
+					    swap(l[u], r[u]);
+					}
+
+					void bfs(int u){
+					    q[0] = u;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while(hh <= tt){
+					        int t = q[hh++];
+					        if(l[t] != -1) q[++tt] = l[t];
+					        if(r[t] != -1) q[++tt] = r[t];
+					    }
+					    cout << q[0];
+					    for(int i = 1; i < hh; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+
+					void dfs(int u, int& i){
+					    if(u == -1) return;
+					    dfs(l[u], i);
+					    cout << u;
+					    if(++i != n) cout << " ";
+					    else cout << endl;
+					    dfs(r[u], i);
+					}
+					int main(){
+					    cin >> n;
+					    
+					    memset(l ,-1, sizeof l);
+					    memset(r, -1, sizeof r);
+					    
+					    for(int i = 0; i < n; i++){
+					        char a, b;
+					        cin >> a >> b;
+					        if(a != '-') l[i] = a - '0', hf[l[i]] = true;
+					        if(b != '-') r[i] = b - '0', hf[r[i]] = true;
+					    }
+					    
+					    int root = 0;
+					    while(hf[root]) root++;
+					    
+					    dfsr(root);
+					    
+					    bfs(root);
+					    
+					    int i = 0;
+					    dfs(root, i);
+					}
 				r4.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 20;
+					int l[N], r[N], q[N];
+					bool hf[N];
+					int n;
+
+					void dfsr(int u){
+					    if(u == -1) return;
+					    dfsr(l[u]);
+					    dfsr(r[u]);
+					    swap(l[u], r[u]);
+					}
+
+					void bfs(int u){
+					    q[0] = u;
+					    int hh, tt;
+					    hh = tt = 0;
+					    while(hh <= tt){
+					        int t = q[hh++];
+					        if(l[t] != -1) q[++tt] = l[t];
+					        if(r[t] != -1) q[++tt] = r[t];
+					    }
+					    cout << q[0];
+					    for(int i = 1; i < hh; i++) cout << " "<< q[i];
+					    cout << endl;
+					}
+
+					void dfs(int u, int& i){
+					    if(u == -1) return;
+					    dfs(l[u], i);
+					    cout << u;
+					    if(++i != n) cout << " ";
+					    else cout << endl;
+					    dfs(r[u], i);
+					}
+
+					int main(){
+					    cin >> n;
+					    
+					    memset(l, -1, sizeof l);
+					    memset(r, -1, sizeof r);
+					    
+					    for(int i = 0; i < n; i++){
+					        char a, b;
+					        cin >> a >> b;
+					        if(a != '-') l[i] = a - '0', hf[l[i]] = true;
+					        if(b != '-') r[i] = b - '0', hf[r[i]] = true;
+					    }
+					    
+					    int root = 0;
+					    while(hf[root]) root++;
+					    
+					    dfsr(root);
+					    
+					    bfs(root);
+					    
+					    int i = 0;
+					    dfs(root, i);
+					}
 				r5.
 
 		53. 1600. 完全二叉搜索树 1110
@@ -16712,9 +17016,7 @@
 				r2.
 				r3.
 				r4.
-				r5.
-
-				
+				r5.			
 
 		56. 1620. Z 字形遍历二叉树	1127
 			0. bug
@@ -17727,6 +18029,11 @@
 		63. 1565. 供应链总销售额	1079
 			0. bug
 			1. 笔记
+				1. dfs() 记忆化搜索, 搜完了这个就存下来, 避免下一次重复计算
+				2. 老师没有用 邻接矩阵, 只记录了每个节点的父节点是谁
+					因为我们需要求的是 某个节点到root的距离, 这个距离 == 该节点的father到root的距离 + 1
+					所以只存父节点是谁就够了
+
 			2. 注释
 				1. y
 					#include <iostream>
@@ -17740,21 +18047,20 @@
 
 					int n;
 					double P, R;
-					int p[N], f[N], c[N];
+					int p[N], f[N], c[N]; p[N]每个点的父节点, f[N]每个点到根节点的距离, c[N]某个叶节点卖给了多少消费者
 
-					int dfs(int u)
+					int dfs(int u) 这个叫做记忆化搜索, 也是dp的一种
 					{
-					    if (f[u] != -1) return f[u];
-
-					    if (p[u] == -1) return f[u] = 0;
-					    return f[u] = dfs(p[u]) + 1;
+					    if (f[u] != -1) return f[u]; 已经搜索过了
+					    if (p[u] == -1) return f[u] = 0; 如果这个点没有父节点, 就是根节点
+					    return f[u] = dfs(p[u]) + 1; 我这个节点到根节点的距离 == 父节点到根节点的距离 + 1
 					}
 
 					int main()
 					{
 					    cin >> n >> P >> R;
 
-					    memset(p, -1, sizeof p);
+					    memset(p, -1, sizeof p); 所有点都没有父节点
 					    for (int i = 0; i < n; i ++ )
 					    {
 					        int k;
@@ -17774,7 +18080,7 @@
 					    double res = 0;
 					    for (int i = 0; i < n; i ++ )
 					        if (c[i])
-					            res += c[i] * P * pow(1 + R / 100, dfs(i));
+					            res += c[i] * P * pow(1 + R / 100, dfs(i)); 这里用到了dfs(i), 也就是i到根节点的距离.
 
 					    printf("%.1lf\n", res);
 
@@ -17824,16 +18130,16 @@
 
 					    memset(f, -1, sizeof f);
 
-					    int res = 0, cnt = 0;
+					    int  max_depth = 0, cnt = 0;
 					    for (int i = 0; i < n; i ++ )
-					        if (dfs(i) > res)
+					        if (dfs(i) > max_depth) 枚举每个点 到根节点的距离, 说明这是最大致
 					        {
-					            res = dfs(i);
+					            max_depth = dfs(i); 
 					            cnt = 1;
 					        }
-					        else if (dfs(i) == res) cnt ++ ;
+					        else if (dfs(i) == max_depth) cnt ++ ;
 
-					    printf("%.2lf %d\n", P * pow(1 + R / 100, res), cnt);
+					    printf("%.2lf %d\n", P * pow(1 + R / 100, max_depth), cnt);
 
 					    return 0;
 					}
@@ -17853,6 +18159,9 @@
 		65. 1596. 供应链最低价格	1106
 			0. bug
 			1. 笔记
+				1. 这里不是问: 哪个节点到root的距离最小, 而是哪个叶节点到root的距离最小
+					也就是求最短路径
+				2. 思路还是: 遍历每个叶节点, 然后用 dfs()来往上递归(因为dfs()了父亲), 求到root的距离
 			2. 注释
 				1. y
 					#include <iostream>
@@ -17924,6 +18233,11 @@
 		66. 1649. 堆路径	1155
 			0. bug
 			1. 笔记
+				0.
+					1. 那种一条一条路径下去的模板:
+						1. 将自己push进path [可以实现一些逻辑, 例如自己是叶子, 就是打印]
+						2. 将dfs(左), dfs(右) [这道题是先dfs(右)后dfs(左)]
+						3. 最后恢复现场 
 			2. 注释
 				1. y
 					#include <iostream>
@@ -17941,7 +18255,7 @@
 					void dfs(int u)
 					{
 					    path.push_back(h[u]);
-					    if (u * 2 > n)  // 叶节点
+					    if (u * 2 > n)  叶节点
 					    {
 					        cout << path[0];
 					        for (int i = 1; i < path.size(); i ++ )
@@ -17988,6 +18302,20 @@
 		67. 1623. 中缀表达式	1130
 			0. bug
 			1. 笔记
+				0. 很神奇
+					1. 原来以前看到的中缀表达式, 就是递归的问题
+					2. 其实就是将最底下的信息, 一层一层的递归
+					3. 规律:
+						1. dfs(自己)
+							if(有左儿子) dfs(左儿子)
+								如果左儿子是叶子, dfs(左儿子)返回的值不用加 "()"
+									因为我们有(a*2.35), 而不是((a) * (2.35)), 其中a是*的左儿子, a是叶子
+								如果左儿子不是叶子, dfs(左儿子)返回值需要加 "()"
+							if(有右儿子) dfs(右儿子)
+								逻辑同上
+							返回给自己的父亲: 左儿子 + 自己 + 右儿子
+						2. 这里没有用 终止条件, 因为如果没有左右儿子, 就会直接返回自己.
+
 			2. 注释
 				1. y
 					#include <iostream>
@@ -18053,6 +18381,46 @@
 		68. 1636. 最低公共祖先	1143
 			0. bug
 			1. 笔记
+				0.
+					1. 离散化
+						为什么需要离散化?
+							1. 因为给的数字可能会很大, 不超过int, 说明可能是 10 ^9
+								如果给了1000个很分散的数字, 你用哈希表去查, 也会很慢
+							2. 所以把分散的数字映射到 0 ~ N-1, 然后用数组去装, 这样就会很快
+						需要4个东西:
+							1.
+								1. 一个是原始的数字: seq[N]: 存原始的数字, 例如一个很大的数字
+								2. 映射: 从原始数字, 到编号: pos[num] = i, 将这个原始数字num, 映射到0~N-1
+									你会发现, 映射的时候, 最好都是从小到大的, 就是原始的数字小的话, 映射到的编号也比较小
+									所以我们更愿意用中序遍历的顺序存原始数字
+							2.
+								3. 前序遍历的编号: pre[N]: 存的都是0 ~N-1的数字, 但是顺序是前序的顺序
+								4. 中序遍历的编号: in[N]: 同上
+						如何使用:
+							1. 知道编号i, 求数字: seq[i];		其中pre[N], in[N]存的就是编号
+							2. 知道数字num, 求编号: pos[num];
+						输入:
+							for (int i = 0; i < n; i ++ )
+						    {
+						        cin >> pre[i]; 存的是原始的num.
+						        seq[i] = pre[i]; seq[]存的也是原始的num
+						    }
+
+						    sort(seq, seq + n); 将原始的num设置成中序
+						    for (int i = 0; i < n; i ++ )
+						    {
+						        pos[seq[i]] = i; 这一步, 就是完成了离散化中的映射, 就是把一个值, 映射到了0~N-1
+						        in[i] = i;
+						    }
+
+						    for (int i = 0; i < n; i ++ ) pre[i] = pos[pre[i]]; 现在前序遍历里面存的也是 0~N-1的编号
+					2. 爬山法:
+						谁在tree的底下, 就往自己的父亲爬
+				1. 思路:
+					1. 离散化存储
+					2. build()的时候:
+						1. 记得存当前节点的层数
+						2. 记得更新儿子的父亲是自己
 			2. 注释
 				1. y
 					#include <iostream>
@@ -18072,10 +18440,11 @@
 					int build(int il, int ir, int pl, int pr, int d)
 					{
 					    int root = pre[pl];
-					    int k = root;
+					    int k = root; 因为中序遍历的值(0~N-1)和下标是相等的, 因为in[i] = i;
 
 					    depth[root] = d;
 
+					    下面要表达的是: p[build(左儿子/右儿子)] = 自己root;
 					    if (il < k) p[build(il, k - 1, pl + 1, pl + 1 + (k - 1 - il), d + 1)] = root;
 					    if (k < ir) p[build(k + 1, ir, pl + 1 + (k - 1 - il) + 1, pr, d + 1)] = root;
 
@@ -18094,11 +18463,11 @@
 					    sort(seq, seq + n);
 					    for (int i = 0; i < n; i ++ )
 					    {
-					        pos[seq[i]] = i;
+					        pos[seq[i]] = i; 这一步, 就是完成了离散化, 就是把一个值, 映射到了0~N-1
 					        in[i] = i;
 					    }
 
-					    for (int i = 0; i < n; i ++ ) pre[i] = pos[pre[i]];
+					    for (int i = 0; i < n; i ++ ) pre[i] = pos[pre[i]]; 现在前序遍历里面存的也是 0~N-1的编号
 
 					    build(0, n - 1, 0, n - 1, 0);
 
@@ -18146,6 +18515,43 @@
 		69. 1644. 二叉树中的最低公共祖先	1151
 			0. bug
 			1. 笔记
+				1. 离散化
+						为什么需要离散化?
+							1. 因为给的数字可能会很大, 不超过int, 说明可能是 10 ^9
+								如果给了1000个很分散的数字, 你用哈希表去查, 也会很慢
+							2. 所以把分散的数字映射到 0 ~ N-1, 然后用数组去装, 这样就会很快
+						需要4个东西:
+							1.
+								1. 一个是原始的数字: seq[N]: 存原始的数字, 例如一个很大的数字
+								2. 映射: 从原始数字, 到编号: pos[num] = i, 将这个原始数字num, 映射到0~N-1
+									你会发现, 映射的时候, 最好都是有小到大的, 就是原始的数字小的话, 映射到的编号也比较小
+									所以我们更愿意用中序遍历的顺序存原始数字
+							2.
+								3. 前序遍历的编号: pre[N]: 存的都是0 ~N-1的数字, 但是顺序是前序的顺序
+								4. 中序遍历的编号: in[N]: 同上
+						如何使用:
+							1. 知道编号i, 求数字: seq[i];		其中pre[N], in[N]存的就是编号
+							2. 知道数字num, 求编号: pos[num];
+						输入:
+							for (int i = 0; i < n; i ++ )
+						    {
+						        cin >> seq[i]; 输入原始的中序遍历的num, 所以seq[]里面的数字也是从小到大的
+						        pos[seq[i]] = i; 将num和编号i的映射储存
+						        in[i] = i;
+						    }
+
+						    for (int i = 0; i < n; i ++ )
+						    {
+						        cin >> pre[i]; 先知道数字是什么
+						        pre[i] = pos[pre[i]]; 将这个数字对应的编号找到
+						    }
+					2. 爬山法:
+						谁在tree的底下, 就往自己的父亲爬
+				1. 思路:
+					1. 离散化存储
+					2. build()的时候:
+						1. 记得存当前节点的层数
+						2. 记得更新儿子的父亲是自己
 			2. 注释
 				1. y
 					#include <iostream>
@@ -18237,6 +18643,18 @@
 		70. 849. Dijkstra求最短路 I 	模板题
 			0. bug
 			1. 笔记
+				0. 
+					1. d[][], 两个点之间的距离, 题目给的
+					2. dist[], 某个点到起点的最短距离
+					3. st[], 某个点是否计算/放松过它所有的临边
+				1. for() 有n个点, 所以放松n次
+					{
+						for(){} 遍历n个点, 找到没有计算过dist[], 并且距离起点最近的点, 这个点是t
+
+						for(){} 遍历n个点, 放松点t的所有临边, 并且给这些更新dist[邻点]
+
+						st[t] = true; 说明已经计算/放松点t的所有临边
+					}
 			2. 注释
 				1. y
 					#include <cstring>
@@ -18365,25 +18783,26 @@
 		71. 850. Dijkstra求最短路 II 	模板题
 			0. bug
 			1. 笔记
+				见注释
 			2. 注释
 				1. y
 					#include <cstring>
 					#include <iostream>
 					#include <algorithm>
-					#include <queue>
+					#include <queue> //用到优先队列
 
 					using namespace std;
 
-					typedef pair<int, int> PII;
+					typedef pair<int, int> PII; 距离起点的最短距离int, 该节点的编号int
 
 					const int N = 1e6 + 10;
 
 					int n, m;
-					int h[N], w[N], e[N], ne[N], idx;
+					int h[N], w[N], e[N], ne[N], idx; 因为是稀疏图,所以用邻接表, 代替之前的邻接矩阵g[N][N]
 					int dist[N];
 					bool st[N];
 
-					void add(int a, int b, int c)
+					void add(int a, int b, int c) //不怕平行边,因为我们每次都是取最短距离的节点
 					{
 					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
 					}
@@ -18392,23 +18811,23 @@
 					{
 					    memset(dist, 0x3f, sizeof dist);
 					    dist[1] = 0;
-					    priority_queue<PII, vector<PII>, greater<PII>> heap;
-					    heap.push({0, 1});
+					    priority_queue<PII, vector<PII>, greater<PII>> heap; //最小堆
+					    heap.push({0, 1}); //距离1节点的距离是1, 这个节点是1节点
 
-					    while (heap.size())
+					    while (heap.size()) 特别像宽搜, 因为最多遍历m条边, 所以heap最多只有m条边加入 
 					    {
-					        auto t = heap.top();
+					        auto t = heap.top();//取出dist最小的节点
 					        heap.pop();
 
 					        int ver = t.second, distance = t.first;
 
-					        if (st[ver]) continue;
+					        if (st[ver]) continue; //加入这个ver节点已经求出了正确值,就看下一个
 					        st[ver] = true;
 
-					        for (int i = h[ver]; i != -1; i = ne[i])
+					        for (int i = h[ver]; i != -1; i = ne[i]) //遍历ver节点的所有临边,这个临边的ind == i
 					        {
-					            int j = e[i];
-					            if (dist[j] > dist[ver] + w[i])
+					            int j = e[i];//j是ver的临边
+					            if (dist[j] > dist[ver] + w[i])//w[i]的意思是, ver和j之间的距离
 					            {
 					                dist[j] = dist[ver] + w[i];
 					                heap.push({dist[j], j});
@@ -18424,7 +18843,7 @@
 					{
 					    scanf("%d%d", &n, &m);
 
-					    memset(h, -1, sizeof h);
+					    memset(h, -1, sizeof h); //初始化链接表
 					    while (m -- )
 					    {
 					        int a, b, c;
@@ -18436,11 +18855,6 @@
 
 					    return 0;
 					}
-
-					作者：yxc
-					链接：https://www.acwing.com/activity/content/code/content/308478/
-					来源：AcWing
-					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
 			3. 5次
 				r1.
@@ -18467,6 +18881,21 @@
 							O(m*logn)
 							适合于边数多的时候
 								因为边数多的时候,m==n^2,O(n^2*logn)
+				2. 
+					1. d[][], 两个点之间的距离, 题目给的
+					2. dist[], 某个点到起点的最短距离
+					3. st[], 某个点是否计算/放松过它所有的临边
+				3. for() 有n个点, 所以放松n次
+					{
+						for(){} 遍历n个点, 找到没有计算过dist[], 并且距离起点最近的点, 这个点是t
+
+						for(){} 遍历n个点, 放松点t的所有临边, 并且给这些更新dist[邻点]
+
+						st[t] = true; 说明已经计算/放松点t的所有临边
+					}
+				4, 考察了:
+					1. 最短路, 最大权
+					2. 最短路径的个数
 			2. 注释
 				1. y
 				2. b
@@ -18485,17 +18914,20 @@
 
 					void dijkstra()
 					{
-					    memset(dist, 0x3f, sizeof dist);
-					    dist[S] = 0; 先初始化起点的距离
+					    memset(dist, 0x3f, sizeof dist); 起始都是正无穷
+					    dist[S] = 0; 先初始化起点的距离, 也就是S到S点的最短距离==0
 					    cnt[S] = 1; 从起点出发的路径只有一种
 					    sum[S] = w[S]; 起点的点权就是w[起点]
 
-					    for (int i = 0; i < n; i ++ ) 
+					    for (int i = 0; i < n; i ++ ) 也是, 放松所有的点
 					    {
 					        int t = -1;
 					        for (int j = 0; j < n; j ++ )
 					            if (!st[j]当前的点j没有被用过 && (t == -1:还没有找到任何一个点|| dist[t] > dist[j] 当前的点j的距离更小))
 					                t = j; 找到了更新其他店的点j,赋值给t
+					        说明我们找到了目前为止, 没有计算过距离的所有点中, 到S点的最短距离的点: t. 因为dist[t]是全部没有计算过的点中, 最短的点
+					        在第一次走到这里时,是i == 0, 也就是t应该是就是起点S, 因为所有的dist[j], 除了dist[S]==0, 都是正无穷
+
 					        st[t] = true;
 
 					        for (int j = 0; j < n; j ++ ) 遍历所有的其他点
@@ -18508,8 +18940,10 @@
 					            else if (dist[j] == dist[t] + d[t][j]) 又遇到了一个从S到j点的最短距离
 					            {
 					                cnt[j] += cnt[t]; 两个路径合并
-					                sum[j] = max(sum[j], sum[t] + w[j]); 取最小的权值
+					                sum[j] = max(sum[j], sum[t] + w[j]);  这个才是这道题的逻辑: 就是我们需要的是. 取最大的救援力量
 					            }
+
+					        第一次走到这里, 是i == 0, 也就是更新了起点S的所有临边, 所以这些邻点的dist[]都从正无穷更新到一个更小的值
 					    }
 					}
 
@@ -18545,6 +18979,8 @@
 		73. 1507. 旅行计划	1030
 			0. bug
 			1. 笔记
+				1. 双关键字: 最短距离, 最小cost
+				2. 记录路径
 			2. 注释
 				1. y
 				2. b
@@ -18650,19 +19086,19 @@
 					int n, k;
 					unordered_map<string, vector<pair<string, int>>> g; string:每个人, vector<pair<string, int>>: 和string人的通话时间int
 					unordered_map<string, int> total; string人的总的通话时间total
-					unordered_map<string, bool> st; 判重数组, 因为题目可能有环,为了防止重复搜,所以设置这个
+					unordered_map<string, bool> st; 判重数组, 因为题目可能有环,为了防止重复搜,所以设置这个,每个点只搜索一次
 
-					int dfs(string ver, vector<string> &nodes) 需要用引用
+					int dfs(string ver, vector<string> &nodes) 需要用引用&node. dfs()这里是深度遍历一个图
 					{
 					    st[ver] = true;
 					    nodes.push_back(ver);
 
 					    int sum = 0;
-					    for (auto edge : g[ver])
+					    for (auto edge : g[ver]) edge就是vector<pair<string, int>> 中的其中一个pair<string,int>
 					    {
-					        sum += edge.second; 需要用+=
-					        string cur = edge.first;
-					        if (!st[cur]) sum += dfs(cur, nodes); 需要用+=
+					        sum += edge.second; 需要用+= 该节点的通过时长
+					        string cur = edge.first; 去临边
+					        if (!st[cur]) sum += dfs(cur, nodes); 需要用+=, 如果临边没有遍历过, 那就去临边
 					    }
 
 					    return sum;
@@ -18695,10 +19131,12 @@
 					        		因为在dfs()中,sum += edge.second;是不需要判断是否是st[ver]的
 					        		只有判断是否要继续递归找的时候,才会判断是否是st[ver]的
 					        		所以sum的确是加了2倍
+					        		或者, 你思考一个例子: 假设最简单的情况, 就只有两个人打电话,通话时长是m
+					        			那么用老师的方法, sum = 0, sum += m, sum += m. 最后的确是2m
 
-					        if (nodes.size() > 2 && sum > k) 需要满足题目的要求
+					        if (nodes.size() > 2 && sum > k) 需要满足题目的要求: 大于等于3人, 大于k分钟
 					        {
-					            string boss = nodes[0];
+					            string boss = nodes[0]; 找到最大通话时长的人
 					            for (string node : nodes)
 					                if (total[boss] < total[node])
 					                    boss = node;
@@ -18748,30 +19186,30 @@
 					int d[N][N]; 点和点之间的距离
 					bool st[N]; 是否遍历过
 					int dist[N], cnt[N], cost[N], sum[N], pre[N];
-					// 最短距离，最短路数量，最大点权，最小点数, 最短路径的前一个点
+					 最短距离，最短路数量，最大点权(幸福度)，最小点数, 最短路径的前一个点
 
 
 					string city[N];
-					unordered_map<string, int> mp;
+					unordered_map<string, int> mp; 将string城市名 映射成 编号1-N
 
 					void dijkstra()
 					{
 					    memset(dist, 0x3f, sizeof dist);
-					    dist[1] = 0, cnt[1] = 1;
+					    dist[1] = 0, cnt[1] = 1; 应为起点城市没有幸福感, 所以sum[1]不需要初始化, 也就是算平均幸福度的时候, 不用除以初始城市
 
 					    for (int i = 0; i < n; i ++ )
 					    {
 					        int t = -1; 也就是为灵魂t找到一个归宿j
-					        for (int j = 1; j <= n; j ++ )
+					        for (int j = 1; j <= n; j ++ ) 不包括了j==0
 					            if (!st[j] && (t == -1 || dist[t] > dist[j]))  t没有归宿 || j是更好的归宿
 					                t = j;
 					        st[t] = true;
 
-					        for (int j = 1; j <= n; j ++ )
+					        for (int j = 1; j <= n; j ++ ) 不包括了j==0
 					            if (dist[j] > dist[t] + d[t][j])
 					            {
 					                dist[j] = dist[t] + d[t][j]; t到j比之前的dist[j]更近
-					                cnt[j] = cnt[t]; 路径数量更新成t的
+					                cnt[j] = cnt[t]; 路径数量更新成t的, 因为j和t是需要链接起来的两个城市
 					                cost[j] = cost[t] + w[j]; 权重也边了
 					                sum[j] = sum[t] + 1; 经过的节点数是sum[t]的基础上+1
 					                pre[j] = t; 上一个节点是t
@@ -18779,7 +19217,7 @@
 					            else if (dist[j] == dist[t] + d[t][j])
 					            {
 					                cnt[j] += cnt[t]; 无论如何,都是多了cnt[t]条到j点的边, 这个不受信服度影响
-					                if (cost[j] < cost[t] + w[j]) 如果新的t到j的走法,幸福度更高
+					                if (cost[j] < cost[t] + w[j]) 如果新的t到j的走法,幸福度更高. 那么我们肯定要走t->j的路
 					                {
 					                    cost[j] = cost[t] + w[j]; 更新信服度
 					                    sum[j] = sum[t] + 1; 因为信服度更高,所以肯定是走t->j这条路,所以是经过的节点数是sum[t]的基础上+1
@@ -18787,7 +19225,7 @@
 					                }
 					                else if (cost[j] == cost[t] + w[j]) 信服度相同
 					                {
-					                    if (sum[j] > sum[t] + 1) 看是否点数更少
+					                    if (sum[j] > sum[t] + 1) 看是否点数更少. 如果是true, 说明点数可以最小
 					                    {
 					                        sum[j] = sum[t] + 1; 更新点数
 					                        pre[j] = t; 更新路径
@@ -18809,7 +19247,7 @@
 					    for (int i = 2; i <= n; i ++ )
 					    {
 					        cin >> city[i] >> w[i];
-					        mp[city[i]] = i;
+					        mp[city[i]] = i; 建立映射
 					    }
 
 					    memset(d, 0x3f, sizeof d);
@@ -18819,7 +19257,7 @@
 					        int c;
 					        cin >> x >> y >> c;
 					        int a = mp[x], b = mp[y];
-					        d[a][b] = d[b][a] = min(d[a][b], c);
+					        d[a][b] = d[b][a] = min(d[a][b], c); 双向边
 					    }
 
 					    dijkstra();
@@ -18847,9 +19285,10 @@
 
 		76. 1601. 在线地图 	1111
 			0. bug
-
-
 			1. 笔记
+				0. 考察了:
+					1. 双关键词查找路径
+					2. 记录路径
 			2. 注释
 				1. y
 				2. b
@@ -18866,7 +19305,7 @@
 					int dist1[N], dist2[N], pre[N];
 					bool st[N];
 
-					 返回最小值,路线.pair<int, string> dijkstra(int d1[][N], int d2[][N], int type) 
+					 返回最小值int,路线string.pair<int, string> dijkstra(int d1[][N], int d2[][N], int type) 
 					注意写法:int d1[][N], int d2[][N],但是老师解释:C++里函数参数为数组时，第一维的长度可以不写。
 					另外, d1,d2在这个函数中是局部变量, 虽然有全局变量也叫d1,d2,但是优先局部变量
 					{
@@ -18894,7 +19333,8 @@
 					                dist1[j] = dist1[t] + d1[t][j]; 这里的dist1, 是指的第一权值的dist, 也就是dist1[N]既可以是代表最短路,也可以代表最快路
 					                dist2[j] = dist2[t] + w; 无条件更新第二个权值. 
 					                如果第一个权值是 最短路线, 第二个权值 就是最快的路, w == d2[t][j]
-					                如果第一个权值是 最块路线, 第二个权值 就是经过路口最少的,也就是经过边数最少的路, w == 1                pre[j] = t;
+					                如果第一个权值是 最块路线, 第二个权值 就是经过路口最少的,也就是经过边数最少的路, w == 1                
+					                pre[j] = t;
 					            }
 					            else if (dist1[j] == dist1[t] + d1[t][j]) 第二个权值比较
 					            {
@@ -19002,6 +19442,8 @@
 					        if (!st[i]) 如果有一个点没有走过,就是false
 					            return false;
 
+					    这里没有判断每个点仅走一次是因为: 一共走了n+1个点, 如果有一个点没有走过, 说明另一个点走了几次
+
 					    return true;
 					}
 
@@ -19036,7 +19478,7 @@
 				r4.
 				r5.
 
-		78. 1619. 欧拉路径	1126
+		78. 1619. 欧拉路径,一笔画问题	1126
 			0. bug
 			1. 笔记
 				1. 
@@ -19089,7 +19531,7 @@
 					    for (int i = 2; i <= n; i ++ ) cout << ' ' << d[i];
 					    cout << endl;
 
-					    if (cnt == n) 图是连通的
+					    if (cnt == n) 图是连通的: 因为只有当每个点都遍历到了, 一个不多一个不少, 才能说是连通的. 一个不多(用st[u]保证,只能走一次), 一个不少(如果少了就说明不连通)
 					    {
 					        int s = 0; s是计算degree是奇数的点的个数
 					        for (int i = 1; i <= n; i ++ )
@@ -19112,7 +19554,7 @@
 				r4.
 				r5.
 
-		79. 1624. 地铁地图	1131
+		todo 79. 1624. 地铁地图	1131
 			0. bug
 			1. 笔记
 				1. 
@@ -19132,7 +19574,7 @@
 						2. 所以最多100*100个站点,也就是1w个点
 						3. 每个line的站点可以链接100*99/2条边, 一共100个line,所以总共差不多100w条边(老师说100w不算多, 因为题目是0.4s, 我们允许千万级别的边)
 					如果是朴素dijkstra
-						1. n^2+m 是10^8, 因为站点有1w个, 会超时, 因为题目限制了0.4s
+						1. n^2+m 是10^8, 因为站点有1w == 10^4个, 会超时, 因为题目限制了0.4s
 					如果是堆优化:
 						1. m*logn, 也就是100w * 一个常数, 可以在0.4s完成
 				2. 空间复杂度
