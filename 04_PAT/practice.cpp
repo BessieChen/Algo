@@ -16779,11 +16779,23 @@
 
 		53. 1600. 完全二叉搜索树 1110
 			0. bug
+				1. 大bug!
+					1. 首先这道题和上面的翻转二叉树不同. 翻转二叉树的输入是一个个位数, 所以可以用char读, 但是这道题可以是两位数, 所以你不能用 a - '0'的方法读!!
+						错误:
+								char a, b; 因为a可以是"10"
+								cin >> a >> b;
+								if(a != '-') l[i] = a - '0', hf[l[i]] = true;
+						正确:
+							string a, b;
+					        cin >> a >> b;
+					        if (a != "-") l[i] = stoi(a), has_father[l[i]] = true;
 			1. 笔记
 				思路:
 					1. 记录每个节点的左右子
 					2. 题目没有给根节点,需要通过是否有father来判断是否是根节点
-					3. 最大节点,maxk,maxid没有搞清楚
+					3. 在dfs()遍历的过程中, 给每个节点赋予 完全二叉树的编号 k, 例如左子是 u*2, 右子是 u*2+1
+						最后记录maxk.
+						因为题目要求输出maxk对应的编号, 所以你还要记录一个maxid
 			2. 注释
 				1. y
 					#include <cstring>
@@ -16844,30 +16856,243 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], kk[N], maxk, maxid;
+					bool hf[N];
+					int n;
+
+					void dfs(int u, int k){
+						if(u == -1) return;
+
+						kk[u] = k;
+						if(k > maxk){
+						    maxk = k;
+						    maxid = u;
+						}
+
+						dfs(l[u], k * 2);
+						dfs(r[u], k * 2 + 1);
+					}
+
+					int main(){
+						cin >> n;
+						memset(l, -1, sizeof l);
+						memset(r, -1, sizeof r);
+
+						for(int i = 0; i < n; i++){
+							string a, b;
+							cin >> a >> b;
+							if(a != "-") l[i] = stoi(a), hf[l[i]] = true;
+							if(b != "-") r[i] = stoi(b), hf[r[i]] = true;
+						}
+
+						int r = 0;
+						while(hf[r]) r++;
+						
+						dfs(r, 1);
+
+						if(maxk > n) printf("NO %d\n", r);
+						else printf("YES %d\n", maxid);
+
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], maxk, maxid;
+					bool hf[N];
+					int n;
+
+					void dfs(int u, int k){
+					    if(u == -1) return;
+					    if(k > maxk){
+					        maxk = k;
+					        maxid = u;
+					    }
+					    dfs(l[u], k * 2);
+					    dfs(r[u], k * 2 + 1);
+					}
+
+					int main(){
+					    cin >> n;
+					    
+					    memset(l, -1, sizeof l);
+					    memset(r, -1, sizeof r);
+					    
+					    for(int i = 0; i < n; i++){
+					        string a, b;
+					        cin >> a >> b;
+					        if(a != "-") l[i] = stoi(a), hf[l[i]] = true;
+					        if(b != "-") r[i] = stoi(b), hf[r[i]] = true;
+					    }
+					    
+					    int root = 0;
+					    while(hf[root]) root++;
+					    
+					    dfs(root, 1);
+					    
+					    if(maxk != n) printf("NO %d\n", root);
+					    else printf("YES %d\n", maxid);
+					    
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], maxk, maxid;
+					int n;
+					bool hf[N];
+
+					void dfs(int u, int k){
+					    if(u == -1) return;
+					    if(k > maxk) maxk = k, maxid = u;
+					    dfs(l[u], k * 2);
+					    dfs(r[u], k * 2 + 1);
+					}
+
+					int main(){
+					    cin >> n;
+					    
+					    memset(l, -1, sizeof l);
+					    memset(r, -1, sizeof r);
+					    
+					    for(int i = 0; i < n; i++){
+					        string a, b;
+					        cin >> a >> b;
+					        if(a != "-") l[i] = stoi(a), hf[l[i]] = true;
+					        if(b != "-") r[i] = stoi(b), hf[r[i]] = true;
+					    }
+					    
+					    int root  = 0;
+					    while(hf[root]) root++;
+					    
+					    dfs(root, 1);
+					    
+					    if(maxk == n) printf("YES %d\n", maxid);
+					    else printf("NO %d\n", root);
+					    
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], maxk, maxid, n;
+					bool hf[N];
+
+					void dfs(int u, int k){
+					    if(u == -1) return;
+					    if(k > maxk) maxk = k, maxid = u;
+					    dfs(l[u], k * 2);
+					    dfs(r[u], k * 2 + 1);
+					}
+
+					int main(){
+					    cin >> n;
+					    memset(l, -1, sizeof l);
+					    memset(r, -1, sizeof r);
+					    
+					    for(int i = 0; i < n; i++){
+					        string a, b;
+					        cin >> a >> b;
+					        if(a != "-") l[i] = stoi(a), hf[l[i]] = true;
+					        if(b != "-") r[i] = stoi(b), hf[r[i]] = true;
+					    }
+					    
+					    int root = 0;
+					    while(hf[root]) root ++;
+					    
+					    dfs(root, 1);
+					    
+					    if(maxk == n) printf("YES %d\n", maxid);
+					    else printf("NO %d\n", root);
+					    
+					    return 0;
+					}
 				r5.
 
 		54. 1605. 二叉搜索树最后两层结点数量	1115
 			0. bug
+				1. 终止条件记得return
+				2. memset()只能填入一个字节, 所以填入0x3f, 并设置INF = 0x3f3f3f3f.
+					不过老师用u == 0来判断也是可以的,因为虽然输入可能是0,但是这个0,是数值的w[u] = 0
+					而不是u == 0, u代表的是ind, 它从1开始
 			1. 笔记
 				0.
-					1. 编号从1开始, 因为0有特殊含义: 空节点
-				1. 题目没有给编号,所以我们用ind来设置编号
-				2. 如果某个节点是0,意味着空的,我们传入&u是因为想改变它的值.
-					void insert(int& u, int w) 好厉害!
-					{
-					    if (!u) //如果是空的
-					    {
-					        u = ++ idx; //创建节点
-					        v[u] = w; //赋值
-					    }
-					    else if (w <= v[u]) insert(l[u], w); 
-					    else insert(r[u], w);
-					}
-				3. dfs()是前序遍历来计算max_depth
-				4. 二叉树老师喜欢用l[N],r[N], 而不是struct Node{int val; Node l, r;};
+					很神奇的insert():
+						1. 我给你举个例子: 
+							1. 26, 24, 21
+								root = 1
+								  	0	1	2	3	4
+								w 		26	24  21				 1. u = ++ idx;v[u] = w; 	=>	 root = ++ idx = 1; w[1] = 26;
+								l 		2	3					 2. insert(l[u], w); =>  u = ++ idx;v[u] = w; 	=>   l[root] = l[1] = ++ ind = 2; w[2] = 24	
+								 								 3. insert(l[u], w); =>  u = ++ idx;v[u] = w; 	=>   l[u] = l[2] = ++ ind = 3; w[3] = 21	
+								r 								 r没有更新
+							2. 26, 24, 29, 21	
+								root = 1
+								  	0	1	2	3	4
+								w 		26	24  29	21			  1. u = ++ idx;v[u] = w; 	=>	 root = ++ idx = 1; w[1] = 26;
+								l 		2(a)4(d)(e)				  2. insert(l[u], w); => u = ++ idx;v[u] = w; 	=>   l[root] = l[1] = ++ ind = 2; w[2] = 24	
+								 								  4. insert(l[u], w); => u = ++ idx;v[u] = w; 	=>   l[u] = l[2] = ++ ind = 4; w[4] = 24		
+								r 		3(b)(c)	(f)  			  3. insert(r[u], w); => u = ++ idx;v[u] = w; 	=>   r[root] = r[1] = ++ ind = 3; w[3] = 29
+								规律:
+									a点(编号为2)的点的left和right是: d点和c点, 也就是left的编号为4, 对应的数字是w[4], right是空
+									b点(编号为3)的点left和right是: e点和f点, 说明都是空(因为值==0, 值==0表示空)
+					insert()模板:
+						int l[N], r[N], w[N], ind;
+
+						void insert(int& u, int v){ 记得一定是传引用. 
+							if(!u){ 说明这个位置没有使用, 即root == 0, 或者l[u] == 0, r[u] == 0;
+								u = ++ind; 所以标号/token从1开始. 因为是传引用, 所以可以把l[u], r[u]改变
+								w[u] = v;
+								return;
+							}
+
+							if(v <= w[u]) insert(l[u], v);
+							else insert(r[u], v);
+						}
+
+						int root = 0; 意思是空节点, 相当于l[N]全局变量都是0, 也就是都是空节点
+						for(int i = 0; i < n; i++){
+							int v;
+							cin >> v;
+							insert(root, v);
+						}
+
+				1.
+					0.
+						1. 编号从1开始, 因为0有特殊含义: 空节点
+					1. 题目没有给编号,所以我们用ind来设置编号
+					2. 如果某个节点是0,意味着空的,我们传入&u是因为想改变它的值.
+						void insert(int& u, int w) 好厉害!
+						{
+						    if (!u) //如果是空的
+						    {
+						        u = ++ idx; //创建节点
+						        v[u] = w; //赋值
+						        return;
+						    }
+						    if (w <= v[u]) insert(l[u], w);  因为insert(int &i ,int w), 所以可以改变l[u]的值
+						    else insert(r[u], w);
+						}
+					3. dfs()是前序遍历来计算max_depth
+					4. 二叉树老师喜欢用l[N],r[N], 而不是struct Node{int val; Node l, r;};
 
 			2. 注释
 				1. y
@@ -16928,12 +17153,157 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 1010, INF = 0x3f3f3f3f;
+					int l[N], r[N], ind, w[N];
+					int cnt[N], maxd;
+					int n;
+
+					void insert(int& u, int v, int depth){
+						if(u == INF){
+							u = ++ ind;
+							w[u] = v;
+							cnt[depth]++;
+							if(depth > maxd) maxd = depth;
+						}
+						else if(v <= w[u]) insert(l[u], v, depth + 1);
+						else insert(r[u], v, depth + 1);
+					}
+
+					int main(){
+						cin >> n;
+
+						
+						memset(l, 0x3f, sizeof l);
+						memset(r, 0x3f, sizeof r);
+
+						int root = INF;
+						for(int i = 0; i < n; i++){
+							int v;
+							cin >> v;
+							insert(root, v, 0);
+						}
+
+						printf("%d + %d = %d", cnt[maxd], cnt[maxd - 1], cnt[maxd] + cnt[maxd - 1]);
+						return 0;
+
+					}
 				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+					int l[N], r[N], w[N], ind;
+					int cnt[N], maxd;
+					int n;
+
+					void insert(int& u, int v, int depth){
+						if(!u){
+							u = ++ind;
+							w[u] = v;
+							cnt[depth]++;
+							maxd = max(maxd, depth);
+							return;
+						}
+
+						if(v <= w[u]) insert(l[u], v, depth + 1);
+						else insert(r[u], v, depth + 1);
+					}
+
+					int main(){
+						cin >> n;
+						int root = 0;
+						for(int i = 0; i < n; i++){
+							int v;
+							cin >> v;
+							insert(root, v, 0);
+						}
+
+						int a = cnt[maxd], b = cnt[maxd-1];
+						printf("%d + %d = %d\n", a, b, a + b);
+						return 0;
+					}
 				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+					int l[N], r[N], w[N], ind;
+					int cnt[N], maxd;
+					int n;
+
+					void insert(int& u, int v, int depth){
+					    if(!u){
+					        u = ++ind;
+					        w[u] = v;
+					        cnt[depth]++;
+					        maxd = max(maxd, depth);
+					        return;
+					    }
+					    if(v <= w[u]) insert(l[u], v, depth + 1);
+					    else insert(r[u], v, depth + 1);
+					    
+					}
+
+					int main(){
+					    cin >> n;
+					    
+					    int root = 0;
+					    for(int i = 0; i < n; i++){
+					        int v;
+					        cin >> v;
+					        insert(root, v, 0);
+					    }
+					    
+					    int a = cnt[maxd], b = cnt[maxd-1];
+					    printf("%d + %d = %d\n", a, b, a + b);
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 1010;
+					int l[N], r[N], w[N], ind;
+					int cnt[N], maxd;
+					int n;
+
+					void insert(int& u, int v, int d){
+					    if(!u){
+					        u = ++ind;
+					        w[u] = v;
+					        cnt[d]++;
+					        maxd = max(maxd, d);
+					        return;
+					    }
+					    if(v <= w[u]) insert(l[u], v, d+1);
+					    else insert(r[u], v, d + 1);
+					}
+					int main(){
+					    cin >> n;
+					    
+					    int root = 0;
+					    for(int i = 0; i < n; i++){
+					        int v;
+					        cin >> v;
+					        insert(root, v, 0);
+					    }
+					    
+					    int a = cnt[maxd], b = cnt[maxd-1];
+					    printf("%d + %d = %d\n", a, b, a+b);
+					    return 0;
+					}
 				r5.
 
-		55. 1609. 前序和后序遍历	1119
+		todo 55. 1609. 前序和后序遍历	1119
 			0. bug
 			1. 笔记
 				1. 
@@ -17131,9 +17501,221 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 40;
+					int in[N], post[N];
+					unordered_map<int, int> l, r, pos;
+					int q[N];
+					int n;
+
+					int build(int il, int ir, int pl, int pr){
+						int root = post[pr];
+						int k = pos[root];
+						if(il < k) l[root] = build(il, k-1, pl, pl + (k-1-il));
+						if(k < ir) r[root] = build(k+1, ir, pl + (k-il), pr-1);
+						return root;
+					}
+
+
+					void bfs(int u){
+						q[0] = u;
+						int hh, tt;
+						hh = tt = 0;
+						int layer = 0;
+
+						while(hh <= tt){
+							int head = hh;
+							int tail = tt;
+							while(hh <= tail){
+								int t = q[hh++];
+								if(l.count(t)) q[++tt] = l[t];
+								if(r.count(t)) q[++tt] = r[t];
+							}
+							if(++layer % 2) reverse(q + head, q + tail + 1);
+						}
+
+						cout << q[0];
+						for(int i = 1; i < n; i++) cout << " " << q[i];
+						cout << endl;
+					}
+
+					int main(){
+						cin >> n;
+
+						for(int i = 0; i < n; i++){
+							cin >> in[i];
+							pos[in[i]] = i;
+						}
+						for(int i = 0; i < n; i++) cin >> post[i];
+
+						int root = build(0, n-1, 0, n-1);
+
+						bfs(root);
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 40;
+					int in[N], post[N], q[N];
+					unordered_map<int, int> l, r, pos;
+					int n;
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl, pl + (k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl+(k-il), pr-1);
+					    return root;
+					}
+
+					void bfs(int u){
+					    q[0] = u;
+					    int hh, tt;
+					    hh = tt = 0;
+					    
+					    int layer = 0;
+					    while(hh <= tt){
+					        int head = hh, tail = tt;
+					        while(hh <= tail){
+					            int t = q[hh++];
+					            if(l.count(t)) q[++tt] = l[t];
+					            if(r.count(t)) q[++tt] = r[t];
+					        }
+					        if(++layer % 2) reverse(q + head, q + tail + 1);
+					    }
+					    
+					    cout << q[0];
+					    for(int i = 1; i < hh; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    
+					    int root = build(0, n-1, 0, n-1);
+					    bfs(root);
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 40;
+					int in[N], post[N], q[N];
+					unordered_map<int, int> l, r, pos;
+					int n;
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl, pl+(k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl + (k-il), pr-1);
+					    return root;
+					}
+
+					void bfs(int u){
+					    q[0] = u;
+					    int hh, tt;
+					    hh = tt = 0;
+					    int layer = 0;
+					    while(hh <= tt){
+					        int head = hh, tail = tt;
+					        while(hh <= tail){
+					            int t = q[hh++];
+					            if(l.count(t)) q[++tt] = l[t];
+					            if(r.count(t)) q[++tt] = r[t];
+					        }
+					        if(++layer % 2) reverse(q + head, q + tail + 1);
+					    }
+					    cout << q[0];
+					    for(int i = 1; i < hh; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    for(int i = 0; i < n; i++){
+					        cin >> post[i];
+					    }
+					    
+					    int root = build(0, n-1, 0, n-1);
+					    bfs(root);
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 40;
+					int in[N], post[N], q[N];
+					unordered_map<int, int> l, r, pos;
+					int n;
+
+					int build(int il, int ir, int pl, int pr){
+					    int root = post[pr];
+					    int k = pos[root];
+					    if(il < k) l[root] = build(il, k-1, pl, pl+(k-1-il));
+					    if(k < ir) r[root] = build(k+1, ir, pl+(k-il), pr-1);
+					    return root;
+					}
+
+					void bfs(int u){
+					    q[0] = u;
+					    int hh, tt;
+					    hh = tt = 0;
+					    
+					    int layer = 0;
+					    while(hh <= tt){
+					        int head = hh, tail = tt;
+					        while(hh <= tail){
+					            int t = q[hh++];
+					            if(l.count(t)) q[++tt] = l[t];
+					            if(r.count(t)) q[++tt] = r[t];
+					        }
+					        if(++layer % 2) reverse(q + head, q + tail + 1);
+					    }
+					    cout << q[0];
+					    for(int i = 1;i < hh; i++) cout << " " << q[i];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    
+					    int root = build(0, n-1, 0, n-1);
+					    bfs(root);
+					    return 0;
+					}
 				r5.
 
 		57. 1631. 后序遍历	1138
@@ -17151,7 +17733,8 @@
 						    if (k < ir) build(k + 1, ir, pl + 1 + k - 1 - il + 1, pr);
 
 						    if (!post) post = root; 我喜欢这一句
-							    这一句只会执行一次, 也就是说, 第一次执行这一句的时候,就已经是最左边的接地拿了
+							    这一句只会执行一次, 也就是说, 第一次执行这一句的时候,就已经是tree最左下角的了
+							    	这时的root就是最左下角的, 也就应该是il == k的点
 								    题目要求的是后序遍历的第一个节点
 								    老师说了,写完了上面两个build()说明是遍历完所有的左子树和右子树了
 								    现在是看根节点了.其实这个根节点就是后序遍历的第一个节点,也就是树中最左边的节点
@@ -17170,7 +17753,6 @@
 								break;
 							}
 						}
-
 			2. 注释
 				1. y
 					#include <iostream>
@@ -17220,17 +17802,166 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 50010;
+					int in[N], pre[N];
+					int post;
+					int n;
+					unordered_map<int, int> pos;
+
+					void build(int il, int ir, int pl, int pr){
+						int root = pre[pl];
+						int k = pos[root];
+						if(il < k) build(il, k-1, pl+1, pl+1+(k-1-il));
+						if(k < ir) build(k+1, ir, pl+1+(k-il), pr);
+						if(!post) post = root;
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 0; i < n; i++) cin >> pre[i];
+						for(int i = 0; i < n; i++){
+							cin >> in[i];
+							pos[in[i]] = i;
+						}
+
+						build(0, n-1, 0, n-1);
+						cout << post << endl;
+						return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 50010;
+					int in[N], pre[N];
+					unordered_map<int, int> pos;
+					int post, n;
+
+					void build(int il, int ir, int pl, int pr){
+					    int root = pre[pl];
+					    int k = pos[root];
+					    if(il < k) build(il, k-1, pl+1, pl+1+(k-1-il));
+					    if(k < ir) build(k+1, ir, pl+1+(k-il), pr);
+					    if(!post) post = root;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++)cin >> pre[i];
+					    for(int i = 0; i < n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    
+					    build(0, n-1, 0, n-1);
+					    cout << post << endl;
+					    return 0;
+					}
 				r3.
 				r4.
 				r5.
 
-		58. 1552. AVL树的根	1160
+		todo 58. 1552. AVL树的根	1160
 			0. bug
+				1. 
+					正确的:
+						if(v < w[u]){
+							insert(l[u], v);
+							if(gb(u) >= 2){
+								if(gb(l[u]) == 1) R(u);
+								else L(l[u]), R(u);
+							}
+						}
+						else{
+							insert(r[u], v);
+							if(gb(u) <= -2){
+								if(gb(r[u]) == -1) L(u); 
+								else R(r[u]), L(u);
+							}
+						}
+					错误的: comment部分
+						if(v < w[u]){
+							insert(l[u], v);
+							if(gb(u) >= 2){
+								if(gb(l[u]) == 1) R(u);
+								else L(l[u]), R(u);
+							}
+							// else if(gb(u) <= -2){
+							// 	if(gb(r[u]) == -1) L(u); 
+							// 	else R(r[u]), L(u);
+							// }
+						}
+						else{
+							insert(r[u], v);
+							if(gb(u) <= -2){
+								if(gb(r[u]) == -1) L(u); 
+								else R(r[u]), L(u);
+							}
+							// else if(gb(u) >= 2){
+							// 	if(gb(l[u]) == 1) R(u);
+							// 	else L(l[u]), R(u);
+							// }
+						}
+				2.
+					insert(int& u, int v), L(int& u), R(int& u)
+						这三个都要传引用, 因为是结构体内部的变化
+				3. update()的时机:
+					1. 在L(), R()里面, 都要update()
+					2. 在insert()里面, 3种情况都要update()
+						1. 不简写: 学要写3次update();
+							1. if(!u){...; update()}
+							2. if(v < w[u]){...; update()}
+							3. else {...; update()}
+						2. 简写: 只需要写一次update()
+							if(!u){}
+							else if(v < w[u]){}
+							else{}
+							update();
+				4. 一个奇奇怪怪的bug: 竟然没有报错, 还我找半天
+					错误的: if(get_balance(r[u] == -1))
+					应该是: if(get_balance(r[u]) == -1)
+				5. 我nd是怎么了? 锈了?
+					约定好了: get_balance()是左侧-右侧,所以,如果是insert(l[u],v)那么就是判断是否是 >= 2
+					我的错误: insert(l[u],v)判断成了是否是 <= -2
 			1. 笔记
+				0. AVL的插入很简单: 总之, 最后的目标都是变成 屋顶 /\
+					1. 向l[u]插入, 不正常的两种情况:
+						1. / 一路左撇
+							解决: 直接R(u), 变成屋顶/\
+						2. < 先左撇儿子, 后右撇
+							解决: 先L(l[u]), 变成/, 后R(u), 变成屋顶/\
+					2. 向r[u]插入, 不正常的两种情况:
+						1. \ 一路右撇
+							解决: 直接L(u), 变成屋顶/\
+						2. > 先右撇儿子, 后左撇
+							解决: 先R(r[u]), 变成\, 后L(u), 变成屋顶/\
+					3. 关键背下来: 
+						void R(int& u) 
+						{
+						    int p = l[u]; 
+						    l[u] = r[p], r[p] = u; 
+						    update(u), update(p); 先更新底部t, 后更新顶部p
+						    u = p;
+						}
+
+						void L(int& u) 
+						{
+						    int p = r[u]; 
+						    r[u] = l[p], l[p] = u; 
+						    update(u), update(p);
+						    u = p;
+						}
+
 				1. 
 					1. avl 和 红黑树
-						avl需要学会判别,插入
+						avl需要学会判别,插入(get_balance, udpate, R, L, insert).
 						红黑树学会判别,(插入需要100多行,所以不会考)
 
 					2. 
@@ -17384,9 +18115,260 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], h[N], w[N], ind;
+					int n;
+
+					void update(int u){
+						h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+						return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+						int p = l[u];
+						l[u] = r[p], r[p] = u; 
+						update(u), update(p);
+						u = p;
+					}
+
+					void L(int& u){
+						int p = r[u];
+						r[u] = l[p], l[p] = u;
+						update(u), update(p);
+						u = p; 
+					}
+
+					void insert(int& u, int v){
+					    
+						if(!u){
+							u = ++ind;
+							w[u] = v;
+							update(u);
+							return;
+						}
+
+						if(v < w[u]){
+							insert(l[u], v);
+							if(gb(u) >= 2){
+								if(gb(l[u]) == 1) R(u);
+								else L(l[u]), R(u);
+							}
+							update(u);
+						}
+						else{
+							insert(r[u], v);
+							if(gb(u) <= -2){
+								if(gb(r[u]) == -1) L(u); 
+								else R(r[u]), L(u);
+							}
+							update(u);
+						}
+						
+					}
+
+					int main(){
+						cin >> n;
+
+						int root = 0;
+						for(int i = 0; i < n; i++)
+						{
+							int v;
+							cin >> v;
+							insert(root, v);
+						}
+						cout << w[root] << endl;
+					}
 				r2.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], w[N], h[N], ind;
+					int n;
+
+					int get_balance(int u){
+						return h[l[u]] - h[r[u]];
+					}
+
+					void update(int u){
+						h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					void R(int& u){
+						int p = l[u];
+						l[u] = r[p], r[p] = u;
+						update(u), update(p);
+						u = p;
+					}
+
+					void L(int& u){
+						int p = r[u];
+						r[u] = l[p], l[p] = u;
+						update(u), update(p);
+						u = p;
+					}
+
+					void insert(int& u, int v){
+						if(!u){
+							u = ++ind;
+							w[u] = v;
+						}else if(v < w[u]){
+							insert(l[u], v);
+							if(get_balance(u) >= 2){
+								if(get_balance(l[u]) >= 1) R(u);
+								else L(l[u]), R(u);
+							}
+						}else{
+							insert(r[u], v);
+							if(get_balance(u) <= -2){
+								if(get_balance(r[u]) <= -1) L(u);
+								else R(r[u]), L(u);
+							}
+						}
+						update(u);
+					}
+
+					int main(){
+						cin >> n;
+						int v;
+						int root = 0;
+						for(int i = 0; i < n; i++){
+							cin >> v;
+							insert(root, v);
+						}
+						cout << w[root] << endl;
+					}
 				r3.
+					#include <iostream>
+					using namespace std;
+
+					const int N = 40;
+					int l[N], r[N], w[N], ind;
+					int h[N];
+					int n;
+
+					int gb(int u){
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void update(int u){
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					void R(int& u){
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u){
+					    int p = r[u];
+					    r[u] =l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+
+					void insert(int& u, int v){
+					    if(!u) u = ++ind, w[u] = v;
+					    else if(v < w[u]){
+					        insert(l[u], v);
+					        if(gb(u) >= 2){
+					            if(gb(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }else{
+					        insert(r[u], v);
+					        if(gb(u) <= -2){
+					            if(gb(r[u]) == -1) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+					    update(u);
+					}
+
+					int main(){
+					    cin >> n;
+					    int v;
+					    int root = 0;
+					    for(int i = 0; i< n; i++){
+					        cin >> v;
+					        insert(root, v);
+					    }
+					    cout << w[root] << endl;
+					    
+					}
 				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 40;
+					int l[N], r[N], w[N], ind;
+					int h[N], n;
+
+					void update(int u){
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u){
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void insert(int& u, int v){
+					    if(!u){
+					        u = ++ind;
+					        w[u] = v;
+					    }else if(v < w[u]){
+					        insert(l[u], v);
+					        if(gb(u) >= 2){
+					            if(gb(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }else{
+					        insert(r[u], v);
+					        if(gb(u) <= -2){
+					            if(gb(r[u]) == -1) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+					    update(u);
+					}
+
+					int main(){
+					    cin >> n;
+					    int root = 0;
+					    int v;
+					    for(int i = 0; i < n;i ++){
+					        cin >> v;
+					        insert(root, v);
+					    }
+					    cout << w[root] << endl;
+					    return 0;
+					}
 				r5.
 
 		59. 1616. 判断完全 AVL树 	1123
