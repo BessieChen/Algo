@@ -17303,27 +17303,103 @@
 					}
 				r5.
 
-		todo 55. 1609. 前序和后序遍历	1119
+		55. 1609. 前序和后序遍历	1119
 			0. bug
+				1.
+					1. 错误的:
+						string ls, rs;
+						for(int i = l1+1; i <= r1; i++){
+							lc = build(l1 + 1, i-1, l2, l2 + (i-1-l1-1), ls);
+							rc = build(i+1, r1, l2+(i-l1-1), r2-1, rs);
+						我错误的想法:
+							1. i是k, 就是inordered的分割点, 但是这里没有inordered, 只有pre和post
+					2.  正确的:
+							1. i是左子树的最右侧, 而不是什么inordered的分割符
+								for(int i = preL; i <= preR; i++){
+									leftcnt = build(preL + 1, )
+								}
+						解释:
+							1. 首先i一定是从preL到preR, 一个都不能漏掉
+							2.
+								int lcnt = dfs(preL + 1, i, preR, postR + i - preL - 1, lin);
+								int rcnt = dfs(i + 1, preR, postR + i - preL, postR - 1, rin);
+							3. 解释: 其实就是正常的分割, 记住pre[]是要抛弃第一个, post[]是要抛弃最后一个
+								    pre[]
+										左子树:
+											preL + 1, i
+												所以当i == preL的时候, preL + 1 > preL, 就可以break
+										右子树:
+											i+1, preR
+									post[]
+										左子树:
+											postL, postL + (i - preL - 1)
+										右子树:
+											postL + (i - preL), postR - 1
+							4. 对比 ***:
+								在以前有inordered: 以下的xx和yy是pre或者post的左右端
+									build(il, k - 1, xx, yy)
+									build(k + 1, ir, xx, yy)
+									你看, 其中k-1和k+1其实是相隔了一个数字k, 因为这是inordered, 使用k做分割
+								现在: 根本就没有inordered, 所以不存在所谓的相隔数字k
+									int lcnt = build(preL + 1, i, xx, yy);
+									int rcnt = build(i + 1, xx, yy);
+									你看其中i和i+1中间没有相隔什么数字, 本身就是挨着的, 因为这是preordered
+				2. 记得最后string res要去掉末尾的空格:
+					res.pop_back();
 			1. 笔记
-				1. 
-					1. 暴力枚举左侧,右侧
-					2. 时间复杂度是阶乘
-						1. 假设第一层有11个,最左根节点,爆搜的是右边10个节点,但是有9中分割方式:例如左侧1个,右侧9个;左侧2个,右侧8个...
-						2. 搜第二层的时候, 例如左侧1个,右侧9个的: 右侧9个还分成了左侧1个,右侧8个;左侧2个,右侧7个...
-						3. 但是我们有很多限制,例如preorder的最左侧应该是postorder的最右侧.
+				0.
+					1. 这道题吧, 很多需要背诵的细节, 一个细节错了, 答案就错了:
+						0. 终止条件:
+							if(prel > prer) return 1
+								注意一定是严格的大于, 不能是prel >= prer,  因为即便是prel == prer也不能直接return 1, 也要判断是不是pre[prel] == post[postr]
+						1. 检查自身:
+							if(pre[prel] != post[postr]) return 0
+						2. 检查左右儿子: 左右儿子是爆搜确定的, 其中我们的分割点是从prel到prer, 一个都不能少
+							1. 左右儿子的返回的数字, 只要一个不满足, 就继续下一个
+							2. 如果左右儿子都满足, 就可以生成string
+								我之前的疑问: string会不会超出应该的长度
+								答案是: 不会的, 因为for loop中, string可能会被覆盖掉, 总之就是string只能被更新成其他string, 但是不会额外增加长度
+							3. string的加法:
+								如果是到了终止条件, 那么返回的lstr和rstr都是""空的
+								所以就可以 in = lstr + to_string(pre[preL]) + ' ' + rstr; 
+								这样string in就是第一个string
+							4. 注释:
+								int cnt = 0;
+							    for (int i = preL; i <= preR; i ++ )  // 枚举左子树包含的节点数量
+							    {
+							        string lstr, rstr;
+							        int lcnt = dfs(preL + 1, i, preR, postR + i - preL - 1, lstr);
+							        int rcnt = dfs(i + 1, r1, postR + i - preL - 1 + 1, postR - 1, rstr);
 
-					3. in.pop_back();去掉string的最后一个空格
-					4. 我很喜欢那个传入string rin, lin, string& in. 这样就可以把之前的in都传给rin了
-					5. in = lin + to_string(pre[l1]) + ' ' + rin; //是因为中序遍历, 左子树 + 根节点 + 右子树
-					6. cnt += lcnt * rcnt;还不是很懂, 到时候画个图.
-					7. 注意build的里面: 
-						左子树中, preorder是不包括第一个点(因为是根节点).
-						右子树中, postorder是不包括最后一个点(因为是根节点).
+							        if(lcnt == 0 || rcnt == 0) continue; 
 
-				2.
-					1. 这道题并没有用bool
-						用int, 即可以当成是bool: lcnt && rcnt, 又可以计算出合法子树的数量
+							        说明左右子树都是合法的, 那么我也是合法的
+						            in = lstr + to_string(pre[preL]) + ' ' + rstr; 
+						            cnt += lcnt * rcnt; 因为我们是暴力枚举 for (int i = l1; i <= r1; i ++ ) , 所以cnt可能会变成2,3..
+						            if (cnt > 1) break;
+							    }
+						3. 把自己传给父亲
+							return cnt
+
+				1.
+					1. 
+						1. 暴力枚举左侧,右侧
+						2. 时间复杂度是阶乘
+							1. 假设第一层有11个,最左根节点,爆搜的是右边10个节点,但是有9中分割方式:例如左侧1个,右侧9个;左侧2个,右侧8个...
+							2. 搜第二层的时候, 例如左侧1个,右侧9个的: 右侧9个还分成了左侧1个,右侧8个;左侧2个,右侧7个...
+							3. 但是我们有很多限制,例如preorder的最左侧应该是postorder的最右侧.
+
+						3. in.pop_back();去掉string的最后一个空格
+						4. 我很喜欢那个传入string rin, lin, string& in. 这样就可以把之前的in都传给rin了
+						5. in = lin + to_string(pre[l1]) + ' ' + rin; //是因为中序遍历, 左子树 + 根节点 + 右子树
+						6. cnt += lcnt * rcnt;还不是很懂, 到时候画个图.
+						7. 注意build的里面: 
+							左子树中, preorder是不包括第一个点(因为是根节点).
+							右子树中, postorder是不包括最后一个点(因为是根节点).
+
+					2.
+						1. 这道题并没有用bool
+							用int, 即可以当成是bool: lcnt && rcnt, 又可以计算出合法子树的数量
 			2. 注释
 				1. y
 					#include <iostream>
@@ -17354,7 +17430,6 @@
 					            if (cnt > 1) break;
 					        }
 					    }
-
 					    return cnt;
 					}
 
@@ -17383,9 +17458,182 @@
 				2. b
 			3. 5次
 				r1.
-				r2.
-				r3.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], post[N]; 
+					int n;
+
+					int build(int l1, int r1, int l2, int r2, string& s){
+						if(l1 > r1) return 1;
+
+						if(pre[l1] != post[r2]) return 0;
+
+						int cnt =0;
+						for(int i = l1; i <= r1; i++){
+						    	string ls, rs;
+							int lc = build(l1 + 1, i, l2, l2 + (i-l1-1), ls);
+							int rc = build(i+1, r1, l2+(i-l1), r2-1, rs);
+
+					        // cout << lc << " " << rc << endl;
+							if(lc == 0 || rc == 0) continue;
+
+							s = ls + to_string(pre[l1]) + " " + rs;
+					// 		cout << "hi" <<endl;
+							cnt += lc * rc;
+							if(cnt > 1) break;
+						}
+						return cnt;
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 0; i < n; i++) cin >> pre[i];
+						for(int i = 0; i < n; i++) cin >> post[i];
+
+						string res;
+						int cnt = build(0, n-1, 0, n-1, res);
+
+						if(cnt > 1) puts("No");
+						else puts("Yes");
+						res.pop_back();
+						cout << res << endl;
+						return 0;
+
+					}
+				r2. 很顺:
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], post[N];
+					int n;
+
+					int build(int preL, int preR, int postL, int postR, string& res){
+						int cnt = 0;
+						if(preL > preR) return 1;
+
+						if(pre[preL] != post[postR]) return 0;
+
+						for(int i = preL; i <= preR; i++){
+							string lstr, rstr;
+							int lcnt = build(preL + 1, i, postL, postL + ( i - preL - 1), lstr);
+							int rcnt = build(i + 1, preR, postL + (i - preL), postR - 1, rstr);
+
+							if(!lcnt || !rcnt) continue;
+							res = lstr + to_string(pre[preL]) + " " + rstr;
+							cnt += lcnt * rcnt;
+							if(cnt > 1) break;
+						}
+						return cnt;
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 0; i < n; i++) cin >> pre[i];
+						for(int i = 0; i < n; i++) cin >> post[i];
+
+						string res;
+						int cnt = build(0, n - 1, 0, n - 1, res);
+
+						if(cnt > 1) puts("No");
+						else puts("Yes");
+
+						res.pop_back();
+						cout << res << endl;
+						return 0;
+					}
+				r3. 顺利
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], post[N], n;
+
+					int build(int preL, int preR, int postL, int postR, string& res){
+					    int cnt = 0;
+					    if(preL > preR) return 1;
+					    
+					    if(pre[preL] != post[postR]) return 0;
+					    
+					    for(int i = preL; i <= preR; i++){
+					        string lstr, rstr;
+					        int lcnt, rcnt;
+					        lcnt = build(preL + 1, i, postL, postL + (i - preL - 1), lstr);
+					        rcnt = build(i + 1, preR, postL + (i- preL), postR - 1 , rstr);
+					        
+					        if(!lcnt || !rcnt) continue;
+					        res = lstr + to_string(pre[preL]) + " " + rstr;
+					        cnt += lcnt * rcnt;
+					        if(cnt > 1) break;
+					    }
+					    
+					    return cnt;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> pre[i];
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    
+					    string res;
+					    int cnt;
+					    cnt = build(0, n - 1, 0, n - 1, res);
+					    
+					    if(cnt == 1) puts("Yes");
+					    else puts("No");
+					    
+					    res.pop_back();
+					    cout << res << endl;
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], post[N], n;
+
+					int build(int preL, int preR, int postL, int postR, string& res){
+					    int cnt = 0;
+					    if(preL > preR) return 1;
+					    if(pre[preL] != post[postR]) return 0;
+					    
+					    for(int i = preL; i <= preR ; i++){
+					        string lstr, rstr;
+					        int lcnt, rcnt;
+					        lcnt = build(preL + 1, i, postL, postL + (i-preL -1), lstr);
+					        rcnt = build(i + 1, preR, postL + (i-preL), postR - 1, rstr);
+					        
+					        if(!lcnt || !rcnt) continue;
+					        res = lstr + to_string(pre[preL]) + " " + rstr;
+					        cnt += lcnt * rcnt;
+					        if(cnt > 1) break;
+					    }
+					    return cnt;
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> pre[i];
+					    for(int i = 0; i < n; i++) cin >> post[i];
+					    
+					    string res;
+					    int cnt;
+					    cnt = build(0, n - 1, 0, n - 1, res);
+					    
+					    if(cnt == 1) puts("Yes");
+					    else puts("No");
+					    
+					    res.pop_back();
+					    cout << res << endl;
+					    return 0;
+					}
 				r5.			
 
 		56. 1620. Z 字形遍历二叉树	1127
@@ -17718,6 +17966,8 @@
 					}
 				r5.
 
+	13. 2020年10月21日07:26:54
+
 		57. 1631. 后序遍历	1138
 			0. bug
 			1. 笔记
@@ -17868,8 +18118,8 @@
 				r4.
 				r5.
 
-		todo 58. 1552. AVL树的根	1160
-			0. bug
+		58. 1552. AVL树的根	1160
+			0. bug, 尤其警惕第4个bug, 总是会错在这里
 				1. 
 					正确的:
 						if(v < w[u]){
@@ -17924,7 +18174,7 @@
 							else if(v < w[u]){}
 							else{}
 							update();
-				4. 一个奇奇怪怪的bug: 竟然没有报错, 还我找半天
+				4. 需要重视的bug, 我已经犯了好多次了. 一个奇奇怪怪的bug: 竟然没有报错, 还我找半天
 					错误的: if(get_balance(r[u] == -1))
 					应该是: if(get_balance(r[u]) == -1)
 				5. 我nd是怎么了? 锈了?
@@ -18370,6 +18620,132 @@
 					    return 0;
 					}
 				r5.
+					#include <iostream>
+					#include <algorithm>
+					using namespace std;
+
+					const int N = 40;
+					int l[N], r[N], w[N], ind;
+					int h[N], n;
+
+					void update(int u){
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u){
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void insert(int& u, int v){
+					    if(!u){
+					        u = ++ind;
+					        w[u] = v;
+					    }else if(v < w[u]){
+					        insert(l[u], v);
+					        if(gb(u) >= 2){
+					            if(gb(l[u]) == 1) R(u);// cout << "r" << endl;
+					            else L(l[u]), R(u);// cout << "lr" << endl;
+					        }
+					    }else{
+					        insert(r[u], v);
+					        // cout << v << " " << gb(u) << endl;
+					        if(gb(u) <= -2){
+					            if(gb(r[u]) == -1) L(u);// cout << "l" << endl;
+					            else R(r[u]), L(u); //cout << "rl" << endl;
+					        }
+					    }
+					    update(u);
+					}
+					int main(){
+					    cin >> n;
+					    int v;
+					    int root = 0;
+					    for(int i = 0; i < n; i++){
+					        cin >> v;
+					        insert(root, v);
+					    }
+					    cout << w[root] << endl;
+					   
+					    return 0;
+					}
+				r6.
+					#include <iostream>
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], w[N], ind;
+					int n, h[N];
+
+					void update(int u){
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u){
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+
+					void insert(int& u, int v){
+					    if(!u){
+					        u = ++ind;
+					        w[u] = v;
+					    }
+					    else if(v < w[u]){
+					        insert(l[u], v);
+					        if(gb(u) >= 2){
+					            if(gb(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }else{
+					        insert(r[u], v);
+					        if(gb(u) == -2){
+					            if(gb(r[u]) == -1) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+					    update(u);
+					}
+
+					int main(){
+					    cin >> n;
+					    int v, root = 0;
+					    for(int i = 0; i < n; i++){
+					        cin >> v;
+					        insert(root, v);
+					    }
+					    cout << w[root] << endl;
+					    return 0;
+					}
+
+	14. 
 
 		59. 1616. 判断完全 AVL树 	1123
 			0. bug
