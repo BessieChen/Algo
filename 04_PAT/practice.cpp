@@ -17177,7 +17177,7 @@
 
 					int main(){
 						cin >> n;
-
+ 
 						
 						memset(l, 0x3f, sizeof l);
 						memset(r, 0x3f, sizeof r);
@@ -18745,10 +18745,21 @@
 					    return 0;
 					}
 
-	14. 
+	14. 2020年11月2日14:08:20
 
 		59. 1616. 判断完全 AVL树 	1123
 			0. bug
+				1. 果然很就不写代码就会出问题:
+					正确:
+						if(!u) u = ++ ind, w[u] = v;
+					错误:	
+						if(!u) u = ind ++, w[u] = v;
+				2. pos也就是记录个数的.
+					正确
+						pos[root] = 1; 根节点对应的ind是1
+					错误:
+						pos[0] = 1; 根节点对应的ind是1
+
 			1. 笔记
 				1. 
 					1. 构建avl
@@ -18767,28 +18778,28 @@
 						例3: ind的最大值是6 == abcdef共6个节点,是完全二叉树
 
 					4.
-					int q[N]; q是bfs用到的队列
-					int pos[N];	pos是记录每个节点(值)的对应的ind
-					例如某个节点的值是99,它的ind是2,即pos[99]=2. 如果这个节点的左子的值是88, 它的ind就是2*2, 即pos[88] = 4
-					因为题目中说了所有的值都不同,所以可以用pos数组存.
-					bool bfs(int root)
-					{
-					    int hh = 0, tt = 0;
-					    q[0] = root;
-					    pos[root] = 1; 根节点对应的ind是1
+						int q[N]; q是bfs用到的队列
+						int pos[N];	pos是记录每个节点(值)的对应的ind
+						例如某个节点的值是99,它的ind是2,即pos[99]=2. 如果这个节点的左子的值是88, 它的ind就是2*2, 即pos[88] = 4
+						因为题目中说了所有的值都不同,所以可以用pos数组存.
+						bool bfs(int root)
+						{
+						    int hh = 0, tt = 0;
+						    q[0] = root;
+						    pos[root] = 1; 根节点对应的ind是1
 
-					    bool res = true;
-					    while (hh <= tt)
-					    {
-					        int t = q[hh ++ ];
-					        if (pos[t] > n) res = false; 这就是我们上面说的,只要一个超出了n,就说明前面有空位,说明不是完全二叉树
+						    bool res = true;
+						    while (hh <= tt)
+						    {
+						        int t = q[hh ++ ];
+						        if (pos[t] > n) res = false; 这就是我们上面说的,只要一个超出了n,就说明前面有空位,说明不是完全二叉树
 
-					        if (l[t]) q[ ++ tt] = l[t], pos[l[t]] = pos[t] * 2; 插入左子, t的左子的ind是t的ind*2
-					        if (r[t]) q[ ++ tt] = r[t], pos[r[t]] = pos[t] * 2 + 1; 插入右子, t的右子的ind是t的ind*2+1
-					    }
+						        if (l[t]) q[ ++ tt] = l[t], pos[l[t]] = pos[t] * 2; 插入左子, t的左子的ind是t的ind*2
+						        if (r[t]) q[ ++ tt] = r[t], pos[r[t]] = pos[t] * 2 + 1; 插入右子, t的右子的ind是t的ind*2+1
+						    }
 
-					    return res;
-					}
+						    return res;
+						}
 
 
 			2. 注释
@@ -18902,17 +18913,472 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], h[N], w[N], ind;
+					int q[N], pos[N];
+					int n;
+
+					void update(int u){
+						h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+						return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+						int p = l[u];
+						l[u] = r[p], r[p] = u;
+						update(u), update(p);
+						u = p; 
+					}
+
+					void L(int& u){
+						int p = r[u];
+						r[u] = l[p], l[p] = u;
+						update(u), update(p);
+						u = p;
+					}
+
+					void insert(int& u, int v){
+						if(!u){
+							u = ++ ind;
+							w[u] = v;
+							update(u);
+						}
+						else if(v < w[u]){
+							insert(l[u], v);
+							if(gb(u) >= 2){
+								if(gb(l[u]) >= 1) R(u);
+								else L(l[u]), R(u);
+							}
+							update(u);
+						}else{
+							insert(r[u], v);
+							if(gb(u) <= -2){
+								if(gb(r[u]) <= -1) L(u);
+								else R(r[u]), L(u);
+							}
+							update(u);
+						}
+					}
+
+					bool bfs(int root){
+						int hh, tt;
+						hh = tt = 0;
+						q[0] = root;
+					// 	cout << "root " << root << endl;
+						pos[root] = 1;
+						bool res = true;
+						while(hh <= tt){
+							int t = q[hh++];
+					// 		cout << pos[t] << " hi" << endl;
+							if(pos[t] > n) res = false;
+							if(l[t]) q[++tt] = l[t], pos[l[t]] = pos[t] * 2; 
+							if(r[t]) q[++tt] = r[t], pos[r[t]] = pos[t] * 2 + 1;
+						}
+
+						cout << w[q[0]];
+						for(int i = 1; i < hh; i++){
+							cout << " " << w[q[i]];
+						}
+						cout << endl;
+						return res;
+					}
+
+					int main(){
+						
+						cin >> n;
+
+						int root = 0;
+						for(int i = 0; i < n; i++){
+							int v;
+							cin >> v;
+							insert(root, v);
+						}	
+
+						bool res = bfs(root);
+						if(res) cout << "YES" << endl;
+						else cout << "NO" << endl;
+						return 0;
+
+					}
 				r2.
-				r3.
-				r4.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], h[N], w[N], ind;
+					int q[N], pos[N];
+					int n;
+					int root;
+
+					void update(int u){
+						h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+						return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+						int p = l[u];
+						l[u] = r[p], r[p] = u;
+						update(u), update(p);
+						u = p;
+					}
+
+					void L(int& u){
+						int p = r[u];
+						r[u] = l[p], l[p] = u;
+						update(u), update(p);
+						u = p;
+					}
+
+					void insert(int& u, int v){
+						if(!u){
+							u = ++ind;
+							w[u] = v;
+						}else if(v < w[u]){
+							insert(l[u], v);
+							if(gb(u) == 2){
+								if(gb(l[u]) == 1) R(u);
+								else L(l[u]), R(u);
+							}
+						}else{
+							insert(r[u], v);
+							if(gb(u) == -2){
+								if(gb(r[u]) == -1) L(u);
+								else R(r[u]), L(u);
+							}
+						}
+						update(u);
+					}
+
+					bool bfs(int root){
+						int hh, tt;
+						hh = tt = 0;
+						q[0] = root;
+						bool res = true;
+						pos[root] = 1;
+						while(hh <= tt){
+							int t = q[hh++];
+							if(pos[t] > n) res = false;
+							if(l[t]) q[++tt] = l[t], pos[l[t]] = pos[t] * 2;
+							if(r[t]) q[++tt] = r[t], pos[r[t]] = pos[t] * 2 + 1;
+						}
+						cout << w[q[0]];
+						for(int i = 1; i < hh; i++){
+							cout << " " << w[q[i]];
+						}
+						cout << endl;
+						return res;
+					}
+
+					int main(){
+						cin >> n;
+						for(int i = 0; i < n; i++){
+							int v;
+							cin >> v;
+							insert(root, v);
+						}
+
+						bool res = bfs(root);
+						if(res) cout << "YES" << endl;
+						else cout << "NO" << endl;
+
+					}
+				r3. todo 有bug, 且没找到bug
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], h[N], w[N], ind;
+					int q[N], pos[N];
+					int n, root;
+
+					void update(int u){
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u){
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void insert(int& u, int v){
+					    if(!u) u = ++ ind, w[u] = v;
+					    else if(v < w[u]){
+					        insert(l[u], v);
+					        if(gb(u) == 2){
+					            if(gb(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }else{
+					        insert(r[u], v);
+					        if(gb(u) == -2){
+					            if(gb(r[u] == -1)) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+					    update(u);
+					}
+
+					bool bfs(int root){
+					    int hh, tt;
+					    hh = tt = 0;
+					    
+					    q[0] = root;
+					    bool res = true;
+					    pos[root] = 1;
+					    while(hh <= tt){
+					        int t = q[hh++];
+					        
+					        if(l[t]) q[++tt] = l[t], pos[l[t]] = pos[t] * 2;
+					        if(r[t]) q[++tt] = r[t], pos[r[t]] = pos[t] * 2 + 1;
+					        
+					        if(pos[t] > n) res = false;
+					    }
+					    
+					    cout << w[q[0]];
+					    for(int i = 1; i < hh; i++) cout << " " << w[q[i]];
+					    cout << endl;
+					    return res;
+					}
+
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        int v;
+					        cin >> v;
+					        insert(root, v);
+					    }
+					    
+					    bool res = bfs(root);
+					    if(res) cout << "YES" << endl;
+					    else cout << "NO" << endl;
+					    return 0;
+					}
+				r4. 好奇怪,再写一次,一次通过..上面的bug到底是什么?
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], h[N], w[N], ind;
+					int q[N], pos[N];
+					int n, root;
+
+					void update(int u){
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void L(int& u){
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void insert(int& u, int v){
+					    if(!u) u = ++ ind, w[u] = v;
+					    else if(v < w[u]){
+					        insert(l[u], v);
+					        if(gb(u) == 2){
+					            if(gb(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }else{
+					        insert(r[u], v);
+					        if(gb(u) == -2){
+					            if(gb(r[u] == -1)) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+					    update(u);
+					}
+
+					bool bfs(int root){
+					    int hh, tt;
+					    hh = tt = 0;
+					    
+					    q[0] = root;
+					    bool res = true;
+					    pos[root] = 1;
+					    while(hh <= tt){
+					        int t = q[hh++];
+					        
+					        if(l[t]) q[++tt] = l[t], pos[l[t]] = pos[t] * 2;
+					        if(r[t]) q[++tt] = r[t], pos[r[t]] = pos[t] * 2 + 1;
+					        
+					        if(pos[t] > n) res = false;
+					    }
+					    
+					    cout << w[q[0]];
+					    for(int i = 1; i < hh; i++) cout << " " << w[q[i]];
+					    cout << endl;
+					    return res;
+					}
+
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        int v;
+					        cin >> v;
+					        insert(root, v);
+					    }
+					    
+					    bool res = bfs(root);
+					    if(res) cout << "YES" << endl;
+					    else cout << "NO" << endl;
+					    return 0;
+					}
 				r5.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					int l[N], r[N], h[N], w[N], ind;
+					int q[N], pos[N];
+					int n, root;
+
+					void update(int u){
+					    h[u] = max(h[l[u]], h[r[u]]) + 1;
+					}
+
+					int gb(int u){
+					    return h[l[u]] - h[r[u]];
+					}
+
+					void R(int& u){
+					    int p = l[u];
+					    l[u] = r[p], r[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+
+					void L(int& u){
+					    int p = r[u];
+					    r[u] = l[p], l[p] = u;
+					    update(u), update(p);
+					    u = p;
+					}
+
+					void insert(int& u, int v){
+					    if(!u){
+					        u = ++ ind;
+					        w[u] = v;
+					    }else if(v < w[u]){
+					        insert(l[u], v);
+					        if(gb(u) == 2){
+					            if(gb(l[u]) == 1) R(u);
+					            else L(l[u]), R(u);
+					        }
+					    }
+					    else{
+					        insert(r[u], v);
+					        if(gb(u) == -2){
+					            if(gb(r[u]) == -1) L(u);
+					            else R(r[u]), L(u);
+					        }
+					    }
+					    
+					    update(u);
+					}
+
+					void bfs(int root){
+					    int hh, tt;
+					    hh = tt = 0;
+					    
+					    bool res = true;
+					    pos[root] = 1;
+					    
+					    q[0] = root;
+					    while(hh <= tt){
+					        int t = q[hh++];
+					        if(l[t]) q[++tt] = l[t], pos[l[t]] = pos[t] * 2;
+					        if(r[t]) q[++tt] = r[t], pos[r[t]] = pos[t] * 2 + 1;
+					        if(pos[t] > n) res = false;
+					    }
+					    
+					    cout << w[q[0]];
+					    for(int i = 1; i < hh; i++) cout << " " << w[q[i]];
+					    cout << endl;
+					    if(res) cout << "YES" << endl;
+					    else cout << "NO" << endl;
+					    return;
+					    
+					    
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++){
+					        int v;
+					        cin >> v;
+					        insert(root, v);
+					    }
+					    
+					   bfs(root);
+					   
+					   return 0;
+					}
+
+	15. 2020年11月3日08:24:56
 
 		60. 1628. 判断红黑树	1135  ***** 
 			0. bug
 				1.  left和right不赋初值0就会错呢
 					考虑到有k个测试案例，如果left与right不附初值0
 					那么当左子树或右子树为空不向下递归时则left与right没有更新，是之前测试案例的值
+				2. 每次记得pos.clear()
+				3. 记得要把in[i] = abs(pre[i]);
+					但是build()里面是 root = pre[pl], k = pos[abs(root)];
 			1. 笔记
+				0. 之所以用build()加工
+					1. return root
+					2. 计算ls 和 rs
+					因为:
+						1. root可以用递归的方式求得: 用来判断这个条件 if(root < 0) {if(left < 0 || right < 0) res = false;}
+						2. ls和rs也可以递归求得
+						3. 需要判断的东西: 都可以递归求得, 所以放在了一个 build()里面
+							1. 根节点是黑色(最后判断)
+							2. 红色节点的儿子都是黑色(递归的时候判断)
+							3. 每个节点到每个叶子节点,经过的黑色点的个数都是一样的(递归的时候判断)
 				0. 
 					1. build() 包含了两种信息: 两个儿子的颜色, 两个儿子(两个路径)的黑色节点数量
 						1. 两个儿子的颜色: 也就是用left 和 right传回来的, 如果父亲是红色, 此时如果l,r有一个是红色, 那么就是false, 不是红黑树 
@@ -19103,15 +19569,313 @@
 					    return 0;
 					}
 			3. 5次
-				r1.
+				r1. 挺顺利的,不难
+					#include<iostream>
+					#include<unordered_map>
+					#include<algorithm>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], in[N];
+					unordered_map<int, int> pos;
+					int n;
+					bool ans;
+
+					int build(int il, int ir, int pl, int pr, int& sum){
+					    int root = pre[pl];
+					    int k = pos[abs(root)];
+
+					    if(k < il || k > ir){
+					        ans = false;
+					        return -1;
+					    }
+
+					    int left = 0, right = 0; 
+					    int ls = 0, rs = 0;
+					    if(il < k) left = build(il, k-1, pl+1, pl+1+(k-1-il), ls);
+					    if(k < ir) right = build(k+1, ir, pl+1+(k-il), pr, rs);
+
+					    if(ls != rs){
+					        ans = false;
+					        return -1;
+					    }
+
+					    sum = ls;
+					    if(root < 0){
+					        if(left < 0 || right < 0){
+					            ans = false;
+					            return -1;
+					        }
+					    }else{
+					        sum ++;
+					    }
+
+					    return root;
+					}
+
+
+					int main(){
+					    int T;
+					    cin >> T;
+					    while(T--){
+					        ans = true;
+
+					        cin >> n;
+					        for(int i = 0; i < n ; i++){
+					            cin >> pre[i];
+					            in[i] = abs(pre[i]);
+					        }
+
+					        sort(in, in + n);
+					        pos.clear();
+					        for(int i = 0; i < n; i++){
+					            pos[in[i]] = i;
+					        }
+
+					        int sum;
+					        int root = build(0, n-1, 0, n-1, sum);
+					        if(root < 0) ans = false;
+					        if(ans) cout << "Yes" << endl;
+					        else cout << "No" << endl;
+					    }
+
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], in[N];
+					unordered_map<int, int> pos;
+					int n;
+					bool res;
+
+					int build(int il, int ir, int pl, int pr, int& sum){
+					    int root = pre[pl];
+					    int k = pos[abs(root)];
+					    
+					    if(k < il || k > ir){
+					        res = false;
+					        return -1;
+					    }
+					    
+					    int left = 0, right = 0;
+					    int ls = 0, rs = 0;
+					    if(il < k) left = build(il, k - 1, pl + 1, pl + 1 + (k-1-il), ls);
+					    if(k < ir) right = build(k+1, ir, pl+1+(k-il), pr, rs);
+					    
+					    if(ls != rs){
+					        res = false;
+					        return -1;
+					    }
+					    
+					    sum = ls;
+					    if(root > 0){
+					        sum ++;
+					    }else{
+					        if(left < 0 || right < 0){
+					            res = false;
+					            return -1;
+					        }
+					    }
+					    
+					    return root;
+					    
+					}
+
+					int main(){
+					    int T;
+					    cin >> T;
+					    while(T--){
+					        res = true;
+					        cin >> n;
+					        for(int i = 0; i < n; i++)
+					        {
+					            cin >> pre[i];
+					            in[i] = abs(pre[i]);
+					        }
+					        
+					        sort(in, in + n);
+					        pos.clear();
+					        for(int i = 0 ; i <n; i++){
+					            pos[in[i]] = i;
+					        }
+					        
+					        int sum;
+					        int root = build(0, n-1, 0, n-1, sum);
+					        if(root < 0) res = false;
+					        if(res) cout << "Yes" << endl;
+					        else cout << "No" << endl;
+					    }
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], in[N];
+					unordered_map<int, int> pos;
+					int n;
+					bool res;
+
+					int build(int il, int ir, int pl, int pr, int& sum){
+					    int root = pre[pl];
+					    int k = pos[abs(root)];
+					    
+					    if(k < il || k > ir){
+					        res = false;
+					        return -1;
+					    }
+					    
+					    int left = 0, right = 0;
+					    int ls = 0, rs = 0;
+					    if(il < k) left = build(il, k - 1, pl + 1, pl + 1 + (k - 1 - il), ls);
+					    if(k < ir) right = build(k + 1, ir, pl + 1 + (k - il), pr, rs);
+					    
+					    if(ls != rs){
+					        res = false;
+					        return -1;
+					    }
+					    sum = ls;
+					    
+					    if(root < 0){
+					        if(left < 0 || right < 0){
+					            res = false;
+					            return -1;
+					        }
+					    }
+					    if(root > 0) sum ++ ;
+					    return root;
+					}
+
+					int main(){
+					    int T;
+					    cin >> T;
+					    while(T--){
+					        res = true;
+					        cin >> n;
+					        for(int i = 0; i < n; i++){
+					            cin >> pre[i];
+					            in[i] = abs(pre[i]);
+					        }
+					        
+					        sort(in, in + n);
+					        pos.clear();
+					        for(int i = 0; i < n; i++){
+					            pos[in[i]] = i;
+					        }
+					        
+					        int sum;
+					        int root = build(0, n-1, 0, n-1, sum);
+					        if(root < 0) res = false;
+					        if(res) cout << "Yes" << endl;
+					        else cout << "No" << endl;
+					    }
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 40;
+					int pre[N], in[N];
+					unordered_map<int, int> pos;
+					int n;
+					bool res;
+
+					int build(int il, int ir, int pl, int pr, int& sum){
+					    int ls = 0, rs = 0;
+					    int root = pre[pl];
+					    int k = pos[abs(root)];
+					    
+					    if(k < il || k > ir){
+					        res = false;
+					        return -1;
+					    }
+					    
+					    int left = 0, right = 0;
+					    if(il < k) left = build(il, k - 1, pl + 1, pl + 1 + (k - 1- il), ls);
+					    if(k < ir) right = build(k + 1, ir, pl + 1 + ( k - il), pr, rs);
+					    
+					    if(ls != rs){
+					        res = false;
+					        return -1;
+					    }
+					    sum = ls;
+					    if(root < 0){
+					        if(left < 0 || right < 0){
+					            res = false;
+					            return -1;
+					        }
+					    }
+					    
+					    if(root > 0){
+					       sum ++; 
+					    }
+					    return root;
+					    
+					}
+
+					int main(){
+					    int T;
+					    cin >> T;
+					    while(T--){
+					        res = true;
+					        cin >> n;
+					        for(int i = 0; i < n; i++){
+					            cin >> pre[i];
+					            in[i] = abs(pre[i]);
+					        }
+					        
+					        sort(in, in + n);
+					        pos.clear();
+					        for(int i = 0 ; i < n ; i++){
+					            pos[in[i]] = i;
+					        }
+					        
+					        int sum;
+					        int root = build(0, n-1, 0, n-1, sum);
+					        if(root < 0) res = false;
+					        if(res) cout << "Yes" << endl;
+					        else cout << "No" << endl;
+					    }
+					    
+					    return 0;
+					}
 				r5.
 
 		61. 1539. 等重路径	1053
 			0. bug
 			1. 笔记
+				0. 思路还是很简单的.
+					注意的地方:
+						1. dfs()里面传入的东西,是当前自己节点的所有信息
+							也就是dfs(int u, int s, xx path)中s和path是已经包含了自己这个节点u的信息, 而不是进入dfs()之后再处理这些信息
+							原因: 因为我们有恢复现场这个步骤. 而恢复现场是要给儿子节点已经准备好信息, 所以dfs()的参数就是要包括已经准备好的信息
+								path.push_back(w[i]); 
+				                dfs(i, s + w[i], path); 这个权重s + w[i]也算是恢复现场. 因为每个儿子的信息都不同
+				                path.pop_back();
+				1. 我们有ans的排序: 从大到小
+					sort(ans.begin(), ans.end(), greater<vector<int>>());
+				2. 检查是否是leaf:
+					bool is_leaf(int u){
+					    for(int i = 0; i < n; i++){
+					        if(g[u][i]) return false;
+					    }
+					    return true;
+					}
 				0. 
 					1. 考察了 dfs() 来搜索每一个从根到叶子的路径
 						其中是先从 最开始的时候, 传入根节点的信息: 权值, 和path
@@ -19134,8 +19898,7 @@
 				1. 
 					1. 用邻接矩阵存,而不是邻接表
 					2. pat很要求stl的使用,例如这道题需要使用vector<>的比较,你不需要自己实现小于号,很方便
-					3. 
-					因为N很小,所以老师用邻接矩阵存,老师说pat的很多题都可以邻接矩阵存.
+					3. 因为N很小,所以老师用邻接矩阵存,老师说pat的很多题都可以邻接矩阵存.
 			2. 注释
 				1. y
 					#include <iostream>
@@ -19291,20 +20054,257 @@
 
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+					int n, m, S;
+					int w[N];
+					bool g[N][N];
+					vector<vector<int>> ans;
+					vector<int> path;
+
+					void dfs(int u, int s, vector<int> path){
+					    bool is_leaf = true;
+					    for(int i = 0; i < n; i++){
+					        if(g[u][i]){
+					            is_leaf = false;
+					            break;
+					        }
+					    }
+
+					    if(is_leaf){
+					        if(s == S) ans.push_back(path);
+					        return;
+					    }else{
+					        for(int i = 0; i < n; i++){
+					            if(g[u][i]){
+					                path.push_back(w[i]);
+					                dfs(i, s + w[i], path);
+					                path.pop_back();
+					            }
+					        }
+					    }
+					}
+
+					int main(){
+					    cin >> n >> m >> S;
+					    for(int i = 0; i < n ; i++) cin >> w[i];
+
+					    for(int i = 0; i < m ; i++){
+					        int id, k, son;
+					        cin >> id >> k;
+					        while(k--){
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+
+					    path.push_back(w[0]);
+					    dfs(0, w[0], path);
+
+					    sort(ans.begin(), ans.end(), greater<vector<int>>());
+					    for(auto& item : ans){
+					        cout << item[0];
+					        for(int i = 1; i < item.size(); i++) cout << " " << item[i];
+					        cout << endl;
+					    }
+
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+
+
+					using namespace std;
+
+					const int N = 110;
+					int n, m, S, w[N];
+					bool g[N][N];
+					vector<vector<int>> ans;
+
+					bool is_leaf(int u){
+					    for(int i = 0; i < n; i++){
+					        if(g[u][i]) return false;
+					    }
+					    return true;
+					}
+
+					void dfs(int u, int s, vector<int>& path){
+					    if(is_leaf(u)){
+					        if(s == S) ans.push_back(path);
+					    }else{
+					        for(int i = 0; i < n; i++){
+					            if(g[u][i]){
+					                path.push_back(w[i]);
+					                dfs(i, s + w[i], path);
+					                path.pop_back();
+					            }
+					        }
+					    }
+					}
+
+					int main(){
+					    cin >> n >> m >> S;
+					    for(int i = 0; i < n; i++) cin >> w[i];
+					    for(int i = 0; i < m; i++){
+					        int id, k, son;
+					        cin >> id >> k;
+					        while(k--){
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+
+					    vector<int> path({w[0]});
+					    dfs(0, w[0], path);
+					    
+					    sort(ans.begin(), ans.end(), greater<vector<int>>());
+
+					    for(auto& item : ans){
+					        cout << item[0];
+					        for(int i = 1; i < item.size(); i++) cout << " " << item[i];
+					        cout << endl;
+					    }
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+					int n, m, S, w[N];
+					bool g[N][N];
+					vector<vector<int>> ans;
+
+					bool is_leaf(int u){
+					    for(int i = 0; i < n ; i++){
+					        if(g[u][i]) return false;
+					    }
+					    return true;
+					}
+					void dfs(int u, int s, vector<int>& path){
+					    if(is_leaf(u)){
+					        if(s == S) ans.push_back(path);
+					    }else{
+					        for(int i = 0; i < n; i++){
+					            if(g[u][i]){
+					                path.push_back(w[i]);
+					                dfs(i, s + w[i], path);
+					                path.pop_back();
+					            }
+					        }
+					    }
+					}
+
+					int main(){
+					    cin >> n >> m >> S;
+					    for(int i = 0; i < n; i++) cin >> w[i];
+					    for(int i = 0; i < m; i++){
+					        int id, k, son;
+					        cin >> id >> k;
+					        while(k--){
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+					    
+					    vector<int> path({w[0]});
+					    dfs(0, w[0], path);
+					    sort(ans.begin(), ans.end(), greater<vector<int>>());
+					    
+					    for(auto& item : ans){
+					        cout << item[0];
+					        for(int i = 1; i < item.size(); i++) cout << " " << item[i];
+					        cout << endl;
+					    }
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 110;
+					int n, m, S, w[N];
+					bool g[N][N];
+					vector<vector<int>> ans;
+
+					bool is_leaf(int u){
+					    for(int i = 0; i < n; i++) if(g[u][i]) return false;
+					    return true;
+					}
+					void dfs(int u, int s, vector<int>& path){
+					    if(is_leaf(u)){
+					        if(s == S) ans.push_back(path);
+					    }
+					    else{
+					        for(int i = 0; i < n; i++){
+					            if(g[u][i]){
+					                path.push_back(w[i]);
+					                dfs(i, s + w[i], path);
+					                path.pop_back();
+					            }
+					        }
+					    }
+					}
+
+					int main(){
+					    cin >> n >> m >> S;
+					    for(int i = 0; i < n; i++) cin >> w[i];
+					    for(int i = 0; i < m ; i++){
+					        int id, k, son;
+					        cin >> id >> k;
+					        while(k--){
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+					    
+					    vector<int> path({w[0]});
+					    dfs(0, w[0], path);
+					    sort(ans.begin(), ans.end(), greater<vector<int>>());
+					    for(auto& item : ans){
+					        cout << item[0];
+					        for(int i = 1; i < item.size(); i++) cout << " " << item[i];
+					        cout << endl;
+					    }
+					    return 0;
+					    
+					}
 				r5.
 
 		62. 1584. 最大的一代	1094
 			0. bug
+				1. 题目的编号是从01开始的, 而不是从00开始的:
+					while(level[l].size()){
+				        for(int id : level[l]){
+				            错误: for(int i = 0; i < n; i++){
+				            正确: for(int i = 1; i <= n; i++){
+				                if(g[id][i]) level[l+1].push_back(i);
+				            }
+				        }
+				        l++;
+				    }
+				    另外, 题目认为最顶层是01层而不是00层
+				    所以我们是level[1].push_back(1); 而不是level[0].push_back(1);
+				2. 我们用的是 vector<int> level[N]; 而不是 vector<vector<int>> level;
 			1. 笔记
 				1. 
 					1. 就是宽搜,老师没有用queue[]实现,而是vector<int> level[N];
-					2.
-						level[1].push_back(1);
+					2. 总之和queue[]很像, 就是用前面一层来populate后面一层
+						不过还是容易写错, 多写几次
+							level[1].push_back(1);
 						    int l = 1;
-
 						    while (level[l].size())
 						    {
 						        for (auto ver : level[l]) 看这个level上的所有人
@@ -19379,8 +20379,138 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 110;
+
+					int n, m;
+					bool g[N][N];
+					vector<int> level[N];
+
+
+					int main(){
+
+					    cin >> n >> m;
+					    for(int i = 0; i < m; i++){
+					        int id, k, son;
+					        cin >> id >> k;
+					        while(k--){
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+					    
+					    //exit(0);
+
+					    level[1].push_back(1);
+					    int l = 1;
+					    while(level[l].size()){
+					        for(int id : level[l]){
+					            for(int i = 1; i <= n; i++){
+					                if(g[id][i]) level[l+1].push_back(i);
+					            }
+					        }
+					        l++;
+					    }
+					    
+
+					    int k = 1;
+					    for(int i = 1; i < l ; i++){
+					        if((int)level[i].size() > (int)level[k].size()) k = i;
+					    }
+
+					    
+					    cout << level[k].size() <<  " " << k << endl;
+					    return 0;
+
+					}
 				r2.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 110;
+					int n, m;
+					bool g[N][N];
+					vector<int> level[N];
+
+					int main(){
+					    cin >> n >> m;
+					    while(m--){
+					        int id, k, son;
+					        cin >> id >> k;
+					        while(k--){
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+					    
+					    level[1].push_back(1);
+					    int l = 1;
+					    int maxn = 0;
+					    int maxk = 0;
+					    while(level[l].size()){
+					        for(auto item : level[l]){
+					            for(int i = 1 ; i <= n; i++){
+					                if(g[item][i]) level[l+1].push_back(i);
+					            }
+					        }
+					        if(level[l].size() > maxn){
+					            maxn = level[l].size();
+					            maxk = l;
+					        }
+					        l++;
+					    }
+					    
+					    cout << maxn << " " << maxk << endl;
+					    return 0;
+					    
+					    
+					}
 				r3.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 110;
+					int n, m;
+					bool g[N][N];
+					vector<int> level[N];
+
+					int main(){
+					    cin >> n >> m;
+					    while(m--){
+					        int id, k, son;
+					        cin >> id >> k;
+					        while(k--){
+					            cin >> son;
+					            g[id][son] = true;
+					        }
+					    }
+					    
+					    level[1].push_back(1);
+					    int l = 1;
+					    while(level[l].size()){
+					        for(int i : level[l]){
+					            for(int j = 1; j <= n; j ++){
+					                if(g[i][j]) level[l+1].push_back(j);
+					            }
+					        }
+					        l++;
+					    }
+					    
+					    int k = 1;
+					    for(int i = 2; i < l; i++){
+					        if(level[i].size() > level[k].size()) k = i;
+					    }
+					    cout << level[k].size() << " " << k <<endl;
+					    return 0;
+					}
 				r4.
 				r5.
 
