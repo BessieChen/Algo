@@ -20514,14 +20514,42 @@
 				r4.
 				r5.
 
+	16. 2020年11月4日11:18:35
+
 		63. 1565. 供应链总销售额	1079
 			0. bug
+				1. 注意 pow(1 + R / 100, dfs(i)); 记得除以100, 因为是百分比
+				2. 记录价格, 利率是: double P, R; 不是int
+				3. 不要忘了 memset(xx, -1, sizeof xx)
 			1. 笔记
 				1. dfs() 记忆化搜索, 搜完了这个就存下来, 避免下一次重复计算
 				2. 老师没有用 邻接矩阵, 只记录了每个节点的父节点是谁
 					因为我们需要求的是 某个节点到root的距离, 这个距离 == 该节点的father到root的距离 + 1
 					所以只存父节点是谁就够了
-
+				3. f[v]指的是v到根的距离
+				4. 这个 dfs()递归我喜欢:
+					1. 这里的是求某个点到root的距离, 不过递归的时候, 采用的是从f[root] = 0开始的, 然后儿子们是+1
+						不同于以前的, 叶子节点的距离是0, 然后最后看root的最深高度是什么,那样的题目
+					2. 既然是从f[root] = 0开始,那么我们就是要知道 父亲, 然后得出儿子. 所以递归的时候, 需要父亲的信息. 
+						所以我们使用了存储父亲的信息的方法: + 一个函数判断是否是root
+							p[son] = i; son的父亲是i,
+							if(p[u] == -1)  u是根节点, 因为root没有父亲
+						对比之前的存储儿子的方法 + 一个函数判断是否是leaf
+							g[id][son] = true;
+							bool is_leaf(int u){
+							    for(int i = 0; i < n; i++){
+							        if(g[u][i]) return false;
+							    }
+							    return true;
+							}
+					3. 城会玩: 老师一边将f[u]的值设置好了, 一边return
+						int dfs(int u){
+						    if(f[u] != -1) return f[u];
+						    if(p[u] == -1) return f[u] = 0;
+						    return f[u] = dfs(p[u]) + 1;
+						}
+				5. 当时题目说叶子结点的销售量是xx的时候,我没有想到用cnt[N]就可以, 我想的太复杂了, 我以为需要什么map
+					判断是否是叶子: 看cnt[i]是否 == 0
 			2. 注释
 				1. y
 					#include <iostream>
@@ -20582,14 +20610,181 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cmath>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, p[N], f[N], cnt[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+
+					    memset(p, -1, sizeof p);
+					    memset(f, -1, sizeof f);
+					    int k, son;
+					    for(int i = 0; i < n; i++){
+					        cin >> k;
+					        if(k){
+					            while(k--){
+					                cin >> son;
+					                p[son] = i;
+					            }
+					        }else{
+					            cin >> cnt[i];
+					        }
+					    }
+
+					    double res = 0;
+					    for(int i = 0; i < n; i++){
+					        if(cnt[i])
+					            res += cnt[i] * P * pow(1 + R / 100, dfs(i));
+					    }
+
+					    printf("%.1lf", res);
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N], cnt[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+					int main(){
+					    cin >> n >> P >> R;
+					    int k, son;
+					    
+					    memset(p, -1, sizeof p);
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        cin >> k;
+					        if(!k) cin >> cnt[i];
+					        while(k--){
+					            cin >> son;
+					            p[son] = i;
+					        }
+					    }
+					    
+					    double res = 0;
+					    for(int i = 0; i < n; i++){
+					        if(cnt[i]){
+					            res += cnt[i] * P * pow(1 + R / 100, dfs(i));
+					        }
+					    }
+					    
+					    printf("%.1lf", res);
+					    return 0;
+					    
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N], cnt[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    int k, son;
+					    
+					    memset(p, -1, sizeof p);
+					    for(int i = 0; i < n; i++){
+					        cin >> k;
+					        if(!k) cin >> cnt[i];
+					        while(k--){
+					            cin >> son;
+					            p[son] = i;
+					        }
+					    }
+					    
+					    memset(f, -1, sizeof f);
+					    double res = 0;
+					    for(int i = 0; i <n; i++){
+					        if(cnt[i]){
+					            res += cnt[i] * P * pow(1 + R / 100, dfs(i));
+					        }
+					    }
+					    
+					    printf("%.1lf", res);
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N], cnt[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    int k, son;
+					    
+					    memset(p, -1, sizeof p);
+					    for(int i = 0; i < n; i++){
+					        cin >> k;
+					        if(!k) cin >> cnt[i];
+					        while(k--){
+					            cin >> son;
+					            p[son] = i;
+					        }
+					    }
+					    
+					    double res = 0;
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        if(cnt[i]) res += cnt[i] * P * pow(1 + R / 100, dfs(i));
+					    }
+					    
+					    printf("%.1lf", res);
+					    return 0;
+					}
 				r5.
 
 		64. 1580. 供应链最高价格	1090
 			0. bug
 			1. 笔记
+				1. 求节点到root距离
+				2. 双关键字排序: 最大深度, 最大深度的个数
 			2. 注释
 				1. y
 					#include <iostream>
@@ -20638,14 +20833,118 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
 			3. 5次
-				r1.
+				r1. byb 不难
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    memset(p, -1, sizeof p);
+					    for(int i = 0; i < n; i++){
+					        cin >> p[i];
+					    }
+
+					    int m = -1, cnt = 0; m是节点到root的最深深度
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        int temp = dfs(i);
+					        if(m < temp){
+					            m = temp;
+					            cnt = 1;
+					        }
+					        else if(m == temp) cnt ++;
+					    }
+
+					    printf("%.2lf %d", P * pow(1 + R / 100, m), cnt);
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    memset(p, -1, sizeof p);
+					    for(int i = 0; i < n; i++) cin >> p[i];
+					    
+					    int md = -1, cnt = 0;
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        int temp = dfs(i);
+					        if(md < temp) md = temp, cnt = 1;
+					        else if(md == temp) cnt ++;
+					    }
+					    
+					    printf("%.2lf %d", P * pow(1 + R / 100, md), cnt);
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N];
+					double P, R;
+
+					int dfs(int u)
+					{
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    memset(p, -1 ,sizeof p);
+					    for(int i = 0; i < n; i++) cin >> p[i];
+					    
+					    int md = -1, cnt = 0;
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        int temp = dfs(i);
+					        if(md < temp) md = temp, cnt = 1;
+					        else if(md == temp) cnt ++;
+					    }
+					    
+					    printf("%.2lf %d", P * pow(1 + R / 100, md), cnt);
+					    return 0;
+					}
 				r4.
 				r5.
 
 		65. 1596. 供应链最低价格	1106
 			0. bug
+				注意逻辑不要错. 因为是最小的距离, 但是这里一定是leaf到root的最短距离, 而不是任何一个点到root的最短距离, 因为如果是任何一个点, 那root到root就是0距离
+				所以需要一个记录is_leaf的数组
 			1. 笔记
 				1. 这里不是问: 哪个节点到root的距离最小, 而是哪个叶节点到root的距离最小
 					也就是求最短路径
@@ -20713,19 +21012,164 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N], is_leaf[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    memset(p, -1, sizeof p);
+					    int k, son;
+					    for(int i = 0; i < n; i++){
+					        cin >> k;
+					        if(!k) is_leaf[i] = 1;
+					        while(k--){
+					            cin >> son;
+					            p[son] = i;
+					        }
+					    }
+
+					    int md = N, cnt = 0;
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        if(!is_leaf[i]) continue;
+					        int temp = dfs(i);
+					        if(temp < md) md = temp, cnt = 1;
+					        else if(temp == md) cnt ++;
+					    }
+
+					    printf("%.4lf %d\n", P * pow(1 + R / 100, md), cnt);
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N];
+					double P, R;
+					bool l[N];
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    memset(p, -1, sizeof p);
+					    int k, son;
+					    for(int i = 0; i < n; i++){
+					        cin >> k;
+					        if(!k) l[i] = true;
+					        while(k--){
+					            cin >> son;
+					            p[son] = i;
+					        }
+					    }
+					    
+					    int m = N, cnt = 0;
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        if(!l[i]) continue;
+					        int t = dfs(i);
+					        if(t < m) m = t, cnt = 1;
+					        else if(t == m) cnt ++;
+					    }
+					    
+					    printf("%.4lf %d", P * pow( 1 + R / 100, m), cnt);
+					    
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+					#include <cmath>
+
+					using namespace std;
+
+					const int N = 100010;
+					int n, p[N], f[N];
+					bool l[N];
+					double P, R;
+
+					int dfs(int u){
+					    if(f[u] != -1) return f[u];
+					    if(p[u] == -1) return f[u] = 0;
+					    return f[u] = dfs(p[u]) + 1;
+					}
+
+					int main(){
+					    cin >> n >> P >> R;
+					    int k, son;
+					    memset(p, -1, sizeof p);
+					    for(int i = 0; i < n; i++){
+					        cin >> k;
+					        if(!k) l[i] = true;
+					        while(k--){
+					            cin >> son;
+					            p[son] = i;
+					        }
+					    }
+					    
+					    int m = N, cnt = 0;
+					    memset(f, -1, sizeof f);
+					    for(int i = 0; i < n; i++){
+					        if(!l[i]) continue;
+					        int t = dfs(i);
+					        if(t < m) m = t, cnt = 1;
+					        else if(t == m) cnt ++;
+					    }
+					    
+					    printf("%.4lf %d", P * pow(1 + R / 100, m), cnt);
+					    
+					    return 0;
+					    
+					}
 				r4.
 				r5.
 
 		66. 1649. 堆路径	1155
 			0. bug
+				1. 因为是层序遍历,又是完全二叉树,所以最好从1开始
+				2. 你写的时候注意typo, 例如我要写的是 u * 2, 但是竟然写成 n * 2, bug找了很久
+				3. 正确:  if(path[i] > path[i-1]) lt = true; 输出小跟堆 Min Heap (也就是root最小)
 			1. 笔记
+				1.  完全二叉树, 层序遍历中暗含的条件: 
+					if (u * 2 + 1 <= n)  dfs(u * 2 + 1); 存在右子树, 也就是右子树合法: u * 2 + 1. 如果u是叶子, 那么u没有左右子树, 因为 u * 2 > n
+					if (u * 2 <= n) dfs(u * 2);
+					if (u * 2 > n)  叶节点
+
 				0.
 					1. 那种一条一条路径下去的模板:
 						1. 将自己push进path [可以实现一些逻辑, 例如自己是叶子, 就是打印]
 						2. 将dfs(左), dfs(右) [这道题是先dfs(右)后dfs(左)]
 						3. 最后恢复现场 
+					2. 打印的时候:
+						也就是遍历到了叶子, 现在path里面就是从root都其中一个叶子的路径
+						打印完成之后, 没有return, 而是把叶子从path里pop掉, 然后去下一个叶子
+					3. 这里的 dfs()是进入之后,往path插入本节点的信息, 而不是在dfs()参数中插入本节点的信息
+				1. 如何判断大根堆小跟堆:
+					就是设立两个gt和lt, 如果
+					if (gt && lt) puts("Not Heap");
+				    else if (gt) puts("Min Heap");
+				    else puts("Max Heap");
 			2. 注释
 				1. y
 					#include <iostream>
@@ -20752,14 +21196,14 @@
 					            if (path[i] > path[i - 1]) gt = true;
 					            else if (path[i] < path[i - 1]) lt = true;
 					        }
-					        cout << endl;
+					        cout << endl;  不加return是为了执行函数最后一行的恢复现场操作。
 					    }
 
 					    if (u * 2 + 1 <= n) dfs(u * 2 + 1);
 					    if (u * 2 <= n) dfs(u * 2);
 
 					    path.pop_back();
-					} 不加return是为了执行函数最后一行的恢复现场操作。
+					}
 
 					int main()
 					{
@@ -20782,8 +21226,124 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 1010;
+					int n, q[N];
+					vector<int> path;
+					bool gt, lt;
+
+
+					void dfs(int u){
+					    path.push_back(q[u]);
+					    if(u * 2 > n) {
+					        cout << path[0];
+					        for(int i = 1; i < path.size(); i++){
+					            cout << " " << path[i];
+					            if(path[i] > path[i-1]) gt = true;
+					            else if(path[i] < path[i-1]) lt = true;
+					        }
+					        cout << endl;
+					    }
+					    if(u * 2 + 1 <= n) dfs(u * 2 + 1);
+					    if(u * 2 <= n) dfs(u * 2);
+					    
+					    path.pop_back();
+
+					}
+					int main(){
+					    cin >> n;
+					    for(int i = 1 ; i <= n ; i++) cin >> q[i];
+
+					    dfs(1);
+					    if(gt && lt) cout << "Not Heap" << endl;
+					    else if(gt) cout << "Min Heap" << endl;
+					    else cout << "Max Heap" << endl;
+					    
+					    return 0;
+
+
+					}
 				r2.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 1010;
+					int n, q[N];
+					vector<int> path;
+					bool gt, lt;
+
+					void print(){
+					    cout << path[0];
+					    for(int i = 1; i < path.size(); i++){
+					        cout << " " << path[i];
+					        if(path[i] > path[i-1]) lt = true;
+					        else if(path[i] < path[i-1]) gt = true;
+					    }
+					    cout << endl;
+					}
+
+					void dfs(int u){
+					    path.push_back(q[u]);
+					    if(u * 2 > n) print();
+					    if(u * 2 + 1 <= n) dfs(u * 2 + 1);
+					    if(u * 2 <= n) dfs(u * 2);
+					    path.pop_back();
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 1 ; i <= n; i++) cin >> q[i];
+					    dfs(1);
+					    if(gt && lt) cout << "Not Heap" << endl;
+					    else if(gt) cout << "Max Heap" << endl;
+					    else cout << "Min Heap" << endl;
+					    
+					}
 				r3.
+					#include <iostream>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 1010;
+					int n, q[N];
+					vector<int> p;
+					bool gt, lt;
+
+					void print(){
+					    cout << p[0];
+					    for(int i = 1; i < p.size(); i++){
+					        cout << " " << p[i];
+					        if(p[i] > p[i-1]) gt = true;
+					        else if(p[i] < p[i-1]) lt = true;
+					    }
+					    cout << endl;
+					}
+
+					void dfs(int u){
+					    p.push_back(q[u]);
+					    if(u * 2 > n) print();
+					    if(u * 2 + 1 <= n) dfs(u * 2 + 1);
+					    if(u * 2 <= n) dfs(u * 2);
+					    p.pop_back();
+					}
+
+					int main(){
+					    cin >> n;
+					    for(int i = 1; i <= n; i ++) cin >> q[i];
+					    dfs(1);
+					    if(gt && lt) cout << "Not Heap" << endl;
+					    else if(gt) cout << "Min Heap" << endl;
+					    else cout << "Max Heap" << endl;
+					    
+					    return 0;
+					}
 				r4.
 				r5.
 
@@ -20861,6 +21421,44 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 30;
+					string num[N];
+					int n, l[N], r[N];
+					bool hf[N], isl[N];
+
+					string dfs(int u){
+					    string left, right;
+					    if(l[u] != -1){
+					        left = dfs(l[u]);
+					        if(!isl[l[u]]) left = '(' + left + ')';
+					    }
+					    if(r[u] != -1){
+					        right = dfs(r[u]);
+					        if(!isl[r[u]]) right = '(' + right + ')';
+					    }
+					    return left + num[u] + right;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for(int i = 1; i <= n; i++){
+					        cin >> num[i] >> l[i] >> r[i];
+					        hf[l[i]] = true, hf[r[i]] = true;
+					        if(l[i] == -1 && r[i] == -1) isl[i] = true;
+					    }
+
+					    int root = 1;
+						while (hf[root]) root ++ ;
+
+					    string res = dfs(root);
+					    cout << res << endl;
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
@@ -20868,6 +21466,10 @@
 
 		68. 1636. 最低公共祖先	1143
 			0. bug
+				1. 正确:
+					int na = pos[a], nb = pos[b];
+					错误:
+						int na = pos.count(a), nb = pos.count(b);
 			1. 笔记
 				0.
 					1. 离散化
@@ -20902,8 +21504,27 @@
 						    }
 
 						    for (int i = 0; i < n; i ++ ) pre[i] = pos[pre[i]]; 现在前序遍历里面存的也是 0~N-1的编号
+					2. build()	的时候, 求出了什么东西? p[N], depth[N]
+						1. 每个节点的父亲: 因为后面是爬山法, 需要知道每个节点的父亲
+							注意是 p[build()] = root;
+						2. 每个节点的depth: 其中root的depth是0, 后面的儿子的depth+1 
+							因为后面的爬山法, 需要知道谁比较深
+						3. 爬山法, 三句话, 其中na和nb就是树中的节点编号. 我们能保证最后na == nb, 因为最差的情况会走到root
+							while(na != nb){
+				                if(d[na] >= d[nb]) na = p[na];
+				                else nb = p[nb];
+				            }
 					2. 爬山法:
 						谁在tree的底下, 就往自己的父亲爬
+						结果三种情况:
+							1. 两者都不等于原来的自己
+								if (a != x && a != y) printf("LCA of %d and %d is %d.\n", seq[x], seq[y], seq[a]);
+					            
+							2. a不是原来的自己: 说明b是a的祖先
+								else if (a == x) printf("%d is an ancestor of %d.\n", seq[x], seq[y]);
+					            
+							3. b不是原来的自己: 说明a是b的祖先
+								else printf("%d is an ancestor of %d.\n", seq[y], seq[x]);
 				1. 思路:
 					1. 离散化存储
 					2. build()的时候:
@@ -20928,7 +21549,7 @@
 					int build(int il, int ir, int pl, int pr, int d)
 					{
 					    int root = pre[pl];
-					    int k = root; 因为中序遍历的值(0~N-1)和下标是相等的, 因为in[i] = i;
+					    int k = pre[seq[root]]; //或者: int k = root; 因为中序遍历的值(0~N-1)和下标是相等的, 因为in[i] = i;
 
 					    depth[root] = d;
 
@@ -20952,10 +21573,13 @@
 					    for (int i = 0; i < n; i ++ )
 					    {
 					        pos[seq[i]] = i; 这一步, 就是完成了离散化, 就是把一个值, 映射到了0~N-1
-					        in[i] = i;
 					    }
 
-					    for (int i = 0; i < n; i ++ ) pre[i] = pos[pre[i]]; 现在前序遍历里面存的也是 0~N-1的编号
+					    for (int i = 0; i < n; i ++ ){
+					    	pre[i] = pos[pre[i]]; 现在前序遍历里面存的也是 0~N-1的编号
+					    	in[i] = pos[seq[i]];
+					    }
+
 
 					    build(0, n - 1, 0, n - 1, 0);
 
@@ -20995,51 +21619,295 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 10010;
+					int pre[N], in[N], seq[N];
+					unordered_map<int, int> pos;
+					int p[N], depth[N];
+
+					int build(int il, int ir, int pl, int pr, int d){
+					    int root = pre[pl];
+					    int k = root;
+
+					    depth[root] = d; 
+					    if(il < k) p[build(il, k - 1, pl + 1 , pl + 1 + ( k - 1 - il), d + 1)] = root;
+					    if(k < ir) p[build(k + 1, ir, pl + 1 + (k - il), pr, d + 1)] = root;
+
+					    return root;
+
+					}
+
+
+					int main(){
+					    int m, n;
+					    cin >> m >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        seq[i] = pre[i];
+					    }
+
+					    sort(seq, seq + n);
+					    for(int i = 0 ; i < n; i ++){
+					        pos[seq[i]] = i;
+					        in[i] = i;
+					    }
+
+					    for(int i = 0; i < n; i++) pre[i] = pos[pre[i]];
+
+					    int root = build(0, n-1, 0, n-1, 0);
+
+					    while(m--){
+					        int a, b;
+					        cin >> a >> b;
+
+					        if(pos.count(a) && pos.count(b)){
+					            int na =  pos[a], nb = pos[b];
+					            int x = na, y = nb;
+
+					            while(na != nb){
+					                if(depth[na] > depth[nb]) na = p[na];
+					                else nb = p[nb];
+					            }
+
+					            if(na != x && nb != y) printf("LCA of %d and %d is %d.\n", seq[x], seq[y], seq[na]);
+					            else if(na == x) printf("%d is an ancestor of %d.\n", seq[x], seq[y]);
+					            else printf("%d is an ancestor of %d.\n", seq[y], seq[x]);
+					        }
+					        else if(!pos.count(a) && pos.count(b)) printf("ERROR: %d is not found.\n", a);
+					        else if(pos.count(a) && !pos.count(b)) printf("ERROR: %d is not found.\n", b);
+					        else printf("ERROR: %d and %d are not found.\n", a, b);
+					    }
+
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int pre[N], in[N], seq[N];
+					unordered_map<int, int> pos;
+					int d[N], p[N];
+					int n, m;
+					int a, b;
+
+
+					int build(int il, int ir, int pl, int pr, int depth){
+					    int root = pre[pl];
+					    int k = pos[seq[root]];
+					    
+					    d[root] = depth;
+					    if(il < k) p[build(il, k - 1, pl + 1, pl + 1 + (k - 1 - il), depth + 1)] = root;
+					    if(k < ir) p[build(k + 1, ir, pl + 1 + ( k - il), pr, depth + 1)] = root;
+					    
+					    return root;
+					    
+					}
+
+
+					int main(){
+					    cin >> m >> n;
+					    for(int i = 0 ; i < n; i++){
+					        cin >> pre[i];
+					        seq[i] = pre[i];
+					    }
+					    
+					    sort(seq, seq + n);
+					    for(int i = 0; i < n; i++){
+					        pos[seq[i]] = i;
+					    }
+					    
+					    for(int i = 0; i < n; i++){
+					        pre[i] = pos[pre[i]];
+					        in[i] = pos[seq[i]];
+					    }
+					    
+					    int root = build(0, n-1, 0, n-1, 0);
+					    
+					    while(m--){
+					        cin >> a >> b;
+					        if(pos.count(a) && pos.count(b)){
+					            int na = pos[a], nb = pos[b];
+					            int x = na, y = nb;
+					            
+					            while(na != nb){
+					                if(d[na] > d[nb]) na = p[na];
+					                else nb = p[nb];
+					            }
+					            
+					            if(na != x && nb != y) printf("LCA of %d and %d is %d.\n", a, b, seq[na]);
+					            else if(na == x) printf("%d is an ancestor of %d.\n", a, b);
+					            else printf("%d is an ancestor of %d.\n", b, a);
+					        }
+					        else if(!pos.count(a) && !pos.count(b)) printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if(!pos.count(a)) printf("ERROR: %d is not found.\n", a);
+					        else printf("ERROR: %d is not found.\n", b);
+					    }
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+					int pre[N], in[N], d[N], p[N];
+					int seq[N];
+					unordered_map<int, int> pos;
+					int n, m;
+					int a, b;
+
+					int build(int il, int ir, int pl, int pr, int depth){
+					    int root = pre[pl];
+					    int k = pos[seq[root]];
+					    
+					    d[root] = depth;
+					    if(il < k){
+					        int left = build(il, k - 1, pl + 1, pl + 1 + ( k - 1 - il), depth + 1);
+					        p[left] = root;
+					    }
+					    if(k < ir) {
+					        int right = build(k + 1, ir, pl + 1 + ( k - il), pr, depth + 1);
+					        p[right] = root;
+					    }
+					    return root;
+					}
+
+					int main(){
+					    cin >> m >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        seq[i] = pre[i];
+					    }
+					    
+					    sort(seq, seq + n);
+					    for(int i = 0; i < n; i++) pos[seq[i]] = i;
+					    for(int i = 0; i < n; i++){
+					        pre[i] = pos[pre[i]];
+					        in[i] = pos[seq[i]];
+					    }
+					    
+					    int root = build(0, n - 1, 0, n - 1, 0);
+					    
+					    while(m--){
+					        cin >> a >> b;
+					        if(pos.count(a) && pos.count(b)){
+					            int na = pos[a], nb = pos[b];
+					            int x = na, y = nb;
+					            
+					            while(na != nb){
+					                 if(d[na] > d[nb]) na = p[na];
+					                 else nb = p[nb];
+					            }
+					            
+					            if(na != x && nb != y) printf("LCA of %d and %d is %d.\n", a, b, seq[na]);
+					            else if(na == x) printf("%d is an ancestor of %d.\n", a, b);
+					            else printf("%d is an ancestor of %d.\n", b, a);
+					        }
+					        else if(!pos.count(a) && !pos.count(b)) printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if(!pos.count(a)) printf("ERROR: %d is not found.\n", a);
+					        else printf("ERROR: %d is not found.\n", b);
+					        
+					    }
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+					int pre[N], in[N], p[N], d[N];
+					unordered_map<int, int> pos;
+					int seq[N];
+					int n, m;
+					int a, b;
+
+					int build(int il, int ir, int pl, int pr, int depth){
+					    int root = pre[pl];
+					    int k =  pos[seq[root]];
+					    d[root] = depth;
+					    if(il < k){
+					        int left = build(il, k - 1, pl + 1, pl + 1 + ( k - 1 - il), depth + 1);
+					        p[left] = root;
+					    }
+					    if(k < ir){
+					        int right = build(k + 1, ir, pl + 1 + ( k - il), pr, depth + 1);
+					        p[right] = root;
+					    }
+					    return root;
+					}
+
+					int main(){
+					    cin >> m >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        seq[i] = pre[i];
+					    }
+					    
+					    sort(seq, seq + n);
+					    for(int i = 0 ; i < n ; i++) pos[seq[i]] = i;
+					    for(int i = 0; i < n; i++){
+					        pre[i] = pos[pre[i]];
+					        in[i] = pos[seq[i]];
+					    }
+					    
+					    int root = build(0, n - 1, 0, n - 1, 0);
+					    
+					    while(m--){
+					        cin >> a >> b;
+					        if(pos.count(a) && pos.count(b)){
+					            int na = pos[a], nb = pos[b];
+					            int x = na, y = nb;
+					            
+					            while(na != nb){
+					                if(d[na] >= d[nb]) na = p[na];
+					                else nb = p[nb];
+					            }
+					            
+					            if(na != x && nb != y) printf("LCA of %d and %d is %d.\n", a, b, seq[na]);
+					            else if(na == x) printf("%d is an ancestor of %d.\n", a, b);
+					            else printf("%d is an ancestor of %d.\n", b, a);
+					        }
+					        else if(!pos.count(a) && !pos.count(b)) printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if(!pos.count(a)) printf("ERROR: %d is not found.\n", a);
+					        else printf("ERROR: %d is not found.\n", b);
+					    }
+					    
+					    return 0;
+					    
+					}
 				r5.
 
 		69. 1644. 二叉树中的最低公共祖先	1151
 			0. bug
 			1. 笔记
-				1. 离散化
-						为什么需要离散化?
-							1. 因为给的数字可能会很大, 不超过int, 说明可能是 10 ^9
-								如果给了1000个很分散的数字, 你用哈希表去查, 也会很慢
-							2. 所以把分散的数字映射到 0 ~ N-1, 然后用数组去装, 这样就会很快
-						需要4个东西:
-							1.
-								1. 一个是原始的数字: seq[N]: 存原始的数字, 例如一个很大的数字
-								2. 映射: 从原始数字, 到编号: pos[num] = i, 将这个原始数字num, 映射到0~N-1
-									你会发现, 映射的时候, 最好都是有小到大的, 就是原始的数字小的话, 映射到的编号也比较小
-									所以我们更愿意用中序遍历的顺序存原始数字
-							2.
-								3. 前序遍历的编号: pre[N]: 存的都是0 ~N-1的数字, 但是顺序是前序的顺序
-								4. 中序遍历的编号: in[N]: 同上
-						如何使用:
-							1. 知道编号i, 求数字: seq[i];		其中pre[N], in[N]存的就是编号
-							2. 知道数字num, 求编号: pos[num];
-						输入:
-							for (int i = 0; i < n; i ++ )
-						    {
-						        cin >> seq[i]; 输入原始的中序遍历的num, 所以seq[]里面的数字也是从小到大的
-						        pos[seq[i]] = i; 将num和编号i的映射储存
-						        in[i] = i;
-						    }
-
-						    for (int i = 0; i < n; i ++ )
-						    {
-						        cin >> pre[i]; 先知道数字是什么
-						        pre[i] = pos[pre[i]]; 将这个数字对应的编号找到
-						    }
-					2. 爬山法:
-						谁在tree的底下, 就往自己的父亲爬
-				1. 思路:
-					1. 离散化存储
-					2. build()的时候:
-						1. 记得存当前节点的层数
-						2. 记得更新儿子的父亲是自己
+				1. 同上题
+				2. 但是这道题, 不是二叉搜索树, 所以离散化的步骤:
+					cin >> m >> n;
+				    for(int i = 0; i < n; i++){	题目显示给了中序输入
+				        cin >> seq[i];	
+				        pos[seq[i]] = i; 离散化: 总之就是value 和 编号
+				        in[i] = i;
+				    }
+				    for(int i = 0; i < n; i++){ 题目显示给了pre序输入
+				        cin >> pre[i];
+				        pre[i] = pos[pre[i]];
+				    }
+				    
 			2. 注释
 				1. y
 					#include <iostream>
@@ -21121,13 +21989,199 @@
 					著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				2. b
 			3. 5次
-				r1.
+				r1. TLE: 果然没有离散化就还是TLE
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+
+					const int N = 10010;
+					int in[N], pre[N], d[N], p[N];
+					unordered_map<int, int> pos;
+					int n, m;
+					int a, b;
+
+					int build(int il, int ir, int pl, int pr, int depth){
+					    int root = pre[pl];
+					    int k = pos[root];
+					    d[root] = depth;
+					    if(il < k){
+					        int left = build(il, k - 1, pl + 1, pl + 1 + ( k -  1 - il), depth + 1);
+					        p[left] = root;
+					    }
+					    if(k < ir){
+					        int right = build(k + 1, ir, pl + 1 + ( k - il), pr, depth + 1);
+					        p[right] = root;
+					    }
+					    return root;
+					}
+
+					int main(){
+					    cin >> m >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> in[i];
+					        pos[in[i]] = i;
+					    }
+					    for(int i = 0; i < n; i++) cin >> pre[i];
+
+					    int root = build(0, n - 1, 0 , n - 1, 0);
+					    
+					    while(m--){
+					        cin >> a >> b;
+					        if(pos.count(a) && pos.count(b)){
+					            int x = a, y = b;
+
+					            while(a != b){
+					                if(d[a] >= d[b]) a = p[a];
+					                else b = p[b];
+					            }
+
+					          if(a != x && b != y) printf("LCA of %d and %d is %d.\n", x, y, a);
+					            else if(a == x) printf("%d is an ancestor of %d.\n", x, y);
+					            else printf("%d is an ancestor of %d.\n", y, x);
+					        }
+					        else if(!pos.count(a) && !pos.count(b)) printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if(!pos.count(a)) printf("ERROR: %d is not found.\n", a);
+					        else printf("ERROR: %d is not found.\n", b);
+					    }
+					    return 0;
+
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+					int pre[N], in[N], p[N], d[N];
+					unordered_map<int, int> pos;
+					int seq[N];
+					int n, m;
+					int a, b;
+
+					int build(int il, int ir, int pl, int pr, int depth){
+					    int root = pre[pl];
+					    int k =  pos[seq[root]];
+					    d[root] = depth;
+					    if(il < k){
+					        int left = build(il, k - 1, pl + 1, pl + 1 + ( k - 1 - il), depth + 1);
+					        p[left] = root;
+					    }
+					    if(k < ir){
+					        int right = build(k + 1, ir, pl + 1 + ( k - il), pr, depth + 1);
+					        p[right] = root;
+					    }
+					    return root;
+					}
+
+					int main(){
+					    cin >> m >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> seq[i];
+					        pos[seq[i]] = i;
+					        in[i] = i;
+					    }
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        pre[i] = pos[pre[i]];
+					    }
+					    
+					    int root = build(0, n - 1, 0, n - 1, 0);
+					    
+					    while(m--){
+					        cin >> a >> b;
+					        if(pos.count(a) && pos.count(b)){
+					            int na = pos[a], nb = pos[b];
+					            int x = na, y = nb;
+					            
+					            while(na != nb){
+					                if(d[na] >= d[nb]) na = p[na];
+					                else nb = p[nb];
+					            }
+					            
+					            if(na != x && nb != y) printf("LCA of %d and %d is %d.\n", a, b, seq[na]);
+					            else if(na == x) printf("%d is an ancestor of %d.\n", a, b);
+					            else printf("%d is an ancestor of %d.\n", b, a);
+					        }
+					        else if(!pos.count(a) && !pos.count(b)) printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if(!pos.count(a)) printf("ERROR: %d is not found.\n", a);
+					        else printf("ERROR: %d is not found.\n", b);
+					    }
+					    
+					    return 0;
+					    
+					}
 				r3.
+					#include <iostream>
+					#include <unordered_map>
+
+					using namespace std;
+					const int N = 10010;
+					int pre[N], in[N], d[N], p[N];
+					unordered_map<int, int> pos;
+					int seq[N];
+					int n, m;
+					int a, b;
+
+					int build(int il, int ir, int pl, int pr, int depth){
+					    int root = pre[pl];
+					    int k = pos[seq[root]];
+					    d[root] = depth;
+					    if(il < k){
+					        int left = build(il, k - 1, pl + 1, pl + 1 + ( k - 1 - il), depth + 1);
+					        p[left] = root;
+					    }
+					    if(k < ir){
+					        int right = build(k + 1, ir, pl + 1 + ( k - il), pr, depth + 1);
+					        p[right] = root;
+					    }
+					    return root;
+					}
+
+
+					int main(){
+					    cin >> m >> n;
+					    for(int i = 0; i < n; i++){
+					        cin >> seq[i];
+					        pos[seq[i]] = i;
+					        in[i] = i;
+					    }
+					    for(int i = 0; i < n; i++){
+					        cin >> pre[i];
+					        pre[i] = pos[pre[i]];
+					    }
+					    
+					    int root = build(0, n - 1, 0, n - 1, 0);
+					    
+					    while(m--){
+					        cin >> a >> b;
+					        if(pos.count(a) && pos.count(b)){
+					            int na = pos[a], nb = pos[b];
+					            int x = na, y = nb;
+					            
+					            while(na != nb){
+					                if(d[na] >= d[nb]) na = p[na];
+					                else nb = p[nb];
+					            }
+					            
+					            if(na != x && nb != y) printf("LCA of %d and %d is %d.\n", a, b, seq[na]);
+					            else if(na == x) printf("%d is an ancestor of %d.\n", a, b);
+					            else printf("%d is an ancestor of %d.\n", b, a);
+					        }
+					        else if(!pos.count(a) && !pos.count(b)) printf("ERROR: %d and %d are not found.\n", a, b);
+					        else if(!pos.count(a)) printf("ERROR: %d is not found.\n", a);
+					        else printf("ERROR: %d is not found.\n", b);
+					    }
+					    return 0;
+					}
 				r4.
 				r5.
 
 6. 图论
+	
+	16. 2020年11月4日16:25:10
 		70. 849. Dijkstra求最短路 I 	模板题
 			0. bug
 			1. 笔记
@@ -21143,6 +22197,15 @@
 
 						st[t] = true; 说明已经计算/放松点t的所有临边
 					}
+				5. dijkstra():
+					1. 在所有的点中, 找一个合适的灵魂
+					2. 用这个灵魂, 更新其他的点
+				6. 初始需要的
+					const int N = 1010;
+					int n, m, S, T;			点边等
+					int w[N], d[N][N];				input的值: 权重, 距离
+					int dist[N], cnt[N], sum[N];	我们加工的: 最短距离, 最短路条数, 最大权值
+					bool st[N];						dijkstra过程用到的
 			2. 注释
 				1. y
 					#include <cstring>
@@ -21353,6 +22416,22 @@
 
 		72. 1475. 紧急情况	1003
 			0. bug
+				1. 老师看到说城市编号是0开始的,所以用了int i = 0
+					for(int i = 0; i < n; i++) cin >> w[i];
+				2. 正确:
+					int t = -1;
+	        		for (int j = 0; j < n; j ++ )
+			            if (!st[j] && (t == -1 || dist[t] > dist[j])) 是 !st[j]
+			                t = j;
+			        st[t] = true;
+			        错误:
+			        int t = -1;
+	        		for (int j = 0; j < n; j ++ )
+			            if (!st[t] && (t == -1 || dist[t] > dist[j])) 不是 !st[t]
+			                t = j;
+			        st[t] = true;
+			    3. 记得初始为正无穷:
+			    	memset(d, 0x3f, sizeof d);
 			1. 笔记
 				1. 
 					spfa,bellman ford在pat不考
@@ -21384,8 +22463,77 @@
 				4, 考察了:
 					1. 最短路, 最大权
 					2. 最短路径的个数
+				5. dijkstra():
+					1. 在所有的点中, 找一个合适的灵魂
+					2. 用这个灵魂, 更新其他的点
+				6. 初始的变量:
+					const int N = 1010;
+					int n, m, S, T;			点边等
+					int w[N], d[N][N];				input的值: 权重, 距离
+					int dist[N], cnt[N], sum[N];	我们加工的: 最短距离, 最短路条数, 最大权值
+					bool st[N];						dijkstra过程用到的
 			2. 注释
 				1. y
+					#include <cstring>
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m, S, T;
+					int w[N], d[N][N];
+					int dist[N], cnt[N], sum[N];
+					bool st[N];
+
+					void dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[S] = 0, cnt[S] = 1, sum[S] = w[S];
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 0; j < n; j ++ )
+					            if (!st[j] && (t == -1 || dist[t] > dist[j]))
+					                t = j;
+					        st[t] = true;
+
+					        for (int j = 0; j < n; j ++ )
+					            if (dist[j] > dist[t] + d[t][j])
+					            {
+					                dist[j] = dist[t] + d[t][j];
+					                cnt[j] = cnt[t];
+					                sum[j] = sum[t] + w[j];
+					            }
+					            else if (dist[j] == dist[t] + d[t][j])
+					            {
+					                cnt[j] += cnt[t];
+					                sum[j] = max(sum[j], sum[t] + w[j]);
+					            }
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> S >> T;
+
+					    for (int i = 0; i < n; i ++ ) cin >> w[i];
+
+					    memset(d, 0x3f, sizeof d);
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+
+					    dijkstra();
+
+					    cout << cnt[T] << ' ' << sum[T] << endl;
+
+					    return 0;
+					}
 				2. b
 					#include <cstring>
 					#include <iostream>
@@ -21459,16 +22607,247 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 510;
+					int n, m, S, T;
+					int w[N], d[N][N], dist[N];
+					bool st[N];
+					int cnt[N], sum[N];
+
+					void dijkstra(){
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[S] = 0;
+					    cnt[S] = 1;
+					    sum[S] = w[S];
+
+					    for(int i = 0; i < n ; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t]))
+					                t = j;
+					        }
+
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cnt[j] = cnt[t];
+					                sum[j] = sum[t] + w[j];
+					            }else if(dist[t] + d[t][j] == dist[j]){
+					                cnt[j] += cnt[t];
+					                sum[j] = max(sum[j], sum[t] + w[j]);
+					            }
+					        }
+					    }
+					    
+					}
+
+					int main(){
+					    cin >> n >> m >> S >> T;
+					    for(int i = 0; i < n; i++) cin >> w[i];
+
+					    memset(d, 0x3f, sizeof d);
+					    for(int i = 0 ; i < m ; i++){
+					        int a, b, c;
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+					    dijkstra();
+					    cout << cnt[T] << " " << sum[T] << endl;
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1010;
+					int n, m, S, T;
+					int d[N][N], w[N];
+					int dist[N], cnt[N], sum[N];
+					bool st[N];
+
+					void dijkstra(){
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[S] = 0;
+					    cnt[S] = 1;
+					    sum[S] = w[S];
+					    
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t]))
+					                t = j;
+					        }
+					        
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cnt[j] = cnt[t];
+					                sum[j] = sum[t] + w[j];
+					            }else if(dist[t] + d[t][j] == dist[j]){
+					                cnt[j] += cnt[t];
+					                sum[j] = max(sum[j], sum[t] + w[j]);
+					            }
+					        }
+					    }
+					}
+
+					int main(){
+					    cin >> n >> m >> S >> T;
+					    for(int i = 0; i < n; i++) cin >> w[i];
+					    
+					    memset(d, 0x3f, sizeof d);
+					    while(m--){
+					        int a, b, c;
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+					    
+					    dijkstra();
+					    cout << cnt[T] << " " << sum[T];
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1010;
+					int n, m, S, T;
+					int w[N], d[N][N];
+					int dist[N], cnt[N], sum[N];
+					bool st[N];
+					int a, b, c;
+
+					void dijkstra(){
+					    dist[S] = 0;
+					    cnt[S] = 1;
+					    sum[S] = w[S];
+					    
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t]))
+					                t = j;
+					        }
+					        
+					        st[t] = true;
+					        for(int j = 0; j < n; j ++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cnt[j] = cnt[t];
+					                sum[j] = sum[t] + w[j];
+					            }else if(dist[t] + d[t][j] == dist[j]){
+					                cnt[j] += cnt[t];
+					                sum[j] = max(sum[j], sum[t] + w[j]);
+					            }
+					        }
+					    }
+					}
+
+					int main(){
+					    memset(d, 0x3f, sizeof d);
+					    memset(dist, 0x3f, sizeof dist);
+					    cin >> n >> m >> S >> T;
+					    for(int i = 0 ; i < n ; i++) cin >> w[i];
+					    while(m--){
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+					    
+					    dijkstra();
+					    cout << cnt[T] << " " << sum[T] << endl;
+					    return 0;
+					}
 				r4.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+					const int N = 1010;
+					int n, m, S, T;
+					int w[N], d[N][N];
+					int dist[N], cnt[N], sum[N];
+					bool st[N];
+					int a, b, c;
+
+					void dijkstra(){
+					    dist[S] = 0;
+					    cnt[S] = 1;
+					    sum[S] = w[S];
+					    
+					    for(int i = 0; i < n ; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t]))
+					                t = j;
+					        }
+					        
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cnt[j] = cnt[t];
+					                sum[j] = sum[t] + w[j];
+					            }else if(dist[t] + d[t][j] == dist[j]){
+					                cnt[j] += cnt[t];
+					                sum[j] = max(sum[j], sum[t] + w[j]);
+					            }
+					        }
+					        
+					        
+					        
+					    }
+					}
+
+					int main(){
+					    memset(d, 0x3f, sizeof d);
+					    memset(dist, 0x3f, sizeof dist);
+					    cin >> n >> m >> S >> T;
+					    for(int i = 0; i < n; i++) cin >> w[i];
+					    while(m--){
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+					    
+					    dijkstra();
+					    cout << cnt[T] << " " << sum[T] << endl;
+					    return 0;
+					}
 				r5.
 
 		73. 1507. 旅行计划	1030
 			0. bug
 			1. 笔记
 				1. 双关键字: 最短距离, 最小cost
+					if (dist[j] > dist[t] + d[t][j]) 我们优先的是,dist更小的
+		            {
+		                dist[j] = dist[t] + d[t][j];
+		                cost[j] = cost[t] + c[t][j]; 即便之前的cost小,也要放弃,因为现在的路更短
+		                pre[j] = t; 记录路径
+		            }
+		            else if (dist[j] == dist[t] + d[t][j] && cost[j] > cost[t] + c[t][j]) 
+		            	如果dist一样, 但是cost更小, 因为题目说: 首先输出从起点城市到终点城市的最短路径（花费最少的）经过的所有城市，
+		            {
+		                cost[j] = cost[t] + c[t][j];
+		                pre[j] = t;
+		            }
 				2. 记录路径
+					因为需要反向输出路径,所以依次插入vec,然后反向输出
+				    vector<int> path;
+				    for (int i = T; i != S; i = pre[i]) path.push_back(i); 插入了T,...,但是没有插入S
+
+				    cout << S;
+				    for (int i = path.size() - 1; i >= 0; i -- ) cout << ' ' << path[i]; 反向输出
+				    cout << ' ' << dist[T] << ' ' << cost[T] << endl;
 			2. 注释
 				1. y
 				2. b
@@ -21549,10 +22928,141 @@
 
 					    return 0;
 					}
-
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 510;
+
+					int n, m, S, T;
+					int d[N][N], c[N][N];
+					int dist[N], cost[N], pre[N];
+					bool st[N];
+
+					void dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost);
+
+					    dist[S] = 0, cost[S] = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }else if(dist[t] + d[t][j] == dist[j] && cost[t] + c[t][j] < cost[j]){
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }
+					        }
+					    }
+					}
+
+					int main()
+					{
+					    cin >> n >> m >> S >> T;
+					    memset(d, 0x3f, sizeof d);
+					    memset(c, 0x3f, sizeof c);
+
+					    while (m -- )
+					    {
+					        int a, b, x, y;
+					        cin >> a >> b >> x >> y;
+					        if (x < d[a][b])
+					        {
+					            d[a][b] = d[b][a] = x;
+					            c[a][b] = c[b][a] = y;
+					        }
+					        else if (x == d[a][b] && y < c[a][b])
+					        {
+					            c[a][b] = c[b][a] = y;
+					        }
+					    }
+
+					    dijkstra();
+
+					   vector<int> path;
+					    for(int i = T; i != S; i = pre[i]) path.push_back(i);
+
+					    cout << S;
+					    for(int i = path.size() - 1; i >= 0; i--) cout << " " << path[i];
+					    cout << " " << dist[T] << " " << cost[T] << endl;
+
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <vector>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 510;
+					int d[N][N], c[N][N];
+					int dist[N], cost[N], pre[N];
+					bool st[N];
+					int n, m, S, T;
+					int a, b, x, y;
+
+					void dijkstra(){
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost);
+					    
+					    dist[S] = 0;
+					    cost[S] = 0;
+					    
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }
+					            else if(dist[t] + d[t][j] == dist[j] && cost[t] + c[t][j] < cost[j]){
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }
+					        }
+					    }
+					}
+
+					int main(){
+					    cin >> n >> m >> S >> T;
+					    memset(d, 0x3f, sizeof d);
+					    memset(c, 0x3f, sizeof c);
+
+					    while(m--){
+					        cin >> a >> b >> x >> y;
+					        d[a][b] = d[b][a] = min(d[a][b], x);
+					        c[a][b] = c[b][a] = min(c[a][b], y);
+					    }
+					    
+					    dijkstra();
+					    vector<int> p;
+					    for(int i = T; i != S; i = pre[i]) p.push_back(i);
+					    cout << S;
+					    for(int i = p.size()-1; i >= 0; i--) cout << " " << p[i];
+					    cout << " " << dist[T] << " " << cost[T] << endl;
+					    return 0;
+					}
+
 				r3.
 				r4.
 				r5.
@@ -21971,9 +23481,9 @@
 			1. 笔记
 				1. 
 					欧拉:每条边只能走一次,一笔画问题
-					欧拉回路:图是连通的,所有点的degree是偶数
-					欧拉路径:图是连通的,有两个点的degree是奇数,其余的点的degree是偶数
-					非欧拉:图不连通, 或者图是连通的但是三个点或以上的degree是奇数
+						欧拉回路:图是连通的,所有点的degree是偶数
+						欧拉路径:图是连通的,有两个点的degree是奇数,其余的点的degree是偶数
+						非欧拉:图不连通, 或者图是连通的但是三个点或以上的degree是奇数
 
 					图的连通:1. dfs 2.并查集
 			2. 注释
