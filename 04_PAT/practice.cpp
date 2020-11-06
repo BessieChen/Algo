@@ -22182,6 +22182,24 @@
 6. 图论
 	
 	16. 2020年11月4日16:25:10
+		
+		总结:
+			1. 最短距离:
+				d[N][N], dist[N]
+			2. 最大点权:
+				w[N], weight[j] = weight[t] + w[j];
+			3. 最小花费 相当于最短距离
+				c[N][N], cost[N]
+			4. 经过节点的数量:
+				cnt[N]
+					cnt[j] = cnt[t] + 1;
+			5. 最短距离的路径的个数:
+				amt[N]
+					amt[j] = amt[t]: 还沿着这条路走
+					amt[j] += amt[t]: 多个路径合并
+			6. 记录路径:
+				pre[j] = t
+		
 		70. 849. Dijkstra求最短路 I 	模板题
 			0. bug
 			1. 笔记
@@ -22848,6 +22866,22 @@
 				    cout << S;
 				    for (int i = path.size() - 1; i >= 0; i -- ) cout << ' ' << path[i]; 反向输出
 				    cout << ' ' << dist[T] << ' ' << cost[T] << endl;
+				3. 总结:
+					1. 最短距离:
+						d[N][N], dist[N]
+					2. 最大点权:
+						w[N], weight[j] = weight[t] + w[j];
+					3. 最小花费 相当于最短距离
+						c[N][N], cost[N]
+					4. 经过节点的数量:
+						cnt[N]
+							cnt[j] = cnt[t] + 1;
+					5. 最短距离的路径的个数:
+						amt[N]
+							amt[j] = amt[t]: 还沿着这条路走
+							amt[j] += amt[t]: 多个路径合并
+					6. 记录路径:
+						pre[j] = t
 			2. 注释
 				1. y
 				2. b
@@ -23062,14 +23096,151 @@
 					    cout << " " << dist[T] << " " << cost[T] << endl;
 					    return 0;
 					}
-
 				r3.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 1010;
+					int d[N][N], c[N][N];
+					int dist[N], cost[N], pre[N];
+					bool st[N];
+					vector<int> p;
+					int n, m, S, T;
+					int a, b, x, y;
+
+					void dijkstra(){
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost);
+					    dist[S] = 0;
+					    cost[S] = 0;
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        
+					        st[t] = true;
+					        for(int j = 0; j < n ; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }else if(dist[t] + d[t][j] == dist[j] && cost[t] + c[t][j] < cost[j]){
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }
+					        }
+					    }
+					    
+					    for(int i = T; i != S; i = pre[i]) p.push_back(i);
+					    cout << S;
+					    for(int i = p.size()-1; i >= 0; i--) cout << ' ' << p[i];
+					    cout << ' ' << dist[T] << ' ' << cost[T] << endl;
+					}
+
+					int main(){
+					    cin >> n >> m >> S >> T;
+					    memset(d, 0x3f, sizeof d);
+					    memset(c, 0x3f, sizeof c);
+					    for(int i = 0; i < m; i++){
+					        cin >> a >> b >> x >> y;
+					        d[a][b] = d[b][a] = min(d[a][b], x);
+					        c[a][b] = c[b][a] = min(c[a][b], y);
+					    }
+					    
+					    dijkstra();
+					    return 0;
+					}
 				r4.
 				r5.
 
-		74. 1518. 团伙头目 	1034
+		todo 74. 1518. 团伙头目 	1034
 			0. bug
+				1. 很容易错:
+					错误:
+						vector<string, int> res;
+					正确:
+						vector<pair<string, int>> res;
+				2. 我的逻辑错了:
+					正确: 一个连通分量的通话时长, 应该每一对人的通话, 而不是某个人的 total
+						int dfs(int id){
+						    st[id] = true;
+						    int sum = 0;//int sum = total[id];
+						    cnt.push_back(id);
+
+						    vector<pair<int, int>> vec = rec[id];
+						    for(auto item : vec){
+						        sum += item.second;
+						        int name = item.first;
+						        if(!st[name]){
+						            sum += dfs(name);
+						        }
+						    }
+
+						    return sum;
+						}
+					错误:
+						我弄成total了:
+						int dfs(int id){
+						    st[id] = true;
+						    int sum = total[id]; //错误, 不应该是total
+						    cnt.push_back(id);
+
+						    vector<pair<int, int>> vec = rec[id];
+						    for(auto item : vec){
+						        //忘了写: sum += item.second;
+						        int name = item.first;
+						        if(!st[name]){
+						            sum += dfs(name);
+						        }
+						    }
+
+						    return sum;
+						}
+				3. 有时候for(int i : num) 和 for(int i = 0; i < num.size(); i++)
+					的结果很容易写错:
+					正确:
+						for(int id : cnt){
+			                if(total[id] > m){
+			                    m = total[id]; 
+			                    maxid = id;
+			                }
+			            }
+			        错误:
+			        	for(int id : cnt){
+			                if(total[cnt[id]] > m){ //错了啊! 是total[id]
+			                    m = total[cnt[id]]; //错了啊!
+			                    maxid = id;
+			                }
+			            }
 			1. 笔记
+				1. 其实更多的考察,你是怎么储存数据的:
+					1. 记录每个人的全部通话时间: total
+					2. 记录每个人的: 对方是谁, 通话时长
+				2. 老师没有用map
+					其实你可以用离散化:
+					byb:
+					for(int i = 0; i < n; i++){
+				        string x, y;
+				        int c;
+				        cin >> x >> y >> c;
+				        if(mp.count(x) == 0) mp[x] = ++ ind; 
+				        if(mp.count(y) == 0) mp[y] = ++ ind;
+				        int a = mp[x] , b = mp[y];
+				        names[a] = x, names[b] = y;
+				        rec[a].push_back({b, c});
+				        rec[b].push_back({a, c});
+				        total[a] += c;
+				        total[b] += c;
+				    }
+				    所以map里面一共有ind个数据
+				    	for(int id = 1; id <= ind; id++){}
+				3. 考察连通分量:
+					1. 连通分量的权重和
+					2. 连通分量中的所有元素, 所有元素谁的total最大
 			2. 注释
 				1. y
 				2. b
@@ -23149,24 +23320,186 @@
 
 					    return 0;
 					}
-
 			3. 5次
 				r1.
-				r2.
+					#include <iostream>
+					#include <vector>
+					#include <unordered_map>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					unordered_map<string, int> total;
+					unordered_map<string, bool> st;
+					unordered_map<string, vector<pair<string, int>>> rec;
+					vector<pair<string, int>> res;
+					int n, k;
+					int m;
+					string ms;
+					int clcnt;
+
+					int dfs(string name, int& clcnt){
+					    st[name] = true;
+					    auto vec = rec[name];
+					    int sum = total[name];
+					    clcnt += 1;
+					    if(sum > m){
+					        m = sum;
+					        ms = name;
+					    }
+					    for(auto& p :  vec){
+					        string other = p.first;
+					        if(!st[other]){
+					            sum += dfs(other, clcnt);
+					            // clcnt += 1;
+					        }
+					    }
+					    return sum;
+					}
+
+					int main(){
+					    cin >> n >> k;
+					    string a, b;
+					    int c;
+					    for(int i = 0 ; i < n; i++){
+					        cin >> a >> b >> c;
+					        rec[a].push_back({b, c});
+					        rec[b].push_back({a, c});
+					        total[a] += c;
+					        total[b] += c;
+					    }
+
+					    for(auto& item : total){
+					        string name = item.first;
+					        clcnt = 0;
+					        m = -1;
+					        ms = "";
+					        int sum = dfs(name, clcnt) / 2;
+					        if(sum > k && clcnt > 2){
+					            res.push_back({ms, clcnt});
+					        }
+					    }
+					    sort(res.begin(), res.end());
+					    cout << res.size() << endl;
+					    for(auto i : res) cout << i.first << ' ' << i.second << endl;
+					    return 0;
+					}
+				r2. ***** byb: 离散化
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+					int ind;
+					unordered_map<string, int> mp;
+					string names[N];
+					unordered_map<int, vector<pair<int, int>>> rec;
+					int total[N];
+					bool st[N];
+					int n, k;
+					vector<int> cnt;
+					vector<pair<string, int>> res;
+
+					int dfs(int id){
+					    st[id] = true;
+					    int sum = 0;//int sum = total[id];
+					    cnt.push_back(id);
+
+					    vector<pair<int, int>> vec = rec[id];
+					    for(auto item : vec){
+					        sum += item.second;
+					        int name = item.first;
+					        if(!st[name]){
+					            sum += dfs(name);
+					        }
+					    }
+
+					    return sum;
+					}
+
+					int main(){
+					    cin >> n >> k;
+					    for(int i = 0; i < n; i++){
+					        string x, y;
+					        int c;
+					        cin >> x >> y >> c;
+					        if(mp.count(x) == 0) mp[x] = ++ ind;
+					        if(mp.count(y) == 0) mp[y] = ++ ind;
+					        int a = mp[x] , b = mp[y];
+					        names[a] = x, names[b] = y;
+					        rec[a].push_back({b, c});
+					        rec[b].push_back({a, c});
+					        total[a] += c;
+					        total[b] += c;
+					    }
+					    
+					    for(int id = 1; id <= ind; id++){
+
+					        int sum = 0;
+					        cnt.clear();
+					        if(!st[id]){
+					            sum = dfs(id) / 2;
+					        }
+
+					        int m = 0;
+					        int maxid = -1;
+					        if(cnt.size() >= 3 && sum > k){
+					            for(int id : cnt){
+					                if(total[id] > m){
+					                    m = total[id]; //m = total[cnt[id]];
+					                    maxid = id;
+					                }
+					            }
+					            res.push_back({names[maxid], (int)cnt.size()});
+					        }
+
+					    }
+					    
+
+					    sort(res.begin(), res.end());
+					    cout << res.size() << endl;
+					    for(auto item : res){
+					        cout << item.first << ' ' << item.second << endl;
+					    }
+
+					    return 0;
+					}
 				r3.
 				r4.
 				r5.
 
 		75. 1577. 条条大路通罗马	1087
 			0. bug
+				1. cnt[j] += cnt[t]; 无论如何,都是多了cnt[t]条到j点的边, 这个不受信服度影响
+					上面这一句,是写在下面的ifelse的外面. 
+					if (cost[j] < cost[t] + w[j]){}
+					else if (cost[j] == cost[t] + w[j]) {}
+				2. 打印:
+					正确:
+						vector<int> p; 
+					    for(int i = T; i != S; i = pre[i]) p.push_back(i);
+					    cout << amt[T] << ' ' << dist[T] << ' ' << sum[T] << ' ' <<  int(sum[T] / cnt[T]) << endl;
+					    cout << city[S];
+					    for(int i = p.size()-1; i >= 0; i--) cout << "->" << city[p[i]];
+					    cout << endl;
+					错误: 错了两次 (微笑)
+						 cout << city[S];
+					    for(int i = p.size()-1; i >= 0; i--) cout << "->" << city[i]; 应该是city[p[i]];
+					    cout << endl;
+
 			1. 笔记
 				1.
 					考察很全面
-						最短路
-							最短路的数量
-						最大点权
+						第一关键字: 最短路
+						第二关键字: 最大点权
+						第三关键字: 最大点权的前提下,点数最少
 						路径输出
-						最大点权的前提下,点数最少
+						映射:
+							1. unordered_map<string,int>
 			2. 注释
 				1. y
 				2. b
@@ -23276,17 +23609,194 @@
 
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_map>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 210;
+					int d[N][N], w[N];
+					bool st[N];
+					int dist[N], sum[N], cnt[N], pre[N], amt[N];
+					int n, m;
+					string city[N];
+					unordered_map<string, int> mp;
+
+					void dijkstra(){
+					    memset(dist, 0x3f, sizeof dist);
+					    int S = mp[city[0]];
+					    dist[S] = 0, sum[S] = 0, cnt[S] = 0, pre[S] = -1, amt[S] = 1;
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j ++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        st[t] = true;
+					        for(int j = 0; j < n ; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                sum[j] = sum[t] + w[j];
+					                cnt[j] = cnt[t] + 1;
+					                amt[j] = amt[t];
+					                pre[j] = t;
+					            }else if(dist[t] + d[t][j] == dist[j]){
+					                amt[j] += amt[t];
+					                if(sum[t] + w[j] > sum[j]){
+					                    sum[j] = sum[t] + w[j];
+					                    cnt[j] = cnt[t] + 1;
+					                    pre[j] = t;
+					                }else if(sum[t] + w[j] == sum[j]){
+					                    if(cnt[t] + 1 <  cnt[j]){
+					                        cnt[j] = cnt[t] + 1;
+					                        pre[j] = t;
+					                    }
+					                }
+					            }
+					        }
+					    }
+					    int T = mp["ROM"];
+					    vector<int> p; 
+					    for(int i = T; i != S; i = pre[i]) p.push_back(i);
+					    cout << amt[T] << ' ' << dist[T] << ' ' << sum[T] << ' ' <<  int(sum[T] / cnt[T]) << endl;
+					    cout << city[S];
+					    for(int i = p.size()-1; i >= 0; i--) cout << "->" << city[p[i]];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n >> m >> city[0];
+					    mp[city[0]] = 0;
+					    for(int i = 1; i < n; i++){
+					        cin >> city[i] >> w[i];
+					        mp[city[i]] = i;
+					    }
+
+					    memset(d, 0x3f, sizeof d);
+					    while(m--){
+					        string x, y;
+					        int c;
+					        cin >> x >> y >> c;
+					        int a = mp[x], b = mp[y];
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+
+					    dijkstra();
+					    return 0;
+
+					}
 				r2.
+					#include <iostream>
+					#include <unordered_map>
+					#include <vector>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 210;
+					int d[N][N], w[N];
+					int dist[N], weight[N], pre[N], cnt[N], amt[N];
+					string names[N];
+					bool st[N];
+					unordered_map<string, int> mp;
+					int n, m;
+
+					void dijkstra(){
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0, weight[1] = 0, amt[1] = 1;
+					    for(int i = 1; i <= n; i++){
+					        int t = -1;
+					        for(int j = 1; j <= n; j++){
+					            if(!st[j] && ( t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        st[t] = true;
+					        for(int j = 1; j <= n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                weight[j] = weight[t] + w[j];
+					                amt[j] = amt[t];
+					                pre[j] = t;
+					                cnt[j] = cnt[t] + 1;
+					            }else if(dist[t] + d[t][j] == dist[j] ){
+					                amt[j] += amt[t];
+					                if(weight[t] + w[j] > weight[j]){
+					                    weight[j] = weight[t] + w[j];
+					                    cnt[j] = cnt[t] + 1;
+					                    pre[j] = t; 
+					                }else if(weight[t] + w[j] == weight[j]){
+					                    if(cnt[t] + 1 < cnt[j])
+					                    {
+					                        cnt[j] = cnt[t] + 1;
+					                        pre[j] = t;
+					                    }
+					                }
+					            }
+					        }
+					    }
+
+					    int T = mp["ROM"];
+					    printf("%d %d %d %d\n", amt[T], dist[T], weight[T], (int)(weight[T] / cnt[T]));
+					    vector<int> path;
+					    for(int i = T; i != 1; i = pre[i]) path.push_back(i);
+					    cout << names[1];
+					    for(int i = path.size()-1 ; i >= 0; i--) cout << "->" << names[path[i]];
+					    cout << endl;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    string start;
+					    cin >> start;
+					    mp[start] = 1;
+					    names[1] = start;
+
+					    string a;
+					    int b;
+					    memset(d, 0x3f, sizeof d);
+					    for(int i = 2; i <= n; i++){
+					        cin >> a >> b;
+					        mp[a] = i;
+					        names[i] = a;
+					        w[i] = b;
+					    }
+
+					    string x, y;
+					    while(m--){
+					        cin >> x >> y >> b;
+					        int o = mp[x], p = mp[y];
+					        d[o][p] = d[p][o] = min(d[o][p], b);
+					    }
+
+					    dijkstra();
+					    return 0;
+					}
 				r3.
 				r4.
 				r5.
 
 		76. 1601. 在线地图 	1111
 			0. bug
+				1. 重新初始化st和pre
+					memset(st, 0, sizeof st);
+					memset(pre, 0, sizeof pre);
+				2. 正确:
+					int t = -1;
+			        for(int j = 0; j < n; j++){
+			            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+			        }
+			        错误:
+			        	int t = -1;
+				        for(int j = 0; j < n; j++){
+				            if(!st[j] && (t == -1 || dist[j] < dist[t] + d[t][j])) t = j; 千万不能加这一句 + d[t][j] 啊!
+				        }
+
 			1. 笔记
 				0. 考察了:
 					1. 双关键词查找路径
 					2. 记录路径
+				1. 如果两个vector的里面是int 或者 char
+					可以直接用if(vec1 == vec2)判断相等
 			2. 注释
 				1. y
 				2. b
@@ -23395,13 +23905,245 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 510;
+					int d[N][N], c[N][N];
+					int dist[N], cost[N], pre[N], cnt[N];
+					bool st[N];
+					vector<int> v1;
+					vector<int> v2;
+					int n, m;
+					int S, T;
+					int Dis, Time;
+
+					string dij1(){
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost);
+					    memset(st, 0, sizeof st);
+					    dist[S] = 0, cost[S] = 0, pre[S] = -1;
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }else if(dist[t] + d[t][j] == dist[j] && cost[t] + c[t][j] < cost[j]){
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }   
+					        }
+					    }
+					    for(int i = T; i != S; i = pre[i]) v1.push_back(i);
+					    string res = to_string(S);
+					    for(int i = v1.size() - 1; i >= 0; i --) res += (" -> " + to_string(v1[i]));
+					    Dis = dist[T];
+					    return res;
+					}
+
+					string dij2(){
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost);
+					    memset(st, 0, sizeof st);
+					    memset(pre, 0, sizeof pre);
+					    dist[S] = 0, cost[S] = 0, pre[S] = -1, cnt[S] = 1;
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && (t == -1 || cost[j] < cost[t])) t = j;
+					        }
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(cost[t] + c[t][j] < cost[j]){
+					                cost[j] = cost[t] + c[t][j];
+					                cnt[j] = cnt[t] + 1;
+					                pre[j] = t;
+					            }else if(cost[t] + c[t][j] == cost[j] && cnt[t] + 1 < cnt[j]){
+					                cnt[j] = cnt[t] + 1;
+					                pre[j] = t;
+					            }   
+					        }
+					    }
+					    for(int i = T; i != S; i = pre[i]) v2.push_back(i);
+					    Time = cost[T];
+					    string res = to_string(S);
+					    for(int i = v2.size() - 1; i >= 0; i --) res += (" -> " + to_string(v2[i]));
+					    return res;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    memset(d, 0x3f, sizeof d);
+					    memset(c, 0x3f, sizeof c);
+					    while(m--){
+					        int a, b, t;
+					        int x, y;
+					        cin >> a >> b >> t >> x >> y;
+					        d[a][b] = min(d[a][b], x);
+					        c[a][b] = min(c[a][b], y);
+					        if(!t){
+					            d[b][a] = min(d[b][a], x);
+					            c[b][a] = min(c[b][a], y);
+					        }
+					    }
+					    cin >> S >> T;
+					    string res1 = dij1();
+					    string res2 = dij2();
+
+					    
+					    if(v1 == v2)
+					        printf("Distance = %d; Time = %d: %s\n", Dis, Time, res1.c_str());
+					    else{
+					        printf("Distance = %d: %s\n", Dis, res1.c_str());
+					        printf("Time = %d: %s\n", Time, res2.c_str());
+					    }
+					    return 0;
+
+
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 510;
+					int n, m;
+					int d[N][N], c[N][N];
+					int dist[N], cost[N], pre[N], cnt[N];
+					bool st[N];
+					int S, T;
+					vector<int> v1;
+					vector<int> v2;
+					int dis, ti;
+
+					void dijkstra1(){
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost);
+					    dist[S] = 0, cost[S] = 0, pre[S] = -1;
+					    for(int i = 0; i < n; i ++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && ( t == -1 || dist[j] < dist[t])) t = j;
+					        }
+
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }else if(dist[t] + d[t][j] == dist[j]){
+					                if(cost[t] + c[t][j] < cost[j]){
+					                    cost[j] = cost[t] + c[t][j];
+					                    pre[j] = t;
+					                }
+					            }
+					        }
+					    }
+					    for(int i = T; i != -1; i = pre[i]) v1.push_back(i);
+					    dis = dist[T];
+					}
+
+
+					void dijkstra2(){
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(cost, 0x3f, sizeof cost);
+					    memset(pre, 0, sizeof pre);
+					    memset(st, 0, sizeof st);
+
+					    cost[S] = 0, pre[S] = -1, cnt[S] = 1;
+					    for(int i = 0; i < n; i++){
+					        int t = -1;
+					        for(int j = 0; j < n; j++){
+					            if(!st[j] && ( t == -1 || cost[j] < cost[t])) t = j; 
+					        }
+					        st[t] = true;
+					        for(int j = 0; j < n; j++){
+					            if(cost[t] + c[t][j] < cost[j]){
+					                cost[j] = cost[t] + c[t][j];
+					                pre[j] = t;
+					            }else if(cost[t] + c[t][j] == cost[j] && cnt[t] + 1 < cnt[j]){
+					                cnt[j] = cnt[t] + 1;
+					                pre[j] = t;
+					            } 
+					        }
+					    }
+
+					    for(int i = T; i != -1; i = pre[i]) v2.push_back(i);
+					    ti = cost[T];
+
+					}
+
+					string print(vector<int> v){
+					    string res = "";
+					    for(int i = v.size()-1; i >= 0; i--){
+					        if(i == 0) res += to_string(v[i]);
+					        else{
+					            res += (to_string(v[i]) + " -> ");
+					        }
+					    }
+					    return res;
+					}
+					int main(){
+					    cin >> n >> m;
+					    int a, b, t, x, y;
+					    memset(d, 0x3f, sizeof d);
+					    memset(c, 0x3f, sizeof c);
+					    while(m--){
+					        cin >> a >> b >> t >> x >> y;
+					        d[a][b] = min(d[a][b], x);
+					        c[a][b] = min(c[a][b], y);
+					        if(!t){
+					            d[b][a] = min(d[b][a], x);
+					            c[b][a] = min(c[b][a], y);
+					        }
+					    }
+					    cin >> S >> T;
+					    dijkstra1();
+					    dijkstra2();
+
+					    string r1 = print(v1);
+					    string r2 = print(v2);
+					    if(v1 == v2){
+					        printf("Distance = %d; Time = %d: %s\n", dis, ti, r1.c_str());
+					    }
+					    else{
+					        printf("Distance = %d: %s\n", dis, r1.c_str());
+					        printf("Time = %d: %s\n", ti, r2.c_str());
+					    }
+					    return 0;
+					}
 				r3.
 				r4.
 				r5.
 
+	17. 2020年11月6日11:56:20
+
 		77. 1615. 哈密顿回路	1122
 			0. bug
+				1. bug! 很简单的题目, 但是容易错.
+					不要忘记判断是否每个点都走了一遍:
+						1. 用st[node[i]] = true标记需要检测的nodes中走过的点
+						2. 然后判断是否每个点都走了:
+							正确:
+							for(int i = 1; i <= n; i++){ //bug!!
+						        if(!st[i]) return false;
+						    }
+						    错误:
+						    for(int i = 1; i <= t; i++){ 不是t(nodes的个数), 而是n, 也就是图中点的个数
+						        if(!st[i]) return false;
+						    }
 			1. 笔记
 				1.
 				 	哈密顿回路:
@@ -23471,6 +24213,56 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+					const int N = 210;
+					int n, m;
+					bool g[N][N];
+					int nodes[N * 2];
+					bool st[N];
+
+					bool check(int t){
+					    if(t != n + 1) return false;
+					    if(nodes[0] != nodes[t - 1]) return false;
+					    
+					    for(int i = 1; i <= n; i++){ //bug!!
+					        if(!st[i]) return false;
+					    }
+					    
+					    for(int i = 1; i < t; i++){
+					        if(!g[nodes[i-1]][nodes[i]]) return false;
+					    }
+					    
+					    return true;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    while(m--){
+					        int a, b;
+					        cin >> a >> b;
+					        g[a][b] = g[b][a] = true;
+					    }
+
+					    int k;
+					    cin >> k;
+					    while(k--){
+					        int t;
+					        cin >> t;
+					        memset(nodes, 0, sizeof nodes);
+					        memset(st, 0, sizeof st);
+					        for(int i = 0; i < t ; i++){
+					            cin >> nodes[i];
+					            st[nodes[i]] = true;
+					        }
+					        bool res = check(t);
+					        if(res) cout << "YES" << endl;
+					        else cout << "NO" << endl;
+					    }
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
@@ -23478,12 +24270,31 @@
 
 		78. 1619. 欧拉路径,一笔画问题	1126
 			0. bug
+				虽然很简单,可还是错了一些:
+					1. 忘记这是无向图:
+						记得g[a][b] = g[b][a] = true;
+					2. dfs()遍历求得连通分量的所有节点个数:
+						正确:
+							int dfs(int u){
+							    st[u] = true;
+							    int res = 1;
+							    for(int i = 1; i <= n; i++){
+							        if(!st[i] && g[u][i]) res += dfs(i);
+							    }
+							    return res;
+							}
+						错误:
+							for(int i = 1; i <= n; i++){
+						        if(!st[u]) res += dfs(i); 忘记判断g[u][i], 并且st[u]也错了
+						    }
 			1. 笔记
 				1. 
 					欧拉:每条边只能走一次,一笔画问题
-						欧拉回路:图是连通的,所有点的degree是偶数
-						欧拉路径:图是连通的,有两个点的degree是奇数,其余的点的degree是偶数
-						非欧拉:图不连通, 或者图是连通的但是三个点或以上的degree是奇数
+						1. 欧拉回路:图是连通的,所有点的degree是偶数
+						2. 欧拉路径:图是连通的,有两个点的degree是奇数,其余的点的degree是偶数
+						3. 非欧拉:
+							1. 图不连通,
+							2. 或者图是连通的, 但是1个点,2个点或 3个以上点 的degree是奇数
 
 					图的连通:1. dfs 2.并查集
 			2. 注释
@@ -23547,6 +24358,55 @@
 
 			3. 5次
 				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 510;
+					int d[N];
+					bool g[N][N];
+					int n, m;
+					bool st[N];
+
+					int dfs(int u){
+					    st[u] = true;
+					    int res = 1;
+					    for(int i = 1; i <= n; i++){
+					        if(!st[i] && g[u][i]) res += dfs(i);
+					    }
+					    return res;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    int a, b;
+					    while(m--){
+					        cin >> a >> b;
+					        g[a][b] = g[b][a] = true;
+					        d[a]++;
+					        d[b]++;
+					    }
+
+					    int sum = dfs(1);
+
+					    cout << d[1];
+					    for(int i = 2; i <= n; i ++)
+					        cout << ' ' << d[i];
+					    cout << endl;
+
+					    if(sum != n){
+					        cout << "Non-Eulerian" << endl;
+					    }else{
+					        int is = 0;
+					        for(int i = 1; i <= n; i++){
+					            if(d[i] % 2) is ++;
+					        }
+					        if(is == 0) cout << "Eulerian" << endl;
+					        else if(is == 2) cout << "Semi-Eulerian" << endl;
+					        else cout << "Non-Eulerian" << endl;
+					    }
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
@@ -23751,6 +24611,8 @@
 
 		80. 1627. 顶点覆盖	1134
 			0. bug
+				1. 记得bool st[N]每一轮询问都要初始化
+					memset(st, 0, sizeof st);
 			1. 笔记
 				1.
 					1. 题目要求的是能否覆盖所有边的点, 什么意思呢?
@@ -23768,6 +24630,9 @@
 						2. 一共100次询问
 						3. 总共100*1w = 100w的复杂度
 						4. 这个复杂度很低, 老师说,不涉及最短路的复杂度都很低
+				2. 其实很简单, 但是注意两点:
+					1. 我们的宗旨: 遍历所有的边, 然后看下边的两个端点是否在test的测试顶点中
+					2. 看上去需要用set, 但是其实只需要用一个bool st[N]就好了
 			2. 注释
 				1. y
 				2. b
@@ -23818,6 +24683,48 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 10010;
+
+					struct edge{
+					    int a, b;
+					}edges[N];
+
+					int n, m;
+					bool st[N];
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < m; i++){
+					        cin >> edges[i].a >> edges[i].b;
+					    }
+					    int k;
+					    cin >> k;
+					    while(k--){
+					        int c;
+					        cin >> c;
+					        int t;
+					        memset(st, 0, sizeof st);
+					        while(c--){
+					            cin >> t;
+					            st[t] = true;
+					        }
+					        bool res = true;
+					        for(int i = 0; i < m; i++){
+					            if(!st[edges[i].a] && !st[edges[i].b]){
+					                res = false;
+					                break;
+					            }
+					        }
+					        if(res) cout << "Yes" << endl;
+					        else cout << "No" << endl;
+					    }
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
@@ -23825,6 +24732,37 @@
 
 		81. 1632. 第一次接触	1139
 			0. bug
+				这道题还是挺顺的..
+				不过有几个容易错的:
+					1. 最好用string读每个名
+					2. 判断是否是女生:
+						a[0] == '-' 或者 a.size() == 5
+					3. names[N] 最好存的是不带有'-'的名字, 因为输出的时候不需要'-'
+					4. 判断从哪个vector boys还是girl取出答案:
+						vector<int> v1 = boys, v2 = boys; 先默认成boy, 然后再改
+				        if(a.size() == 5) v1 = girls;
+				        if(b.size() == 5) v2 = girls;
+				    5. 记得排序:
+				    	sort(res.begin(), res.end());
+				    6. 我用add()逻辑, 所以没有用老师的删除重复元素:
+				    	byb: 
+				    	int add(string a){
+						    if(a[0] == '-'){
+						        if(mp.count(a) == 0){
+						            mp[a] = ++ ind;
+						            names[ind] = a.substr(1);
+						            girls.push_back(ind);
+						        }
+						    }else{
+						        if(mp.count(a) == 0){
+						            mp[a] = ++ ind;
+						            names[ind] = a;
+						            boys.push_back(ind);
+						        }
+						    }
+						    return mp[a];
+						}
+
 			1. 笔记
 				1.
 					1. 题目要求的: 找出两个人c,d; 构造出a,c,d,b的关系
@@ -23852,6 +24790,13 @@
 					6. 所以:
 						1. 如果输入不恶心的话, 就直接当做普通题目处理, 只需要g[][], vec<int> boy, vec<int> girl
 						2. 但是题目输入恶心, 所以需要我们从4位数判断是男是女, 还需要映射到1-N, 还需要从1-N映射回来
+				2. 这道题: 想清楚了就不难.
+					1. 其实就是找到距离为1的方法, 也就只有一个牵线搭桥的人
+					2. 不过我们需要将人分成两种: boys 和 girls
+					3. 然后是在这两个类中 判断是否g[a][b] == true 
+				3. 输入如果需要删除重复元素:
+					sort(boys.begin(), boys.end()); 
+					boys.erase(unique(boys.begin(), boys.end()), boys.end()); 删掉重复元素
 			2. 注释
 				1. y
 				2. b
@@ -23931,7 +24876,73 @@
 					    return 0;
 					}
 			3. 5次
-				r1.
+				r1. 1c1a
+					#include <iostream>
+					#include <cstring>
+					#include <unordered_map>
+					#include <algorithm>
+					#include <vector>
+
+					using namespace std;
+
+					const int N = 310;
+					bool g[N][N];
+					vector<int> boys, girls;
+					unordered_map<string, int> mp;
+					string names[N];
+					int ind;
+					int n, m, k;
+					vector<pair<string, string>> res;
+
+					int add(string a){
+					    if(a[0] == '-'){
+					        if(mp.count(a) == 0){
+					            mp[a] = ++ ind;
+					            names[ind] = a.substr(1);
+					            girls.push_back(ind);
+					        }
+					    }else{
+					        if(mp.count(a) == 0){
+					            mp[a] = ++ ind;
+					            names[ind] = a;
+					            boys.push_back(ind);
+					        }
+					    }
+					    return mp[a];
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    string a, b;
+					    while(m--){
+					        cin >> a >> b;
+					        int x = add(a);
+					        int y = add(b);
+					        g[x][y] = g[y][x] = true;
+					    }
+
+					    cin >> k;
+					    while(k--){
+					        cin >> a >> b;
+					        vector<int> v1 = boys, v2 = boys;
+					        res.clear();
+					        if(a.size() == 5) v1 = girls;
+					        if(b.size() == 5) v2 = girls;
+
+					        int x = mp[a], y = mp[b];
+					        for(int i1 : v1)
+					            for(int i2 : v2)
+					                if(i1 != x && i1 != y)
+					                    if(i2 != x && i2 != y)
+					                        if(g[x][i1] && g[i1][i2] && g[i2][y]) res.push_back({names[i1], names[i2]});
+					        
+					        sort(res.begin(), res.end());
+					        cout << res.size() << endl;
+					        for(int i = 0; i < res.size() ; i++) cout << res[i].first << " " << res[i].second << endl;
+					    }
+
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
