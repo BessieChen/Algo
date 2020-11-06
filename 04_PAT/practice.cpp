@@ -12151,7 +12151,7 @@
 
 					//假设之前是 (头结点) a --> b --> c --> d --> -1, 其中b是a的next,现在要变成a --> b --> e --> c --> d --> -1
 					//其中b是第3个加入的节点, 在b的后面加上一个数, 这里的后面是next
-					void add_k(int a, int k){
+					void add_k(int a, int k){ 在k的前面加上一个新的数字, 所以这个新的数字的next是k
 						e[ind] = a, ne[ind] = ne[k], ne[k] = ind++; //也就是我ind要指向你k的下一位,你k指向我
 					}
 
@@ -23157,7 +23157,7 @@
 				r4.
 				r5.
 
-		todo 74. 1518. 团伙头目 	1034
+		only_one 74. 1518. 团伙头目 	1034
 			0. bug
 				1. 很容易错:
 					错误:
@@ -24412,7 +24412,7 @@
 				r4.
 				r5.
 
-		todo 79. 1624. 地铁地图	1131
+		none 79. 1624. 地铁地图	1131
 			0. bug
 			1. 笔记
 				1. 
@@ -24950,6 +24950,44 @@
 
 		82. 1635. 最大团	1142
 			0. bug
+				1. 逻辑错了:判断是否是最大的团
+					错误: 
+						bool check2(){
+						    for(int i = 1; i <= n; i ++){
+						        if(!st[i]){
+						            for(int item : nodes) if(!g[item][i]) return false; 
+						            	如果一个不是, 不能直接return false
+						            		我们要看到所有的节点都不是, 才能return false. 
+						            	只要存在一个节点可以更大, 那就return true(可以更大)
+						        }
+						    }
+						    return true;
+						}
+						bool Ismax = haslarger();
+				        if(Ismax) cout << "Yes" << endl;
+				        else cout << "Not max" << endl;
+					正确:
+						bool haslarger(){
+						    for(int i = 1; i <= n; i ++){
+						        if(!st[i]){
+						            bool valid = true;
+						            for(int item : nodes){
+						                if(!g[item][i]) 
+						                {
+						                    valid = false;
+						                    break;
+						                }
+						            }
+						            if(valid) return true; 
+						            如果这个节点i是可以让当前团变大, 就返回true
+						        }
+						    }
+						    return false; 我们要看到所有的节点都不是, 才能return false. 
+						}
+						bool hasm = haslarger();
+				        if(hasm) cout << "Not Maximal" << endl; 有更大的, 所以 当前团 不是最大
+				        else cout << "Yes" << endl;
+
 			1. 笔记
 				1. 
 					1. 题目要求: 
@@ -25037,6 +25075,7 @@
 					}
 			3. 5次
 				r1.
+
 				r2.
 				r3.
 				r4.
@@ -25054,6 +25093,14 @@
 					2. 复杂度:
 						1. 一共10000条边, 每条边都要比较起点在p[]的顺序是不是在终点前面
 						2. 一共100次询问, 所以是100*10000 = 100w
+				2. 重要:
+					bool tp(){
+					    for(int i = 0; i < m; i++){
+					        if(rec[edges[i].a] > rec[edges[i].b]) return false;
+					    	每一条边edge, 的左右两个端点 a,b. 是否在给定的测试中 rec[] 都是a的顺序在b的左边
+					    }
+					    return true;
+					}
 			2. 注释
 				1. y
 				2. b
@@ -25112,12 +25159,63 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 10010;
+					struct edge{
+					    int a, b;
+					}edges[N];
+
+					int n, m, k;
+					int rec[N];
+
+					bool tp(){
+					    for(int i = 0; i < m; i++){
+					        if(rec[edges[i].a] > rec[edges[i].b]) return false;
+					    }
+					    return true;
+					}
+
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < m; i++){
+					        int a, b;
+					        cin >> a >> b;
+					        edges[i].a = a;
+					        edges[i].b = b;
+					    }
+
+					    cin >> k;
+					    bool isfirst = true;
+					    for(int i = 0; i < k ; i++){
+					        memset(rec, 0, sizeof rec);
+					        for(int i = 0; i < n; i++){
+					            int a;
+					            cin >> a;
+					            rec[a] = i;
+					        }
+					        if(!tp()){
+					            if(isfirst){
+					                isfirst = false;
+					                cout << i;
+					            }else{
+					                cout << " " << i;
+					            }
+					        }
+					    }
+					    cout << endl;
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
 				r5.
 
-		84. 1643. 旅行商问题	1150
+		none 84. 1643. 旅行商问题	1150
 			0. bug
 			1. 笔记
 				1.
@@ -25236,7 +25334,7 @@
 				r4.
 				r5.
 
-		85. 1648. 顶点着色	1154
+		none 85. 1648. 顶点着色	1154
 			0. bug
 			1. 笔记
 				1.
@@ -25301,7 +25399,7 @@
 				r4.
 				r5.
 
-		86. 1495. 公共自行车管理	1018
+		none 86. 1495. 公共自行车管理	1018
 			0. bug
 			1. 笔记
 				1. 题目中说明只会沿着最短路从起点走到终点，然后就不能进行其他操作了。
@@ -25409,7 +25507,7 @@
 				r4.
 				r5.
 
-		87. 1558. 加油站	1072
+		none 87. 1558. 加油站	1072
 			0. bug
 			1. 笔记
 			2. 注释
@@ -25510,7 +25608,7 @@
 				r4.
 				r5.
 
-		88. 1562. 微博转发 	1076
+		none 88. 1562. 微博转发 	1076
 			0. bug
 			1. 笔记
 			2. 注释
@@ -27294,6 +27392,21 @@
 		113. 1485. 战争中的城市	1013
 			0. bug
 			1. 笔记
+				1. 这道题真的很有意思, 可以看视频01:55, 也就是如果删除掉了一个点x, 那么所有和这个点x有关的边e (也就是边e的一个端点是x), 这个边e就不存在了
+					不存在之后, 剩余的图, 有多少连通块, 假设有n个连通块, 那么我们需要(n-1)条边链接这n个连通块, 从而变成唯一的联通块
+				2. 思路:
+					1. 对于每个边e, 看他的两个端点, 如果两个端点都不包括被摧毁的x, 那么说明这个边e是保留的
+					2. 既然边e的两个端点a,b是链接起来的, 那么我们就合并两个部分:
+						int pa = find(a), pb = find(b);
+		                if (pa != pb)
+		                {
+		                    p[pa] = pb; pa的父亲 == pb
+		                    cnt -- ; 最后的cnt就是联通块个数
+		                }
+		        3. 复杂度:
+		        	1. 对于k个询问, 每个询问都要遍历m个边(因为要判断这个边是否和删除的点x相关)
+		        		所以复杂度是k*m
+		        		刚好题目说了k*m < 350w, 然后题目限制是0.4s, 也就是4000w, 所以是够的!
 			2. 注释
 				1. y
 					#include <iostream>
@@ -27326,7 +27439,7 @@
 					    while (k -- )
 					    {
 					        int x;
-					        scanf("%d", &x);
+					        scanf("%d", &x); 要删除的城市, 要删除的点 : x
 
 					        for (int i = 1; i <= n; i ++ ) p[i] = i;
 
@@ -27334,7 +27447,7 @@
 					        for (int i = 0; i < m; i ++ )
 					        {
 					            int a = e[i].a, b = e[i].b;
-					            if (a != x && b != x)
+					            if (a != x && b != x) 说明这条边e 和我们要删除的点不想管
 					            {
 					                int pa = find(a), pb = find(b);
 					                if (pa != pb)
@@ -27366,6 +27479,42 @@
 		114. 1604. 家产	1604
 			0. bug
 			1. 笔记
+				很棒的题目!
+				1. 最多7k条边, 因为最多1k个点, 每个点最多7个临点(父母+5个孩子)
+				2. 很厉害的几个技巧:
+					1. 自己创建边e:
+						e[m ++ ] = {id, father};
+						最后,一共有m条边
+					2. 合并的依据: 一个边的两个点需要被合并
+						其余信息的合并, c, ha, hc的合并的时机:
+							都写在一起.
+							c的合并: c[pb] += c[pa];	 注意, 初始化是for(int i = 0; i < N; i++) c[i] = 1;
+						for (int i = 0; i < m; i ++ )
+					    {
+					        int a = e[i].a, b = e[i].b;
+
+					        st[a] = st[b] = true;
+					        int pa = find(a), pb = find(b);
+					        if (pa != pb)
+					        {
+					            if (pb > pa) swap(pa, pb); 看谁的id小, 谁就是老大
+					            c[pb] += c[pa];		我们只更新老大的信息: c, hc, ha
+					            hc[pb] += hc[pa];
+					            ha[pb] += ha[pa];
+					            p[pa] = pb;
+					        }
+					    }
+					3. 我们是遍历了全部的点: for(int i = 0; i < N; i++)注意是N!
+						但是因为我们用了st[t] = true, 标记, 所以不怕
+					4. 遍历所有点的时候, 如何找到每个家族的boss:
+						for (int i = 0; i < N; i ++ )
+					        if (st[i] && p[i] == i) 也就是: p[i] == i的就是boss
+					            family.push_back({i, c[i], hc[i], ha[i]});
+					5. operator比较的时候:
+						因为老师认为:
+							比较(ha / c) ? (t.ha / t.c) 可能会存在除不尽,小数的差异. 所以:
+							采用了乘法 if (ha * t.c != t.ha * c) return ha * t.c > t.ha * c;
+
 			2. 注释
 				1. y
 					#include <iostream>
@@ -27378,6 +27527,7 @@
 
 					int n;
 					int p[N], c[N], hc[N], ha[N];
+					p: 并查集, c: 家族的人数, hc: 家族的房子数, ha: 家族的房子面积
 					bool st[N];
 
 					struct Edge
@@ -29482,7 +29632,66 @@
 13. 链表
 		148. 1516. 共享	1032
 			0. bug
+				1. 读char 也是%c
+					scanf("%d %c %d", &a, &b, &c)
+				2. 题目的输入本身就会告诉你结尾: -1
+					所以你可以直接:
+						for(int i = h1; i != -1; i = ne[i]) st[i] = true;
 			1. 笔记
+				1. 其实非常简单, 就和以前学的链表很像
+					2. 要记的模板:
+					int head, e[N], ne[N];
+					int ind;
+
+					void init(){
+						head = -1;
+						ind = 0;
+					}
+
+					void add_head(int a){
+						e[ind] = a, ne[ind] = head, head = ind++;
+					}
+
+					//假设之前是 (头结点) a --> b --> c --> d --> -1, 其中b是a的next,现在要变成a --> b --> e --> c --> d --> -1
+					//其中b是第3个加入的节点, 在b的后面加上一个数, 这里的后面是next
+					void add_k(int a, int k){ 在k的前面加上一个新的数字, 所以这个新的数字的next是k
+						e[ind] = a, ne[ind] = ne[k], ne[k] = ind++; //也就是我ind要指向你k的下一位,你k指向我
+					}
+
+
+					void remove(int k){ 
+						ne[k] = ne[ne[k]]; //我k不指向我的下一个了,我指向我next的next
+					}
+
+					void remove_head(){
+						head = ne[head];
+					}
+
+					add规律:
+						e[ind] = xx, ne[ind] = yy, yy = ind++;
+
+						想象: 我先创建一个新的节点, 这个节点的e, 和ne要设置好, 最后我要给这个节点一个名分, 也就是让yy链接它
+							
+						xx是元素
+						yy是head, 或者是ne[k]
+							e[ind] = xx, ne[ind] = head, head = ind++;
+								我ind的元素是xx, 我ind的下一个是旧头head, 新头head是我ind, 最后ind++
+							e[ind] = xx, ne[ind] = ne[k], ne[k] = ind++;
+								我ind的元素是xx, 我ind的下一个是它k的下一个ne[k], 它k的下一个现在是我ind, 最后ind++
+
+					remove规律:
+						yy = ne[yy]
+							ne[k] = ne[ne[k]]; 
+								k的下一个 是 k的下一个 的下一个
+							head = ne[head];
+								头 是 头的下一个
+
+					最后是遍历
+						for (int i = head; i != -1; i = ne[i]) cout << e[i] << ' ';
+				2. scanf()一定要记得空格, 然后记得&
+				3. 最好用string读, 因为遇到00002的话, 我们要是需要输出00002, 不能输出2
+					不过老师还是用int读, 因为老师用了补齐5位的方式:
+						printf("%05d\n", i);
 			2. 注释
 				1. y
 					#include <iostream>
@@ -29530,6 +29739,38 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+					int e[N], ne[N];
+					bool st[N];
+
+					int main(){
+					    int h1, h2, n;
+					    scanf("%d %d %d", &h1, &h2, &n);
+
+
+					    for(int i = 0; i < n; i++){
+					        int a, b;
+					        char c;
+					        scanf("%d %c %d", &a, &c, &b);
+
+					        e[a] = c, ne[a] = b;
+					    }
+
+					    for(int i = h1; i != -1; i = ne[i]) st[i] = true;
+					    for(int i = h2; i != -1; i = ne[i]){
+					        if(st[i]){
+					            printf("%05d\n", i);
+					            return 0;
+					        }
+					    }
+					    puts("-1");
+					    return 0;
+
+					}
 				r2.
 				r3.
 				r4.
