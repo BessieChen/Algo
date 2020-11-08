@@ -20,7 +20,7 @@
 				    {
 				        res = num[i] + res;
 				        ++ j;
-				        if (j % 3 == 0 && i && num[i - 1] != '-') res = ',' + res;
+				        if (j % 3 == 0 && i && num[i - 1] != '-') res = ',' + res; 当加了3的倍数个数字, 还要不要加,: 首先: 如果当前已经指向第一个数字,不用加. 如果前面是一个-. 不用加
 				    }
 
 				    cout << res << endl;
@@ -152,7 +152,7 @@
 		2. 1477. 拼写正确	1005
 			1. 笔记
 				1. 用index来代替switch
-				2. 从int到string(to_string), 从string到int( - '0')
+				2. 从int到string(to_string), 从char到int( - '0'), 从string到int: stoi()
 				3. 输出, 先输出第一个数字
 				4. 注意, 之所以将int又转化成string是因为, 这样提取每个数字就很方便,而不需要%10,/10
 			2. 注释
@@ -26225,13 +26225,25 @@
 
 					复杂度:
 						1. 体积的取值是1-400, 选取的物品个数是1-400, 一共有最多20种物品, 所以复杂度是400*400*20=320w < 
+				2. 这道题:
+					1. 2维限制:
+						1. 体积: n^2
+						2. 重量: 只能选k个
+					2. 完全背包问题:
+						1. 体积之和 == 一个值
+						2. 每个物品可以选多次
+				3. 延时分析
+					1. 状态表示
+						因为是两维度,所以我们需要3个参数
+						f(i,j,k)
+							表示了某个集合, 这个集合中:
+								只考虑前i个物品
+								总p次方和 == j
+								选了 k 个物品
+							表示了该集合的属性:
+								价值最大
+					2. 状态计算
 
-					状态表示
-					因为是两维度,所以我们需要3个参数
-					f(i,j,k)
-						表示了某个集合:
-							所有只考虑前i个物品
-						表示了该集合的属性:
 			2. 注释
 				1. y
 				2. b
@@ -26365,24 +26377,24 @@
 					    string str;
 					    cin >> k >> str;
 
-					    for (int i = 0; i < str.size(); i ++ )
+					    for (int i = 0; i < str.size(); i ++ ) 双指针
 					    {
 					        int j = i + 1;
 					        while (j < str.size() && str[j] == str[i]) j ++ ;
-					        int len = j - i;
-					        if (len % k) st[str[i]] = 1;
-					        i = j - 1;
+					        int len = j - i; 计算长度
+					        if (len % k) st[str[i]] = 1; str[i]是字符, 字符最多是200, ==1说明不可能是坏的
+					        i = j - 1; i指向相同元素的最后一个元素. 之后i++
 					    }
 
 					    string res;
 					    for (int i = 0; i < str.size(); i ++ )
 					    {
-					        if (!st[str[i]]) cout << str[i], st[str[i]] = 2;
+					        if (!st[str[i]]) cout << str[i], st[str[i]] = 2; 我觉得不设置成2也可以呀.. 可是事实证明不可以, 因为我们要输出的坏键是只能输出一次, 如果你不设置成2, 之后这个坏键再出现, 你还会输出一次
 
 					        if (st[str[i]] == 1) res += str[i];
 					        else
 					        {
-					            res += str[i];
+					            res += str[i]; 如果是坏键, 那么 i 跳k次, 也就是 i += k - 1, 然后继续 i++
 					            i += k - 1;
 					        }
 					    }
@@ -26407,6 +26419,7 @@
 		97. 1606. C 语言竞赛	1116
 			0. bug
 			1. 笔记
+				见注释
 			2. 注释
 				1. y
 					#include <iostream>
@@ -26426,7 +26439,7 @@
 					        {
 					            st[i] = 1;
 					            for (int j = i * 2; j < N; j += i)
-					                st[j] = 2;
+					                st[j] = 2; 把合数标记成2
 					        }
 					}
 
@@ -26440,7 +26453,7 @@
 					    {
 					        int id;
 					        cin >> id;
-					        Rank[id] = i;
+					        Rank[id] = i; 因为第一个输入是第一名, 第i个输入是第i名
 					    }
 
 					    int k;
@@ -26450,8 +26463,8 @@
 					        int id;
 					        cin >> id;
 
-					        printf("%04d: ", id);
-					        if (!Rank[id]) puts("Are you kidding?");
+					        printf("%04d: ", id);	记得补全4个零
+					        if (!Rank[id]) puts("Are you kidding?");	说明没有这个人
 					        else if (Rank[id] == -1) puts("Checked");
 					        else
 					        {
@@ -26813,6 +26826,11 @@
 		104. 1532. 找硬币 	1048
 			0. bug
 			1. 笔记
+				1. 这道题可以用: 哈希表(unordered_set), 双指针
+				2. 因为只涉及两个硬币, 所以我们可以判断 sum - a 的硬币, 在不在集合里面
+					如果在, 加入这个硬币, 并且说明找到一个可行的解, 但是我们需要一个小的硬币最小的组合
+					如果不在, 就把这个硬币加入.
+				3. 每次比较, 都适合自己的前面比较,这就达到了两两握手的效果
 			2. 注释
 				1. y
 					#include <iostream>
@@ -26862,6 +26880,10 @@
 		105. 1549. 集合相似度	1063
 			0. bug
 			1. 笔记
+				Nc = A ∩ B
+					for (auto x : S[a]) nc += S[b].count(x);
+				Nt = A U B = A + B - Nc
+					Nt = a.size() + b.size() - nc;
 			2. 注释
 				1. y
 					#include <iostream>
@@ -26920,6 +26942,8 @@
 		106. 1610. 朋友数	1120
 			0. bug
 			1. 笔记
+				我们需要 去重, 又需要 排序:
+					set是最好的选择
 			2. 注释
 				1. y
 					#include <iostream>
@@ -26970,6 +26994,9 @@
 		107. 1637. 漏掉的数字	1144
 			0. bug
 			1. 笔记
+				老师的关键一句:
+					int res = 1;
+					while (S.count(res)) res ++ ;
 			2. 注释
 				1. y
 					#include <iostream>
@@ -27013,6 +27040,14 @@
 		108. 1642. 危险品装箱	1149
 			0. bug
 			1. 笔记
+				1. 不难, 关键在思路:
+					1. 和我想的一样:
+						1. 记录每一对不相容的物品:ab
+						2. 两种可能的思路:
+							1. 遍历test的所有元素c, 假设c == a, 然后再看不相容的b有没有test里面
+								麻烦, 不建议
+							2. 遍历所有不相容的物品ab, 看是否a在test里面并且b也在test里
+								简单
 			2. 注释
 				1. y
 					#include <iostream>
@@ -27072,6 +27107,14 @@
 		109. 1564. 哈希 		1078
 			0. bug
 			1. 笔记
+				1.
+					1. 这道题其实有点特殊: 采用了 1. 拉链法 2. 开放寻址法 的开放寻址法
+					2. 题目说: 利用只具有正增量的二次探测法来解决冲突。
+						1. 所以int i = (t + k * k) % s;
+						2. 也就是如果t 不行, 就尝试 t + 1, t + 4, t + 9...
+						3. 其中t = x % s, for(int k = 0; k < s; k++)
+				2. 找 大于 (用户给出的大小) 的最小素数。
+					while (!is_prime(s)) s ++ ;
 			2. 注释
 				1. y
 					#include <iostream>
@@ -27147,6 +27190,12 @@
 		110. 1630. 期终成绩	1137
 			0. bug
 			1. 笔记
+				1. 就是一个模拟题嘛..
+					可能用到的数据结构:
+					struct Student{} 初始函数
+					unordered_map<string, Student> hash;
+					vector<Student> students;
+
 			2. 注释
 				1. y
 					#include <iostream>
@@ -27251,6 +27300,18 @@
 					疑问就是，查询的数字不在哈希表里面，难道不应该是算Tsize + 1嘛？
 					yxc   4个月前     回复
 					PAT的某些题目确实很奇怪，不太清楚题目为何这样规定，但他就是这么来计算标准答案的。所以我们在题面中给大家特殊声明了这一点： 如果查找了 TSize 次，每次查找的位置上均有数，但都不等于要查找的数，则认为查找时间是 TSize+1。
+				2. 这是一道奇怪的题目:
+					1. 可以看成是模拟题
+					2. 最重要的步骤:
+						 cnt = 1;
+					    for (int k = 0; k < s; k ++, cnt ++ )
+					    {
+					        int i = (t + k * k) % s;
+					        if (!h[i] || h[i] == x) return i;
+					    }
+					    是两种情况:
+					    	1. !h[i] : 是为了找到一个空位
+					    	2. h[i] == x: 是为了找到是否插入过这个元素
 			2. 注释
 				1. y
 					#include <iostream>
@@ -29986,6 +30047,14 @@
 		152. 1506. 中位数	1029
 			0. bug
 			1. 笔记
+				1. 这道题的输入本身就是有序的
+				2. 所以你可以通过几个指针来完成: 感觉归并排序很像
+					int k = 0, i = 0, j = 0;
+				    while (i < n && j < m)
+				        if (a[i] <= b[j]) c[k ++ ] = a[i ++ ];
+				        else c[k ++ ] = b[j ++ ];
+				    while (i < n) c[k ++ ] = a[i ++ ];
+				    while (j < m) c[k ++ ] = b[j ++ ];
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30032,6 +30101,27 @@
 		153. 1530. 最短距离 	1046
 			0. bug
 			1. 笔记
+				1. 考察累计和
+					1. 题目是: 注意是右侧:
+						其中 Di 是第 i 个出口与第 i+1 个出口之间的距离，DN 是第 N 个出口与第 1 个出口之间的距离。
+					2. 所以:
+						s[0] = 0;
+						s[1] = s[0] + d[1] = 1 -> 2之间的距离
+						s[j] = s[j-1] + d[j] = 1->j的距离 + j -> j+1 之间的距离 = 1 -> j+1的距离
+						所以: s[j] = 1 -> j+1的距离
+						如果需要求 i,j 之间的距离:
+							i -> j == (0 -> j) - (0 -> i)
+								   == s[j-1] - s[i-1]
+							j -> N -> 1 -> i == (0 -> N -> 1) - (0 -> j) + ( 1 -> i)
+										     == s[N] - s[j-1] + s[i-1]
+										     因为s[N] 就是 0->N->1
+										     	DN 是第 N 个出口与第 1 个出口之间的距离。
+					3. 环要注意!
+						没有0号点, 只有N, 所以是 1 -> 2 -> 3 -> N -> 1 -> 2 ...
+						所以求得时候:
+							依旧是s[0] = 0, 只是为了格式的方便
+							但是s[j]管的永远是右边的部分: 也就是 s[j] = 1 -> j+1的距离 
+								而不是 s[j] = 1 -> j的距离
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30080,6 +30170,10 @@
 		154. 1571. 完美序列	1085
 			0. bug
 			1. 笔记
+				1. 难在了思路:
+					1. 遍历的是M
+					2. 然后保证 m * p > M, 所有满足这个条件的m的最小的那个m, 因为我们需要的子序列长度最大
+					3. 遍历下一个M的时候, 我们只需要从m的右侧开始遍历, 因为没有必要从最小的值开始遍历
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30095,7 +30189,7 @@
 
 					int main()
 					{
-					    scanf("%d%d", &n, &p);
+					    scanf("%d %d", &n, &p);
 					    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
 
 					    sort(a, a + n);
@@ -30126,6 +30220,58 @@
 		155. 1581. 急性中风	1091
 			0. bug
 			1. 笔记
+				1. 厉害了!
+					1. 6个方位:
+						前后, 左右, 上下:
+						int d[][3] = {
+						    {1, 0, 0},
+						    {-1, 0, 0},
+						    {0, 1, 0},
+						    {0, -1, 0},
+						    {0, 0, 1},
+						    {0, 0, -1},
+						};
+					2. 给定一个点的位置, 求出相邻的6个方位的点的位置:
+						当前的点的位置: t.x, t.y, t.z. 其中t是结构体
+						新的6个点的位置:
+							for (int i = 0; i < 6; i ++ )
+					        {
+					            int a = t.x + d[i][0], b = t.y + d[i][1], c = t.z + d[i][2];
+					        }
+					3. 我们要看这6个点是否是合法的:
+						a >= 0 && a < l
+						b >= 0 && b < m
+						c >= 0 && c < n
+					4. 如何合法, 是否存在是1
+						if (a >= 0 && a < l && b >= 0 && b < m && c >= 0 && c < n && g[a][b][c])
+			            {
+			                g[a][b][c] = 0;
+			                q.push({a, b, c});
+			                cnt ++ ;
+			            }
+			    2. 和之前队列不一样, 这里是真的用queue:
+			    	#include <queue>
+		   			queue<Node> q;
+				    q.push({x, y, z}); 把第一个节点push进去
+				    g[x][y][z] = 0; 标记成0, 说明我已经遍历过了
+
+				    int cnt = 1;	标记一下queue里面有多少元素
+				    while (q.size())	如果还有元素: while(hh <= tt)
+				    {
+				        auto t = q.front();		这两句取出t和从queue中删除t: int t = q[hh++];
+				        q.pop();
+
+				        for (int i = 0; i < 6; i ++ )
+				        {
+				            int a = t.x + d[i][0], b = t.y + d[i][1], c = t.z + d[i][2];
+				            if (a >= 0 && a < l && b >= 0 && b < m && c >= 0 && c < n && g[a][b][c])
+				            {
+				                g[a][b][c] = 0;
+				                q.push({a, b, c}); 如果相邻的元素有1的, 加入队列
+				                cnt ++ ;
+				            }
+				        }
+				    }
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30218,6 +30364,7 @@
 		156. 1641. 狼人杀-简单版	1148
 			0. bug
 			1. 笔记
+				见注释
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30230,18 +30377,17 @@
 					int n;
 					int q[N];
 
-					int judge(int k, int i, int j)  // 如果是假话，返回1；如果是真话，返回0
+					int judge(int k, int i, int j)  假设ij是狼人, 判断k说的是真话还是假话. // 如果是假话，返回1；如果是真话，返回0
 					{
 					    int t = q[k];
-					    if (t > 0)
+					    if (t > 0) 代表: t是好人
 					    {
-					        if (t == i || t == j) return 1;
-					        return 0;
-					    }
-
-					    t = -t;
-					    if (t == i || t == j) return 0;
-					    return 1;
+					        if (t == i || t == j) return 1; 但是t 确实是狼人ij, 那么就是说假话
+					        return 0;	那么说明说的是真话
+					    }else{代表: t是狼人
+					    	if (-t == i || -t == j) return 0; t的确是狼人, 返回说真话
+						}
+						return 1; 说明是假话
 					}
 
 					int main()
@@ -30249,17 +30395,17 @@
 					    cin >> n;
 					    for (int i = 1; i <= n; i ++ ) cin >> q[i];
 
-					    for (int i = 1; i <= n; i ++ )
+					    for (int i = 1; i <= n; i ++ ) 因为需要按照 id 的升序排列, 所以i最好是小的, 然后遍历j
 					        for (int j = i + 1; j <= n; j ++ )
 					        {
-					            int s = judge(i, i, j) + judge(j, i, j);
-					            if (s != 1) continue;
+					            int s = judge(i, i, j) + judge(j, i, j); 判断ij两个人说的是真话还是假话的个数
+					            if (s != 1) continue;	这里需要满足第三个条件:ij狼人只能有一个说假话
 
 					            s = 0;
-					            for (int k = 1; k <= n; k ++ )
+					            for (int k = 1; k <= n; k ++ ) 判断k个人中, 有多少个人说了假话
 					                s += judge(k, i, j);
 
-					            if (s != 2) continue;
+					            if (s != 2) continue; 满足第二个条件: 所有人只能有两个说假话
 
 					            cout << i << ' ' << j << endl;
 					            return 0;
@@ -30285,6 +30431,43 @@
 		157. 1535. 弹出序列	1051
 			0. bug
 			1. 笔记
+				1. 举例:
+					要插入的:1	2	3	4	5	6	7
+					要判断的:3	2	1	7	5	6	4
+					1. stack没有元素, 先压入1
+					2. 1 != 3, 所以继续压入2
+					3. 2 != 3, 所以压入3
+					3. 3 == 3, pop掉3
+					4. 2 == 2, pop掉2
+					5. 1 == 1, pop掉1
+					6. stack没有元素, 压入4
+					7. 4 != 7, 继续压入5, 6, 7
+					8. 7 == 7, pop掉7
+					9. 6 != 5, 并没有元素在压入了, 所以return false
+				2. 总结:
+					压入:
+						1. stack没有元素
+							压入stack, 如果没有元素可以哑了, returnfalse
+						2. for loop : stack的栈顶 != 要检测的数
+							压入stack, 如果没有元素可以哑了, returnfalse
+					弹出:
+						1. while: stack的栈顶 == 要检测的数
+							之后要检测的数的指针++
+					最后: 判断是否empty()
+				3. 思路和实现都有点点难: 因为压入的逻辑不是while, 而是for loop
+					 stack<int> stk;
+				    for (int i = 1, j = 0; i <= n; i ++ ) i是我们的1234序列, a[j]是我们要检测的元素
+				    {
+				        stk.push(i);	压入: stack没有元素, stack的栈顶 != a[j]
+				        if (stk.size() > m) return false; 没有元素压入
+
+				        while (stk.size() && stk.top() == a[j]) 弹出: stack的栈顶 == a[j]
+				        {
+				            stk.pop();
+				            j ++ ;
+				        }
+				    }
+
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30301,12 +30484,12 @@
 					bool check()
 					{
 					    stack<int> stk;
-					    for (int i = 1, j = 0; i <= n; i ++ )
+					    for (int i = 1, j = 0; i <= n; i ++ ) i是我们的1234序列, a[j]是我们要检测的元素
 					    {
-					        stk.push(i);
-					        if (stk.size() > m) return false;
+					        stk.push(i);	压入: stack没有元素, stack的栈顶 != a[j]
+					        if (stk.size() > m) return false; 没有元素压入
 
-					        while (stk.size() && stk.top() == a[j])
+					        while (stk.size() && stk.top() == a[j]) 弹出: stack的栈顶 == a[j]
 					        {
 					            stk.pop();
 					            j ++ ;
@@ -30341,9 +30524,26 @@
 				r4.
 				r5.
 
-		158. 1541. 世界首富	1055
+		158. 1541. 世界首富 ****	1055
 			0. bug
 			1. 笔记
+				1. 这道题很棒啊!!!
+					多路归并算法: (老师说: 夺路归并其实可以用最小堆, 但是这里用遍历也不会超时)
+						 int t = -1;
+			            for (int i = a; i <= b; i ++ )
+			                if (idx[i] < ages[i].size()) 这个序列没有用完?  idx[i]的意思: 年龄 == i的这个链表下, 已经用了多少个元素. (也就是当前指向的元素的ind)
+			                {
+			                    if (t == -1 || ages[i][idx[i]] < ages[t][idx[t]]) 
+			                    	很经典的夺路归并!! ages[i]的这个链表下我们是用到了第ind[i]个元素. 
+			                        其中 < 重载了ages的 < 
+			                        t = i;
+			                }
+
+			            if (t == -1) break; 注意, t是可能 == -1的
+			    2. 和以往不同的是, 这道题:
+			    	1. 将一个年龄都是i的人, 放在了age[i]这个链表中: vector<Person> ages[N];
+			    	2. 然后对于age[i], 我们再进行排序, 也就是age[i]链表中, 财富最多的, 名字最小的 在前面
+			    	3. 最后夺路归并. 厉害厉害.
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30370,7 +30570,7 @@
 					};
 
 					vector<Person> ages[N];
-					int idx[N];
+					int idx[N]; 
 
 					int main()
 					{
@@ -30384,7 +30584,7 @@
 					        ages[age].push_back({name, age, w});
 					    }
 
-					    for (auto& age : ages) sort(age.begin(), age.end());
+					    for (auto& age : ages) sort(age.begin(), age.end()); 
 
 					    for (int C = 1; C <= m; C ++ )
 					    {
@@ -30398,15 +30598,17 @@
 					        {
 					            int t = -1;
 					            for (int i = a; i <= b; i ++ )
-					                if (idx[i] < ages[i].size())
+					                if (idx[i] < ages[i].size()) 这个序列没有用完?  idx[i]的意思: 年龄 == i的这个链表下, 已经用了多少个元素. (也就是当前指向的元素的ind)
 					                {
-					                    if (t == -1 || ages[i][idx[i]] < ages[t][idx[t]])
+					                    if (t == -1 || ages[i][idx[i]] < ages[t][idx[t]]) 
+					                    	很经典的夺路归并!! ages[i]的这个链表下我们是用到了第ind[i]个元素. 
+					                        其中 < 重载了ages的 < 
 					                        t = i;
 					                }
 
-					            if (t == -1) break;
+					            if (t == -1) break; 注意, t是可能 == -1的
 					            auto& p = ages[t][idx[t]];
-					            idx[t] ++ ;
+					            idx[t] ++ ;	用了这个t年龄, 所以要++
 
 					            printf("%s %d %d\n", p.name.c_str(), p.age, p.w);
 					            exists = true;
@@ -30433,6 +30635,26 @@
 		159. 1543. 栈 	1057
 			0. bug
 			1. 笔记
+				1. 复杂度:
+					以前的类似的题目:
+						只有插入操作, 和查询中位数的操作
+							查询: 返回堆顶 : Q(1)
+							插入: O(nlogn)
+					现在这道题:
+						插入, pop, 查询
+				2. 我们因为有pop, 所以还是需要一个stack
+					1. 但是对于插入和查询, 我们可以用multiset来做:
+						1. multi: 因为我们可能插入诸多相同值的元素, 我们要保留这些相同的值
+						2. set: 有自动排序的功能
+					2. 设计两个multiset:
+						up: 存的是大的部分, 其中值从小到大: up.begin(), up.end()
+						down: 存小的部分: down.begin(), down.end();
+					3. 大小: 
+						如果一共有偶数个数, 中位数是中间偏左的数: 其中down.size() == up.size()
+							down.begin() < down.end() == 中位数 < up.begin() < up.end()
+						如果有奇数个数,  中位数是中间的数: down.size() == up.size() + 1
+							down.begin() < down.end() == 中位数 < up.begin() < up.end()
+						总之, down.size() >= up.size();
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30449,14 +30671,14 @@
 					{
 					    while (up.size() > down.size())
 					    {
-					        down.insert(*up.begin());
-					        up.erase(up.begin());
+					        down.insert(*up.begin()); up.begin()是地址, *xx是值
+					        up.erase(up.begin()); 
 					    }
 
 					    while (down.size() > up.size() + 1)
 					    {
 					        auto it = down.end();
-					        it -- ;
+					        it -- ; 因为end()是指向最后一个数的下一个
 					        up.insert(*it);
 					        down.erase(it);
 					    }
@@ -30475,9 +30697,14 @@
 					            int x;
 					            scanf("%d", &x);
 					            stk.push(x);
-					            if (up.empty() || x < *up.begin()) down.insert(x);
+
+					            往down插入的条件:
+					            	1. down是empty(): 此时up也一定是empty(), 因为我们这里是保证down.size() >= up.size()
+					            	2. 如果up.size() && x < *up.begin()
+					            老师这么写也可以:
+					            if (up.empty() || x < *up.begin()) down.insert(x); 如果 x < up的最小值: x < *up.begin()
 					            else up.insert(x);
-					            adjust();
+					            adjust(); 每次都要ajust
 					        }
 					        else if (strcmp(op, "Pop") == 0)
 					        {
@@ -30487,9 +30714,9 @@
 					                int x = stk.top();
 					                stk.pop();
 					                printf("%d\n", x);
-					                auto it = down.end();
+					                auto it = down.end(); up有可能是空, 但是down一定有元素. 所以不是auto it = up.begin();
 					                it -- ;
-					                if (x <= *it) down.erase(down.find(x));
+					                if (x <= *it) down.erase(down.find(x)); 不能直接down.erase(x), 因为这样就会把全部 == x的值删除. 
 					                else up.erase(up.find(x));
 
 					                adjust();
@@ -30525,6 +30752,12 @@
 		160. 1607. 爱丁顿数	1117
 			0. bug
 			1. 笔记
+				这道题还是看思维:
+					思路:
+						1. 从最大的天数开始: 从N开始
+						2. 筛选的条件:
+							1. 先用sort()排序, 然后看最大的N天, 是否满足要求
+								要求是:最小的那个元素, 依旧大于N英里
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30570,6 +30803,21 @@
 		161. 1528. 火星购物	1044
 			0. bug
 			1. 笔记
+				这道题主要也是思路:
+				思路:
+					1. 既然题目要求的 最小的 >= M的数字们
+					2. 假设答案是 从 a[j] 到 a[i]的所有数字之和 是最小的>=M的数字们
+						那么他们的特点是:
+							1. a[j] 到 a[i] 之和 >= M;
+							2. a[j+1] 到 a[i] 之和 < M;
+							因为如果a[j+1] 到 a[i] 都是 >= M
+							那么a[j] 到 a[i] 之和就不是最小的 >= M的了
+				所以:
+					1. 先找到a[j+1] 到 a[i] 之和 < M;
+					2. 在判断是否:  a[j] 到 a[i] 之和 >= M;
+					3. 然后判断这一对 ij 是不是最小的res
+				澄清:
+					s[i]是从节点1 + 节点2 + ... + 节点i的和
 			2. 注释
 				1. y
 					#include <iostream>
@@ -30622,6 +30870,9 @@
 		162. 1524. 最长回文子串	1040
 			0. bug
 			1. 笔记
+				思路:
+					1. 选定一个数字, 然后判断他的左右是否相等, 直到不相等为止
+					2. 选定一个数字, 判断自己和右侧是否相等, 直到不相等为止
 			2. 注释
 				1. y
 					#include <iostream>
