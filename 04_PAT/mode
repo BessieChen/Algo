@@ -1,0 +1,23 @@
+1. string
+	1.
+				0. bug
+				1. 笔记
+				2. 注释
+					1. y
+					2. b
+				3. 5次
+					r1.
+					r2.
+					r3.
+					r4.
+					r5.
+
+
+2, 总结:
+	#include <cstdio>
+	#include <cstring>
+	#include <iostream>
+	#include <algorithm>
+	#include <queue>
+	#include <map>
+	#include <vector>

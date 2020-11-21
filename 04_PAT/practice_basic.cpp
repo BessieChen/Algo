@@ -3734,17 +3734,17 @@
 						    {
 						        int t = -1;
 						        for (int j = 1; j <= n; j ++ )
-						            if (!st[j] && (t == -1 || dist[t] > dist[j])) //找到所有:没有确定最小距离(!st[j])的节点中, dist最小的, 这里先初始了t = 第一个没有确定的节点, 然后再和所有后面没有确定距离的节点作比较
-						                t = j; //注意, t == -1, t = j之后, 还会继续走上面的for loop
+						            if (!st[j] && (t == -1 || dist[t] > dist[j]))  找到所有:没有确定最小距离(!st[j])的节点中, dist最小的, 这里先初始了t = 第一个没有确定的节点, 然后再和所有后面没有确定距离的节点作比较
+						                t = j; 注意, t == -1, t = j之后, 还会继续走上面的for loop
 
-						        if(t == n) break; //因为题目要求的就是1到N的最短距离, 如果求出来了dist最短的就是N节点,我们就知道答案了
+						        if(t == n) break; 因为题目要求的就是1到N的最短距离, 如果求出来了dist最短的就是N节点,我们就知道答案了
 
-						        st[t] = true;//因为t是当前距离最小的,所以t节点的最短距离确定了
+						        st[t] = true; 因为t是当前距离最小的,所以t节点的最短距离确定了
 
 						        for (int j = 1; j <= n; j ++ )
 						            dist[j] = min(dist[j], dist[t] + g[t][j]);
-						            //两个作用,一个是将==3f..的dist[]更新为真正距离1节点的距离
-						            //第一次走的时候,t == 1,所以全程都是更新所有和1相邻的点,真正距离1节点的距离
+						            两个作用,一个是将==3f..的dist[]更新为真正距离1节点的距离
+						            第一次走的时候,t == 1,所以全程都是更新所有和1相邻的点,真正距离1节点的距离
 
 
 						    }
@@ -3795,12 +3795,12 @@
 
 						using namespace std;
 
-						typedef pair<int, int> PII;
+						typedef pair<int, int> PII; 距离起点的最短距离int, 该节点的编号int
 
 						const int N = 1e6 + 10;
 
 						int n, m;
-						int h[N], w[N], e[N], ne[N], idx; //因为是稀疏图,所以用邻接表, 代替之前的邻接矩阵g[N][N]
+						int h[N], w[N], e[N], ne[N], idx; 因为是稀疏图,所以用邻接表, 代替之前的邻接矩阵g[N][N]
 						int dist[N];
 						bool st[N];
 
@@ -3816,7 +3816,7 @@
 						    priority_queue<PII, vector<PII>, greater<PII>> heap; //最小堆
 						    heap.push({0, 1}); //距离1节点的距离是1, 这个节点是1节点
 
-						    while (heap.size())
+						    while (heap.size()) 特别像宽搜, 因为最多遍历m条边, 所以heap最多只有m条边加入 
 						    {
 						        auto t = heap.top();//取出dist最小的节点
 						        heap.pop();

@@ -970,6 +970,12 @@
 						全都初始化成0
 					for(char c : s2) map[c] = 1; 
 						不需要 - '0', 因为可能有特殊字符 )(*$#)
+				4. 总结:
+					1. multiset: 1. 排序
+						不去重(允许重复元素, 例如求stack的中位数的题目)
+					2. set: 1. 排序 2. 去重
+					3. unordered_set: 1. 去重
+						但是不排序
 					
 			2. 注释
 			3. 5次
@@ -1093,7 +1099,7 @@
 					while(j < s1.size() && isword(s1[j])) j++;
 					string word = tolower(s1.substr(i, j-i)); 会报错, 因为tolower()只能处理char
 				2. 忘记j++
-			1. 笔记
+			1. 笔记0
 				0. 用了双指针
 					先检测到word的第一个字符,如果符合就用while()取出整个word
 						int j = i; 首先让j指向i的位置
@@ -1551,6 +1557,8 @@
 					用到了struct
 					用到了重载<, sort()
 					用到了前缀和
+				2. 主要是设计怎么样的数据结构很重要:
+					map<string, vector<Record>> persons;
 			2. 注释
 				#include <cstdio>
 				#include <cstring>
@@ -3105,7 +3113,7 @@
 				1. string
 					-1 总结:
 						取k前面的: a.substr(0, k)
-						取k+1和后面的: a.substr(k)
+						取k+1和后面的: a.substr(k+1)
 					0. 找:
 						int k = a.find('.');
 						说明在'.'之前,不包括'.',有k个元素
@@ -3329,6 +3337,9 @@
 
 		13. 1559. 科学计数法	1073
 			0. bug
+				substr()的规则:
+					 s.substr(3, k - 3);
+					 这里的k-3是相对距离, 也就是从ind == 3开始, 走k-3步子, 也就是最后终止与ind == k
 			1. 笔记
 				0. 回忆:
 					 int to string: to_string()
@@ -3493,6 +3504,9 @@
 		14. 1563. Kuchiguse	1077
 			0. bug
 				用getline(cin, s[i]);之前,记得getchar();
+				取最后a个char
+					string str = xx.substr(xx.size() - a);
+					当a == xx.size(), 我们就是从xx开始, 然后从xx的第二个元素开始
 			1. 笔记
 				1. 其实要找的是最长后缀,思路很简单
 					就是直接看每个string的后k个字符是否一样
@@ -22341,18 +22355,153 @@
 
 					    return 0;
 					}
-
 			3. 5次
-				r1.
+				r1. 好久没写了, 还ok 
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 510;
+					const int M = 100010;
+					int d[N][N], dist[M];
+					bool st[M];
+					int n, m;
+
+					void dijkstra(){
+					    int S = 1, T = n;
+					    dist[S] = 0;
+					    for(int i = 1; i <= n; i++){
+					        int t = -1;
+					        for(int j = 1; j <= n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        st[t] = true;
+
+					        for(int j = 1; j <= n; j++){
+					            if(dist[t] + d[t][j] < dist[j]){
+					                dist[j] = dist[t] + d[t][j];
+					            }
+					        }
+					    }
+					    if(dist[T] == 0x3f3f3f3f) cout << -1 << endl;
+					    else cout << dist[T] << endl;
+					}
+
+					int main(){
+					    scanf("%d%d", &n, &m);
+					    memset(d, 0x3f, sizeof d);
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(st, 0, sizeof st);
+					    while(m--){
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        d[a][b] = min(d[a][b], c);
+					    }
+
+					    dijkstra();
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 510;
+					const int M = 100010;
+					int dist[N], d[N][N];
+					bool st[N];
+					int n, m;
+					int S, T;
+
+					void dijkstra(){
+					    S = 1, T = n;
+					    dist[S] = 0;
+					    
+					    for(int i = 1; i <= n; i++){
+					        int t = -1;
+					        for(int j = 1; j <= n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        st[t] = true;
+					        
+					        for(int j = 1; j <= n; j++){
+					            dist[j] = min(dist[j], dist[t] + d[t][j]);
+					        }
+					    }
+					    
+					    if(dist[T] == 0x3f3f3f3f) cout << -1 << endl;
+					    else cout << dist[T] << endl;
+					}
+
+					int main(){
+					    scanf("%d%d", &n, &m);
+					    
+					    memset(d, 0x3f, sizeof d);
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(st, 0, sizeof st);
+					    while(m--){
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        d[a][b] = min(d[a][b], c);
+					    }
+					    
+					    dijkstra();
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 510;
+					const int M = 100010;
+					int d[N][N], dist[N];
+					bool st[N];
+					int n, m;
+
+					void dijkstra(){
+					    dist[1] = 0;
+					    for(int i = 1; i <= n; i++){
+					        int t = -1;
+					        for(int j = 1; j <= n; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+					        st[t] = true;
+					        
+					        for(int j = 1; j <= n; j++) dist[j] = min(dist[j], dist[t] + d[t][j]);
+					    }
+					    
+					    if(dist[n] == 0x3f3f3f3f) cout << -1 << endl;
+					    else cout << dist[n] << endl;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    memset(d, 0x3f, sizeof d);
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(st, 0, sizeof st);
+					    while(m--){
+					        int a, b, c;
+					        cin >> a >> b >> c;
+					        d[a][b] = min(d[a][b], c);
+					    }
+					    
+					    dijkstra();
+					    return 0;
+					}
 				r4.
 				r5.
 
-		71. 850. Dijkstra求最短路 II 	模板题
+		71. 850. Dijkstra求最短路 II (堆优化版)	模板题
 			0. bug
 			1. 笔记
-				见注释
+				1. 找最好的灵魂, 这一步的复杂度是O(n^2), 因为有两个嵌套的for loop
+					用heap找最好的灵魂, 这一步变成O(n), 因为第一个for loop还是n次, 但是我们每次找最小值只需要O(1)
+				2. 往heap里面加入新的dist
+					从原来的复杂度O(m)[m似乎是边数?], 然后因为用了heap, 变成了现在的O(m*logn), 因为修改heap是logn
 			2. 注释
 				1. y
 					#include <cstring>
@@ -25075,7 +25224,75 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+					#include <vector>
 
+					using namespace std;
+
+					const int N = 210;
+					bool g[N][N], st[N];
+					vector<int> nodes;
+					int n, m, k, cnt;
+
+					bool check1(){
+					    for(int i = 1; i < (int)nodes.size(); i++){
+					        for(int j = 0; j < i; j++){
+					            // cout << "i: " << i << " j: " <<j <<endl;
+					            // cout << nodes[j] << ' ' << nodes[i] << endl;
+					            if(!g[nodes[i]][nodes[j]]) return false;
+					        }
+					    }
+					    return true;
+					}
+
+					bool haslarger(){
+					    for(int i = 1; i <= n; i ++){
+					        if(!st[i]){
+					            bool valid = true;
+					            for(int item : nodes){
+					                if(!g[item][i]) 
+					                {
+					                    valid = false;
+					                    break;
+					                }
+					            }
+					            if(valid) return true; //如果这个节点i是可以让当前团变大, 就返回true
+					        }
+					    }
+					    return false;
+					}
+
+					int main(){
+					    cin >> n >> m;
+					    int a, b;
+					    while(m--){
+					        cin >> a >> b;
+					        g[a][b] = g[b][a] = true;
+					    }
+
+					    cin >> k;
+					    while(k--){
+					        
+					        memset(st, 0, sizeof st);
+					        nodes.clear();
+					        cin >> cnt;
+					        for(int i = 1; i <= cnt; i++){
+					            cin >> a;
+					            nodes.push_back(a);
+					            st[a] = true;
+					        }
+					        bool iscl = check1();
+					        if(!iscl){
+					            cout << "Not a Clique" << endl;
+					            continue;
+					        }
+					        bool hasm = haslarger();
+					        if(hasm) cout << "Not Maximal" << endl;
+					        else cout << "Yes" << endl;
+					    }
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
@@ -25215,21 +25432,67 @@
 				r4.
 				r5.
 
-		none 84. 1643. 旅行商问题	1150
+		84. 1643. 旅行商问题	1150
 			0. bug
+				1. 粗心:
+					for(int j = 0; j < a; j++){
+			            cin >> path[j]; 我把j写成了i
+			            st[j] = true; 把j写成了i..
+			        }
+			    2. 检查是否每个点都是true
+			    	错误:
+				        for(int j = 0; j < a; j++){ 我检查成了path了, 这不是贼喊捉贼吗
+				            if(!st[path[j]]){
+				              cycle = false;
+				              break;
+				            }
+				        }
+			        正确:
+			        	for(int j = 1; j <= n; j++) 应该是查每一个点
+			            if(!st[j]){
+			               cycle = false;
+			               break;
+			            }
+			    3. 回路: 记得判断是否起点 == 终点, 否则怎么叫"回"路呢
 			1. 笔记
 				1.
+					回路:
+						1. 是否能走:
+							也就是边是否是 < INF
+						2. 检查是否每个点都走了一次
+							test的点标记了true后,  检查是否还有没有标记true的点
+						3. 是否起点 == 终点
 					简单回路: 
-						1. 两个点之间存在一条边
-						2. 每个点都遍历了
-						3. 起点 == 终点
-						4. 点数 == n+1
+						1. 是否能走:
+							也就是边是否是 < INF
+						2. 检查是否每个点都走了一次
+							test的点标记了true后,  检查是否还有没有标记true的点
+						3. 是否起点 == 终点
+						4. 是否有的点走了两次:
+							是否点数 == n + 1
 					debug:
 						1. segmentfault: 数组越界
+				2. 主要还是考察思路的清晰:
+					1. 假设我们已经输入了所有的input, 将test的点都标记上了true:
+					2. 具体的步骤:
+						1. 检查是否每个边都是联通的:
+							1. 否: break + "NA (Not a TS cycle)"
+							2. 是: 记录总的距离 +去step2
+						2. 检查是否每个点都是true
+							1. 否: break + "dist (Not a TS cycle)"
+							2. 是: 继续step3
+						3. 检查是否起点==终点:
+							1. 否: "dist (Not a TS cycle)"			我就是这里错了! 题目应该说明 回路 一定是 起点 == 终点
+							2. 是: step4
+						4. 检查cnt == n + 1;
+							1. 否: "dist (TS cycle)"		说明是走多了一些点
+							2. 是: "dist (TS simple cycle)" 就是简单回路
+
+
 
 			2. 注释
 				1. y
-				2. b
+				2. b 这是老师的, 我建议参考我的r1
 					#include <iostream>
 					#include <cstring>
 
@@ -25329,18 +25592,101 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 310, INF = 0x3f3f3f3f;
+					int d[N][N];
+					int path[N];
+					bool st[N];
+					int n, m;
+
+					int main(){
+					    cin >> n >> m;
+					    int a, b, c;
+					    memset(d, 0x3f, sizeof d);
+					    while(m--){
+					        cin >> a >> b >> c;
+					        d[a][b] = d[b][a] = min(d[a][b], c);
+					    }
+					    int k;
+					    cin >> k;
+					    int sh = INF, id = -1;
+					    for(int i = 1; i <= k; i++){
+					        printf("Path %d: ", i);
+
+					        int a;
+					        cin >> a;
+					        memset(st, 0, sizeof st);
+					        for(int j = 0; j < a; j++){
+					            cin >> path[j];
+					            st[path[j]] = true;
+					        }
+
+					        int res = -1;
+					        bool cycle = true;
+					        int dist = 0;
+					        for(int j = 1; j < a; j++){
+					            int x = path[j-1], y = path[j];
+					            if(d[x][y] == INF){
+					                cycle = false;
+					            }
+					            else{ dist += d[x][y];}
+					        }
+					        
+
+					        if(!cycle){
+					            printf("NA (Not a TS cycle)\n");
+					            continue;
+					        }
+
+					        //wrong:
+					        // for(int j = 0; j < a; j++){
+					        //     if(!st[path[j]]){
+					        //       cycle = false;
+					        //       break;
+					        //     }
+					        // }
+					        for(int j = 1; j <= n; j++)
+					            if(!st[j]){
+					               cycle = false;
+					               break;
+					            }
+					        if(path[0] != path[a-1]) cycle = false;
+					        
+					        if(!cycle) printf("%d (Not a TS cycle)\n", dist);
+					        else{
+					            if(dist < sh) sh = dist, id = i;
+					            if(a == n + 1) printf("%d (TS simple cycle)\n", dist);
+					            else printf("%d (TS cycle)\n", dist);
+					        }
+					    }
+
+					    printf("Shortest Dist(%d) = %d\n", id, sh);
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
 				r5.
 
-		none 85. 1648. 顶点着色	1154
+		85. 1648. 顶点着色	1154
 			0. bug
+				1. 题目并没有说所有的点都是联通的. 所以你在计算一共有多少种颜色的时候:
+					正确:
+						for(int i = 0; i < n; i++) s.insert(color[i]);
+					错误: 错误的原因是, 只算了所有edge的两侧点的颜色, 但是有的点可能不在edge里面.
+						for(int i = 0; i < m; i++){
+				            if(color[e[i].a] == color[e[i].b]) res = false;
+				            else s.insert(color[e[i].a]), s.insert(color[e[i].b]);
+				        }
 			1. 笔记
 				1.
 					简单,因为询问是给出了颜色,让我们判断对错, 而不是让我们自己设计颜色
 					思路是:
-					1. 记录每条边的起点和终点
+					1. 记录每条边的起点和终点: struct edge{}
 					2. 判断这个起点和终点的颜色(因为询问中给出了每个点的颜色)
 					3. 如果颜色相同,就是false
 					4. 最后也需要输出颜色的种类数, 用unordered_set来存
@@ -25394,6 +25740,44 @@
 					}
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <unordered_set>
+					using namespace std;
+
+					const int N = 10010;
+					struct E{
+					    int a, b;
+					}e[N];
+					int test[N];
+					unordered_set<int> s;
+					int n, m;
+
+
+					int main(){
+					    cin >> n >> m;
+					    for(int i = 0; i < m; i++){
+					        cin >> e[i].a >> e[i].b;
+					    }
+
+					    int k;
+					    cin >> k;
+					    while(k--){
+					        for(int i = 0; i < n; i++) cin >> test[i];
+					        bool res = true;
+					        s.clear();
+					        for(int i = 0; i < m; i++){
+					            if(test[e[i].a] == test[e[i].b]) res = false;
+					            //else s.insert(test[e[i].a]), s.insert(test[e[i].b]);
+					        }
+					        if(!res) cout << "No" << endl;
+					        else {
+					            for(int i = 0; i < n; i++) s.insert(test[i]);
+					            printf("%d-coloring\n", s.size());
+					        }
+					            
+					    }
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
@@ -25507,9 +25891,43 @@
 				r4.
 				r5.
 
-		none 87. 1558. 加油站	1072
+		87. 1558. 加油站	1072
 			0. bug
+				1. 我理解错了题意:
+					我的错误理解:
+						找到每个加油站a的最近的房子b, 计算每个加油站a距离他们最近房子的距离c
+							这个c 需要满足 > 指定距离. 因为加油站不能离房子太近
+						但是, 题目并没有给这个指定距离, 而是给了服务范围
+					正确:
+						找到每个加油站a的最近的房子b, 计算每个加油站a距离他们最近房子的距离c
+						我们需要c最大的那个加油站. 
+				2. 我少考虑了一个:
+					如果有两个加油站的c相同, 我们就要判断两个加油站的距离每个房子的距离total谁的小
+					total小的优先
 			1. 笔记
+				1. 思路:
+					1. 满足条件的加油站:
+						1. 计算每个加油站a距离他们最远房子的距离d
+							这个d 满足 < a的服务范围, 否则a服务不到这个房子
+					2. 在所有满足田健的加油站中:
+						0. 找到每个加油站a的最近的房子b, 计算每个加油站a距离他们最近房子的距离c
+							选取c最大的加油站, 因为加油站不能离房子太近否则爆炸
+						1. 第二关键词: 选取与所有房屋的总距离total最小的加油站
+							也就是加油站a距离所有房子的距离和是最小的
+						2. 还不唯一, 返回最小编号的房子. 
+							我们只要按照需要由小到大遍历就可以
+				2. 实现:
+					1. 每个加油站, 计算去每个房子的距离
+						1. 遍历, 找到最远的房子的距离. 看是否大于指定服务距离
+						2. 遍历, 找到最近的房子的距离. 
+						3. 遍历, 找到房子距离的和
+				3. 数据结构:
+					1. 因为题目是加油站和房子一起给你的. 
+						没有关系, 我们依旧可以用链接矩阵:
+							1. n个房子, m个加油站.
+							2. 我们使用d[n+m][n+m]矩阵
+							3. for(int i = 1; i <= n; i ++)遍历每个房子
+							4. for(int i = n + 1; i <= n + m; i ++)遍历每个加油站
 			2. 注释
 				1. y
 					#include <iostream>
@@ -25603,6 +26021,80 @@
 				2. b
 			3. 5次
 				r1.
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					const int N = 1020;
+					int d[N][N];
+					int dist[N];
+					bool st[N];
+					int n, m, k, s;
+
+					void dijkstra(int S, bool& cond, int& mind, int& total){
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(st, 0x3f, sizeof st);
+					    dist[S] = 0;
+					    for(int i = 1; i <= n + m; i++){
+					        int t = -1;
+					        for(int j = 1; j <= n + m; j++){
+					            if(!st[j] && (t == -1 || dist[j] < dist[t])) t = j;
+					        }
+
+					        st[t] = true;
+					        for(int j = 1; j <= n + m; j++){
+					            if(dist[t] + d[t][j] < dist[j]) dist[j] = dist[t] + d[t][j];
+					        }
+					    }
+
+					    mind = 0x3f3f3f3f;
+					    int maxd = -1;
+					    for(int i = 1; i <= n; i++){
+					        if(dist[i] < mind) mind = dist[i];
+					        if(dist[i] > maxd) maxd = dist[i];//如果dist[i] == 0x3f3f3f3f, 说明这个加油站根本不能到达这个房子. 不合格加油站. 所以不能写成: if(dist[i] != 0x3f3f3f3f && dist[i] > maxd) maxd = dist[i];
+					        total += dist[i];
+					    }
+					    if(maxd > s) cond = false;
+					}
+
+					int main(){
+					    cin >> n >> m >> k >> s;
+
+					    memset(d, 0x3f, sizeof d);
+					    while(k--){
+					        string a, b;
+					        int c;
+					        cin >> a >> b >> c;
+
+					        int x, y;
+					        if(a[0] == 'G') a = a.substr(1), x = stoi(a) + n;
+					        else x = stoi(a);
+					        if(b[0] == 'G') b = b.substr(1), y = stoi(b) + n;
+					        else y = stoi(b);
+					        
+					        d[x][y] = d[y][x] = min(d[x][y], c);
+					    }
+
+					    int maxmin = -1;
+					    int id = -1;
+					    int mtotal = -1;
+					    for(int i = n + 1; i <= n + m; i ++){
+					        bool cond = true;
+					        int mind = 0x3f3f3f3f, total = 0;
+					        dijkstra(i, cond, mind, total);
+					        if(cond && (maxmin == -1 || mind > maxmin)) maxmin = mind, id = i - n, mtotal = total;
+					        else if(cond && (maxmin == -1 || mind == maxmin) && total < mtotal) id = i - n, mtotal = total; 
+					    }
+
+					    if(id == -1) cout << "No Solution" << endl;
+					    else{
+					        cout << 'G' << id << endl;
+					        printf("%.1lf %.1lf\n", (double)maxmin, (double)mtotal / n + 1e-8);
+					    }
+					    return 0;
+					}
+
 				r2.
 				r3.
 				r4.
