@@ -22498,6 +22498,7 @@
 		71. 850. Dijkstra求最短路 II (堆优化版)	模板题
 			0. bug
 			1. 笔记
+				0. 堆优化: 应用于稀疏图, 也就是点数 约等于 边数
 				1. 找最好的灵魂, 这一步的复杂度是O(n^2), 因为有两个嵌套的for loop
 					用heap找最好的灵魂, 这一步变成O(n), 因为第一个for loop还是n次, 但是我们每次找最小值只需要O(1)
 				2. 往heap里面加入新的dist
@@ -22530,7 +22531,7 @@
 					    memset(dist, 0x3f, sizeof dist);
 					    dist[1] = 0;
 					    priority_queue<PII, vector<PII>, greater<PII>> heap; //最小堆
-					    heap.push({0, 1}); //距离1节点的距离是1, 这个节点是1节点
+					    heap.push({0, 1}); 距离1节点的距离是0, 这个节点是1节点. 因为priority_queue是按照第一个关键字排的
 
 					    while (heap.size()) 特别像宽搜, 因为最多遍历m条边, 所以heap最多只有m条边加入 
 					    {
@@ -22575,9 +22576,185 @@
 					}
 				2. b
 			3. 5次
-				r1.
+				r1. 这个图是稀疏图, 因为点数 几乎等于 边数
+					#include <iostream>
+					#include <cstring>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std; //记得加, 否则: 'pair' does not name a type
+
+					typedef pair<int, int> PII;
+
+					const int M = 1.5e5 + 10;
+					int e[M], ne[M], h[M], ind;
+					int d[M];
+					int dist[M];
+					bool st[M];
+					int n, m;
+
+					void add(int a, int b, int c){
+					    e[ind] = b, d[ind] = c, ne[ind] = h[a], h[a] = ind ++;
+					}
+
+					void dijkstra(){
+					    dist[1] = 0;
+					    priority_queue<PII, vector<PII>, greater<PII>> q;
+					    q.push({0, 1});
+
+					    while(q.size()){
+					        auto t = q.top();
+					        q.pop();
+
+					        int ver = t.second, dis = t.first;
+					        if(st[ver]) continue;
+					        st[ver] = true;
+
+					        for(int i = h[ver]; ~i; i = ne[i]){
+					            int j = e[i];
+					            if(dist[ver] + d[i] < dist[j]){
+					                dist[j] = dist[ver] + d[i];
+					                q.push({dist[j], j});
+					            }
+					        }
+					    }
+
+					    if(dist[n] == 0x3f3f3f3f) cout << -1 << endl;
+					    else cout << dist[n] << endl;
+					}
+
+					int main(){
+					    scanf("%d%d", &n, &m);
+					    memset(h, -1, sizeof h);
+					    memset(d, 0x3f, sizeof d);
+					    memset(dist, 0x3f, sizeof dist);
+					    while(m--){
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    dijkstra();
+					    return 0;
+					}
 				r2.
+					#include <iostream>
+					#include <cstring>
+					#include <queue>
+
+					using namespace std;
+
+					typedef pair<int, int> PII;
+
+					const int N = 1.5e6 + 10;
+					int e[N], d[N], ne[N], h[N], ind;
+					int dist[N];
+					bool st[N];
+					int n, m;
+
+					void add(int a, int b, int c){
+					    e[ind] = b, d[ind] = c, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					void dijkstra(){
+					    dist[1] = 0;
+					    priority_queue<PII, vector<PII>, greater<PII>> q;
+					    q.push({0, 1}); 
+					    
+					    while(q.size()){
+					        auto t = q.top();
+					        q.pop();
+					        
+					        int ver = t.second, dis = t.first;
+					        if(st[ver]) continue;
+					        st[ver] = true;
+					        
+					        // 更新ver的所有临边
+					        for(int i = h[ver]; ~i ; i = ne[i]){
+					            int j = e[i];
+					            if(dist[ver] + d[i] < dist[j]){
+					                dist[j] = dist[ver] + d[i];
+					                q.push({dist[j], j});
+					            }
+					        }
+					    }
+					    
+					    if(dist[n] == 0x3f3f3f3f) cout << -1 << endl;
+					    else cout << dist[n] << endl;
+					}
+
+					int main(){
+					    scanf("%d%d", &n, &m);
+					    memset(h, -1, sizeof h);
+					    memset(dist, 0x3f, sizeof dist);
+					    memset(d, 0x3f, sizeof d);
+					    while(m--){
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+					    dijkstra();
+					    return 0;
+					}
 				r3.
+					#include <iostream>
+					#include <cstring>
+					#include <queue>
+
+					using namespace std;
+
+					typedef pair<int, int> PII;
+					const int N = 1e6 + 10;
+					int e[N], d[N], ne[N], h[N], ind;
+					int dist[N];
+					bool st[N];
+					int n, m;
+
+					void add(int a, int b, int c){
+					    e[ind] = b, d[ind] = c, ne[ind] = h[a], h[a] = ind++;
+					}
+
+					int dijkstra(){
+					    dist[1] = 0;
+					    priority_queue<PII, vector<PII>, greater<PII>> q;
+					    q.push({0, 1});
+					    
+					    while(q.size()){
+					        //找灵魂, 因为灵魂: 1. 最小的dist, 2. st[它] == false
+					        auto t = q.top();
+					        q.pop();
+					        
+					        int ver = t.second, dis = t.first;
+					        if(st[ver]) continue;
+					        st[ver] = true;
+					        
+					        //遍历灵魂的所有临边
+					        for(int i = h[ver]; ~i ; i = ne[i]){
+					            int ver2 = e[i];
+					            if(dist[ver] + d[i] < dist[ver2]){
+					                dist[ver2] = dist[ver] + d[i];
+					                q.push({dist[ver2], ver2});
+					            }
+					        }
+					    }
+					    
+					    if(dist[n] == 0x3f3f3f3f) return -1;
+					    return dist[n];
+					}
+
+					int main(){
+					    scanf("%d%d", &n, &m);
+					    memset(h, -1, sizeof h);
+					    memset(d, 0x3f, sizeof d);
+					    memset(dist, 0x3f, sizeof dist);
+					    while(m--){
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+					    cout << dijkstra() << endl;
+					    return 0;
+					}
 				r4.
 				r5.
 
