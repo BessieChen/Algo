@@ -26377,6 +26377,7 @@
 7. 数学
 		89. 1533. 1 的个数	1049
 			0. bug
+				1. 在设置int left = 0, right = 0, power = 1的时候, 错将这一句写在了第一个for loop外面
 			1. 笔记
 				1.	
 					1. 暴力枚举一定会超时:
@@ -26386,14 +26387,14 @@
 					2. 思路
 						假设一个数字是bar(abcdefgh), 其中bar()就是代表一个数字上面加上-
 						我们需要一个一个遍历所有的数字, 假设我们当前遍历到了d
-						我们是判断, 比这个bar(abcdefgh)小的所有数字中,有多少是bar(abc1efgh)
+						我们是判断, 比这个bar(abcdefgh)小的所有数字中,有多少是bar(___1____)
 						有多少呢?需要分情况讨论:
 							1. 假设d == 0, 求比bar(abc0efgh)小的所有数字中,有多少是第4位数字是1, 也就是bar(___1____)
 								分析
 									前3位___的取值是bar(000)到bar(abc)-1, 因为如果是bar(abc)的话, bar(abc1____)肯定是大于我们题目给的bar(abc0efgh)
 										bar(000)到bar(abc)-1一共有bar(abc)个数字
-									后4位____的取值是bar(0)到bar(999), 例如, 假设bar(abc)是123, 题目给定的就是1230efgh, 比1230efgh要小的数字,就包括了12219999. 其中前三位是bar(abc)-1, 后4位是9999
-										bar(0)到bar(999)一共有10^4个数字
+									后4位____的取值是bar(0000)到bar(9999), 例如, 假设bar(abc)是123, 题目给定的就是1230efgh, 比1230efgh要小的数字,就包括了12219999. 其中前三位是bar(abc)-1, 后4位是9999
+										bar(0000)到bar(9999)一共有10^4个数字
 								总结
 									bar(abc) * 10^4种可能
 
@@ -26425,7 +26426,7 @@
 					4. 所以我们预处理,需要bar(abc), bar(efgh), 后面的位数n
 			2. 注释
 				1. y
-				2. b
+				2. b 还可以参考r1的注释
 					#include <iostream>
 					#include <vector>
 
@@ -26434,7 +26435,7 @@
 					int calc(int n)
 					{
 					    vector<int> nums;
-					    while (n) nums.push_back(n % 10), n /= 10; 每次推入的是个位数, 所以个位数的ind == 0
+					    while (n) nums.push_back(n % 10) 把个位数加进去 , n /= 10 把个位数删掉; 每次推入的是个位数, 所以个位数的ind == 0
 
 					    int res = 0;
 					    for (int i = nums.size() - 1; i >= 0; i -- ) 从最高位开始, 所以想想画面: ind == 0 (hgfedcba) ind == size-1
@@ -26468,6 +26469,62 @@
 					}
 			3. 5次
 				r1.
+					这道题, 属于难在思路, 实现其实熟练了就不难:
+					#include <iostream>
+					#include <vector>
+					#include <cmath>
+
+					using namespace std;
+
+					vector<int> vec;
+
+					int calc(int n){
+					    // 首先将所有的数字, 插入vec, 最后 低位(ind==0) ---- 高位(ind == size()-1)
+					    while(n) vec.push_back(n % 10), n /= 10;
+
+					    我们需要3个东西:
+					    1. 某个数字左侧的bar(abc), 我们称为left
+					    2. 某个数字右侧的bar(efgh), 我们称为right
+					    3. 某个数字右侧的pow, 例如这里是10^4, 我们称为power
+
+					    
+					    int res = 0;
+
+					    for(int i = 0; i < (int)vec.size(); i ++) // 遍历所有的"某个数字", 无所谓从左到右, 还是从右往左
+					    {    
+					        int left = 0, right = 0, power = 1;
+					        // 1. 求left: 都是在vec的高位, 我们计算的时候, 是从最高位开始, 这个最高位在vec.size() - 1
+					        for(int j = (int)vec.size()-1; j > i; j--) left = left * 10 + vec[j];
+
+					        // 2. 求right: 都是在vec的低位, 不过计算的时候, 也是从最高位开始, 这个最高位在 i - 1
+					        for(int j = i - 1; j >= 0; j--)
+					        {
+					            right = right * 10 + vec[j];
+					            // power *= 10; //后面有几位
+					        }
+
+					        // 3. 求power: 也就是数字尾部有几个数字, 数字的低位在vec的靠近ind==0的位置
+					        power = pow(10, i);
+
+					        // cout << left << " " << right << " " << power << endl;
+					        if(vec[i] == 0) res += left * power;
+					        else if(vec[i] == 1) res += left * power + (right + 1);
+					        else res += (left + 1) * power;
+					    }
+					    return res;
+
+
+					    
+
+					}
+
+					int main(){
+					    int n;
+					    cin >> n;
+
+					    cout << calc(n) << endl;
+					    return 0;
+					}
 				r2.
 				r3.
 				r4.
