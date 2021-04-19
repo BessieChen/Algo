@@ -301,9 +301,13 @@
 
 						void quick_sort(int q[], int l, int r)
 						{
-						    if (l >= r) return;
+						    if (l >= r) return; 如果区间里面没有数字, 或者一个数字, 直接返回 
 
 						    int i = l - 1, j = r + 1, x = q[l + r >> 1];
+						    两个指针:
+						    	i: 指向l的左边一位
+						    	j: 指向r的右边一位
+
 						    while (i < j)
 						    {
 						        do i ++ ; while (q[i] < x);
@@ -383,8 +387,13 @@
 				0. bug
 				1. 笔记
 					1.
-						复杂度是O(n):
+						复杂度是 O(n):
 							因为是n + n/4 + n/8 +… = 2n
+
+
+					分好后, 左边的数 <= x
+					分好后, 右边的数 >= x
+						也就是 ==x的数字, 在左右两边都有分布
 				2. 注释
 					1. y
 						#include <iostream>
@@ -428,6 +437,43 @@
 						来源：AcWing
 						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					2. b
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 100010;
+
+						int q[N];
+
+						int quick_sort(int q[], int l, int r, int k)
+						{
+						    if (l >= r) return q[l];
+
+						    swap(q[l], q[rand() % (r-l+1) + l]);
+						    
+						    int x = q[l], i = l - 1, j = r + 1;
+						    while (i < j)
+						    {
+						        do i ++ ; while (q[i] < x);
+						        do j -- ; while (q[j] > x);
+						        if (i < j) swap(q[i], q[j]);
+						    }
+
+						    if (j - l + 1 >= k) return quick_sort(q, l, j, k);
+						    else return quick_sort(q, j + 1, r, k - (j - l + 1));
+						}
+
+						int main()
+						{
+						    int n, k;
+						    scanf("%d%d", &n, &k);
+
+						    for (int i = 0; i < n; i ++ ) scanf("%d", &q[i]);
+
+						    cout << quick_sort(q, 0, n - 1, k) << endl;
+
+						    return 0;
+						}
 				3. 5次
 					r1.
 					r2.
@@ -671,7 +717,7 @@
 						3. auto c : list/vector/迭代器
 							c11新特色
 					4. 加减乘除
-						1. 格式都要一样: 也就是数字低位在index==0的地方
+						1. 存储数字的方式都一样: 也就是数字低位在index==0的地方
 							因为加减乘除可能需要混合进行
 
 			7. 791. 高精度加法
@@ -684,35 +730,36 @@
 						#include <vector> //因为vector里面存有size的信息.不需要用额外空间获取
 						using namespace std;
 
-						vector<int> add2(vector<int> &A, vector<int> &B) //这里是传入地址.所以就不需要复制
-						{
-						    if(A.size() < B.size()) return add2(B,A);
+						不背这个了, 大同小异, add2()只是用到了这个技巧: if(A.size() < B.size()) return add2(B,A);
+						// vector<int> add2(vector<int> &A, vector<int> &B) //这里是传入地址.所以就不需要复制
+						// {
+						//     if(A.size() < B.size()) return add2(B,A);
 
-						    int t = 0; //进位
-						    vector<int> C;
-						    for(unsigned int i = 0; i < A.size(); i++) //需要选择最长的那个
-						    {
-						        if(i < A.size()) t += A[i];
-						        if(i < B.size()) t += B[i];
-						        C.push_back(t % 10); //C的index==0位置是数字的最低位
-						        t /= 10;
-						    }
-						    if(t) C.push_back(t);
-						    return C;
-						}
+						//     int t = 0; //进位
+						//     vector<int> C;
+						//     for(unsigned int i = 0; i < A.size(); i++) //需要选择最长的那个
+						//     {
+						//         if(i < A.size()) t += A[i];
+						//         if(i < B.size()) t += B[i];
+						//         C.push_back(t % 10); //C的index==0位置是数字的最低位
+						//         t /= 10;
+						//     }
+						//     if(t) C.push_back(t);
+						//     return C;
+						// }
 
 						vector<int> add(vector<int> &A, vector<int> &B) //这里是传入地址.所以就不需要复制
 						{
 						    int t = 0; //进位
 						    vector<int> C;
-						    for(unsigned int i = 0; i < A.size() || i < B.size(); i++) //需要选择最长的那个 //注意不能用 int i, 编译出错
+						    for(unsigned int i = 0; i < A.size() || i < B.size(); i++) 只要A和B还有一个没有完, 就继续下去 //需要选择最长的那个 //注意不能用 int i, 编译出错
 						    {
 						        if(i < A.size()) t += A[i];
 						        if(i < B.size()) t += B[i];
 						        C.push_back(t % 10); //C的index==0位置是数字的最低位
-						        t /= 10;
+						        t /= 10; 给下一次的进位
 						    }
-						    if(t) C.push_back(t);
+						    if(t) C.push_back(t); 如果还有进位
 						    return C;
 						}
 
@@ -722,11 +769,11 @@
 						    vector<int> A, B; //存到数组
 
 						    cin >> a >> b;
-						    for(int i = a.size()-1; i >= 0; i--) A.push_back(a[i] - '0');
+						    for(int i = a.size()-1; i >= 0; i--) A.push_back(a[i] - '0'); 把数字低位{也就是末位, a.size()-1} 先push
 						    for(int i = b.size()-1; i >= 0; i --) B.push_back(b[i] - '0'); //注意这里是char '0'
 
 						    auto C = add2(A, B); //相当于vector<int> C = add(A,B);
-						    for(int i = C.size()-1 ; i >= 0; i--) printf("%d",C[i]);
+						    for(int i = C.size()-1 ; i >= 0; i--) printf("%d",C[i]); 输出的时候, 也是先输出数字高位, 也就是vector的末尾: C.size()-1
 						    cout << endl;
 						    return 0;
 						}
@@ -774,17 +821,19 @@
 						    for(int i = 0; i <= A.size()-1; i++){
 						        int temp = A[i] - t;//A首先看是否之前被借了1
 						        if(i <= B.size()-1) temp -= B[i]; //如果B还有第i位
+						        	如果B已经遍历完了, 那之后剩下的A的高位, 就直接是 C里面 push_back(temp)了
 						        C.push_back( (temp + 10) % 10); //如果temp = -2, 那么就是8. 如果temp = 2, 那么就是2
 						        if(temp >= 0) t = 0; 
 						        else t = 1; //注意:一定要严格temp < 0才表明借了
 						    }
 
 						    //删除数字高位的0, 也就是C index末尾, 也就是C.back
+						    注意, 可能存在 A == B的情况, 例如 123 == 123, 这样就会导致C里面存的是 000, 我们去掉前导0, 也就是至少还要剩余最后一个0
 						    while(C.size() > 1 && C.back() == 0) C.pop_back(); //语意: while里面是要pop掉的条件, 所以允许0,但是不允许003
 
 						    return C;
 						}
-						int main(){
+						int main(){ 这道题, 假定两个数都是正数, 不存在负数
 						    string a, b;
 						    cin >> a >> b;
 						    vector<int> A;
@@ -831,33 +880,14 @@
 						#include <vector>
 						using namespace std;
 
+						背这个:
 						vector<int> mul2(vector<int> &A, int b){
 						    vector<int> C;
 						    int t = 0;
 						    for(unsigned int i = 0; i < A.size() || t ; i++) //合并了while
 						    {
 						        if(i < A.size()) t = A[i] * b + t; //还有上一次的
-						        C.push_back(t % 10);
-						        t /= 10;
-						    }
-
-						    while(C.size() > 1 && C.back() == 0) C.pop_back();
-
-
-						    return C;
-						}
-
-						vector<int> mul(vector<int> &A, int b){
-						    vector<int> C;
-						    int t = 0;
-						    for(unsigned int i = 0; i < A.size() ; i++)
-						    {
-						        t = A[i] * b + t; //还有上一次的
-						        C.push_back(t % 10);
-						        t /= 10;
-						    }
-
-						    while(t){
+						        	注意, 最大就是9*9=81, 也就是t最大81
 						        C.push_back(t % 10);
 						        t /= 10;
 						    }
@@ -865,8 +895,31 @@
 						    //bug: 忘记删除前置0了, 例如C是300, 意味着是003, 但是答案应该是3
 						    while(C.size() > 1 && C.back() == 0) C.pop_back();
 
+
 						    return C;
 						}
+
+						不背这个了:
+						// vector<int> mul(vector<int> &A, int b){
+						//     vector<int> C;
+						//     int t = 0;
+						//     for(unsigned int i = 0; i < A.size() ; i++)
+						//     {
+						//         t = A[i] * b + t; //还有上一次的
+						//         C.push_back(t % 10);
+						//         t /= 10;
+						//     }
+
+						//     while(t){
+						//         C.push_back(t % 10);
+						//         t /= 10;
+						//     }
+
+						//     //bug: 忘记删除前置0了, 例如C是300, 意味着是003, 但是答案应该是3
+						//     while(C.size() > 1 && C.back() == 0) C.pop_back();
+
+						//     return C;
+						// }
 						int main(){
 						    string a;
 						    int b;
@@ -910,12 +963,15 @@
 
 						    r = 0;
 						    for(int i = A.size()-1; i >= 0; i--){ //是从最高位开始除 //bug! 这里不能用unsigned, 否则i是一直>=0
-						        r = r * 10 + A[i]; //首先看上一轮遗留下来的余数, *10, 然后加上这意味的
+						        r = r * 10 + A[i]; //首先看上一轮遗留下来的余数, *10, 然后加上这一位的
 						        C.push_back(r / b); //除以b,这里可能得到的是0.
 						        r %= b; //剩下的余数,给下一轮. 
 						    }
 
-						    reverse(C.begin(), C.end());//假设C是0013,其实代表是数字31,所以先翻转,变成3100,最后去掉末尾的0
+
+						    reverse(C.begin(), C.end());//假设C是0013,其实代表就是数字13{加减乘中, 放入C数组的第一个数其实是答案的低位}, 是人类的视角
+						    	但是为了, 和之前的写法统一, 也就是为了能用下面的这一句"while(C.size() > 1 && C.back() == 0) C.pop_back();", 所以先翻转,变成3100,最后去掉末尾的0, 变为31, 最后打印的时候我们是逆序打印, 所以打印出来是13
+						    	这里之所以 reverse, 是因为计算除法是先从最高位开始除, 所以放入C数组的第一个数其实是答案的高位, 其实这个视角是我们人类的视角. 回忆 : 加减乘中, 放入C数组的第一个数其实是答案的低位
 						    while(C.size() > 1 && C.back() == 0) C.pop_back();
 
 						    return C;
@@ -931,7 +987,7 @@
 						    cin >> a >> b;
 
 						    vector<int> A;
-						    for(int i = a.size()-1; i >= 0; i--) A.push_back(a[i] - '0'); //其实可以从i = 0推入,因为出发是从最高位开始.但是+-*都是从数字最低位开始
+						    for(int i = a.size()-1; i >= 0; i--) A.push_back(a[i] - '0'); //其实可以从数字高位推入vec,因为除法是从最高位开始.回忆: +-*都是从数字最低位开始. 但是为了统一, y总还是从数字低位推入vec
 
 						    int r; //余数
 						    vector<int> C = div(A,b,r); //用的是别名,也可以修改值
@@ -957,17 +1013,18 @@
 	5. 前缀和与差分
 			介绍:
 				3. 前缀和
-					1. 最大和唯一的用处
-						求一段区间的复杂度,从O(n)到O(1)
-							假设有a0,a1,a2..,an
-								其中a0 = 0, 方便计算
-							其中Sn = a0 + a1 + a2 + .. + an
-								S0 = 0
-							Sn+1 = Sn + a_(n+1)
+					1. 前缀和最大的用处和唯一的用处
+						求一段区间的复杂度,用前缀和, 可以让复杂度从 O(n)到 O(1)
+							方法:
+								a0,a1,a2..,an
+									其中 a0 = 0, 方便计算
+								Sn = a0 + a1 + a2 + .. + an
+									S0 = 0
+								S_(n+1) = S_(n) + a_(n+1)
 						作用
-							Sm - Sn就是(n, m]左开右闭的总和,也就是[n+1, m]的和
-							[n+1,m]不用前缀和是O(n) : a_(n+1) + a_(n+2) + ... + am
-							用前缀和是O(1):
+							Sm - Sn 就是: (n, m]左开右闭的总和,也就是[n+1, m]的和
+							[n+1,m]不用前缀和是 O(n) : a_(n+1) + a_(n+2) + ... + am
+							用前缀和是 O(1): Sm - Sn
 								Sn = a1 + a2 + .. + an
 								Sm = a1 + a2 + .. + an + a_(n+1) + a_(n+2) + ... + am
 						疑问
@@ -980,18 +1037,63 @@
 									特殊例子: 求[1,9]区间
 										也就是求a1 + a2 + .. + a9
 										也就是S9 - S0 (你看,这里有S0, 所以我们希望S0是存在的)
-									一般不存在求[0,9]
+									一般不存在求[0,9], 其实我觉得 [0,9]的总和 == [1,9]的总和, 因为a0 = 0
 										因为[1,9]是题目中给的info,但是一般[0]这个是我们自己添加的
-					2. 子矩阵的和(相当于二维的前缀)
+					2. 子矩阵的和: 相当于二维的前缀和
 						公式:
 							配合画图 #001 https://www.acwing.com/video/239/ 12:19
-							Sum((x1,y1), (x2, y2)) 
-								= S[x2, y2] - S[x1 - 1, y2] - S[x2, y1 - 1] + S[x1 - 1, y1 - 1]
-								= 大矩形 - 上侧 - 左侧 + 左上的小矩形
-								注意,是4个下标
-							S[i, j] 
-								= S[i-1, j] + S[i, j-1] - S[i-1, j-1] + a[i,j]
-								= 上侧 + 左侧 - 左上侧小矩形 + 本次a[i,j]
+
+							初始化:
+								S[i, j] 
+									= S[i-1, j] + S[i, j-1] - S[i-1, j-1] + a[i,j]
+									= 上侧 + 左侧 - 左上侧小矩形 + 本次a[i,j]
+							问题:
+								Sum((x1,y1), (x2, y2)) 
+									= S[x2, y2] - S[x1 - 1, y2] - S[x2, y1 - 1] + S[x1 - 1, y1 - 1]
+									= 大矩形 - 上侧 - 左侧 + 左上的小矩形
+								注意,是4个下标:
+									   0,0  y1          y2
+										|---------------|
+										|	|			| 
+									  x1|---------------|			
+										|	|			| 
+										|	|			| 
+									  x2|---------------|
+
+								S[x2, y2]
+									   0,0  y1          y2
+										|---------------|
+										| x |	x 		| 
+									  x1|---------------|			
+										|	|			| 
+										| x |	x		| 
+									  x2|---------------|
+
+								S[x1 - 1, y2]
+									   0,0  y1          y2
+										|---------------|
+										| x |	x 		| 
+									  x1|---------------|			
+										|	|			| 
+										|   |			| 
+									  x2|---------------|
+								S[x1 - 1, y2]
+									   0,0  y1          y2
+										|---------------|
+										| x |	 		| 
+									  x1|---------------|			
+										|	|			| 
+										| x |			| 
+									  x2|---------------|
+
+								 S[x1 - 1, y1 - 1]
+									     0,0  y1          y2
+										|---------------|
+										| x |	 		| 
+									  x1|---------------|			
+										|	|			| 
+										|   |			| 
+									  x2|---------------|
 			
 				4. 差分
 					一维差分
@@ -1113,7 +1215,7 @@
 						        for(int j = 1; j <= m; j++) //bug, 注意是 j <= m
 						        {
 						           S[i][j] = S[i-1][j] + S[i][j-1] - S[i-1][j-1] + a[i][j]; //method 1;
-						           //S[i][j] += S[i-1][j] + S[i][j-1] - S[i-1][j-1]; //method 2;
+						           //S[i][j] += S[i-1][j] + S[i][j-1] - S[i-1][j-1]; //这个是需要搭配scanf()的method 2;
 						        }
 						    }
 
