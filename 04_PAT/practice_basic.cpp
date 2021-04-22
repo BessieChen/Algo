@@ -2201,9 +2201,11 @@
 						        if (op == "push")
 						        {
 						            cin >> x;
-						            q[ ++ tt] = x;
+						            q[ ++ tt] = x; tt: 指向队尾的元素{是真的指着, 而不是指向它的下一个}
 						        }
-						        else if (op == "pop") hh ++ ;
+						        else if (op == "pop") hh ++ ; hh: 指向队首的元素. {所以如果 hh,tt 代表: [hh,tt]有元素. 初始化的时候是[hh=0,tt=-1]有元素, 也就是没有元素. 
+						        		如果变为[hh=0,tt=0]有元素, 那就是0这个位置有元素,
+						        		如果变为[hh=1,tt=0]有元素, 也就是没有元素}
 						        else if (op == "empty") cout << (hh <= tt ? "NO" : "YES") << endl;
 						        else cout << q[hh] << endl;
 						    }
@@ -2244,10 +2246,12 @@
 						    {
 						        int x;
 						        scanf("%d", &x);
-						        while (tt && stk[tt] >= x) tt -- ;
-						        if (!tt) printf("-1 ");
-						        else printf("%d ", stk[tt]);
-						        stk[ ++ tt] = x;
+						        while (tt 如果栈不为空 && stk[tt] >= x 且栈顶元素大于我们当前遍历到的x) tt -- ; 既然大于了, 就说明栈顶元素不会被用到了, 直接删除
+						        if (!tt) printf("-1 "); 如果栈此时为空, 说明栈里面的都大于x, 就输出-1
+						        else printf("%d ", stk[tt]); 如果此时栈里面还有元素, 说明他肯定比x小
+						        stk[ ++ tt] = x; 此时把x加入栈顶. 
+						        					之后如果遇到一个比x小的数b, 我们还会把x给删除掉, 一直到找到一个合适的. 
+						        					如果遇到的比x大的c, 我们输出的就是x. 因为这个x是离c最近的比c小的数
 						    }
 
 						    return 0;
@@ -2276,23 +2280,54 @@
 
 						const int N = 1000010;
 
-						int a[N], q[N];
+						int a[N], q[N]; a: 题目的输入, q: 我们的单调队列
+							注意我们的q存的是下标. 
 
 						int main()
 						{
 						    int n, k;
-						    scanf("%d%d", &n, &k);
+						    scanf("%d%d", &n, &k); 因为输入量有很多, 用scanf 
 						    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
 
-						    int hh = 0, tt = -1;
+						    int hh = 0, tt = -1; 定义 [hh=0, tt=-1]
 						    for (int i = 0; i < n; i ++ )
 						    {
-						        if (hh <= tt && i - k + 1 > q[hh]) hh ++ ;
+						        if (hh <= tt && q[hh] < i - k + 1) hh ++ ; 
+						        	hh <= tt 如果队列不为空 
+						        	且当前窗口的终点是i, 起点是{i - k + 1}. 
+						        		解释: 很简单, 窗口的长度是 k, 终点是i, 那么起点是 i - k + 1. 所以窗口是: [i-k+1, i] : 长度刚好是: i-(i-k+1)+1 = k
+						        		就像是, 我的终点是i, 长度是1的话, 其实起点是 i - 1 + 1. 也就是起点是i, 也就是[i,i], 也就是我一个值{长度为1嘛}
+						         	q[hh] < i - k + 1:
+						         		也就是q队列的队首, 存的index的值 < 窗口起点的index. 说明要把队首去掉: hh++
+						         	不用while, 而是用if. 因为我们是for, 每次窗口只是移动一位
 
 						        while (hh <= tt && a[q[tt]] >= a[i]) tt -- ;
-						        q[ ++ tt] = i;
+						        	只要还有元素, 且左边的点a[q[tt]] 凡是大于等于我这个新点a[i]的, 就都是逆序对{左大右小}, 我们要把逆序对都删掉, 剩下的元素都是严格单增的
+						        		因为题目求得是窗口最小, 所以最小值就是单增数组的第一个元素, q[hh]
+						        	之所以是大于等于{有个等于} 是因为, 左侧的值如果等于我, 可是左边的值因为在左边, 所以先会被窗口剔除
 
-						        if (i >= k - 1) printf("%d ", a[q[hh]]);
+
+						        	单调栈/队列的总结:
+						        		1. 暴力做
+						        		2. 然后看哪些是不需要的元素
+						        			就像是我脑海里的图, 新来的元素a, 可以和x4,x5组成逆序对, 所以x4,x5都不用要了
+						        			|			   x5
+						        			|			x4
+						        			|		 -------- a
+						        			|        x3        
+						        			|	  x2
+						        			|  x1 
+						        			|
+						        			------------------
+						        		3. 剩下的元素, 是具有单调性的{这里是单调上升}
+						        			如果题目要求最大, 那就是a
+						        			如果题目要求最小, 那就是x1
+						        			我们还可以二分求其他的, 因为这是具有单调性的
+
+
+						        q[ ++ tt] = i; 注意, 这一句要写在 if (i >= k - 1)之前, 因为i可能是最小值. 如果写在 if (i >= k - 1) 之后, 就是y总的bug了
+
+						        if (i >= k - 1) printf("%d ", a[q[hh]]); 当窗口>=k的时候才开始打印. 也就是遍历到了 index == k-1
 						    }
 
 						    puts("");
@@ -2377,6 +2412,23 @@
 					r4.
 					r5.
 
+					从1开始的前缀 == 以i为终点的最长后缀, 这个后缀的长度是j
+					next[i] = j
+
+					也就是
+						原数组:  xxxxxyyyxxx|xxyyyxxx
+							   | 	 a1    |       i索引
+							   			|    b 	   |
+										|xxxxxyyyxxx
+							  		    | 	 a2    |
+							你看 a1 == a2, 也就是相当于平移
+							而 a2 == b, 因为a2本来就是从b复制过来的, 本身就是一个东西
+							所以 a1 == b, 也就是原数组的前缀 == 以i为终点的最长后缀
+
+										
+
+
+
 	4. Trie
 			介绍:
 				9. trie
@@ -2392,19 +2444,21 @@
 
 						const int N = 100010;
 
-						int son[N][26], cnt[N], idx;
+						int son[N][26] {存trie的每个点的所有儿子}, cnt[N]{以当前节点结尾的点有多少个}, idx{当前用到的token, 就是和单链表里面的一样}; 因为只包含小写字母, 所以开26个
+						idx == 0, 既是根节点, 又是空节点. 如果一个点没有子节点, 也会让这个点指向0
 						char str[N];
 
+						存储{插入}一个字符串
 						void insert(char *str)
 						{
-						    int p = 0;
-						    for (int i = 0; str[i]; i ++ )
+						    int p = 0; 从根节点开始
+						    for (int i = 0; str[i] 因为字符串结尾是\0, 所以这里可以这么写成 str[i] ; i ++ ) 遍历字符串, 从头开始遍历
 						    {
 						        int u = str[i] - 'a';
-						        if (!son[p][u]) son[p][u] = ++ idx;
-						        p = son[p][u];
+						        if (!son[p][u]) son[p][u] = ++ idx; 如果节点p的儿子u不存在的话, 我们就创建这个儿子u, 用 ++idx; 
+						        p = son[p][u]; 走向儿子的点 
 						    }
-						    cnt[p] ++ ;
+						    cnt[p] ++ ; 以这个点p结尾的单词的个数增加了
 						}
 
 						int query(char *str)
@@ -2413,10 +2467,10 @@
 						    for (int i = 0; str[i]; i ++ )
 						    {
 						        int u = str[i] - 'a';
-						        if (!son[p][u]) return 0;
-						        p = son[p][u];
+						        if (!son[p][u]) return 0; 如果没有儿子, 说明就没有这个单词
+						        p = son[p][u]; 说明有这个单词 
 						    }
-						    return cnt[p];
+						    return cnt[p]; 单词个数
 						}
 
 						int main()
@@ -2426,7 +2480,7 @@
 						    while (n -- )
 						    {
 						        char op[2];
-						        scanf("%s%s", op, str);
+						        scanf("%s%s", op, str); 操作类型 + 字符串
 						        if (*op == 'I') insert(str);
 						        else printf("%d\n", query(str));
 						    }
