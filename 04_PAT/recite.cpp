@@ -1,9 +1,9 @@
 目标:
-	1. 面试:
-		1. 基础 
-		2. 提高 
-		3. 面试/剑指offer
-		4. pat 
+	1. 面试: 每天背15题
+		1. 基础 	106
+		2. 提高 	219
+		3. 面试/剑指offer	125+76=201
+		4. pat 	162
 	2. pat证书, ccf比赛, google比赛:
 		1. 进阶
 		2. ccf 
@@ -14,7 +14,7 @@
 1. 基础
 	1. 基础算法
 		1. 快速排序
-			1. AcWing 785. 快速排序
+			1. AcWing 785. 快速排序 $$
 				1. 网址
 					https://www.acwing.com/problem/content/787/
 				2. 代码{解析}
@@ -30,7 +30,8 @@
 					{
 					    if (l >= r) return; 如果区间里面没有数字, 或者一个数字, 直接返回 
 
-					    int i = l - 1, j = r + 1, x = q[l + r >> 1];
+					    swap(q[l], q[rand() % (r-l+1) + l]);
+					    int i = l - 1, j = r + 1, x = q[l];
 					    两个指针:
 					    	i: 指向l的左边一位
 					    	j: 指向r的右边一位
@@ -72,7 +73,8 @@
 					{
 					    if (l >= r) return;
 
-					    int i = l - 1, j = r + 1, x = q[l + r >> 1];
+					    swap(q[l], q[rand() % (r-l+1) + l]);
+					    int i = l - 1, j = r + 1, x = q[l];
 					    while (i < j)
 					    {
 					        do i ++ ; while (q[i] < x);
@@ -2644,7 +2646,7 @@
 					}
 				4. 复杂度
 		7. KMP
-			1. AcWing 831. KMP字符串 todo
+			1. AcWing 831. KMP字符串
 				1. 网址
 				2. 代码{解析}
 					#include <iostream>
@@ -2663,22 +2665,118 @@
 					    cin >> n >> (p + 1) >> m >> (s + 1); //意思是:abc存入p的index=1,2,3的位置, 记得加上括号
 
 					    for(int i = 2, j = 0; i <= n ; i++){ //p的第二个字符和p的第一个字符比较
-					        while(j && p[i] != p[j+1]) j = ne[j]; //不满足, 跳回到之前模式一样的地方
+					        while(j && p[i] != p[j+1]) j = ne[j]; //不满足, 跳回到之前模式一样的地方, ne[j]对应的是图中前缀的小后缀a1的右端点
+					        	上一轮我们停留在了j点{注意, 这里是理解成索引为j的地方, 而不是长度为j}, 现在从j点继续. 
+					        		如果j > 0, 说明还有回退的空间
+					        		如果j == 0, 已经退到最后了, 就不需要while了 
+					        	我们判断下一个pair{也就是 p[i], p[j+1]}. 
+					        		pair的第一个部分, 也就是当前遍历到的 p[i]
+					        			这个第一个部分, 其实关注的是后缀, 这个后缀的右端点, 是固定已知的, 那就是i索引所在的点
+					        			至于这个后缀的左端点在哪里, 其实我们现在还不知道, 等知道了, 那就是后面 ne[i] = j; 这一步了, 也就是后缀的长度是 j , 对应的区间是 [i-j+1, i]
+					        		pair的第二个部分, 是我们扩展一下上一轮停留到的前缀, 从上一轮的[1, j] 扩展到这一轮的[1, j+1]
+					        	如果这两个部分, 匹配成功
+					        		因为上一轮的时候, 我们知道了 后缀所在的区间[xx, i-1] == 前缀所在的区间 [1, j]
+					        		而这一轮, 刚好 p[i] == p[j+1]
+					        		那么上一轮的前缀区间和后缀区间, 都可以往后扩展一格, 变为 [xx, i]区间 == [1, j+1] 
+					        	如果这两个部分, 不匹配, 我们就要回退, 回退是什么意思?
+					        		|a1|c1*|b1|d-----|a2|c2*|b2|$|
+					        		1        j                  i 
+					        		首先, 后缀的右端点, 是固定已知的, 那就是i索引所在的点$, 且我们希望后缀的长度越长. 
+					        		因为 上一轮的时候, 我们知道了上一轮求出的 最长后缀所在的区间[xx, i-1] == 最长前缀所在的区间 [1, j]
+					        		我们其实还是可以利用上一轮的一些信息的.
+					        			因为上一轮的 前缀|a1|c1*|b1| == 后缀|a2|c2*|b2|
+					        			这一轮只是 $ != d 
+					        			因为这一轮的后缀的右端点不变, 我们只需要尽可能的往前, 因为不可能前到 a2那么前了, 因为已经知道 $ != d了
+					        			但是我们能否妥协一下, 所以我们尝试着站在前几轮的肩膀上求最长的后缀.
+					        			我们可以利用以下两个信息:
+					        				1. 因为我们知道根据上一轮的信息知道 b1 == b2
+					        				2. 我们从上上上...某轮的信息知道 a1 == b1
+					        					解释:
+					        						于此同时, 那个前缀[1, j], 也就是图中 		这一段, 其实自己本身也可以分成前缀和后缀吧, 我况且称为 小前缀a和小后缀b
+																	        		|a|c*|b|
+																	        		1      j
+													那么这个前缀的最长小前缀a小后缀b, 都是之前就已经计算好了, 因为我们计算的时候是从左往右计算的
+													那这个前缀的最长小后缀b的长度是多少? 是ne[j], 因为前缀的后端点是j, 所以这个前缀的最长小前缀a也就是 [1, ne[j]]
+													所以, 你知道了吧. 就像是如果打不过第3关, 我们就回退到第2关, 看看第二关有什么打的.
+														我们之前想比较的是, 踩在上一轮的肩膀上
+															因为上一轮的时候, 我们知道了 后缀所在的区间[xx, i-1] == 前缀所在的区间 [1, j]
+									        				而这一轮, 我们比较的是 p[i] 和图中d位置上的点, 因为不匹配, 所以我们从第三关回退到第二管, 找前缀的小前缀a
+									        				我们现在判断的是, p[i]和
+					        			所以 a1 == b2
+					        			所以我们不需要从头开始找前缀了, 我们可以从c1开始找前缀
+					        			如果 c1 == $
+					        			我们的最长前后缀就是 |a1|c1| == |b2|$|					        	
 					        if(p[i] == p[j+1]) j++; //满足,继续
+					        	如果这个pair相等, 说明什么?
+					        		说明我们的后缀 [xx, i] 
 					        ne[i] = j;
+					        	解释: 以下两个区间的内容相同:
+					        		1. 后缀:
+					        			[i-j+1, i] 这个区间的内容
+					        				这个区间的长度是j
+					        				注意之所以是 i - j + 1. 因为右端点是i, 长度是j, 然后我们的左端点就是 i - j + 1.
+					        		2. 前缀:
+					        			[1, j] 区间的内容
+					        				这个区间的长度是j
 					    }
+					    举例感受:
+						    a a a a a a a a a 一共9个字母
+						    	i: 0 ne[i]: 0
+								i: 1 ne[i]: 0 
+								i: 2 ne[i]: 1
+								i: 3 ne[i]: 2
+								i: 4 ne[i]: 3
+								i: 5 ne[i]: 4
+								i: 6 ne[i]: 5
+								i: 7 ne[i]: 6
+								i: 8 ne[i]: 7
+								i: 9 ne[i]: 8  前8个a 和 后8个a 是最长前后缀. 说明最长前后缀是不能完全重叠的, 也就是不能是全部九个a
+							a b c d e a b c d					   
+							  	i: 0 ne[i]: 0	index == 0是无用的
+								i: 1 ne[i]: 0	说明, [a] 最长公共前后缀是 j == 0 
+								i: 2 ne[i]: 0	说明, [a, b] 最长公共前后缀是 j == 0
+								i: 3 ne[i]: 0	说明, [a, b, c] 最长公共前后缀是 j == 0
+								i: 4 ne[i]: 0	说明, [a, b, c, d] 最长公共前后缀是 j == 0
+								i: 5 ne[i]: 0	说明, [a, b, c, d, e] 最长公共前后缀是 j == 0
+								i: 6 ne[i]: 1	说明, [a, b, c, d, e, a] 最长公共前后缀是 j == 1
+								i: 7 ne[i]: 2	说明, [a, b, c, d, e, a, b] 最长公共前后缀是 j == 2
+								i: 8 ne[i]: 3
+								i: 9 ne[i]: 4
+							a b c d e a a b c d
+								i: 0 ne[i]: 0
+								i: 1 ne[i]: 0
+								i: 2 ne[i]: 0
+								i: 3 ne[i]: 0
+								i: 4 ne[i]: 0
+								i: 5 ne[i]: 0
+								i: 6 ne[i]: 1	说明, [a, b, c, d, e, a] 最长公共前后缀是 j == 1
+								i: 7 ne[i]: 1	说明, [a, b, c, d, e, a, a] 最长公共前后缀是 j == 1
+								i: 8 ne[i]: 2
+								i: 9 ne[i]: 3
+								i: 10 ne[i]: 4
+							a b a b a b a b a b a
+								i: 0 ne[i]: 0
+								i: 1 ne[i]: 0
+								i: 2 ne[i]: 0
+								i: 3 ne[i]: 1
+								i: 4 ne[i]: 2
+								i: 5 ne[i]: 3
+								i: 6 ne[i]: 4
+								i: 7 ne[i]: 5
+								i: 8 ne[i]: 6
+								i: 9 ne[i]: 7
+								i: 10 ne[i]: 8
+								i: 11 ne[i]: 9
 
 					    for(int i = 1, j = 0; i <= m; i++){ //是s的第一个字符和p的第一个字符比较
 					        while(j && s[i] != p[j+1]) j = ne[j];
 					        if(s[i] == p[j+1]) j++;
-					        if( j == n){
+					        if( j == n){ 说明把p给遍历完了 
 					            cout<< i - n + 1 - 1 <<" "; //注意是 i - n + 1 - 1. 因为index = i-n+1, 但是是从index==1开始的所以要-1
 					            j = ne[j]; //跳回到之前模式一样的地方
 					        }
 					    }
-
 					    return 0;
-
 					}
 				3. 纯代码
 					#include <iostream>
@@ -2716,7 +2814,7 @@
 					}
 				4. 复杂度
 		8. Trie
-			1. AcWing 835. Trie字符串统计
+			1. AcWing 835. Trie字符串统计 todo
 				1. 网址
 				2. 代码{解析}
 					#include <iostream>
@@ -2818,7 +2916,7 @@
 					    return 0;
 					}
 				4. 复杂度
-			2. AcWing 143. 最大异或对
+			2. AcWing 143. 最大异或对 todo
 				1. 网址
 				2. 代码{解析}
 				3. 纯代码
@@ -2827,126 +2925,3673 @@
 			1. AcWing 836. 合并集合
 				1. 网址
 				2. 代码{解析}
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int p[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]); 背就好了, 简单
+					    return p[x];
+					}
+
+					int main()
+					{
+					    int n, m;
+					    scanf("%d%d", &n, &m);
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					    while (m -- )
+					    {
+					        char op[2];
+					        int a, b;
+					        scanf("%s%d%d", op, &a, &b);
+					        if (*op == 'M') p[find(a)] = find(b);
+					        else
+					        {
+					            if (find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int p[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    int n, m;
+					    scanf("%d%d", &n, &m);
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					    while (m -- )
+					    {
+					        char op[2];
+					        int a, b;
+					        scanf("%s%d%d", op, &a, &b);
+					        if (*op == 'M') p[find(a)] = find(b);
+					        else
+					        {
+					            if (find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					    }
+
+					    return 0;
+					}
 				4. 复杂度
 			2. AcWing 837. 连通块中点的数量
 				1. 网址
 				2. 代码{解析}
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int p[N], cnt[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]); 背
+					    return p[x];
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        p[i] = i;
+					        cnt[i] = 1;
+					    }
+
+					    while (m -- )
+					    {
+					        string op;
+					        int a, b;
+					        cin >> op;
+
+					        if (op == "C")
+					        {
+					            cin >> a >> b;
+					            a = find(a), b = find(b);
+					            if (a != b)
+					            {
+					                p[a] = b;
+					                cnt[b] += cnt[a];
+					            }
+					        }
+					        else if (op == "Q1")
+					        {
+					            cin >> a >> b;
+					            if (find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					        else
+					        {
+					            cin >> a;
+					            cout << cnt[find(a)] << endl;
+					        }
+					    }
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int p[N], cnt[N];
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        p[i] = i;
+					        cnt[i] = 1;
+					    }
+
+					    while (m -- )
+					    {
+					        string op;
+					        int a, b;
+					        cin >> op;
+
+					        if (op == "C")
+					        {
+					            cin >> a >> b;
+					            a = find(a), b = find(b);
+					            if (a != b)
+					            {
+					                p[a] = b;
+					                cnt[b] += cnt[a];
+					            }
+					        }
+					        else if (op == "Q1")
+					        {
+					            cin >> a >> b;
+					            if (find(a) == find(b)) puts("Yes");
+					            else puts("No");
+					        }
+					        else
+					        {
+					            cin >> a;
+					            cout << cnt[find(a)] << endl;
+					        }
+					    }
+
+					    return 0;
+					}
 				4. 复杂度
 			3. AcWing 240. 食物链
 				1. 网址
 				2. 代码{解析}
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 50010;
+
+					int n, m;
+					int p[N], d[N]; p是并查集的father, d是距离
+
+					int find(int x)
+					{
+					    if (p[x] != x)
+					    {
+					        int t = find(p[x]); //这里会递归调用, t最后都是祖先的ind
+					        d[x] += d[p[x]]; 执行完这一句, 就是d[x]存储的是x到根节点的距离. 这句话是通过递归调用实现的:  //这里也会递归调用,也就是d[父之父] += d[父之父之父], 之后d[父] += d[父之父], 最后 d[我] += d[父]. 所以d[我]最终就是我x到根节点的距离 
+					        p[x] = t;
+					    }
+					    return p[x];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					    int res = 0;
+					    while (m -- )
+					    {
+					        int t, x, y;
+					        scanf("%d%d%d", &t, &x, &y);
+
+					        if (x > n || y > n) res ++ ; 编号超出, 是假话, res++ 
+					        else
+					        {
+					            int px = find(x), py = find(y);
+					            if (t == 1)
+					            {
+					                if (px == py && (d[x] - d[y]) % 3) res ++ ; 
+					                //如果是同一个集合{生态圈}, 那就需要满足 d[x]%3 == d[y]%3, 也就是说他们属于同一个集合{生态圈}里面的同一类. 
+					                //但是, 如果 d[x] % 3 != d[y] % 3, 就是说明不是同类, 则是假话 res++
+					                else if (px != py) //不是同一个集合{生态圈}, 说明这是一句真话, 或者我们认为这是一句没有矛盾的话. 所以接下来就是合并他们
+					                {
+					                    p[px] = py; //px的父亲变成py
+					                    d[px] = d[y] - d[x];  //修改距离: 所以你看之前说的xx层不是真的层,而是需要d[]来维护距离
+					                    //因为是同类, 需要 (d[x] + ? ) % 3 == d[y] % 3, 所以 d[x] + ? == d[y], 所以 ? = d[y] - d[x], 所以d[px] 就是?的值
+					                    //我的新理解:
+					                    /*
+					                    	   y
+					                    	  /2
+					                    	px 
+					                    	|1
+					                    	x
+
+					                    	d[x]在没有更新之前, 指的是 x到px的距离, 也就是x到x的祖先px的距离 
+					                    	现在更新了之后, 我们要满足的一个条件是 x和y是同一类, 所以要满足的关系是: (d[x] + ? ) % 3 == d[y] % 3
+					                    		怎么解释? (d[x] + ? )中, d[x]也就是图中1的距离, ?也就是图中2的距离
+					                    		而?也就是2, 其实恰好也就是 d[px], 意思也就是px到它的新祖先y的距离. 
+					                    		而1是固定的, 2是我们可以更新的, 所以1不变, 将2更新为 d[y] - d[x] */
+					                
+					                    //https://www.acwing.com/video/19/ 的01:06:30
+					                }
+					            }
+					            else //也就是 x吃y, 也就是x在y的下面层, d[x]%3 比 d[y]%3 要大, 大多少? 大一
+					            {
+					                
+					                if (px == py && (d[x] - d[y] - 1) % 3) res ++ ; 
+					                //注意d[x] - d[y] - 1) % 3 !=0, 不能换成d[a] - d[b]) % 3 != 1. 
+					                // 注意(d[a] - d[b]) % 3可能是负数，需要转化成正数：((d[a] - d[b]) % 3 + 3) % 3 
+					                //看是否是x吃y,也就是d[x]的余数比d[y]的余数大1, d[x] % 3 == d[y] % 3 + 1;
+					                // d[x] % 3 == d[y] % 3 + 1 % 3;  d[x] % 3 == (d[y] + 1) % 3;
+					                else if (px != py)
+					                {
+					                    p[px] = py;
+					                    d[px] = d[y] + 1 - d[x];//修改距离: 所以你看之前说的xx层不是真的层,而是需要d[]来维护距离
+					                    //因为是同类, 需要 (d[x] + ? ) % 3 == d[y] % 3 + 1, 所以? = d[y] - d[x] + 1
+					                    //其实我觉得这里涉及到了一些余数的知识
+					                }
+					            }
+					        }
+					    }
+
+					    printf("%d\n", res);
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 50010;
+
+					int n, m;
+					int p[N], d[N]; 
+
+					int find(int x)
+					{
+					    if (p[x] != x)
+					    {
+					        int t = find(p[x]); //这里会递归调用, t最后都是祖先的ind
+					        d[x] += d[p[x]]; 
+					        p[x] = t;
+					    }
+					    return p[x];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;
+
+					    int res = 0;
+					    while (m -- )
+					    {
+					        int t, x, y;
+					        scanf("%d%d%d", &t, &x, &y);
+
+					        if (x > n || y > n) res ++ ; 编号超出, 是假话, res++ 
+					        else
+					        {
+					            int px = find(x), py = find(y);
+					            if (t == 1)
+					            {
+					                if (px == py && (d[x] - d[y]) % 3) res ++ ; 
+					                else if (px != py) 
+					                {
+					                    p[px] = py; 
+					                    d[px] = d[y] - d[x]; 
+					                    
+					                }
+					            }
+					            else 
+					            {
+					                
+					                if (px == py && (d[x] - d[y] - 1) % 3) res ++ ; 
+					                else if (px != py)
+					                {
+					                    p[px] = py;
+					                    d[px] = d[y] + 1 - d[x];
+					                }
+					            }
+					        }
+					    }
+
+					    printf("%d\n", res);
+
+					    return 0;
+					}
 				4. 复杂度
 		10. 堆
-			1. AcWing 838. 堆排序
+			1. AcWing 838. 堆排序{小根堆, 父亲 <= 左右儿子}
 				1. 网址
 				2. 代码{解析}
+					老师的习惯
+						从ind == 1开始
+						所以size指向的是最后一个已经有的元素,而不是最后一个元素的下一位
+							左儿子 = x * 2, 右儿子 = x * 2 + 1
+							父节点 = x / 2
+					老师说
+						层数不高,所以 down()里面采用的是递归,而不是while实现.
+
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], cnt;
+
+					void down(int u)
+					{
+					    int l = u * 2, r = u * 2 + 1; 
+						int t = u;
+						if(l <= cnt && h[l] > h[t]) t = l; 这里是小跟堆, 父亲 <= 左右儿子
+						if(r <= cnt && h[r] > h[t]) t = r; 这里不能写成b[r] > b[l], 因为还是要和t比, 这里的t可能是l, 也可能是原来的u
+						if(t != u){
+							swap(h[u], h[t]);
+							down(t, cnt);
+						}
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 1; i <= n; i ++ ) scanf("%d", &h[i]); 从1开始方便. 
+					    cnt = n;
+
+					    for (int i = n / 2; i; i -- ) down(i);
+
+					    while (m -- )
+					    {
+					        printf("%d ", h[1]);
+					        h[1] = h[cnt -- ];
+					        down(1);
+					    }
+
+					    puts("");
+
+					    return 0;
+					}
 				3. 纯代码
-				4. 复杂度
-			2. AcWing 839. 模拟堆
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], cnt;
+
+					void down(int u)
+					{
+					    int l = u * 2, r = u * 2 + 1; 
+						int t = u;
+						if(l <= cnt && h[l] > h[t]) t = l;
+						if(r <= cnt && h[r] > h[t]) t = r;
+						if(t != u){
+							swap(h[u], h[t]);
+							down(t, cnt);
+						}
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 1; i <= n; i ++ ) scanf("%d", &h[i]);
+					    cnt = n;
+
+					    for (int i = n / 2; i; i -- ) down(i);
+
+					    while (m -- )
+					    {
+					        printf("%d ", h[1]);
+					        h[1] = h[cnt -- ];
+					        down(1);
+					    }
+
+					    puts("");
+
+					    return 0;
+					}
+				4. 复杂度:  O(n)
+					复杂度
+						如果是一个一个加入,然后 siftDown()
+							复杂度是 O(n*logn):
+								因为一个元素需要向下logn层,一共n个元素
+						如果是heapify,也就是直接整个数组,从倒数第2层的最后一个元素开始 siftDown()
+							复杂度是 O(n)
+								因为倒数第二层有n/4个元素,每个元素只需往下siftdown 1层
+								因为倒数第3层有n/8个元素,每个元素只需往下siftdown 2层
+								...
+								所以复杂度是 O(n/4 * 1) + (n/8 * 2) + ... 最后推到看https://www.acwing.com/video/17/的01:39:00 或者 https://www.acwing.com/video/263/ 的29:00
+								总之就是 O(n * 1)
+			2. AcWing 839. 模拟堆{用于优化Dijkstra, 求最短路}
 				1. 网址
 				2. 代码{解析}
+					#include <iostream>
+					#include <algorithm>
+					#include <string.h>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int h[N], ph[N], hp[N], cnt;
+
+					void heap_swap(int a, int b)
+					{
+					    swap(ph[hp[a]],ph[hp[b]]); 注意: ph[hp[a]] = a; hp[ph[k]] = k
+						    之前: ph 0 1 2 3 4 5 6 
+						       	        a   b 		-> 也就是第2个插入的数字, 在heap中的下标是a
+						    之后: ph 0 1 2 3 4 5 6
+						       	        b   a  		-> 也就是第2个插入的数字, 在heap中的下标是b了, 而之后heap中的下标是b的数字也会从yy改为xx
+					    swap(hp[a], hp[b]);
+						    之前: hp 0 1 2 3 4 a b
+						       	   		      2 4
+						    之后: hp 0 1 2 3 4 a b
+						       	   		      4 2   -> heap中的下标是b的数是xx
+					    swap(h[a], h[b]);
+					    	之前: h  0 1 a 3 b 5 6
+						       	   		xx  yy
+						    之后: h  0 1 a 3 b 5 6
+						       	   		yy  xx      -> heap中的下标是b的数是xx
+						这个故事就讲的通了:
+							之前:
+								ph 0 1 2 3 4 5 6 
+						       	       a   b 		-> 也就是第2个插入的数字, 在heap中的下标是a
+						       	hp 0 1 2 3 4 a b
+						       	   		     2 4
+						       	h  0 1 a 3 b 5 6
+						       	   	   xx  yy
+
+						       	故事:
+						       		1. 问: 第2个插入的数字是多少? 
+						       			答: 从ph[2]得知是a, h[a]得知是xx, 所以是xx
+						       		2. 问: 我要交换heap中下标为a, b的两个数, 那么是交换第几个和第几个插入的数?
+						       			答: 从hp[a]得知是2, 从hp[b]得知是4
+						    假设我们真的交换了:
+					    		ph 0 1 2 3 4 5 6
+					       	           b   a  		
+					       	    hp 0 1 2 3 4 a b
+					       	   		         4 2 
+					       	    h  0 1 a 3 b 5 6
+					       	   		   yy  xx 
+						       	
+						       	故事:
+						       		1. 问: 第2个插入的数字是多少? 
+						       			答: 从ph[2]得知是b, h[b]得知是xx, 所以是xx. 你看, 信息存储没有变!! 第二个插入的一直是数字xx
+					}
+
+					void down(int u)
+					{
+					    int t = u;
+					    if (u * 2 <= cnt && h[u * 2] < h[t]) t = u * 2;
+					    if (u * 2 + 1 <= cnt && h[u * 2 + 1] < h[t]) t = u * 2 + 1;
+					    if (u != t)
+					    {
+					        heap_swap(u, t);
+					        down(t);
+					    }
+					}
+
+					void up(int u)
+					{
+					    while (u / 2 && h[u] < h[u / 2]) 如果有父亲, 而且我比父亲的值小, 我上升{因为小根堆: 父亲 <= 儿子} 
+					    	我比较喜欢这一句 u / 2
+					    		因为如果是根u==1, 那么 u/2 ==0, 也就是根没有父亲了
+					    {
+					        heap_swap(u, u / 2);
+					        u >>= 1;
+					    }
+					}
+
+					int main()
+					{
+					    int n, m = 0; m是第m个插入的数字
+					    scanf("%d", &n);
+					    while (n -- )
+					    {
+					        char op[5];
+					        int k, x;
+					        scanf("%s", op);
+					        if (!strcmp(op, "I")) !=0, 说明匹配 
+					        {
+					            scanf("%d", &x); 数字是多少 
+					            cnt ++ ; cnt是heap中的下标 
+					            m ++ ; 是第m个插入的数字
+					            ph[m] = cnt, hp[cnt] = m;  第m个插入的数字在heap中的下标是cnt, 下标是cnt的数字是第m个插入的
+					            h[cnt] = x; heap的第cnt个下标, 插入x这个数字
+					            up(cnt); 从尾部一直往顶部sift
+					        }
+					        else if (!strcmp(op, "PM")) printf("%d\n", h[1]);
+					        else if (!strcmp(op, "DM"))
+					        {
+					            heap_swap(1, cnt);
+					            cnt -- ;
+					            down(1);
+					        }
+					        else if (!strcmp(op, "D"))
+					        {
+					            scanf("%d", &k);
+					            k = ph[k];   ph[k]: 第k个插入的数在heap中的下标是 ph[k]
+					            heap_swap(k, cnt); 这里传入的都是 heap的下标
+					            cnt -- ;
+					            up(k); 	因为不确定是上升还是下降, 所以两个都走一遍
+					            down(k);
+					        }
+					        else
+					        {
+					            scanf("%d%d", &k, &x);
+					            k = ph[k];
+					            h[k] = x; 更改第k个插入的元素, 改为x
+					            up(k);
+					            down(k);
+					        }
+					    }
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <iostream>
+					#include <algorithm>
+					#include <string.h>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int h[N], ph[N], hp[N], cnt;
+
+					void heap_swap(int a, int b)
+					{
+					    swap(ph[hp[a]],ph[hp[b]]);
+					    swap(hp[a], hp[b]);
+					    swap(h[a], h[b]);
+					}
+
+					void down(int u)
+					{
+					    int t = u;
+					    if (u * 2 <= cnt && h[u * 2] < h[t]) t = u * 2;
+					    if (u * 2 + 1 <= cnt && h[u * 2 + 1] < h[t]) t = u * 2 + 1;
+					    if (u != t)
+					    {
+					        heap_swap(u, t);
+					        down(t);
+					    }
+					}
+
+					void up(int u)
+					{
+					    while (u / 2 && h[u] < h[u / 2])
+					    {
+					        heap_swap(u, u / 2);
+					        u >>= 1;
+					    }
+					}
+
+					int main()
+					{
+					    int n, m = 0; 
+					    scanf("%d", &n);
+					    while (n -- )
+					    {
+					        char op[5];
+					        int k, x;
+					        scanf("%s", op);
+					        if (!strcmp(op, "I"))
+					        {
+					            scanf("%d", &x); 
+					            cnt ++ ; 
+					            m ++ ; 
+					            ph[m] = cnt, hp[cnt] = m;  
+					            h[cnt] = x; 
+					            up(cnt); 
+					        }
+					        else if (!strcmp(op, "PM")) printf("%d\n", h[1]);
+					        else if (!strcmp(op, "DM"))
+					        {
+					            heap_swap(1, cnt);
+					            cnt -- ;
+					            down(1);
+					        }
+					        else if (!strcmp(op, "D"))
+					        {
+					            scanf("%d", &k);
+					            k = ph[k];  
+					            heap_swap(k, cnt);
+					            cnt -- ;
+					            up(k); 	
+					            down(k);
+					        }
+					        else
+					        {
+					            scanf("%d%d", &k, &x);
+					            k = ph[k];
+					            h[k] = x;
+					            up(k);
+					            down(k);
+					        }
+					    }
+
+					    return 0;
+					}
 				4. 复杂度
 		11. 哈希表
 			1. AcWing 840. 模拟散列表
 				1. 网址
 				2. 代码{解析}
+					1. 开放寻址法
+						#include <cstring>
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 200003, null = 0x3f3f3f3f; 
+							老师说, 坑位需要比数据范围大2到3倍
+							老师如何找: 大于20w的最小质数
+								for(int i = 200000; ; i ++){
+									bool f = false;
+									for(int j = 2; j * j <= i; j++){
+										if(i % j == 0)
+										{
+											f = true;
+											break; //说明不是质数
+										}
+									}
+
+									if(!flag){
+										cout << i <<endl;
+										break; //i是质数
+									}
+								}
+
+						int h[N];
+
+						int find(int x) 返回值有两个含义
+						{
+						    int t = (x % N + N) % N; 一定是先%再+再%, 如果错写成: (x + N) % N , 那么: (-10e9 + 10e5) % 10e5 依旧是负数
+						    while (h[t] != null 如果这个坑是有人的 && h[t] != x 并且这个坑位上人不是x)
+						    {
+						        t ++ ; 下一个坑位
+						        if (t == N) t = 0;
+						    }
+						    return t; 返回的是二者之一: 一个没有人的坑, 所以可以存x || 这个坑位上的人已经是x
+						}
+
+						int main()
+						{
+						    memset(h, 0x3f, sizeof h);
+
+						    int n;
+						    scanf("%d", &n);
+
+						    while (n -- )
+						    {
+						        char op[2];
+						        int x;
+						        scanf("%s%d", op, &x);
+						        if (*op == 'I') h[find(x)] = x; 把这个没有人的坑, 填入x值 
+						        else
+						        {
+						            if (h[find(x)] == null) puts("No"); find()返回两种: 一个没有人的坑 || 这个坑位上的人是x
+						            else puts("Yes");
+						        }
+						    }
+
+						    return 0;
+						}
+
+					2. 拉链法: 其实很简单, 就是用 质数N来判断坑在哪里, 其他的和单链表一样
+						#include <cstring>
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 100003; {N是第一个大于10w的质数}
+							老师如何找: 大于100000的最小质数
+								for(int i = 100000; ; i ++){
+									bool f = false;
+									for(int j = 2; j * j <= i; j++){
+										if(i % j == 0)
+										{
+											f = true;
+											break; //说明不是质数
+										}
+									}
+
+									if(!flag){
+										cout << i <<endl;
+										break; //i是质数
+									}
+								}
+
+						int h[N], e[N], ne[N], idx;
+
+						void insert(int x)
+						{
+						    int k = (x % N + N) % N; 找到我们要的坑 
+						    e[idx] = x;
+						    ne[idx] = h[k]; 也就是往这个坑里面加入, 这个坑是一个链表.
+						    h[k] = idx ++ ;
+						}
+
+						bool find(int x)
+						{
+						    int k = (x % N + N) % N;
+						    for (int i = h[k]; i != -1; i = ne[i])
+						        if (e[i] == x)
+						            return true;
+
+						    return false;
+						}
+
+						int main()
+						{
+						    int n;
+						    scanf("%d", &n); 
+
+						    memset(h, -1, sizeof h);
+
+						    while (n -- )
+						    {
+						        char op[2];
+						        int x;
+						        scanf("%s%d", op, &x); 如果是读入一个字符串, 最好用 scanf(), 因为scanf会把制表符, 空格忽略掉. 
+
+						        if (*op == 'I') insert(x);
+						        else
+						        {
+						            if (find(x)) puts("Yes");
+						            else puts("No");
+						        }
+						    }
+
+						    return 0;
+						}
 				3. 纯代码
+					1. 开放寻址法
+						#include <cstring>
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 200003, null = 0x3f3f3f3f; 
+							
+								for(int i = 200000; ; i ++){
+									bool f = false;
+									for(int j = 2; j * j <= i; j++){
+										if(i % j == 0)
+										{
+											f = true;
+											break; 
+										}
+									}
+
+									if(!flag){
+										cout << i <<endl;
+										break; 
+									}
+								}
+
+						int h[N];
+
+						int find(int x) 返回值有两个含义
+						{
+						    int t = (x % N + N) % N; 
+						    while (h[t] != null && h[t] != x)
+						    {
+						        t ++ ; 下一个坑位
+						        if (t == N) t = 0;
+						    }
+						    return t; 
+						}
+
+						int main()
+						{
+						    memset(h, 0x3f, sizeof h);
+
+						    int n;
+						    scanf("%d", &n);
+
+						    while (n -- )
+						    {
+						        char op[2];
+						        int x;
+						        scanf("%s%d", op, &x);
+						        if (*op == 'I') h[find(x)] = x;
+						        else
+						        {
+						            if (h[find(x)] == null) puts("No");
+						            else puts("Yes");
+						        }
+						    }
+
+						    return 0;
+						}
+
+					2. 拉链法: 其实很简单, 就是用 质数N来判断坑在哪里, 其他的和单链表一样
+						#include <cstring>
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 100003; 
+								for(int i = 100000; ; i ++){
+									bool f = false;
+									for(int j = 2; j * j <= i; j++){
+										if(i % j == 0)
+										{
+											f = true;
+											break; //说明不是质数
+										}
+									}
+
+									if(!flag){
+										cout << i <<endl;
+										break; //i是质数
+									}
+								}
+
+						int h[N], e[N], ne[N], idx;
+
+						void insert(int x)
+						{
+						    int k = (x % N + N) % N; 
+						    e[idx] = x;
+						    ne[idx] = h[k]; 
+						    h[k] = idx ++ ;
+						}
+
+						bool find(int x)
+						{
+						    int k = (x % N + N) % N;
+						    for (int i = h[k]; i != -1; i = ne[i])
+						        if (e[i] == x)
+						            return true;
+
+						    return false;
+						}
+
+						int main()
+						{
+						    int n;
+						    scanf("%d", &n); 
+
+						    memset(h, -1, sizeof h);
+
+						    while (n -- )
+						    {
+						        char op[2];
+						        int x;
+						        scanf("%s%d", op, &x);
+
+						        if (*op == 'I') insert(x);
+						        else
+						        {
+						            if (find(x)) puts("Yes");
+						            else puts("No");
+						        }
+						    }
+
+						    return 0;
+						}
 				4. 复杂度
 			2. AcWing 841. 字符串哈希
 				1. 网址
 				2. 代码{解析}
+					str = "ABCDEFSFOIJER"
+					h[n]: "前n个"字符的hash值
+						h[i]的意思是, 前i个字符的hash值. 
+							有种累加和的感觉. 其中"左侧"第一个字符str[1], 它是前1个字符 h[1]. 
+						例如
+							h[0] = 0, 空值的哈希
+							h[1] = "A"这个字符串的hash值
+							h[2] = "AB"这个字符串的hash值
+						问题:如何求一个字符串的hash值
+						解决:
+							1. 先将一个字符串看成一个P进制的数字
+								例如"ABCE"可以看成像是(1235)p的数字
+								计算方法:
+									1*P^3 + 2*p^2 + 3*p + 5
+								其中A是最高位,所以是p^3
+								每个字母都映射着一个数字
+									但是不能映射成0,不然的话AA和A计算的值都是0
+							2. 计算好p进制对应的数字后,取模
+							3. 经验值: 这样就不会发生conflict
+								p进制的p = 131 或者 13331
+								mod的数字是 2^64
+							4.  用 unsigned long long 的溢出代替 mod
+						我们为了求h[i]
+							h[i] = h[i-1] * p + str[i]
+								例如,h[1]是"A"的hash, 也就是1*p^0的hash
+								然后h[2]是"AB"的hash,也就是1*p^1 + 2*p^0的hash
+								其中str[2]就是"B"
+						在知道全部i的h[i]后,我们可以求出第L位到第R位字符串的hash
+							记这个hash叫xxx
+								xxx = h[R] - h[L-1]*p^(R-L+1) 
+									解释:
+										1. 视频
+											https://www.acwing.com/video/20/ 的 01:01:35
+										1. 假设字符串是"ABCDE",R=5(从ind=1开始),L=3,也就是要求"CDE"的hash值
+													  12345
+										2. 因为h[R]的值是
+											"ABCDE"的hash值
+												注意A是高位,E是低位
+												长度是R,也就是5
+												所以A是第R-1位, E是第0位
+											A*p^(R-1) + B*p^(R-2) + C*p^2 + D*p^1 + E*p^0
+											A*p^4 + B*p^3 + C*p^2 + D*p^1 + E*p^0
+										3. 因为h[L-1]的值是"AB"的hash值
+												注意A是高位,E是低位
+												长度是L-1,也就是2
+												所以A是第L-2位, B是第0位
+											所以 A*p^1 + B*p^0
+										4. 所以xxx = h[R] - h[L-1]*p^(R-L+1) 后
+											因为A从L-2的幂次,变成了R-1的幂次,需要乘上: R - (L - 1) == (R - L + 1) == 5-2==3次幂
+											最后我们剩余的就是
+												A*p^4 + B*p^3 + C*p^2 + D*p^1 + E*p^0 
+											- (A*p^1 + B*p^0) * p^3 
+											= C*p^2 + D*p^1 + E*p^0
+											这个就是我们想要的"CDE"的hash值
+					求一个字符串的hash值可以帮助我们判断两个字符串是否相等
+					3. kmp能够做的,用字符串哈希也可以(但是循环节问题:只有kmp能做)
+
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					typedef unsigned long long ULL;
+
+					const int N = 100010, P = 131; P是经验值 
+
+					int n, m;
+					char str[N];
+					ULL h[N], p[N];
+
+					ULL get(int l, int r) 获得[l,r]段的hash值
+					{
+					    return h[r] - h[l - 1] * p[r - l + 1]; 根据公式 
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    scanf("%s", str + 1);
+
+					    p[0] = 1;
+					    for (int i = 1; i <= n; i ++ ) 计算h[i]: h[i]的意思是, 前i个字符的hash值. 有种累加和的感觉. 其中"左侧"第一个字符str[1], 它是前1个字符 h[1]. 
+					    {
+					        h[i] = h[i - 1] * P + str[i]; 因为有 +法, 所以h[i]就是非零了
+					        p[i] = p[i - 1] * P; 这个就可以记录我们的 p^(R-L+1) 
+					    }
+
+					    while (m -- )
+					    {
+					        int l1, r1, l2, r2;
+					        scanf("%d%d%d%d", &l1, &r1, &l2, &r2);
+
+					        if (get(l1, r1) == get(l2, r2)) puts("Yes");
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					typedef unsigned long long ULL;
+
+					const int N = 100010, P = 131; 
+
+					int n, m;
+					char str[N];
+					ULL h[N], p[N];
+
+					ULL get(int l, int r)
+					{
+					    return h[r] - h[l - 1] * p[r - l + 1]; 
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    scanf("%s", str + 1);
+
+					    p[0] = 1;
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        h[i] = h[i - 1] * P + str[i]; 
+					        p[i] = p[i - 1] * P; 
+					    }
+
+					    while (m -- )
+					    {
+					        int l1, r1, l2, r2;
+					        scanf("%d%d%d%d", &l1, &r1, &l2, &r2);
+
+					        if (get(l1, r1) == get(l2, r2)) puts("Yes");
+					        else puts("No");
+					    }
+
+					    return 0;
+					}
 				4. 复杂度
+					我觉得: O(n), 因为预处理 h[i]是 O(n), 然后get函数是 O(1)
 	3. 搜索和图论
 		1. DFS
 			1. AcWing 842. 排列数字
 				1. 网址
 				2. 代码{解析}
+					0. 介绍: BFS/DFS
+						BFS
+							稳重,步步为营
+							用queue,也就是一层一层的往里面放
+							空间复杂度: O(指数级 2^h), 因为第h层会有2^h个元素
+							可以应用于
+								1. 最短路问题
+									0. 背景
+										包含了动态规划问题
+										两者互通
+										DP是特殊的最短路问题,是没有环的最短路问题
+
+										没有权重的最短路问题用BFS做
+										DP问题一般不会用最短路算法做,因为最短路算法的复杂度更高,DP算法低一些
+
+									1. 分类
+										1. 单源最短路
+											边的权都是正数
+												1. 朴素dikkstra
+													O(n^2)
+														n是节点个数
+														时间复杂度和e边的个数无关
+													稠密图的时候,e =接近= n^2, 所以用朴素dijkstra更好
+												2. heap优化的dijkstra
+													O(e*logn)
+													适合稀疏图
+													没有负权边用dijkstra,别用spfa(虽然能用),老师说的
+														因为虽然spfa会快一点,但是最坏的情况下会比dijkstra慢,题目可能就会卡你,让spfa变成最坏的
+														例如网格的图,会卡你
+											存在负权边: 一般用spfa,不用bellman-ford
+												1. bellman-ford
+													O(n*e)
+													基于离散数学
+													可以求负权环但是一般不用这个来做,用spfa做
+												2. spfa
+													一般是 O(e), 最坏 O(n*e)
+													spfa是限制最小的算法
+														可以解决没有负权环的问题(99.9%的题目都是没有负权环的)
+													spfa是对bellman-ford的优化
+										2. 多源汇最短路
+											floyd
+												O(n^3)
+												基于动态规划
+
+								2. 拓扑序
+									有向图有拓扑序,无向图没有
+									有向无环图一定存在拓扑序列
+									举例
+										你要先干a,才能干b
+									操作
+										不断删除入度==0的节点,直到全部删完,如果还剩,说明这个图有环,没有拓扑序
+
+						DFS
+							执着,不撞南墙不死心
+							用stack,将一条路径的元素装入stack,去下一条路径前,会先把当前的stack清空
+							空间复杂度:O(h),因为只存了当前的路径的元素
+							包括:
+								回溯
+								剪枝
+					1.
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 10;
+
+						int n;
+						int path[N]; 方案, 用全局数组. 
+
+						void dfs(int u, int state) 
+						{
+						    if (u == n) 递归结束, 也就是当完美地走到第n个位置. 
+						    {
+						        for (int i = 0; i < n; i ++ ) printf("%d ", path[i]); 输出path就好了
+						        	注意, path[i]只是代表了一个数字
+						        	因为之前: path[u] = i + 1; 把数字{i+1}填到path的索引为u的位置上 
+						        puts("");
+
+						        return;
+						    }
+
+						    for (int i = 0; i < n; i ++ ) 
+						        if (!(state >> i & 1)) 找到一个没有被用过的数字. 假设n==7, 那么state如果是 0010010, 其中0表示没有被用过的数字
+						        {
+						            path[u] = i + 1; 把数字{i+1}填到path的第u个位置上{也就是索引为u的位置上}
+						            dfs(u + 1, state + (1 << i)); 然后去看第u+1个位置, 并且把state标记为{第i位已经用过了}
+						        }
+						        按道理说, 这里应该是执行完了上一句 "dfs(u + 1, state + (1 << i))" 恢复现场. 
+						        但是奇妙就奇妙在: 
+						        	老师的上一句: dfs(u + 1, state + (1 << i))中, state 可并不是: state = state + (1 << i))
+									所以 state的值并没有被修改, 所以每一层的 state的值是互不影响的!
+						        用同学的话:
+						        	进入递归的数是 state+（1<<i）,也就是在第i位的状态变了，所以就是尽管在递归完成后没有语句恢复现场
+						        	但是因为state这个数一直没有变化，所以在递归完成后其实跟递归之前状态一样呐
+						}
+
+						int main()
+						{
+						    scanf("%d", &n);
+
+						    dfs(0, 0); 从第0个位置开始看, 刚开始state是全0也就是没有一个数字被用过
+
+						    return 0;
+						}
 				3. 纯代码
+					#include <iostream>
+
+					using namespace std;
+
+					const int N = 10;
+
+					int n;
+					int path[N]; 
+
+					void dfs(int u, int state) 
+					{
+					    if (u == n)
+					    {
+					        for (int i = 0; i < n; i ++ ) printf("%d ", path[i]);
+					        puts("");
+
+					        return;
+					    }
+
+					    for (int i = 0; i < n; i ++ ) 
+					        if (!(state >> i & 1)) 
+					        {
+					            path[u] = i + 1;
+					            dfs(u + 1, state + (1 << i));
+					        }
+					}
+
+					int main()
+					{
+					    scanf("%d", &n);
+
+					    dfs(0, 0); 
+
+					    return 0;
+					}
 				4. 复杂度
-			2. AcWing 843. n-皇后问题
+			2. AcWing 843. n-皇后问题: 经典dfs问题 
 				1. 网址
 				2. 代码{解析}
+					1. 第一种搜索顺序
+						是按照格子依次遍历:
+							也就是: 
+								第0行第0列, 第0行第1列, ..., 第0行第n-1列
+								第1行第0列, 第1行第1列, ..., 第1行第n-1列
+								第n-1行第0列, 第n-1行第1列, ..., 第n-1行第n-1列
+						每个格子, 有两种操作:
+							放皇后
+							不放皇后
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 10;
+
+						int n;
+						bool row[N], col[N], dg[N * 2], udg[N * 2];
+						char g[N][N];
+
+						void dfs(int x, int y, int s)
+						{
+						    if (s > n) return; 当前皇后的个数, 如果已经超过n了, 就返回. 这是保险写法. 
+						    if (y == n) y = 0, x ++ ;
+						    	如果出界{也就是到了第n-1列的下一列, 出界了}. 
+						    	然后我们就转移到下一行{x++}的第一列{y=0}
+
+						    if (x == n) 这个是到了第n行, 但是到了第n行并不代表摆够了n个皇后
+						    {
+						        if (s == n) 如果到了第n行, 并且摆好了n个皇后
+						        {
+						            for (int i = 0; i < n; i ++ ) puts(g[i]); 输出 
+						            puts("");
+						        }
+						        return;
+						    }
+
+						    g[x][y] = '.'; 因为是一个一个格子遍历, 这里是每个格子无条件放置'.', 如果需要放皇后, 之后会修改为'Q'
+
+						    如果不放皇后: 我们下一个去的是 第x行, 第y+1列. 已经摆好的皇后还是s个
+						    	dfs(x, y + 1, s);
+
+						    如果放皇后, 还是需要判断这个位置是否合法 
+						    if (!row[x] && !col[y] && !dg[x + y] && !udg[x - y + n]) 这里说的是第x行是全0, 第y列全0, 对角线\全0, 斜对角线/全0 
+						    {
+						        row[x] = col[y] = dg[x + y] = udg[x - y + n] = true; 说明放了皇后
+						        g[x][y] = 'Q';
+						        dfs(x, y + 1, s + 1); 我们下一个去的是 第x行, 第y+1列. 已经摆好的皇后还是s个
+
+						        走到这里的时候, 已经是递归到底, 然后往回走了, 然后再从这个位置出发去下一个位置, 我们去下一个位置之前, 需要恢复现场:
+						        g[x][y] = '.';
+						        row[x] = col[y] = dg[x + y] = udg[x - y + n] = false;
+						    }
+						}
+
+						int main()
+						{
+						    cin >> n;
+
+						    dfs(0, 0, 0); 去第0行, 第0列, 当前摆好的皇后数量是 0
+
+						    return 0;
+						}
+					
+					2. 第二种搜索顺序
+						是按照格子依次遍历:
+							也就是: 其实没变...
+								第0行第0列, 第0行第1列, ..., 第0行第n-1列
+								第1行第0列, 第1行第1列, ..., 第1行第n-1列
+								第n-1行第0列, 第n-1行第1列, ..., 第n-1行第n-1列
+						每个格子, 先判断是否满足要求, 然后操作:
+							如果满足要求, 就放皇后
+							如果不满足要求, 就不放皇后
+
+						解释:
+							为什么第x行, 第y列对应的左斜线 / 是: x + y
+							为什么第x行, 第y列对应的右斜线 \ 是: "- x + y + n" 或者 "x - y + n"
+								老师说: 只要保证不同对角线一定映射到不同的下标中即可，其他细节都不本质，很随意
+								的确, 老师的两种方法, 一种写的是 "- x + y + n", 一种写的是 "x - y + n", 都ac了
+
+						详解:
+							1. 左斜线{对角线}:
+									 0  1  2  3
+									-------------
+									|a |b1|c1|  |
+								    -------------
+								  /	|b2|c2|  |  |
+								0	-------------
+								  /	|c3|  |  |  |
+								1	-------------
+								  / |  |  |  |  |
+								2	-------------
+								  /   /   /   / 
+								3    4   5   6
+								就给你一个小例子:
+									a, bb, ccc所在的是左斜线 /:
+									其中, 左上角是第0行, 右下角是第2*(n-1)行==第6行
+										所以取值范围是[0, 2*(n-1)]
+									验证:
+										a是左斜线的第0行. 
+											a所在的是第x=0行, 第y=0列.
+												x + y == 0 + 0 = 0
+										b是左斜线的第1行. 
+											b1所在的是第x=0行, 第y=1列.
+												x + y == 0 + 1 = 1
+											b2所在的是第x=1行, 第y=0列.
+												x + y == 1 + 0 = 1
+									原因:
+										左斜线 /, 对应着我们的方程: y = -x + b 
+											|----------> y
+											|  /
+											| /
+											↓    y = -x + b
+											x
+										b就是我们说的, "第x行, 第y列, 对应的对角线是第b行"
+										因为 y = -x + b , 所以 b = x+y 
+										于是 b =  "x + y"
+
+							2. 右斜线{斜对角线}:
+								1. 左上角是第0行, 右下角是第2*(n-1)行==第6行
+
+										 0  1  2  3
+										-------------
+									0	|  | c|b1| a|
+										------------- \
+									1	|  |  | c|b2|  0
+										------------- \
+									2	|  |  |  | c|  1
+										------------- \
+									3	|  |  |  |  |  2
+										-------------
+										  \   \   \   \ 
+										   6   5   4   3
+									就给你一个小例子:
+										a, bb, ccc所在的是右斜线 \:
+										其中, 左上角是第0行, 右下角是第2*(n-1)行==第6行
+											所以取值范围是[0, 2*(n-1)]
+										验证:
+											a是右斜线的第0行. 
+												a所在的是第x=0行, 第y=3列.
+													n + x - y == 3 + 0 - 3 = 0
+											b是右斜线的第1行. 
+												b1所在的是第x=0行, 第y=2列.
+													n + x - y == 3 + 0 - 2 = 1
+												b2所在的是第x=1行, 第y=3列.
+													n + x - y == 3 + 1 - 3 = 1
+								2. 左下角是第0行, 右上角是第2*(n-1)行==第6行
+									当然只要保证不同对角线一定映射到不同的下标中即可，其他细节都不本质，很随意。
+										也可以是: 	
+												 0  1  2  3
+												-------------
+											0	|  | c|b1| a|
+												------------- \
+											1	|  |  | c|b2|  6
+												------------- \
+											2	|  |  |  | c|  5
+												------------- \
+											3	|  |  |  |  |  4
+												-------------
+												  \   \   \   \ 
+												   0   1   2   3
+											就给你一个小例子:
+												a, bb, ccc所在的是右斜线 \:
+												其中, 左下角是第0行, 右上角是第2*(n-1)行==第6行
+													所以取值范围是[0, 2*(n-1)]
+												验证:
+													a是右斜线的第6行. 
+														a所在的是第x=0行, 第y=3列
+															"n - x + y" == 3 - 0 + 3 = 6
+													b是右斜线的第5行. 
+														b1所在的是第x=0行, 第y=2列.
+															n - x + y == 3 - 0 + 2 = 5
+														b2所在的是第x=1行, 第y=3列.
+															n - x + y == 3 - 1 + 3 = 5
+												原因:
+													右斜线 \, 对应着我们的方程: y = x + b
+
+														|----------> y
+														|  \
+														|   \
+														↓    \ y = x + b
+														x
+													b就是我们说的, "第x行, 第y列, 对应的斜对角线是第b行"
+													因为 y = x + b , 所以 b = -x+y 
+														因为x的取值是[0,n-1], 因为y的取值是[0,n-1]
+														所以-x+y的取值是 [-(n-1), n-1] 可能有负数
+														所以最后加一个n
+													于是 b =  "n - x + y"
+							
+
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 20; 这里已经是比题目的范围大1倍了. 因为假设有n行, 那么对角线有2n行
+
+						int n;
+						char g[N][N]; 存的是第n行第n列是否有皇后
+						bool col[N], dg[N], udg[N]; 
+
+						void dfs(int u) 遍历第u行
+						{
+						    if (u == n) 说明遍历到底, 我们现在输出这个方案
+						    {
+						        for (int i = 0; i < n; i ++ ) puts(g[i]);
+						        puts("");
+						        return;
+						    }
+
+						    for (int i = 0; i < n; i ++ ) 从第u行的第1"列"开始遍历
+						        剪枝: 不合理的点, 就不再继续往下遍历了
+						    	if (!col[i] 第i列是全0 && !dg[u + i] 对角线也是全0 && !udg[n - u + i] 斜对角线也是全0)
+						        {
+						            g[u][i] = 'Q';
+						            col[i] = dg[u + i] = udg[n - u + i] = true; 说明放了皇后
+						            dfs(u + 1);遍历第u+1行
+
+						            恢复现场
+						            col[i] = dg[u + i] = udg[n - u + i] = false;
+						            g[u][i] = '.';
+						        }
+						}
+
+						int main()
+						{
+						    cin >> n;
+						    for (int i = 0; i < n; i ++ )
+						        for (int j = 0; j < n; j ++ )
+						            g[i][j] = '.';
+
+						    dfs(0);
+
+						    return 0;
+						}	
 				3. 纯代码
+					1.
+						#include <iostream>
+
+						using namespace std;
+
+						const int N = 10;
+
+						int n;
+						bool row[N], col[N], dg[N * 2], udg[N * 2];
+						char g[N][N];
+
+						void dfs(int x, int y, int s)
+						{
+						    if (s > n) return; 
+						    if (y == n) y = 0, x ++ ;
+						    if (x == n) 
+						    {
+						        if (s == n)
+						        {
+						            for (int i = 0; i < n; i ++ ) puts(g[i]); 输出 
+						            puts("");
+						        }
+						        return;
+						    }
+
+						    g[x][y] = '.'; 
+						    dfs(x, y + 1, s);
+
+						    if (!row[x] && !col[y] && !dg[x + y] && !udg[x - y + n]) 
+						    {
+						        row[x] = col[y] = dg[x + y] = udg[x - y + n] = true; 
+						        g[x][y] = 'Q';
+						        dfs(x, y + 1, s + 1); 
+						        g[x][y] = '.';
+						        row[x] = col[y] = dg[x + y] = udg[x - y + n] = false;
+						    }
+						}
+
+						int main()
+						{
+						    cin >> n;
+
+						    dfs(0, 0, 0); 
+
+						    return 0;
+						}
+						
+						2. 
+							#include <iostream>
+
+							using namespace std;
+
+							const int N = 20;
+
+							int n;
+							char g[N][N]; 
+							bool col[N], dg[N], udg[N]; 
+
+							void dfs(int u) 
+							{
+							    if (u == n) 
+							    {
+							        for (int i = 0; i < n; i ++ ) puts(g[i]);
+							        puts("");
+							        return;
+							    }
+
+							    for (int i = 0; i < n; i ++ ) 
+							    	if (!col[i] && !dg[u + i] && !udg[n - u + i])
+							        {
+							            g[u][i] = 'Q';
+							            col[i] = dg[u + i] = udg[n - u + i] = true; 
+							            dfs(u + 1);
+							            col[i] = dg[u + i] = udg[n - u + i] = false;
+							            g[u][i] = '.';
+							        }
+							}
+
+							int main()
+							{
+							    cin >> n;
+							    for (int i = 0; i < n; i ++ )
+							        for (int j = 0; j < n; j ++ )
+							            g[i][j] = '.';
+
+							    dfs(0);
+
+							    return 0;
+							}	
 				4. 复杂度
 		2. BFS
 			1. AcWing 844. 走迷宫
 				1. 网址
 				2. 代码{解析}
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					typedef pair<int, int> PII;
+
+					const int N = 110;
+
+					int n, m;
+					int g[N][N], d[N][N]; g:存的是地图, d: 每个点到起点的距离
+
+					int bfs()
+					{
+					    queue<PII> q;  一个队列
+
+					    memset(d, -1, sizeof d); 起点都是 0xfffffff, 也就是max
+					    d[0][0] = 0; 起点到起点的距离是 0 
+					    q.push({0, 0});
+
+					    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+					    while (q.size()) 如果队列不为空
+					    {
+					        auto t = q.front(); 把队头拿出来
+					        q.pop();
+
+					        for (int i = 0; i < 4; i ++ )4个方向
+					        {
+					            int x = t.first + dx[i], y = t.second + dy[i];
+
+					            if (x >= 0 && x < n && y >= 0 && y < m && g[x][y] == 0 && d[x][y] == -1) 
+					            	保证xy的坐标是合法的, g[x][y] == 0说明xy点是空地, d[x][y] == -1说明以前没有走过xy点
+					            //如果已经搜到过了, d[x][y] != -1, 就不需要遍历了,因为我们找的就是最短距离. 
+					            	//老师说: bfs第一次搜到的点才是最短距离，不是第一次就不是最短距离
+					            	// 我的疑问:会不会以前搜到过, 但是后来走不通. 但是这次虽然再次搜到,可是这次走的通?
+					            	//我认为可能再次搜到,也一样走不通,因为BFS本身就是一层一层的搜的
+					            	//而且 d[x][y]只能越来越大, 因为越外层, d[aa][bb]的值就越大, 距离就越大
+					            {
+					                d[x][y] = d[t.first][t.second] + 1;
+					                q.push({x, y});
+					            }
+					        }
+					    }
+
+					    return d[n - 1][m - 1];
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < n; i ++ )
+					        for (int j = 0; j < m; j ++ )
+					            cin >> g[i][j]; 把整个地图读进来
+
+					    cout << bfs() << endl;
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					typedef pair<int, int> PII;
+
+					const int N = 110;
+
+					int n, m;
+					int g[N][N], d[N][N]; 
+
+					int bfs()
+					{
+					    queue<PII> q; 
+
+					    memset(d, -1, sizeof d); 
+					    d[0][0] = 0; 
+					    q.push({0, 0});
+
+					    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+					    while (q.size()) 
+					    {
+					        auto t = q.front();
+					        q.pop();
+
+					        for (int i = 0; i < 4; i ++ )
+					        {
+					            int x = t.first + dx[i], y = t.second + dy[i];
+
+					            if (x >= 0 && x < n && y >= 0 && y < m && g[x][y] == 0 && d[x][y] == -1) 
+					            {
+					                d[x][y] = d[t.first][t.second] + 1;
+					                q.push({x, y});
+					            }
+					        }
+					    }
+
+					    return d[n - 1][m - 1];
+					}
+
+					int main()
+					{
+					    cin >> n >> m;
+					    for (int i = 0; i < n; i ++ )
+					        for (int j = 0; j < m; j ++ )
+					            cin >> g[i][j]; 
+
+					    cout << bfs() << endl;
+
+					    return 0;
+					}
 				4. 复杂度
 			2. AcWing 845. 八数码
 				1. 网址
 				2. 代码{解析}
+					主要是 3*3矩阵中的坐标, 还有string中的坐标的转换:
+						1. string -> 3*3: 
+							int k = t.find('x'); 求一下, 'x'这个字符, 在状态{字符串}中的下标 
+					        int x = k / 3, y = k % 3;
+					    2. 3*3 -> string:
+					    	x * 3 + y
+					    	
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <queue>
+
+					using namespace std;
+
+					int bfs(string state)
+					{
+					    queue<string> q;		bfs需要定义个队列
+					    unordered_map<string, int> d; 	定义个距离数组
+
+					    q.push(state); 起点放到队列 
+					    d[state] = 0; 起点到起点的距离 == 0
+
+					    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+					    string end = "12345678x"; 终点状态
+					    while (q.size())
+					    {
+					        auto t = q.front();
+					        q.pop();
+
+					        if (t == end) return d[t]; 如果t是终点, 我们就提前结束 
+
+					        int distance = d[t]; 先存一下这个节点t到起点的距离. 
+					        int k = t.find('x'); 求一下, 'x'这个字符, 在状态{字符串}中的下标 
+					        int x = k / 3, y = k % 3;	将下标转化为 第x行, 第y列 
+
+					        for (int i = 0; i < 4; i ++ )
+					        {
+					            int a = x + dx[i], b = y + dy[i]; 3*3矩阵中, 新位置是{a,b}
+					            if (a >= 0 && a < 3 && b >= 0 && b < 3) 如果{a,b}是合法的 
+					            {
+					                swap(t[a * 3 + b], t[k]); 3*3矩阵中的位置, 转换到string后, 就是 a * 3 + b
+					                							这里的 t[a * 3 + b]是某个字符, 例如'1'
+					                							t[k]是我们的字符'x'
+					                							所以我们交换'x'和'1'
+					                if (!d.count(t)) 如果这个新状态, 没有计算过. 
+					                {
+					                    d[t] = distance + 1; 我们就更新下它到起点状态的距离 
+					                    q.push(t); 把这个状态装到queue中, 为了下一层的遍历
+					                }
+
+					                这个是恢复现场, 给下一个方向做准备. 因为下一个方向也是需要老状态t
+					                swap(t[a * 3 + b], t[k]);
+					            }
+					        }
+					    }
+
+					    return -1; 如果遍历不到, 说明到不了终点
+					}
+
+					int main()
+					{
+					    char s[2];
+
+					    string state;
+					    for (int i = 0; i < 9; i ++ )
+					    {
+					        cin >> s;
+					        state += *s; 将9个字符读入. 后面读的字符是插入到string的右边
+					        	state存的是初始状态
+					    }
+
+					    cout << bfs(state) << endl;
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <iostream>
+					#include <algorithm>
+					#include <unordered_map>
+					#include <queue>
+
+					using namespace std;
+
+					int bfs(string state)
+					{
+					    queue<string> q;		
+					    unordered_map<string, int> d; 	
+
+					    q.push(state); 
+					    d[state] = 0; 
+
+					    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+					    string end = "12345678x"; 
+					    while (q.size())
+					    {
+					        auto t = q.front();
+					        q.pop();
+
+					        if (t == end) return d[t]; 
+
+					        int distance = d[t]; 
+					        int k = t.find('x'); 
+					        int x = k / 3, y = k % 3;	
+
+					        for (int i = 0; i < 4; i ++ )
+					        {
+					            int a = x + dx[i], b = y + dy[i]; 
+					            if (a >= 0 && a < 3 && b >= 0 && b < 3) 
+					            {
+					                swap(t[a * 3 + b], t[k]);
+					                if (!d.count(t)) 
+					                {
+					                    d[t] = distance + 1; 
+					                    q.push(t); 
+					                }
+					                swap(t[a * 3 + b], t[k]);
+					            }
+					        }
+					    }
+
+					    return -1; 
+					}
+
+					int main()
+					{
+					    char s[2];
+
+					    string state;
+					    for (int i = 0; i < 9; i ++ )
+					    {
+					        cin >> s;
+					        state += *s;
+					    }
+
+					    cout << bfs(state) << endl;
+
+					    return 0;
+					}
 				4. 复杂度
 		3. 树与图的深度优先遍历	
 			1. AcWing 846. 树的重心
 				1. 网址
 				2. 代码{解析}
+					不管是dfs还是bfs, 都是每个点只遍历一次
+					树的重心, 老师举了一个例子: https://www.acwing.com/video/278/ 的08:00
+					我们要对于每一个节点, 计算删除这个节点之后, 剩下的所有连通块中, 最大的连通块的节点个数
+						对于某个节点, 如何计算删除这个节点之后, 剩下的所有连通块中, 最大的连通块的节点个数?
+							首先, 我们计算以这个节点为根的所有的子树的大小. 
+								因为每个子树都是一个连通块
+							对于这个节点上方的连通块的大小怎么计算?
+								很简单:
+									整个树的大小 - 1{节点自己} - 所有子树的大小
+								不明白的话, 见 https://www.acwing.com/video/278/ 的10:55
+
+					#include <cstdio>
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010, M = N * 2;
+
+					int n;
+					int h[N], e[M], ne[M], idx;
+					int ans = N; 存全局的最大连通块中的点的数量
+					bool st[N]; 某个点是否被遍历过 
+
+					void add(int a, int b) 记录a节点的儿子节点b
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int dfs(int u) 计算了如果删除u节点会怎么样, 返回的是 节点个数: u节点+以u节点为根的所有子树的节点个数 {通俗的说就是u和u下面的所有点有多少个}
+					{ 
+					    st[u] = true; 标记一下, u点遍历过了
+
+					    int size = 0, sum = 0; 
+					    	size: 以u节点为根的所有子树中, 连通块最大的那一个块的点的数量 
+					    	sum: dfs()要返回的值, 也就是 节点个数: u节点+以u节点为根的所有子树的节点个数 {通俗的说就是u和u下面的所有点有多少个}
+					    for (int i = h[u]; i != -1; i = ne[i]) 遍历所有的儿子
+					    {
+					        int j = e[i];
+					        if (st[j]) continue; 如果儿子遍历过了, 就下一个. 因为这个树, 其实也是一个图 
+
+					        int s = dfs(j); 以儿子j为根的节点个数s {这个个数 包括了儿子j和j下面的所有节点}
+					        size = max(size, s); 看看哪个儿子的块头最大
+					        sum += s; 更新总的节点个数
+					    }
+
+					    size = max(size, n - sum - 1); 计算一下u上方的节点个数. 因为 sum是不包括节点u的, 所以还要-1
+
+					    ans = min(ans, size);  对于每个u都对应了一个最大连通块, 在所有的最大连通块中, 我们需要的最小的那M个
+
+					    return sum + 1; sum是不包括节点u的, 所以还要+1
+					}
+
+					int main()
+					{
+					    scanf("%d", &n);
+
+					    memset(h, -1, sizeof h); 初始化链表 
+
+					    for (int i = 0; i < n - 1; i ++ )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+					        add(a, b), add(b, a); 双向的 
+					    }
+
+					    dfs(1); 从节点1开始遍历
+
+					    printf("%d\n", ans);
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstdio>
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010, M = N * 2;
+
+					int n;
+					int h[N], e[M], ne[M], idx;
+					int ans = N; 
+					bool st[N]; 
+
+					void add(int a, int b) 
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int dfs(int u) 
+					{ 
+					    st[u] = true; 
+
+					    int size = 0, sum = 0; 
+					    for (int i = h[u]; i != -1; i = ne[i]) 
+					    {
+					        int j = e[i];
+					        if (st[j]) continue;
+
+					        int s = dfs(j); 
+					        size = max(size, s);
+					        sum += s;
+					    }
+
+					    size = max(size, n - sum - 1); 
+					    ans = min(ans, size);
+					    return sum + 1; 
+					}
+
+					int main()
+					{
+					    scanf("%d", &n);
+
+					    memset(h, -1, sizeof h); 
+
+					    for (int i = 0; i < n - 1; i ++ )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+					        add(a, b), add(b, a); 
+					    }
+
+					    dfs(1); 
+
+					    printf("%d\n", ans);
+
+					    return 0;
+					}
 				4. 复杂度
 		4. 树与图的广度优先遍历	
 			1. AcWing 847. 图中点的层次
 				1. 网址
 				2. 代码{解析}
+					#include <cstdio>
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], e[N], ne[N], idx;
+					int d[N];
+
+					void add(int a, int b)
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int bfs()
+					{
+					    memset(d, -1, sizeof d);
+
+					    queue<int> q;
+					    d[1] = 0; 只有index==1的点被遍历, 它距离1号点{自己}的距离是0
+					    q.push(1);
+
+					    while (q.size())
+					    {
+					        int t = q.front(); 队头 
+					        q.pop();
+
+					        for (int i = h[t]; i != -1; i = ne[i]) 遍历这个点的可以到的点 
+					        {
+					            int j = e[i];
+					            if (d[j] == -1) 如果这个点j没有被遍历过 
+					            {
+					                d[j] = d[t] + 1; 距离
+					                q.push(j);
+					            }
+					        }
+					    }
+
+					    return d[n]; 我们返回的是 n号点距离1号点的距离 
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    memset(h, -1, sizeof h);
+
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+					        add(a, b);
+					    }
+
+					    cout << bfs() << endl;
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstdio>
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], e[N], ne[N], idx;
+					int d[N];
+
+					void add(int a, int b)
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int bfs()
+					{
+					    memset(d, -1, sizeof d);
+
+					    queue<int> q;
+					    d[1] = 0;
+					    q.push(1);
+
+					    while (q.size())
+					    {
+					        int t = q.front(); 
+					        q.pop();
+
+					        for (int i = h[t]; i != -1; i = ne[i]) 
+					        {
+					            int j = e[i];
+					            if (d[j] == -1) 
+					            {
+					                d[j] = d[t] + 1; 
+					                q.push(j);
+					            }
+					        }
+					    }
+
+					    return d[n]; 
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    memset(h, -1, sizeof h);
+
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+					        add(a, b);
+					    }
+
+					    cout << bfs() << endl;
+
+					    return 0;
+					}
 				4. 复杂度
 		5. 拓扑排序
 			1. AcWing 848. 有向图的拓扑序列
 				1. 网址
 				2. 代码{解析}
+					#include <cstring>
+						#include <iostream>
+						#include <algorithm>
+
+						using namespace std;
+
+						const int N = 100010;
+
+						int n, m;
+						int h[N], e[N], ne[N], idx;
+						int d[N];
+						int q[N];
+
+						void add(int a, int b)
+						{
+						    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+						}
+
+						bool topsort()
+						{
+						    int hh = 0, tt = -1;  含义: [hh,tt]区间是有元素的.
+						    	对比之前其他queue的代码:
+						    		int hh = 0, tt = 0; 这里之所以 tt = 0, 是因为我们已经即将加入一个 q[0]. 
+						    							也就是 [hh,tt]即[0,0]区间是有元素的.
+								    q[0] = root;
+
+								    while (hh <= tt)
+								    {
+								        int t = q[hh ++ ];
+								        if (l.count(t)) q[ ++ tt] = l[t];
+								        if (r.count(t)) q[ ++ tt] = r[t];
+								    }
+								对比完毕
+
+						    for (int i = 1; i <= n; i ++ ) 遍历所有的点 
+						        if (!d[i]) 如果这个点的入度 == 0:
+						            q[ ++ tt] = i; 就插入我们的队列 
+
+						    while (hh <= tt) 如果队列不空 
+						    {
+						        int t = q[hh ++ ]; 取队头, 也就是某一个入度 == 0的点t
+
+						        for (int i = h[t]; i != -1; i = ne[i])  这个点t可以去的点j
+						        {
+						            int j = e[i];
+						            if (-- d[j] == 0) 我们把点j的入度 先-1, 如果==0, 就放入我们的queue
+						                q[ ++ tt] = j;
+						        }
+						    }
+
+						    return tt == n - 1; 如果最后发现有n个元素进了queue,说明是有向无环图.否则说明有环
+						    	我的解释: 
+						    		加入说有一个环. 那么这个环里面的所有点, 每个点的入度就不可能是0
+						    		a -> b -> c 
+						    		↑---------|
+						    		每个点的入度都是1, 而且永远是1. 
+						    		加入queue的元素入度都是0, 所以存在有某些点没有进入queue,说明入度不是1,说明有环,没有拓扑序
+						}
+
+						int main()
+						{
+						    scanf("%d%d", &n, &m);
+
+						    memset(h, -1, sizeof h);
+
+						    for (int i = 0; i < m; i ++ )
+						    {
+						        int a, b;
+						        scanf("%d%d", &a, &b);
+						        add(a, b);
+
+						        d[b] ++ ; //b的入度+1
+						    }
+
+						    if (!topsort()) puts("-1");
+						    else
+						    {
+						        for (int i = 0; i < n; i ++ ) printf("%d ", q[i]);
+						        puts("");
+						    }
+
+						    return 0;
+						}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], e[N], ne[N], idx;
+					int d[N];
+					int q[N];
+
+					void add(int a, int b)
+					{
+					    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					bool topsort()
+					{
+					    int hh = 0, tt = -1;
+
+					    for (int i = 1; i <= n; i ++ )
+					        if (!d[i])
+					            q[ ++ tt] = i;
+
+					    while (hh <= tt)
+					    {
+					        int t = q[hh ++ ];
+
+					        for (int i = h[t]; i != -1; i = ne[i])
+					        {
+					            int j = e[i];
+					            if (-- d[j] == 0)
+					                q[ ++ tt] = j;
+					        }
+					    }
+
+					    return tt == n - 1; //如果最后发现有n个元素进了queue,说明是有向无环图.否则说明有环
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+					        add(a, b);
+
+					        d[b] ++ ; //b的入度+1
+					    }
+
+					    if (!topsort()) puts("-1");
+					    else
+					    {
+					        for (int i = 0; i < n; i ++ ) printf("%d ", q[i]);
+					        puts("");
+					    }
+
+					    return 0;
+					}
 				4. 复杂度
 		6. Dijkstra
 			1. AcWing 849. Dijkstra求最短路 I
 				1. 网址
 				2. 代码{解析}
+					图的表示:
+						0. 
+							无向图(相互指着的有向图), 有向图(一般化)
+							树(没环的图), 图(一般化)
+						1. 邻接矩阵
+							不能存重复遍,自环边
+							空间复杂度(n^2)
+							少用,适合稠密图
+						2. 邻接表: 常用
+							单链表实现,使用了拉链法
+							举例
+								1: 4,5,6
+								2: 6,4
+								4: 1...
+								...
+					总结:
+						1. 最短距离:
+							d[N][N], dist[N]
+						2. 最大点权:
+							w[N], weight[j] = weight[t] + w[j];
+						3. 最小花费 相当于最短距离
+							c[N][N], cost[N]
+						4. 经过节点的数量:
+							cnt[N]
+								cnt[j] = cnt[t] + 1;
+						5. 最短距离的路径的个数:
+							amt[N]
+								amt[j] = amt[t]: 还沿着这条路走
+								amt[j] += amt[t]: 多个路径合并
+						6. 记录路径:
+							pre[j] = t
+					Dijkstra:
+						0. 
+							1. d[][], 两个点之间的距离, 题目给的
+							2. dist[], 某个点到起点的最短距离
+							3. st[], 某个点是否计算/放松过它所有的临边
+						1. for() 有n个点, 所以放松n次
+							{
+								for(){} 遍历n个点, 找到没有计算过dist[], 并且距离起点最近的点, 这个点是t
+
+								for(){} 遍历n个点, 放松点t的所有临边, 并且给这些更新dist[邻点]
+
+								st[t] = true; 说明已经计算/放松点t的所有临边
+							}
+						5. dijkstra():
+							1. 在所有的点中, 找一个合适的灵魂
+							2. 用这个灵魂, 更新其他的点
+						6. 初始需要的
+							const int N = 1010;
+							int n, m, S, T;			点边等
+							int w[N], d[N][N];				input的值: 权重, 距离
+							int dist[N], cnt[N], sum[N];	我们加工的: 最短距离, 最短路条数, 最大权值
+							bool st[N];						dijkstra过程用到的
+
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510; 500个点, 10w条边, 所以是"稠密图", 用"邻接矩阵"来写
+
+					int n, m;
+					int g[N][N];
+					int dist[N];
+					bool st[N];
+
+					int dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist); 到起点的距离是正无穷
+					    dist[1] = 0; 点1到起点{也是1}的距离是0 
+
+					    for (int i = 0; i < n - 1; i ++ )
+					    {
+					        int t = -1; 没有灵魂的躯壳
+					        for (int j = 1; j <= n; j ++ ) 对于所有的点 
+					            if (!st[j] && (t == -1 || dist[t] > dist[j])) 如果这个点没有被遍历过. 如果躯壳没有灵魂 或者 有灵魂且但是灵魂不优
+					                t = j;	我们选择更优秀的灵魂 
+					        if(t == n) break; 因为题目要求的就是1到N的最短距离, 好的, 因为 dist[t]已经是存的到起点的最小值了, 所以就结束返回 
+					        for (int j = 1; j <= n; j ++ ) 用这个点, 放松所有的其他点 j
+					            dist[j] = min(dist[j], dist[t] + g[t][j]);
+
+					        st[t] = true; 因为t是当前距离最小的,所以t节点的最短距离确定了
+					        	将t点做标记, 说明已经遍历过了
+
+					    }
+
+					    if (dist[n] == 0x3f3f3f3f) return -1; 如果起点到达不了n号节点，则返回-1
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m); 
+
+					    memset(g, 0x3f, sizeof g); 其他距离是正无穷 
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+
+					        g[a][b] = min(g[a][b], c); 是有向边, 对于同一条边, 存的是距离最短的那个
+					    }
+
+					    printf("%d\n", dijkstra());
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510; 
+
+					int n, m;
+					int g[N][N];
+					int dist[N];
+					bool st[N];
+
+					int dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist); 
+					    dist[1] = 0; 
+
+					    for (int i = 0; i < n - 1; i ++ )
+					    {
+					        int t = -1; 
+					        for (int j = 1; j <= n; j ++ ) 
+					            if (!st[j] && (t == -1 || dist[t] > dist[j])) 
+					                t = j;
+					        if(t == n) break;
+					        for (int j = 1; j <= n; j ++ )
+					            dist[j] = min(dist[j], dist[t] + g[t][j]);
+
+					        st[t] = true;
+					    }
+
+					    if (dist[n] == 0x3f3f3f3f) return -1;
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m); 
+
+					    memset(g, 0x3f, sizeof g);
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+
+					        g[a][b] = min(g[a][b], c); 
+					    }
+
+					    printf("%d\n", dijkstra());
+
+					    return 0;
+					}
 				4. 复杂度
+					有向图的最短路问题的复杂度总结:
+						1. 单源
+							1. 边都是正数
+								1 "稠密图": 朴素版 Dijkstra + 邻接矩阵 
+									时间复杂度 O(n^2)
+									证明:
+										for (int i = 0; i < n; i++) { -> 一个 for
+										    int t = -1;
+										    for (int j = 1; j <= n; j++) { -> 一个 for, O(n) * O(n) -> O(n^2)
+										        if (!st[j] && (t == -1 || dist[j] < dist[t]))
+										            t = j; 
+										    }
+										    st[t] = true; 					->  O(n) * O(1) -> O(n)
+										    for (int j = 1; j <= n; j++) { -> 一个 for, O(n) * O(n) -> O(n^2)
+										        dist[j] = min(dist[j], dist[t] + g[t][j]); -> 注意这里是遍历邻接表的第t行的所有元素 g[t][j]
+										    }
+										}
+									适用于:
+										"稠密图", 因为稠密图本身就要计算e条边, 而e就约等于n^2
+										既然打日本{稠密图},就用消耗资源的原子弹{朴素版 Dijkstra}
+									补充:
+										稠密图: 用邻接矩阵
+										稀疏图: 用邻接表
+								2 "稀疏图": 堆优化版 Dijkstra + 邻接表 
+									时间复杂度 O(e*loge) / O(e*logn)
+									证明:
+										这里没有for了, 是while, 我们需要按照逻辑来, 看heap最后会存多少, st最后会存多少
+										while (heap.size()) { heap中到最后会存e条边
+										    auto t = heap.top(); //O(e) * O(1) -> O(e) heap中到最后会存e条边, 每条边都pop一次, 所以是 O(e)
+										    heap.pop();
+										    int ver = t.second, distance = t.first;
+										    if (st[ver])continue;
+										    st[ver] = true;  //O(n) * O(1) -> O(n)  最后st是每个点都记录一次, 所以是O(n)
+										    for (int i = h[ver]; i != -1; i = ne[i]) { 这个for, 其实要做的是, 对于每一个边{不是点}都遍历一次 
+										        int j = e[i]; 这里会遍历以{i,j}为端点的边, 也就是所有的边, 一共e条
+										        if (dist[j] > distance + w[i]) { 假设每个边都满足这个if条件, 
+										        								堆的插入操作时间复杂度是 O(loge){因为 priority_queue是树, 树有e个节点, 所以有 loge层}, 
+										        								因为for是对于每个边都遍历一次, 所以有
+										        								{每个边 * 一个插入操作} = O(e) * O(loge) -> O(e*loge) -因为 loge 和 logn 是一个级别, 所以习惯写为-> O(e*logn)
+										            dist[j] = distance + w[i];
+										            heap.push({dist[j], j}); 
+										        }
+										    }
+										}
+									适用于:
+										"稀疏图", 邻接表 
+										打蚊子不需要用原子弹
+							2. 有负权边 
+								1. bellman-ford
+									时间复杂度 O(n*e)
+									证明:
+										for (int i = 0; i < k; i ++ )
+									    {
+									        memcpy(last, dist, sizeof dist); 
+									        for (int j = 0; j < m; j ++ )
+									        {
+									            auto e = edges[j];
+									            dist[e.b] = min(dist[e.b], last[e.a] + e.c);
+									        }
+									    }
+									    也就是:
+											for (...) 迭代k次, 就意味着走的边数, 最多不超过k条边
+										    {
+										        memcpy(); 备份上一轮 
+										        for (...) 上一个for是迭代k次, 对于每次, 都要放松所有e条边, 也就是遍历edge数组里面的所有边 
+										    }
+										复杂度: O(n*e)
+											迭代k次, 每次都要放松所有e条边, 也就是遍历edge数组里面的所有边 
+											我能理解 e, 可是为什么不是 O(k*e)? 你就背下来吧: 就是 O(点数n*边数e)
+
+								2. spfa: 用 priority_queue 对 bellman-ford的瓶颈做了优化
+									时间复杂度 一般是 O(e), 最坏 O(n*e)
+									证明: 
+										while (q.size())
+									    {
+									        int t = q.front(); 
+									        q.pop();
+									        st[t] = false; 
+
+									        for (int i = h[t]; i != -1; i = ne[i]) 
+									        	相当于采用了"BFS"，因此"遍历到的结点都是与源点连通的", 回忆树问题中bfs的每个边只走一次
+									        	所以如果图也是没有环的话, 就像树一样, 所以也是遍历所有的边一次, 所以是 O(e)
+									        {
+									            int j = e[i];
+									            if (dist[t] + w[i] < dist[j])
+									            {
+									                dist[j] = dist[t] + w[i]; 
+									                if (!st[j]) 
+									                {
+									                    q.push(j);
+									                    st[j] = true;
+									                }
+									            }
+									        }
+									    }
+									适用于:
+										老师说, 对于很多正权边的问题. 老师一般不用 dijkstra算法, 而是用spfa, 因为更快
+										所以spfa不仅仅解决负权, 也可以解决正权边问题
+						2. 多源 
+							floyd
+								时间复杂度 O(n^3)
+								证明: 很简单
+									void floyd()
+									{
+									    for (int k = 1; k <= n; k ++ )
+									        for (int i = 1; i <= n; i ++ )
+									            for (int j = 1; j <= n; j ++ )
+									                d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
+									}
+								适用于: 就是求多源的, 给你任意两个点ij, 问最近距离
 			2. AcWing 850. Dijkstra求最短路 II
 				1. 网址
 				2. 代码{解析}
+					0. 堆优化: 应用于稀疏图, 也就是点数 约等于 边数
+					1. 朴素版本的瓶颈:
+						1. 找最好的灵魂这一步, 复杂度是 O(n^2), 因为有两个嵌套的for loop
+							优化: 因为只是找最小值, 所以用 priority_queue 找最短dist的t节点
+								priority_queue "返回"最小值, 只需要 O(1)
+								因为我们有个 while, priority_queue里面存了e条边, 
+									这一步变成 O(e) * O(1)
+						2. 但是往 priority_queue 里面"插入"元素, 一次插入操作的复杂度是 O(loge)
+							我们自己实现堆, 因为我们会实现删除操作, 所以堆里只有n个点
+								则插入操作是 O(logn), 解释: 因为 priority_queue是树, 树有n个节点, 树有 logn层
+							但是我们不是自己实现堆, 而是用 priority_queue, 所以不能实现删除点, 所以最后堆里面是 e个邻边 
+								所以 插入操作是 O(loge), 解释: 因为 priority_queue是树, 树有e个节点, e > n, 所以有 loge层
+								但是! loge 和 logn 是一个级别,因为 e <= n^2, loge <= logn^2, loge <= 2logn, 也就是 loge比logn稍微大一点
+						3. 最后, 需要多少次插入操作?
+							因为 priority_queue 有e条边, 每个边都有一次插入操作 
+							所以复杂度是: {每个边 * 一个插入操作} = O(e) * O(loge) -> O(e*loge) -因为 loge 和 logn 是一个级别, 所以习惯写为-> O(e*logn)
+
+					3. 最后的复杂度:
+						本应该是: O(e*loge)
+						但是我们一般说成: O(e*logn)
+
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue> //用到优先队列
+
+					using namespace std;
+
+					typedef pair<int, int> PII; 距离起点的最短距离int, 该节点的编号int
+
+					const int N = 1e6 + 10;
+
+					int n, m;
+					int h[N], w[N], e[N], ne[N], idx; 因为是稀疏图,所以用邻接表, 代替之前的邻接矩阵g[N][N]
+					int dist[N];
+					bool st[N];
+
+					void add(int a, int b, int c) //不怕平行边,因为我们每次都是取最短距离的节点
+					{
+					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0;
+					    priority_queue<PII, vector<PII>, greater<PII>> heap; //最小堆
+					    heap.push({0, 1}); 距离1节点的距离是0, 这个节点是1节点. 因为priority_queue是按照第一个关键字排的
+
+					    while (heap.size()) 特别像宽搜, 因为最多遍历m条边, 所以heap最多只有m条边加入 
+					    {
+					        auto t = heap.top();//取出dist最小的节点
+					        heap.pop();
+
+					        int ver = t.second, distance = t.first;
+
+					        if (st[ver]) continue; //加入这个ver节点已经求出了正确值,就看下一个
+					        st[ver] = true;
+
+					        for (int i = h[ver]; i != -1; i = ne[i]) //遍历ver节点的所有临边,这个临边的ind == i
+					        {
+					            int j = e[i];//j是ver的临边, 也就是以{ver, j}为端点的是一条边
+					            if (dist[ver] + w[i] < dist[j])//w[i]的意思是, ver和j之间的距离. 如果我们能放松{也就是 从起点到ver再从ver到j的距离 小于 从起点到j的距离}
+					            {
+					                dist[j] = dist[ver] + w[i];
+					                heap.push({dist[j], j});
+					            }
+					        }
+					    }
+
+					    if (dist[n] == 0x3f3f3f3f) return -1;
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h); //初始化链接表
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    cout << dijkstra() << endl;
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue> //用到优先队列
+
+					using namespace std;
+
+					typedef pair<int, int> PII; 
+
+					const int N = 1e6 + 10;
+
+					int n, m;
+					int h[N], w[N], e[N], ne[N], idx; 
+					int dist[N];
+					bool st[N];
+
+					void add(int a, int b, int c)
+					{
+					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int dijkstra()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0;
+					    priority_queue<PII, vector<PII>, greater<PII>> heap; 
+					    heap.push({0, 1}); 
+
+					    while (heap.size()) 
+					    {
+					        auto t = heap.top();
+					        heap.pop();
+
+					        int ver = t.second, distance = t.first;
+
+					        if (st[ver]) continue; 
+					        st[ver] = true;
+
+					        for (int i = h[ver]; i != -1; i = ne[i]) 
+					        {
+					            int j = e[i];
+					            if (dist[j] > dist[ver] + w[i])
+					            {
+					                dist[j] = dist[ver] + w[i];
+					                heap.push({dist[j], j});
+					            }
+					        }
+					    }
+
+					    if (dist[n] == 0x3f3f3f3f) return -1;
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    cout << dijkstra() << endl;
+
+					    return 0;
+					}
 				4. 复杂度
 		7. bellman-ford
 			1. AcWing 853. 有边数限制的最短路
 				1. 网址
 				2. 代码{解析}
+					这道题只能用bellman-ford,因为题目有边数限制, 所以即便有负权环,也不能无限次转
+					逻辑:
+						for (...) 迭代k次, 就意味着走的边数, 最多不超过k条边
+					    {
+					        memcpy(); 备份上一轮 
+					        for (...) 上一个for是迭代k次, 对于每次, 都要放松所有e条边, 也就是遍历edge数组里面的所有边 
+					    }
+					复杂度: O(e*n) 
+						迭代k次, 每次都要放松所有e条边, 也就是遍历edge数组里面的所有边 
+						我能理解 e, 可是为什么不是 O(e*k)? 你就背下来吧: 就是 O(边数*点数)
+
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510, M = 10010;
+
+					struct Edge
+					{
+					    int a, b, w; //a,b起点终点, c权重
+					}edges[M]; 这是一个结构体数组 
+
+					int n, m, k;
+					int dist[N];
+					int last[N]; 备份上一轮, 必须要加
+
+					void bellman_ford()
+					{
+					    memset(dist, 0x3f, sizeof dist); 从1号点到n号点的最多经过k条边的最短距离存入 dist
+
+					    dist[1] = 0; 从1号点到1号点距离是0
+
+					    for (int i = 0; i < k; i ++ ) 迭代k次, 就意味着走的边数, 最多不超过k条边 //题目要求:不超过k条边
+					    {
+					        memcpy(last, dist, sizeof dist); 
+					        	//不备份会导致串联, 例如老师给的样例, 正确答案是3. 因为只能走k==1条边. 
+					        	//如果没有备份,会导致,先用最短距离的节点2去更新其他所有的点,导致节点3的最短距离变成了2,但是实际上是3
+					        	//https://www.acwing.com/video/285/ 的16:50
+
+					        //用上次迭代的距离,更新这次节点的dist.
+					        /*理解了,样例是:点1到点2是1,点2到点3是1,点1到点3是3.只能走1条边, 问点1到点3的最短距离是多少.
+					        	答案是3, 因为只能走一条边
+					        没有备份:
+					            1 2  3
+					            0 3f 3f 
+					            0 1  2 -->--> 因为用的是之这一轮的2节点的1, min(3f, 1+1) = 2, 但不应该是2
+					        有备份
+					            1 2  3
+					            0 3f 3f --> 这个是上一轮的dist, 把这个信息存到 last中. 所以last里面是 [0, 3f, 3f]
+					            0 1  3f --> 因为用的是上一轮的2节点的3f, min(3f, 3f+1) = 3f
+					        */
+					        for (int j = 0; j < m; j ++ ) //每次放松m个边
+					        {
+					            auto e = edges[j];
+					            dist[e.b] = min(dist[e.b], last[e.a] + e.w);
+					            	错误写法: 不用备份, 如下: 
+					            		if(dist[e.a] + e.w < dist[e.b])
+					            			dist[e.b] = dist[e.a] + e.w;
+					            		这让我想起了dp中, 滚动数组优化中, 我们从右往左遍历是为了让左侧的值是上一轮的老值
+					            		这里的上一轮的老值, 不见得都在左侧, 所以干脆把所有老值都备份到 last
+					        }
+					    }
+					}
+
+					int main()
+					{
+					    scanf("%d%d%d", &n, &m, &k);
+
+					    for (int i = 0; i < m; i ++ ) 读m条边 
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        edges[i] = {a, b, c}; 读入 
+					    }
+
+					    bellman_ford();
+
+					    /*
+					    为什么写成dist[n] > 0x3f3f3f3f / 2, 而不是dist[n] == 0x3f3f3f3f
+					    	因为存在负权边
+					    		回忆之前的都是正权边:
+					    			dist[b] = min(0x3f3f3f3f, 0x3f3f3f3f + 5) 
+					    			所以 dist[b]会一直保持 0x3f3f3f3f
+					    			所以你判断 if(dist[n] == 0x3f3f3f3f) puts("impossible");这么写是ok的
+								但是现在:
+								    假设节点a到节点b的距离是-5, 但是dist[a] == disk[b] == 0x3f3f3f3f
+								    假设节点a会更新节点b, 那么dist[b] = min(0x3f3f3f3f, 0x3f3f3f3f - 5) =  0x3f3f3f3f - 5
+								    所以最后dist[b]会比正无穷小一点: 0x3f3f3f3f - 5
+					   				但是不会小很多, 因为题目说了边的绝对值<1万, 有500次操作, 所以最多比正无穷小500万, 所以我们用/2判断
+					    */
+					    if (dist[n] > 0x3f3f3f3f / 2) puts("impossible");
+					    else printf("%d\n", dist[n]);
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510, M = 10010;
+
+					struct Edge
+					{
+					    int a, b, c; //a,b起点终点, c权重
+					}edges[M];
+
+					int n, m, k;
+					int dist[N];
+					int last[N];
+
+					void bellman_ford()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+
+					    dist[1] = 0;
+					    for (int i = 0; i < k; i ++ )
+					    {
+					        memcpy(last, dist, sizeof dist); 
+					        for (int j = 0; j < m; j ++ )
+					        {
+					            auto e = edges[j];
+					            dist[e.b] = min(dist[e.b], last[e.a] + e.c);
+					        }
+					    }
+					}
+
+					int main()
+					{
+					    scanf("%d%d%d", &n, &m, &k);
+
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        edges[i] = {a, b, c};
+					    }
+
+					    bellman_ford();
+					    if (dist[n] > 0x3f3f3f3f / 2) puts("impossible");
+					    else printf("%d\n", dist[n]);
+
+					    return 0;
+					}
 				4. 复杂度
 		8. spfa
 			1. AcWing 851. spfa求最短路
 				1. 网址
 				2. 代码{解析}
+					1. spfa是对bellman-ford的优化
+					    bellman-ford中存在一句话:
+					    dist[b] = min(dist[b], last[a] + w)
+					    	1. 所以如果dist[b]减少, 一定是因为last[a]减少
+					   		2. 所以我们可以发现:
+					   			如果last[a]距离变小,它"可能"会使它的邻接点例如b的距离变小
+					   			如果last[a]距离不变,它就"完全不可能"使得邻接点例如b的距离变小
+					    所以我们存储dist"变小"的节点
+					2. 用queue{其实用heap也可以}存所有dist"变小"的节点abc
+					3. 并且更新这个节点abc的邻接点
+					其他细节:
+						对比Bellman_ford算法:
+							1. Bellman_ford
+								1. 会遍历所有的边，但是有很多的边遍历了其实没有什么意义
+								2. 最后的判断条件写的是 if(dist[n] > 0x3f3f3f3f / 2)
+								3. Bellman_ford算法可以存在负权回路，是因为其循环的次数是有限制的因此最终不会发生死循环；
+							2. spfa:
+								1.
+									我们只用遍历那些到源点距离变小的点所连接的边即可
+									只有当一个点的前驱结点更新了，该节点才会得到更新
+									因此考虑到这一点，我们将创建一个队列每一次加入距离被更新的结点
+								2. 最后的判断条件写的是 if(dist[n] == 0x3f3f3f3f)
+									原因:
+										其原因在于Bellman_ford算法会遍历所有的边，因此"不管是不是和源点连通"的边它都会得到更新；
+										但是SPFA算法不一样，它相当于采用了"BFS"，因此"遍历到的结点都是与源点连通的"
+											因此如果你要求的n和源点不连通，它不会得到更新，还是保持的0x3f3f3f3f
+											回忆: 
+												BFS中的st数组记录的是当前已经被遍历过的点
+												spfa中的st数组判断当前的点是否已经加入到队列当中了, 也就是是否距离更短了
+								3. SPFA算法不可以存在负权回路，由于用了队列来存储，只要发生了更新就会不断的入队
+									因此假如有负权回路请你不要用SPFA否则会死循环。
+									当然你如果用一个cnt来判断是否有负环也是可以的, 就不会死循环了
+								4. 由于SPFA算法是由Bellman_ford算法优化而来，在最坏的情况下时间复杂度和它一样即时间复杂度为 O(nm) 
+									假如题目时间允许可以直接用SPFA算法去解Dijkstra算法的题目。(好像SPFA有点小小万能的感觉...)
+								5. 求负环一般使用SPFA算法，方法是用一个cnt数组记录每个点到源点的边数，一个点被更新一次就+1
+									一旦有点的边数达到了n那就证明存在了负环
+						对比Dijstra算法: 虽然有一些像但是其中的意义还是相差甚远的
+							1. Dijkstra算法
+								1. st
+									st数组保存的是当前确定了到源点距离最小的点
+									且一旦确定了最小那么就不可逆了: 不可标记为true后改变为false
+								2. priority_queue
+									Dijkstra算法里使用的是优先队列保存的是当前未确定最小距离的点
+									目的是"快速的"取出当前到源点"距离最小"的点；
+							2. SPFA算法
+								1. st
+									st数组判断当前的点是否已经加入到队列当中了；
+									且spfa中的st数组可逆: 可以在标记为true之后又标记为false
+									即便不使用st数组最终也没有什么关系，但是使用的好处在于可以提升效率。
+								2. priority_queue
+									目的只是记录一下当前"距离变小"的点
+									SPFA算法中使用的是队列{你也可以使用别的数据结构}
+
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], w[N], e[N], ne[N], idx;
+					int dist[N];
+					bool st[N]; //感觉这个的语意是: 某个节点是否在queue里面
+
+					void add(int a, int b, int c)
+					{
+					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int spfa()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0;
+
+					    queue<int> q; 记录所有距离变小的节点 
+					    q.push(1); 把起点1放入队列 
+					    st[1] = true; 说明节点1在queue里面
+
+					    while (q.size()) 只要队列不空, 队列里面是所有到起点的距离"变小"的节点, 所以队列不空说明还有距离变小的节点
+					    {
+					        int t = q.front(); 取出队头t
+					        q.pop();
+
+					        st[t] = false; 说明从queue取出点t, 说明现在queue里面没有节点t
+
+					        for (int i = h[t]; i != -1; i = ne[i]) 遍历点t的邻接点
+					        										因为t是变小的点, 那t节点的邻接点就"有可能"可以变小{到原点的距离变小}
+					        										这个也验证了, 如果是一个到原点距离没变的点, 它的邻接点就"完全没可能"变小
+					        {
+					            int j = e[i];
+					            if (dist[t] + w[i] < dist[j])
+					            {
+					                dist[j] = dist[t] + w[i]; 不管点j在不在queue里面{也就是不管st[j]是true还是false}, 我们都会更新j到起点的距离dist[j]
+					                if (!st[j]) 如果不在queue里面,就放入. 如果这个点j本身就在queue,那以后会在queue中取出它的. 
+					                {
+					                    q.push(j);
+					                    st[j] = true;
+					                }
+					            }
+					        }
+					    }
+
+					    return dist[n]; 返回的就是节点n到节点1的最短距离 
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    int t = spfa();
+
+					    if (t == 0x3f3f3f3f) puts("impossible");
+					    	 为什么不是 if(dist[n] > 0x3f3f3f3f / 2)
+								原因:
+									其原因在于Bellman_ford算法会遍历所有的边，因此"不管是不是和源点连通"的边它都会得到更新；
+									但是SPFA算法不一样，它相当于采用了"BFS"，因此"遍历到的结点都是与源点连通的"
+										因此如果你要求的n和源点不连通，它不会得到更新，还是保持的0x3f3f3f3f
+					    else printf("%d\n", t);
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, m;
+					int h[N], w[N], e[N], ne[N], idx;
+					int dist[N];
+					bool st[N]; 
+
+					void add(int a, int b, int c)
+					{
+					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					int spfa()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+					    dist[1] = 0;
+
+					    queue<int> q;
+					    q.push(1); 
+					    st[1] = true;
+
+					    while (q.size()) 
+					    {
+					        int t = q.front();
+					        q.pop();
+
+					        st[t] = false; 
+
+					        for (int i = h[t]; i != -1; i = ne[i]) 
+					        {
+					            int j = e[i];
+					            if (dist[j] > dist[t] + w[i])
+					            {
+					                dist[j] = dist[t] + w[i];
+					                if (!st[j]) 
+					                {
+					                    q.push(j);
+					                    st[j] = true;
+					                }
+					            }
+					        }
+					    }
+
+					    return dist[n];
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    int t = spfa();
+
+					    if (t == 0x3f3f3f3f) puts("impossible");
+					    else printf("%d\n", t);
+
+					    return 0;
+					}
 				4. 复杂度
 			2. AcWing 852. spfa判断负环
 				1. 网址
 				2. 代码{解析}
+					重点: "如果cnt[x]  == n, 说明有负权环"
+					    首先cnt[x]指的是从节点1到x点,在走最短路径的时候,经过的边数
+					    cnt[x]的更新,一定是遇到了更短的路径,才会更新. 
+					        if (dist[j] > dist[t] + w[i])
+					            {
+					                dist[j] = dist[t] + w[i];
+					                cnt[j] = cnt[t] + 1;
+					            ...
+					    如果cnt[x] == n, 说明经过了n个边, 说明经过了n+1个点,但是我们只有n个节点
+					    说明经过的n条边中,有两个点是同一个点
+					    说明我们有环,因为是更短的路径,所以是负权环
+
+					解释:
+						算法分析
+							使用spfa算法解决是否存在负环问题
+
+							求负环的常用方法，基于SPFA，一般都用方法2, 本题也是用方法2:
+								方法1：统计每个点入队的次数，如果某个点入队n次，则说明存在负环
+								方法2：统计当前每个点的最短路中所包含的边数，如果某点的最短路所包含的边数大于等于n，则也说明存在环
+						y总的原话
+							每次做一遍 spfa()一定是正确的，但时间复杂度较高，可能会超时。
+							初始时将所有点插入队列中可以按如下方式理解：
+							在原图的基础上新建一个虚拟源点，从该点向其他所有点连一条权值为0的有向边。那么原图有负环等价于新图有负环。此时在新图上做spfa，将虚拟源点加入队列中。然后进行spfa的第一次迭代，这时会将所有点的距离更新并将所有点插入队列中。执行到这一步，就等价于视频中的做法了。那么视频中的做法可以找到负环，等价于这次spfa可以找到负环，等价于新图有负环，等价于原图有负环。得证。
+
+						1、dist[x] 记录虚拟源点到x的最短距离
+						2、cnt[x] 记录当前x点到虚拟源点最短路的边数，初始每个点到虚拟源点的距离为0，只要他能再走n步，即cnt[x] >= n，则表示该图中一定存在负环，由于从虚拟源点到x至少经过n条边时，则说明图中至少有n + 1个点，表示一定有点是重复使用
+						3、若dist[j] > dist[t] + w[i],则表示从t点走到j点能够让权值变少，因此进行对该点j进行更新，并且对应cnt[j] = cnt[t] + 1,往前走一步
+
+						注意：该题是判断是否存在负环，并非判断是否存在从1开始的负环，因此需要将所有的点都加入队列中，更新周围的点
+
+
+					todo:
+						1. dist[N]初始化不是 0x3f, 而是0 
+							解释: 虚拟节点.
+						2. 前面的写法 只是把点1放入queue中, 现在要把所有节点都放入queue中
+							因为题目说的不是判断是否存在包含点1的负环, 而是判断是否存在任意负环 
+							所以如果不把所有节点放入queue中, 而只是把点1放入queue中
+							可能存在的情况:
+								有负环, 但是节点1和这个负环是不连通的 
+								之前说了, spfa很像bfs, 因此"遍历到的结点都是与源点1连通的"
+						3. 想象画面:
+							树的bfs,从根一层一层向下扩散
+							图的bfs,对于某个点,一层一层向外扩散. 如果图中存在环, 并且这个点在环上, 一层层扩散后还会扩散回自己
+								如果一个点, bfs, 走过的步数 == n, 那就说明一定有环了.
+								注意, 步数 == n, 并不见得一定是刚好绕环一圈, 可能已经绕了超多圈了
+									我们不设置一个阈值, 他能无限绕下去.
+									所以, 步数 == n, 就一定有环了
+
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					const int N = 2010, M = 10010;
+
+					int n, m;
+					int h[N], w[M], e[M], ne[M], idx;
+					int dist[N], cnt[N];
+					bool st[N];
+
+					void add(int a, int b, int c)
+					{
+					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					bool spfa()
+					{
+					    queue<int> q;
+
+					    for (int i = 1; i <= n; i ++ ) //因为担心节点1和负权环不连通? 所以需要把所有点都加到queue中
+					    {
+					        st[i] = true;
+					        q.push(i);
+					    }
+
+					    while (q.size())
+					    {
+					        int t = q.front();
+					        q.pop();
+
+					        st[t] = false;
+
+					        for (int i = h[t]; i != -1; i = ne[i]) //假设t节点是和节点1不连通的点, 我们依旧可以计算出和t相邻的点到t的举例, 因为全部dist[xx]的初始值都是0
+					        {
+					            int j = e[i];
+					            if (dist[j] > dist[t] + w[i]) //因为dist[xx]初始值是0, 所以需要w[i] < 0的时候,才会更新dist[j]
+					            {
+					                dist[j] = dist[t] + w[i];
+					                cnt[j] = cnt[t] + 1;
+
+					                if (cnt[j] >= n) return true; 因为题目说的是: 是否有负环, 而不是是否包括点1的负环. 
+					                if (!st[j])
+					                {
+					                    q.push(j);
+					                    st[j] = true;
+					                }
+					            }
+					        }
+					    }
+
+					    return false;
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    if (spfa()) puts("Yes");
+					    else puts("No");
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+					#include <queue>
+
+					using namespace std;
+
+					const int N = 2010, M = 10010;
+
+					int n, m;
+					int h[N], w[M], e[M], ne[M], idx;
+					int dist[N], cnt[N];
+					bool st[N];
+
+					void add(int a, int b, int c)
+					{
+					    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+					}
+
+					bool spfa()
+					{
+					    queue<int> q;
+
+					    for (int i = 1; i <= n; i ++ ) 
+					    {
+					        st[i] = true;
+					        q.push(i);
+					    }
+
+					    while (q.size())
+					    {
+					        int t = q.front();
+					        q.pop();
+
+					        st[t] = false;
+
+					        for (int i = h[t]; i != -1; i = ne[i])
+					        {
+					            int j = e[i];
+					            if (dist[j] > dist[t] + w[i])
+					            {
+					                dist[j] = dist[t] + w[i];
+					                cnt[j] = cnt[t] + 1;
+
+					                if (cnt[j] >= n) return true;
+					                if (!st[j])
+					                {
+					                    q.push(j);
+					                    st[j] = true;
+					                }
+					            }
+					        }
+					    }
+
+					    return false;
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(h, -1, sizeof h);
+
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        add(a, b, c);
+					    }
+
+					    if (spfa()) puts("Yes");
+					    else puts("No");
+
+					    return 0;
+					}
 				4. 复杂度
 		9. Floyd
 			1. AcWing 854. Floyd求最短路
 				1. 网址
 				2. 代码{解析}
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 210, INF = 1e9;
+
+					int n, m, Q;
+					int d[N][N];
+
+					void floyd()
+					{
+					    for (int k = 1; k <= n; k ++ )
+					        for (int i = 1; i <= n; i ++ )
+					            for (int j = 1; j <= n; j ++ )
+					                d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
+					}
+
+					int main()
+					{
+					    scanf("%d%d%d", &n, &m, &Q);
+
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = 1; j <= n; j ++ )
+					            if (i == j) d[i][j] = 0;
+					            else d[i][j] = INF;
+
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        d[a][b] = min(d[a][b], c);
+					    }
+
+					    floyd();
+
+					    while (Q -- )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+
+					        int t = d[a][b];
+					        if (t > INF / 2) puts("impossible");
+					        else printf("%d\n", t);
+					    }
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 210, INF = 1e9;
+
+					int n, m, Q;
+					int d[N][N];
+
+					void floyd()
+					{
+					    for (int k = 1; k <= n; k ++ )
+					        for (int i = 1; i <= n; i ++ )
+					            for (int j = 1; j <= n; j ++ )
+					                d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
+					}
+
+					int main()
+					{
+					    scanf("%d%d%d", &n, &m, &Q);
+
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = 1; j <= n; j ++ )
+					            if (i == j) d[i][j] = 0;
+					            else d[i][j] = INF;
+
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        d[a][b] = min(d[a][b], c);
+					    }
+
+					    floyd();
+
+					    while (Q -- )
+					    {
+					        int a, b;
+					        scanf("%d%d", &a, &b);
+
+					        int t = d[a][b];
+					        if (t > INF / 2) puts("impossible");
+					        else printf("%d\n", t);
+					    }
+
+					    return 0;
+					}
 				4. 复杂度
 		10. Prim
 			1. AcWing 858. Prim算法求最小生成树
 				1. 网址
 				2. 代码{解析}
+					回忆:
+						1. 有向图问题: 最短路
+								1. 单源最短路
+									都是正权边
+										1. 朴素dikkstra
+											O(v^2)
+											稠密图的时候,e =接近= n^2, 所以用朴素dijkstra更好
+										2. heap优化的dijkstra
+											O(e*logv)
+											适合稀疏图
+									存在负权边: 一般用spfa,不用bellman-ford
+										1. bellman-ford
+											O(v*e)
+										2. spfa
+											一般是O(e), 最坏(v*e)
+								2. 多源汇最短路
+									floyd
+										O(v^3)
+										基于动态规划
+						2. 无向图问题
+							1. 最小生成树
+								1. prim
+									原理
+										最短的横切边属于最小生成树
+									朴素版prim
+										O(v^2)
+										适合稠密图
+									heap优化的prim
+										O(e*logv)
+										很少用
+								2. kruskal
+									需要的数据结构
+										并查集,判断两个点是否属于同一类
+									O(e*loge)
+									适合稀疏图
+							2. 二分图
+								二分图
+									一个图是二分图,当且仅当,图中不含有奇数环{环的边数是奇数,也就是环上的点的个数也是奇数}
+									环上的点的个数是奇数,例如121,12121,最后一个1和第一个1就不能匹配了
+								1. 判别一个图是否是二分图
+									染色法
+										O(v+e)
+										其实是DFS
+								2. 求二分图的最大匹配
+									匈牙利算法
+										最坏 O(v*e),但是实际运行效果非常好,远小于 O(ve) 
+										思想
+											如果我想要匹配的女生a,被其他男生b占据了,我就让这个b看看有没有其他女生c可以匹配,最后bc匹配,我和a匹配
+										为什么是 O(v*e)
+											v/2个男生,每个可能都需要让其他男生看看其他e条边能否匹配
+											因为其实其他男生可能不需要找很多次,所以实际运行远小于O(v*e)
+									最大流
+										先不讲
+					代码:
+						#include <cstring>
+						#include <iostream>
+						#include <algorithm>
+
+						using namespace std;
+
+						const int N = 510, INF = 0x3f3f3f3f;
+
+						int n, m;
+						int g[N][N]; 稠密图, 用邻接矩阵存 
+						int dist[N];
+						bool st[N];
+
+
+						int prim()
+						{
+						    memset(dist, 0x3f, sizeof dist); 把所有距离初始化为正无穷 
+
+						    int res = 0; //存了最小生成树, 这个树的边的长度之和. 也就是我们要的答案
+						    //下面的for loop
+						    /*
+						    1. 当i == 0也就是第一次遍历的时候
+						        我们是初始化了所有和第一个节点相邻的边的dist[], 让这些dist不再是正无穷
+						    2. 当i >= 1的时候,就是一次次找最短的dist,然后这个边就是最小生成树的一个边
+						    */
+						    for (int i = 0; i < n; i ++ ) 迭代 
+						    {
+						    	下面这一段, 最后的t是指: 在集合外的, 到集合距离最短的那个点.
+						        int t = -1;
+						        for (int j = 1; j <= n; j ++ )
+						            if (!st[j] && (t == -1 || dist[t] > dist[j])) //!st[j]说明还没有划分成bobo老师中的蓝色的部分{蓝色部分是指最小生成树集合}, 这里是寻找最短边的节点
+						                t = j;
+
+						        if (i && dist[t] == INF) return INF; //假设不是第一次遍历,但是dist[t] == INF, 说明图不连通, 没有最小生成树
+
+						        if (i) res += dist[t]; //这句话需要加在下面的for loop之前
+						        st[t] = true;
+
+						        for (int j = 1; j <= n; j ++ ) dist[j] = min(dist[j], g[t][j]); //这个for loop放在if (i) res += dist[t];的后面,因为题目可能会给你一个负权环,例如4 4 -10, 是节点4到节点4的负权环.你会发现
+						        dist[4] = min(dist[4], g[4][4]);会让dist[4]变得更小,从而res+=一个更小的数.这是不行的,所以在更新之前就res+=
+						    }
+
+						    return res;
+						}
+
+
+						int main()
+						{
+						    scanf("%d%d", &n, &m);
+
+						    memset(g, 0x3f, sizeof g); 初始化是正无穷, 也就是不连通
+
+						    while (m -- )
+						    {
+						        int a, b, c;
+						        scanf("%d%d%d", &a, &b, &c);
+						        g[a][b] = g[b][a] = min(g[a][b], c); 如果有重边, 存最小的. 注意是无向图两个方向都要存 
+						    }
+
+						    int t = prim();
+
+						    if (t == INF) puts("impossible"); 如果所有点不是在一个连通块中, 就是impossible.
+						    else printf("%d\n", t);
+
+						    return 0;
+						}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 510, INF = 0x3f3f3f3f;
+
+					int n, m;
+					int g[N][N];
+					int dist[N];
+					bool st[N];
+
+
+					int prim()
+					{
+					    memset(dist, 0x3f, sizeof dist);
+
+					    int res = 0; 
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        int t = -1;
+					        for (int j = 1; j <= n; j ++ )
+					            if (!st[j] && (t == -1 || dist[t] > dist[j]))
+					                t = j;
+
+					        if (i && dist[t] == INF) return INF;
+
+					        if (i) res += dist[t];
+					        st[t] = true;
+
+					        for (int j = 1; j <= n; j ++ ) dist[j] = min(dist[j], g[t][j]); 
+					        dist[4] = min(dist[4], g[4][4]);
+					    }
+
+					    return res;
+					}
+
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    memset(g, 0x3f, sizeof g);
+
+					    while (m -- )
+					    {
+					        int a, b, c;
+					        scanf("%d%d%d", &a, &b, &c);
+					        g[a][b] = g[b][a] = min(g[a][b], c);
+					    }
+
+					    int t = prim();
+
+					    if (t == INF) puts("impossible");
+					    else printf("%d\n", t);
+
+					    return 0;
+					}
 				4. 复杂度
 		11. Kruskal
 			1. AcWing 859. Kruskal算法求最小生成树
 				1. 网址
 				2. 代码{解析}
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010, M = 200010, INF = 0x3f3f3f3f;
+
+					int n, m;
+					int p[N];
+
+					struct Edge
+					{
+					    int a, b, w;
+
+					    bool operator< (const Edge &E)const //重载操作符
+					    {
+					        return w < E.w;
+					    }
+					}edges[M]; //我很喜欢这一句,总之就是之前定义了全部的结构体内容struct xx{}XX;最后有[N]表示定义了一个结构体数组, 相当于定义了全局变量edges[N]
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int kruskal()
+					{
+					    sort(edges, edges + m); //按边长排序, 这里就用到了<操作符重载
+
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;    // 初始化并查集
+
+					    int res = 0, cnt = 0; //res是最小生成树的边长和, cnt是指最小生成树已经有几条边了
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a = edges[i].a, b = edges[i].b, w = edges[i].w;
+
+					        a = find(a), b = find(b);//找到a,b的祖先节点,赋值给a,b
+					        if (a != b) //如果不是同一个祖先,说明可以合并,这个edge也是最小生成树的一部分
+					        {
+					            p[a] = b; //祖先a的父亲,现在是祖先b
+					            res += w;
+					            cnt ++ ;
+					        }
+					    }
+
+					    if (cnt < n - 1) return INF; //最小生成树应该刚好是n-1条边, 如果不足,说明图不是联通的
+					    return res;
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    for (int i = 0; i < m; i ++ ) 把所有的边读进来
+					    {
+					        int a, b, w;
+					        scanf("%d%d%d", &a, &b, &w);
+					        edges[i] = {a, b, w};
+					    }
+
+					    int t = kruskal();
+
+					    if (t == INF) puts("impossible");
+					    else printf("%d\n", t);
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 100010, M = 200010, INF = 0x3f3f3f3f;
+
+					int n, m;
+					int p[N];
+
+					struct Edge
+					{
+					    int a, b, w;
+
+					    bool operator< (const Edge &E)const 
+					    {
+					        return w < E.w;
+					    }
+					}edges[M]; 
+
+					int find(int x)
+					{
+					    if (p[x] != x) p[x] = find(p[x]);
+					    return p[x];
+					}
+
+					int kruskal()
+					{
+					    sort(edges, edges + m); 
+
+					    for (int i = 1; i <= n; i ++ ) p[i] = i;   
+
+					    int res = 0, cnt = 0; 
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a = edges[i].a, b = edges[i].b, w = edges[i].w;
+
+					        a = find(a), b = find(b);
+					        if (a != b) 
+					        {
+					            p[a] = b;
+					            res += w;
+					            cnt ++ ;
+					        }
+					    }
+
+					    if (cnt < n - 1) return INF;
+					    return res;
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    for (int i = 0; i < m; i ++ )
+					    {
+					        int a, b, w;
+					        scanf("%d%d%d", &a, &b, &w);
+					        edges[i] = {a, b, w};
+					    }
+
+					    int t = kruskal();
+
+					    if (t == INF) puts("impossible");
+					    else printf("%d\n", t);
+
+					    return 0;
+					}
 				4. 复杂度
 		12. 染色法判定二分图
 			1. AcWing 860. 染色法判定二分图
@@ -3111,7 +6756,57 @@
 			2. AcWing 3. 完全背包问题
 				1. 网址
 				2. 代码{解析}
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n, m;
+					int v[N], w[N];
+					int f[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i];
+
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = m; j >= v[i]; j -- )
+					            f[j] = max(f[j], f[j - v[i]] + w[i]);
+
+					    cout << f[m] << endl;
+
+					    return 0;
+					}
 				3. 纯代码
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1010;
+
+					int n, m;
+					int v[N], w[N];
+					int f[N];
+
+					int main()
+					{
+					    cin >> n >> m;
+
+					    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i];
+
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = m; j >= v[i]; j -- )
+					            f[j] = max(f[j], f[j - v[i]] + w[i]);
+
+					    cout << f[m] << endl;
+
+					    return 0;
+					}
 				4. 复杂度
 			3. AcWing 4. 多重背包问题
 				1. 网址
