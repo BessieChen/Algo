@@ -332,45 +332,38 @@
 
 						    return 0;
 						}
-
-						作者：yxc
-						链接：https://www.acwing.com/activity/content/code/content/39784/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					2. b
 						O(nlogn)
 						```
 
 						#include <iostream>
-
 						using namespace std;
 
-						const int N = 1e6 +10;
-
-						int n;
+						const int N = 100010;
 						int q[N];
+						int n;
 
 						void quick_sort(int q[], int l, int r){
 						    if(l >= r) return;
-						    swap(q[l], q[rand() % (r-l+1) + l]);
-						    
-						    int x = q[l], i = l - 1, j = r + 1;
+						  //  swap(q[l], q[]);
+						    int i = l - 1, j = r + 1, x = q[l + (rand() % (r - l + 1))]; -> 随机选一个x, 防止x是数组里面的min或者max
 						    while(i < j){
 						        do i++; while(q[i] < x);
-						        do j--; while(q[j] > x);
+						        do j--; while(x < q[j]);
 						        if(i < j) swap(q[i], q[j]);
 						    }
 						    quick_sort(q, l, j);
-						    quick_sort(q, j+1, r);
+						    quick_sort(q, j + 1, r);
 						}
 
 						int main(){
 						    scanf("%d", &n);
-						    for(int i = 0; i < n; i ++) scanf("%d", &q[i]);
-						    
-						    quick_sort(q, 0, n-1);
-						    
-						    for(int i = 0; i < n; i++) printf("%d ", q[i]);
+						    for(int i = 0; i < n; i++)
+						        scanf("%d", &q[i]);
+						        
+						    quick_sort(q, 0, n - 1);
+						    for(int i = 0; i < n; i++)
+						        printf("%d ", q[i]);
 						    return 0;
 						}
 
@@ -713,6 +706,39 @@
 							A/B //更复杂
 					3. 加法
 						1. 反过来存: 数字低位在index==0的地方
+							我的画面:
+								1. string a,b 也就是原始数组:
+											|\
+											|  \
+											|    \
+											|      \
+											|--------
+									ind 	0        size
+											高位 	 低位
+									三角形高  高 		 低
+								2. vector<int> A, B, C. 也就是对应的数组, 还有结果数组C
+													/|
+												  /	 |
+												/    |
+											  /      |
+											  --------
+									ind 	0        size
+											低位 	 高位
+									三角形高  高 		 低
+								3. 想象: string a,b -> vector<int> A,B,C: 就像是坎坷, 先下后上
+									|\				  /|
+									|  \			/  |
+									|    \		  /    |
+									|      \	/      |
+									|--------	--------
+							计算:
+								加法: 从低位开始, 也就是 vector<int> A, B 的index == 0的地方
+								减法: 从低位开始, 也就是 vector<int> A, B 的index == 0的地方
+								乘法: 从低位开始, 也就是 vector<int> A, B 的index == 0的地方
+								打印: 从高位开始, 也就是 vector<int> C 的index == size - 1的地方
+								除法: 从高位开始, 也就是 vector<int> C 的index == size - 1的地方
+
+								减法/乘法/除法: 都要去掉前导零.
 						2. 注意进一
 						3. auto c : list/vector/迭代器
 							c11新特色
@@ -752,14 +778,14 @@
 						{
 						    int t = 0; //进位
 						    vector<int> C;
-						    for(unsigned int i = 0; i < A.size() || i < B.size(); i++) 只要A和B还有一个没有完, 就继续下去 //需要选择最长的那个 //注意不能用 int i, 编译出错
+						    for(unsigned int i = 0; i < A.size() || i < B.size() || t; i++) 只要A和B还有一个没有完, 就继续下去, 或者 如果还有进位t 就继续下去//需要选择最长的那个 //注意不能用 int i, 编译出错
 						    {
 						        if(i < A.size()) t += A[i];
 						        if(i < B.size()) t += B[i];
 						        C.push_back(t % 10); //C的index==0位置是数字的最低位
 						        t /= 10; 给下一次的进位
 						    }
-						    if(t) C.push_back(t); 如果还有进位
+						    // if(t) C.push_back(t); 如果还有进位 这一句可省略
 						    return C;
 						}
 
@@ -1228,6 +1254,10 @@
 						        scanf("%d%d%d%d", &x1, &y1, &x2, &y2);
 
 						        int res = S[x2][y2] - S[x1-1][y2] - S[x2][y1-1] + S[x1-1][y1-1];
+						        	背诵: 
+							        	原材料: x1y2, x2y1
+							        	我们都是1-1, 也就是x1-1, y1-1
+							        	所以最后就是 x1-1 y2, x2 y1-1
 						        printf("%d\n",res);
 						    }
 						    return 0;
@@ -1314,6 +1344,18 @@
 						    b[x1][y2+1] -= v;
 						    b[x2+1][y2+1] += v;
 						    return;
+
+						    背诵: 
+						    	原材料: x2,y1 	x1,y2
+						    	向右下角扩散的, 我们都是遇到二就 +1: x2+1,y1 	x1,y2+1
+						    	总之b是往右下角扩散的: 所以 x2+1, y2+1
+						    对比: 前缀和:
+						    	int res = S[x2][y2] - S[x1-1][y2] - S[x2][y1-1] + S[x1-1][y1-1];
+					        	背诵: 
+						        	原材料: x1y2, x2y1
+						        	向左上角扩散的, 我们都是遇到一就-1, 也就是x1-1, y1-1
+						        	所以最后就是 x1-1 y2, x2 y1-1
+						        	这里是向左上角扩散的: 所以 x1-1,y1-1
 						}
 						int main(){
 						    int n, m, p;
@@ -1512,6 +1554,7 @@
 					r3.
 					r4.
 					r5.
+			
 			17. 2816. 判断子序列 
 				1. 代码:
 					#include <iostream>
@@ -1535,6 +1578,13 @@
 					    {
 					        if (a[i] == b[j]) i ++ ; 匹配成功, 好的, 看下一题{a[i]}
 					        j ++ ; 匹配失败, 看下一次尝试{b[j]}
+
+					        我的理解:
+					        	j就像是衣服, i就是一个人
+					        	不过i喜不喜欢第j个衣服, 我们每次都要把第j个衣服换掉
+					        	如果i喜欢第j个衣服, 那就看下一个人i+1
+					        	如果i不喜欢第j个衣服, 就给i看下一件衣服j+1
+					        	总之 j是无条件++
 					    }
 
 					    if (i == n) puts("Yes");
@@ -1622,7 +1672,7 @@
 						//例如: x = 101000 的 lowbit(x) = 1000
 						int lowbit(int x)
 						{
-						    return x & (-x);
+						    return x & (-x); 谐音: 与负, 渔夫
 						}
 
 						int main(){
@@ -2172,8 +2222,6 @@
 					r4.
 					r5.
 
-
-
 			23. 829. 模拟队列
 				0. bug
 				1. 笔记
@@ -2424,10 +2472,6 @@
 							你看 a1 == a2, 也就是相当于平移
 							而 a2 == b, 因为a2本来就是从b复制过来的, 本身就是一个东西
 							所以 a1 == b, 也就是原数组的前缀 == 以i为终点的最长后缀
-
-										
-
-
 
 	4. Trie
 			介绍:
@@ -3117,12 +3161,14 @@
 					4. 操作
 						1. 添加
 						2. 查找
-						3, 删除
+						3. 删除
 							不会真的删除,而是在哈希表的映射元素(链表)中的该元素的bool设置成false
 			
 				13. 字符串哈希
 					str = "ABCDEFSFOIJER"
-					h[n]: 前n个字符的hash值
+					h[n]: "前n个"字符的hash值
+						h[i]的意思是, 前i个字符的hash值. 
+							有种累加和的感觉. 其中"左侧"第一个字符str[1], 它是前1个字符 h[1]. 
 						例如
 							h[0] = 0, 空值的哈希
 							h[1] = "A"这个字符串的hash值
@@ -3139,9 +3185,8 @@
 							2. 计算好p进制对应的数字后,取模
 							3. 经验值: 这样就不会发生conflict
 								p进制的p = 131 或者 13331
-								mod的数字是2^64
-							4.  用unsigned long long的溢出代替mod
-
+								mod的数字是 2^64
+							4.  用 unsigned long long 的溢出代替 mod
 						我们为了求h[i]
 							h[i] = h[i-1] * p + str[i]
 								例如,h[1]是"A"的hash, 也就是1*p^0的hash
@@ -3154,22 +3199,25 @@
 										1. 视频
 											https://www.acwing.com/video/20/ 的 01:01:35
 										1. 假设字符串是"ABCDE",R=5(从ind=1开始),L=3,也就是要求"CDE"的hash值
+													  12345
 										2. 因为h[R]的值是
 											"ABCDE"的hash值
-											注意A是高位,E是低位
-											长度是R,也就是5
-											所以A是第R-1位, E是第0位
-											A*p^(R-1) + B*p^(R-2) + .. E*p^0
-											A*p^4 + B*p^3 + .. E*p^0
+												注意A是高位,E是低位
+												长度是R,也就是5
+												所以A是第R-1位, E是第0位
+											A*p^(R-1) + B*p^(R-2) + C*p^2 + D*p^1 + E*p^0
+											A*p^4 + B*p^3 + C*p^2 + D*p^1 + E*p^0
 										3. 因为h[L-1]的值是"AB"的hash值
-											注意A是高位,E是低位
-											长度是L-1,也就是2
-											所以A是第L-2位, B是第0位
-											所以A*p^1 + B*p^0
+												注意A是高位,E是低位
+												长度是L-1,也就是2
+												所以A是第L-2位, B是第0位
+											所以 A*p^1 + B*p^0
 										4. 所以xxx = h[R] - h[L-1]*p^(R-L+1) 后
-											因为A从L-2的幂次,变成了R-1的幂次,需要乘上(R - L + 1)次幂
+											因为A从L-2的幂次,变成了R-1的幂次,需要乘上: R - (L - 1) == (R - L + 1) == 5-2==3次幂
 											最后我们剩余的就是
-											C*p^2 + D*p^1 + E*p^0
+												A*p^4 + B*p^3 + C*p^2 + D*p^1 + E*p^0 
+											- (A*p^1 + B*p^0) * p^3 
+											= C*p^2 + D*p^1 + E*p^0
 											这个就是我们想要的"CDE"的hash值
 					求一个字符串的hash值可以帮助我们判断两个字符串是否相等
 					3. kmp能够做的,用字符串哈希也可以(但是循环节问题:只有kmp能做)
@@ -3185,19 +3233,36 @@
 
 							using namespace std;
 
-							const int N = 100003, null = 0x3f3f3f3f; {N是第一个大于10w的质数}
+							const int N = 200003, null = 0x3f3f3f3f; 
+								老师说, 坑位需要比数据范围大2到3倍
+								老师如何找: 大于20w的最小质数
+									for(int i = 200000; ; i ++){
+										bool f = false;
+										for(int j = 2; j * j <= i; j++){
+											if(i % j == 0)
+											{
+												f = true;
+												break; //说明不是质数
+											}
+										}
+
+										if(!flag){
+											cout << i <<endl;
+											break; //i是质数
+										}
+									}
 
 							int h[N];
 
-							int find(int x)
+							int find(int x) 返回值有两个含义
 							{
-							    int t = (x % N + N) % N;
-							    while (h[t] != null && h[t] != x)
+							    int t = (x % N + N) % N; 一定是先%再+再%, 如果错写成: (x + N) % N , 那么: (-10e9 + 10e5) % 10e5 依旧是负数
+							    while (h[t] != null 如果这个坑是有人的 && h[t] != x 并且这个坑位上人不是x)
 							    {
-							        t ++ ;
+							        t ++ ; 下一个坑位
 							        if (t == N) t = 0;
 							    }
-							    return t;
+							    return t; 返回的是二者之一: 一个没有人的坑, 所以可以存x || 这个坑位上的人已经是x
 							}
 
 							int main()
@@ -3212,10 +3277,10 @@
 							        char op[2];
 							        int x;
 							        scanf("%s%d", op, &x);
-							        if (*op == 'I') h[find(x)] = x;
+							        if (*op == 'I') h[find(x)] = x; 把这个没有人的坑, 填入x值 
 							        else
 							        {
-							            if (h[find(x)] == null) puts("No");
+							            if (h[find(x)] == null) puts("No"); find()返回两种: 一个没有人的坑 || 这个坑位上的人是x
 							            else puts("Yes");
 							        }
 							    }
@@ -3223,21 +3288,37 @@
 							    return 0;
 							}
 
-						2. 拉链法
+						2. 拉链法: 其实很简单, 就是用 质数N来判断坑在哪里, 其他的和单链表一样
 							#include <cstring>
 							#include <iostream>
 
 							using namespace std;
 
-							const int N = 100003;
+							const int N = 100003; {N是第一个大于10w的质数}
+								老师如何找: 大于100000的最小质数
+									for(int i = 100000; ; i ++){
+										bool f = false;
+										for(int j = 2; j * j <= i; j++){
+											if(i % j == 0)
+											{
+												f = true;
+												break; //说明不是质数
+											}
+										}
+
+										if(!flag){
+											cout << i <<endl;
+											break; //i是质数
+										}
+									}
 
 							int h[N], e[N], ne[N], idx;
 
 							void insert(int x)
 							{
-							    int k = (x % N + N) % N;
+							    int k = (x % N + N) % N; 找到我们要的坑 
 							    e[idx] = x;
-							    ne[idx] = h[k];
+							    ne[idx] = h[k]; 也就是往这个坑里面加入, 这个坑是一个链表.
 							    h[k] = idx ++ ;
 							}
 
@@ -3254,7 +3335,7 @@
 							int main()
 							{
 							    int n;
-							    scanf("%d", &n);
+							    scanf("%d", &n); 
 
 							    memset(h, -1, sizeof h);
 
@@ -3262,7 +3343,7 @@
 							    {
 							        char op[2];
 							        int x;
-							        scanf("%s%d", op, &x);
+							        scanf("%s%d", op, &x); 如果是读入一个字符串, 最好用 scanf(), 因为scanf会把制表符, 空格忽略掉. 
 
 							        if (*op == 'I') insert(x);
 							        else
@@ -3274,11 +3355,6 @@
 
 							    return 0;
 							}
-
-							作者：yxc
-							链接：https://www.acwing.com/activity/content/code/content/45308/
-							来源：AcWing
-							著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					
 					2. b
 				3. 5次
@@ -3300,7 +3376,7 @@
 
 						typedef unsigned long long ULL;
 
-						const int N = 100010, P = 131;
+						const int N = 100010, P = 131; P是经验值 
 
 						int n, m;
 						char str[N];
@@ -3308,7 +3384,7 @@
 
 						ULL get(int l, int r)
 						{
-						    return h[r] - h[l - 1] * p[r - l + 1];
+						    return h[r] - h[l - 1] * p[r - l + 1]; 根据公式 
 						}
 
 						int main()
@@ -3319,8 +3395,8 @@
 						    p[0] = 1;
 						    for (int i = 1; i <= n; i ++ )
 						    {
-						        h[i] = h[i - 1] * P + str[i];
-						        p[i] = p[i - 1] * P;
+						        h[i] = h[i - 1] * P + str[i]; 因为有 +法, 所以h[i]就是非零了
+						        p[i] = p[i - 1] * P; 这个就可以记录我们的 p^(R-L+1) 
 						    }
 
 						    while (m -- )
@@ -3334,11 +3410,6 @@
 
 						    return 0;
 						}
-
-						作者：yxc
-						链接：https://www.acwing.com/activity/content/code/content/45313/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					2. b
 				3. 5次
 					r1.
@@ -3385,7 +3456,7 @@
 												基于离散数学
 												可以求负权环但是一般不用这个来做,用spfa做
 											2. spfa
-												一般是O(e), 最坏(n*e)
+												一般是 O(e), 最坏 O(n*e)
 												spfa是限制最小的算法
 													可以解决没有负权环的问题(99.9%的题目都是没有负权环的)
 												spfa是对bellman-ford的优化
@@ -3422,39 +3493,43 @@
 						const int N = 10;
 
 						int n;
-						int path[N];
+						int path[N]; 方案, 用全局数组. 
 
-						void dfs(int u, int state)
+						void dfs(int u, int state) 
 						{
-						    if (u == n)
+						    if (u == n) 递归结束, 也就是当完美地走到第n个位置. 
 						    {
-						        for (int i = 0; i < n; i ++ ) printf("%d ", path[i]);
+						        for (int i = 0; i < n; i ++ ) printf("%d ", path[i]); 输出path就好了
+						        	注意, path[i]只是代表了一个数字
+						        	因为之前: path[u] = i + 1; 把数字{i+1}填到path的索引为u的位置上 
 						        puts("");
 
 						        return;
 						    }
 
-						    for (int i = 0; i < n; i ++ )
-						        if (!(state >> i & 1))
+						    for (int i = 0; i < n; i ++ ) 
+						        if (!(state >> i & 1)) 找到一个没有被用过的数字. 假设n==7, 那么state如果是 0010010, 其中0表示没有被用过的数字
 						        {
-						            path[u] = i + 1;
-						            dfs(u + 1, state + (1 << i));
+						            path[u] = i + 1; 把数字{i+1}填到path的第u个位置上{也就是索引为u的位置上}
+						            dfs(u + 1, state + (1 << i)); 然后去看第u+1个位置, 并且把state标记为{第i位已经用过了}
 						        }
+						        按道理说, 这里应该是执行完了上一句 "dfs(u + 1, state + (1 << i))" 恢复现场. 
+						        但是奇妙就奇妙在: 
+						        	老师的上一句: dfs(u + 1, state + (1 << i))中, state 可并不是: state = state + (1 << i))
+									所以 state的值并没有被修改, 所以每一层的 state的值是互不影响的!
+						        用同学的话:
+						        	进入递归的数是 state+（1<<i）,也就是在第i位的状态变了，所以就是尽管在递归完成后没有语句恢复现场
+						        	但是因为state这个数一直没有变化，所以在递归完成后其实跟递归之前状态一样呐
 						}
 
 						int main()
 						{
 						    scanf("%d", &n);
 
-						    dfs(0, 0);
+						    dfs(0, 0); 从第0个位置开始看, 刚开始state是全0也就是没有一个数字被用过
 
 						    return 0;
 						}
-
-						作者：yxc
-						链接：https://www.acwing.com/activity/content/code/content/47087/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					2. b
 				3. 5次
 					r1.
@@ -3463,12 +3538,29 @@
 					r4.
 					r5.
 
-			37. 843. n-皇后问题	dfs
+			37. 843. n-皇后问题	经典dfs问题
 				0. bug
 				1. 笔记
+					其实就是全排列的问题
+					例如我们的全排列数组是:
+						1 3 6 4 7 2 5
+						意思是:
+							第一个皇后, 在第1行,第"1"列
+							第二个皇后, 在第2行,第"3"列
+							第三个皇后, 在第3行,第"6"列
+							....
 				2. 注释
 					1. y
 						1. 第一种搜索顺序
+
+							是按照格子依次遍历:
+								也就是: 
+									第0行第0列, 第0行第1列, ..., 第0行第n-1列
+									第1行第0列, 第1行第1列, ..., 第1行第n-1列
+									第n-1行第0列, 第n-1行第1列, ..., 第n-1行第n-1列
+							每个格子, 有两种操作:
+								放皇后
+								不放皇后
 							#include <iostream>
 
 							using namespace std;
@@ -3481,27 +3573,34 @@
 
 							void dfs(int x, int y, int s)
 							{
-							    if (s > n) return;
+							    if (s > n) return; 当前皇后的个数, 如果已经超过n了, 就返回. 这是保险写法. 
 							    if (y == n) y = 0, x ++ ;
+							    	如果出界{也就是到了第n-1列的下一列, 出界了}. 
+							    	然后我们就转移到下一行{x++}的第一列{y=0}
 
-							    if (x == n)
+							    if (x == n) 这个是到了第n行, 但是到了第n行并不代表摆够了n个皇后
 							    {
-							        if (s == n)
+							        if (s == n) 如果到了第n行, 并且摆好了n个皇后
 							        {
-							            for (int i = 0; i < n; i ++ ) puts(g[i]);
+							            for (int i = 0; i < n; i ++ ) puts(g[i]); 输出 
 							            puts("");
 							        }
 							        return;
 							    }
 
-							    g[x][y] = '.';
-							    dfs(x, y + 1, s);
+							    g[x][y] = '.'; 因为是一个一个格子遍历, 这里是每个格子无条件放置'.', 如果需要放皇后, 之后会修改为'Q'
 
-							    if (!row[x] && !col[y] && !dg[x + y] && !udg[x - y + n])
+							    如果不放皇后: 我们下一个去的是 第x行, 第y+1列. 已经摆好的皇后还是s个
+							    	dfs(x, y + 1, s);
+
+							    如果放皇后, 还是需要判断这个位置是否合法 
+							    if (!row[x] && !col[y] && !dg[x + y] && !udg[x - y + n]) 这里说的是第x行是全0, 第y列全0, 对角线\全0, 斜对角线/全0 
 							    {
-							        row[x] = col[y] = dg[x + y] = udg[x - y + n] = true;
+							        row[x] = col[y] = dg[x + y] = udg[x - y + n] = true; 说明放了皇后
 							        g[x][y] = 'Q';
-							        dfs(x, y + 1, s + 1);
+							        dfs(x, y + 1, s + 1); 我们下一个去的是 第x行, 第y+1列. 已经摆好的皇后还是s个
+
+							        走到这里的时候, 已经是递归到底, 然后往回走了, 然后再从这个位置出发去下一个位置, 我们去下一个位置之前, 需要恢复现场:
 							        g[x][y] = '.';
 							        row[x] = col[y] = dg[x + y] = udg[x - y + n] = false;
 							    }
@@ -3511,37 +3610,165 @@
 							{
 							    cin >> n;
 
-							    dfs(0, 0, 0);
+							    dfs(0, 0, 0); 去第0行, 第0列, 当前摆好的皇后数量是 0
 
 							    return 0;
 							}
 						
 						2. 第二种搜索顺序
+							是按照格子依次遍历:
+								也就是: 其实没变...
+									第0行第0列, 第0行第1列, ..., 第0行第n-1列
+									第1行第0列, 第1行第1列, ..., 第1行第n-1列
+									第n-1行第0列, 第n-1行第1列, ..., 第n-1行第n-1列
+							每个格子, 先判断是否满足要求, 然后操作:
+								如果满足要求, 就放皇后
+								如果不满足要求, 就不放皇后
+
+							解释:
+								为什么第x行, 第y列对应的左斜线 / 是: x + y
+								为什么第x行, 第y列对应的右斜线 \ 是: "- x + y + n" 或者 "x - y + n"
+									老师说: 只要保证不同对角线一定映射到不同的下标中即可，其他细节都不本质，很随意
+									的确, 老师的两种方法, 一种写的是 "- x + y + n", 一种写的是 "x - y + n", 都ac了
+
+							详解:
+								1. 左斜线{对角线}:
+										 0  1  2  3
+										-------------
+										|a |b1|c1|  |
+									    -------------
+									  /	|b2|c2|  |  |
+									0	-------------
+									  /	|c3|  |  |  |
+									1	-------------
+									  / |  |  |  |  |
+									2	-------------
+									  /   /   /   / 
+									3    4   5   6
+									就给你一个小例子:
+										a, bb, ccc所在的是左斜线 /:
+										其中, 左上角是第0行, 右下角是第2*(n-1)行==第6行
+											所以取值范围是[0, 2*(n-1)]
+										验证:
+											a是左斜线的第0行. 
+												a所在的是第x=0行, 第y=0列.
+													x + y == 0 + 0 = 0
+											b是左斜线的第1行. 
+												b1所在的是第x=0行, 第y=1列.
+													x + y == 0 + 1 = 1
+												b2所在的是第x=1行, 第y=0列.
+													x + y == 1 + 0 = 1
+										原因:
+											左斜线 /, 对应着我们的方程: y = -x + b 
+												|----------> y
+												|  /
+												| /
+												↓    y = -x + b
+												x
+											b就是我们说的, "第x行, 第y列, 对应的对角线是第b行"
+											因为 y = -x + b , 所以 b = x+y 
+											于是 b =  "x + y"
+
+								2. 右斜线{斜对角线}:
+									1. 左上角是第0行, 右下角是第2*(n-1)行==第6行
+
+											 0  1  2  3
+											-------------
+										0	|  | c|b1| a|
+											------------- \
+										1	|  |  | c|b2|  0
+											------------- \
+										2	|  |  |  | c|  1
+											------------- \
+										3	|  |  |  |  |  2
+											-------------
+											  \   \   \   \ 
+											   6   5   4   3
+										就给你一个小例子:
+											a, bb, ccc所在的是右斜线 \:
+											其中, 左上角是第0行, 右下角是第2*(n-1)行==第6行
+												所以取值范围是[0, 2*(n-1)]
+											验证:
+												a是右斜线的第0行. 
+													a所在的是第x=0行, 第y=3列.
+														n + x - y == 3 + 0 - 3 = 0
+												b是右斜线的第1行. 
+													b1所在的是第x=0行, 第y=2列.
+														n + x - y == 3 + 0 - 2 = 1
+													b2所在的是第x=1行, 第y=3列.
+														n + x - y == 3 + 1 - 3 = 1
+									2. 左下角是第0行, 右上角是第2*(n-1)行==第6行
+										当然只要保证不同对角线一定映射到不同的下标中即可，其他细节都不本质，很随意。
+											也可以是: 	
+													 0  1  2  3
+													-------------
+												0	|  | c|b1| a|
+													------------- \
+												1	|  |  | c|b2|  6
+													------------- \
+												2	|  |  |  | c|  5
+													------------- \
+												3	|  |  |  |  |  4
+													-------------
+													  \   \   \   \ 
+													   0   1   2   3
+												就给你一个小例子:
+													a, bb, ccc所在的是右斜线 \:
+													其中, 左下角是第0行, 右上角是第2*(n-1)行==第6行
+														所以取值范围是[0, 2*(n-1)]
+													验证:
+														a是右斜线的第6行. 
+															a所在的是第x=0行, 第y=3列
+																"n - x + y" == 3 - 0 + 3 = 6
+														b是右斜线的第5行. 
+															b1所在的是第x=0行, 第y=2列.
+																n - x + y == 3 - 0 + 2 = 5
+															b2所在的是第x=1行, 第y=3列.
+																n - x + y == 3 - 1 + 3 = 5
+													原因:
+														右斜线 \, 对应着我们的方程: y = x + b
+
+															|----------> y
+															|  \
+															|   \
+															↓    \ y = x + b
+															x
+														b就是我们说的, "第x行, 第y列, 对应的斜对角线是第b行"
+														因为 y = x + b , 所以 b = -x+y 
+															因为x的取值是[0,n-1], 因为y的取值是[0,n-1]
+															所以-x+y的取值是 [-(n-1), n-1] 可能有负数
+															所以最后加一个n
+														于是 b =  "n - x + y"
+								
+
 							#include <iostream>
 
 							using namespace std;
 
-							const int N = 20;
+							const int N = 20; 这里已经是比题目的范围大1倍了. 因为假设有n行, 那么对角线有2n行
 
 							int n;
-							char g[N][N];
-							bool col[N], dg[N], udg[N];
+							char g[N][N]; 存的是第n行第n列是否有皇后
+							bool col[N], dg[N], udg[N]; 
 
-							void dfs(int u)
+							void dfs(int u) 遍历第u行
 							{
-							    if (u == n)
+							    if (u == n) 说明遍历到底, 我们现在输出这个方案
 							    {
 							        for (int i = 0; i < n; i ++ ) puts(g[i]);
 							        puts("");
 							        return;
 							    }
 
-							    for (int i = 0; i < n; i ++ )
-							        if (!col[i] && !dg[u + i] && !udg[n - u + i])
+							    for (int i = 0; i < n; i ++ ) 从第u行的第1"列"开始遍历
+							        剪枝: 不合理的点, 就不再继续往下遍历了
+							    	if (!col[i] 第i列是全0 && !dg[u + i] 对角线也是全0 && !udg[n - u + i] 斜对角线也是全0)
 							        {
 							            g[u][i] = 'Q';
-							            col[i] = dg[u + i] = udg[n - u + i] = true;
-							            dfs(u + 1);
+							            col[i] = dg[u + i] = udg[n - u + i] = true; 说明放了皇后
+							            dfs(u + 1);遍历第u+1行
+
+							            恢复现场
 							            col[i] = dg[u + i] = udg[n - u + i] = false;
 							            g[u][i] = '.';
 							        }
@@ -3557,13 +3784,7 @@
 							    dfs(0);
 
 							    return 0;
-							}
-
-							作者：yxc
-							链接：https://www.acwing.com/activity/content/code/content/47097/
-							来源：AcWing
-							著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
-					
+							}	
 					2. b
 				3. 5次
 					r1.
@@ -3590,29 +3811,34 @@
 						const int N = 110;
 
 						int n, m;
-						int g[N][N], d[N][N];
+						int g[N][N], d[N][N]; g:存的是地图, d: 每个点到起点的距离
 
 						int bfs()
 						{
-						    queue<PII> q;
+						    queue<PII> q;  一个队列
 
-						    memset(d, -1, sizeof d);
-						    d[0][0] = 0;
+						    memset(d, -1, sizeof d); 起点都是 0xfffffff, 也就是max
+						    d[0][0] = 0; 起点到起点的距离是 0 
 						    q.push({0, 0});
 
 						    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
 
-						    while (q.size())
+						    while (q.size()) 如果队列不为空
 						    {
-						        auto t = q.front();
+						        auto t = q.front(); 把队头拿出来
 						        q.pop();
 
-						        for (int i = 0; i < 4; i ++ )
+						        for (int i = 0; i < 4; i ++ )4个方向
 						        {
 						            int x = t.first + dx[i], y = t.second + dy[i];
 
-						            if (x >= 0 && x < n && y >= 0 && y < m && g[x][y] == 0 && d[x][y] == -1) //如果已经搜到过了, d[x][y] != -1, 就不需要遍历了,因为我们找的就是最短距离. 我的疑问:会不会以前搜到过,但是后来走不通. 但是这次虽然再次搜到,可是这次走的通?
-						            //我认为可能再次搜到,也一样走不通,因为BFS本身就是一层一层的搜的
+						            if (x >= 0 && x < n && y >= 0 && y < m && g[x][y] == 0 && d[x][y] == -1) 
+						            	保证xy的坐标是合法的, g[x][y] == 0说明xy点是空地, d[x][y] == -1说明以前没有走过xy点
+						            //如果已经搜到过了, d[x][y] != -1, 就不需要遍历了,因为我们找的就是最短距离. 
+						            	//老师说: bfs第一次搜到的点才是最短距离，不是第一次就不是最短距离
+						            	// 我的疑问:会不会以前搜到过, 但是后来走不通. 但是这次虽然再次搜到,可是这次走的通?
+						            	//我认为可能再次搜到,也一样走不通,因为BFS本身就是一层一层的搜的
+						            	//而且 d[x][y]只能越来越大, 因为越外层, d[aa][bb]的值就越大, 距离就越大
 						            {
 						                d[x][y] = d[t.first][t.second] + 1;
 						                q.push({x, y});
@@ -3628,17 +3854,12 @@
 						    cin >> n >> m;
 						    for (int i = 0; i < n; i ++ )
 						        for (int j = 0; j < m; j ++ )
-						            cin >> g[i][j];
+						            cin >> g[i][j]; 把整个地图读进来
 
 						    cout << bfs() << endl;
 
 						    return 0;
 						}
-
-						作者：jackrrr
-						链接：https://www.acwing.com/activity/content/code/content/465891/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				3. 5次
 					r1.
 					r2.
@@ -3649,8 +3870,25 @@
 			39. 845. 八数码
 				0. bug
 				1. 笔记
+					转换为图论问题:
+						1. 所有的状态, 都是图里面的一个节点
+							状态: "12345678x", "45678x123" 都是状态
+						2. 我们给了起始节点, 问走到一个终点的最短距离
+					过程:
+						将原点状态"678x12345"想象为3*3的样子
+						对于x, 枚举上下左右4个方向
+						将上下左右4个方向的状态 + 他们到原点的距离记录
+							如果上下左右有一个状态是终点状态"12345678x", 就可以提前结束了
 				2. 注释
 					1. y
+
+						主要是 3*3矩阵中的坐标, 还有string中的坐标的转换:
+							1. string -> 3*3: 
+								int k = t.find('x'); 求一下, 'x'这个字符, 在状态{字符串}中的下标 
+						        int x = k / 3, y = k % 3;
+						    2. 3*3 -> string:
+						    	x * 3 + y
+
 						#include <iostream>
 						#include <algorithm>
 						#include <unordered_map>
@@ -3660,42 +3898,48 @@
 
 						int bfs(string state)
 						{
-						    queue<string> q;
-						    unordered_map<string, int> d;
+						    queue<string> q;		bfs需要定义个队列
+						    unordered_map<string, int> d; 	定义个距离数组
 
-						    q.push(state);
-						    d[state] = 0;
+						    q.push(state); 起点放到队列 
+						    d[state] = 0; 起点到起点的距离 == 0
 
 						    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
 
-						    string end = "12345678x";
+						    string end = "12345678x"; 终点状态
 						    while (q.size())
 						    {
 						        auto t = q.front();
 						        q.pop();
 
-						        if (t == end) return d[t];
+						        if (t == end) return d[t]; 如果t是终点, 我们就提前结束 
 
-						        int distance = d[t];
-						        int k = t.find('x');
-						        int x = k / 3, y = k % 3;
+						        int distance = d[t]; 先存一下这个节点t到起点的距离. 
+						        int k = t.find('x'); 求一下, 'x'这个字符, 在状态{字符串}中的下标 
+						        int x = k / 3, y = k % 3;	将下标转化为 第x行, 第y列 
+
 						        for (int i = 0; i < 4; i ++ )
 						        {
-						            int a = x + dx[i], b = y + dy[i];
-						            if (a >= 0 && a < 3 && b >= 0 && b < 3)
+						            int a = x + dx[i], b = y + dy[i]; 3*3矩阵中, 新位置是{a,b}
+						            if (a >= 0 && a < 3 && b >= 0 && b < 3) 如果{a,b}是合法的 
 						            {
-						                swap(t[a * 3 + b], t[k]);
-						                if (!d.count(t))
+						                swap(t[a * 3 + b], t[k]); 3*3矩阵中的位置, 转换到string后, 就是 a * 3 + b
+						                							这里的 t[a * 3 + b]是某个字符, 例如'1'
+						                							t[k]是我们的字符'x'
+						                							所以我们交换'x'和'1'
+						                if (!d.count(t)) 如果这个新状态, 没有计算过. 
 						                {
-						                    d[t] = distance + 1;
-						                    q.push(t);
+						                    d[t] = distance + 1; 我们就更新下它到起点状态的距离 
+						                    q.push(t); 把这个状态装到queue中, 为了下一层的遍历
 						                }
+
+						                这个是恢复现场, 给下一个方向做准备. 因为下一个方向也是需要老状态t
 						                swap(t[a * 3 + b], t[k]);
 						            }
 						        }
 						    }
 
-						    return -1;
+						    return -1; 如果遍历不到, 说明到不了终点
 						}
 
 						int main()
@@ -3706,7 +3950,8 @@
 						    for (int i = 0; i < 9; i ++ )
 						    {
 						        cin >> s;
-						        state += *s;
+						        state += *s; 将9个字符读入. 后面读的字符是插入到string的右边
+						        	state存的是初始状态
 						    }
 
 						    cout << bfs(state) << endl;
@@ -3714,10 +3959,6 @@
 						    return 0;
 						}
 
-						作者：yxc
-						链接：https://www.acwing.com/activity/content/code/content/48146/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					2. b
 				3. 5次
 					r1.
@@ -3730,6 +3971,16 @@
 			40. 846. 树的重心 (深度)
 				0. bug
 				1. 笔记
+					不管是dfs还是bfs, 都是每个点只遍历一次
+					树的重心, 老师举了一个例子: https://www.acwing.com/video/278/ 的08:00
+					我们要对于每一个节点, 计算删除这个节点之后, 剩下的所有连通块中, 最大的连通块的节点个数
+						对于某个节点, 如何计算删除这个节点之后, 剩下的所有连通块中, 最大的连通块的节点个数?
+							首先, 我们计算以这个节点为根的所有的子树的大小. 
+								因为每个子树都是一个连通块
+							对于这个节点上方的连通块的大小怎么计算?
+								很简单:
+									整个树的大小 - 1{节点自己} - 所有子树的大小
+								不明白的话, 见 https://www.acwing.com/video/278/ 的10:55
 				2. 注释
 					1. y
 						#include <cstdio>
@@ -3743,59 +3994,57 @@
 
 						int n;
 						int h[N], e[M], ne[M], idx;
-						int ans = N;
-						bool st[N];
+						int ans = N; 存全局的最大连通块中的点的数量
+						bool st[N]; 某个点是否被遍历过 
 
-						void add(int a, int b)
+						void add(int a, int b) 记录a节点的儿子节点b
 						{
 						    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
 						}
 
-						int dfs(int u)
-						{
-						    st[u] = true;
+						int dfs(int u) 计算了如果删除u节点会怎么样, 返回的是 节点个数: u节点+以u节点为根的所有子树的节点个数 {通俗的说就是u和u下面的所有点有多少个}
+						{ 
+						    st[u] = true; 标记一下, u点遍历过了
 
-						    int size = 0, sum = 0;
-						    for (int i = h[u]; i != -1; i = ne[i])
+						    int size = 0, sum = 0; 
+						    	size: 以u节点为根的所有子树中, 连通块最大的那一个块的点的数量 
+						    	sum: dfs()要返回的值, 也就是 节点个数: u节点+以u节点为根的所有子树的节点个数 {通俗的说就是u和u下面的所有点有多少个}
+						    for (int i = h[u]; i != -1; i = ne[i]) 遍历所有的儿子
 						    {
 						        int j = e[i];
-						        if (st[j]) continue;
+						        if (st[j]) continue; 如果儿子遍历过了, 就下一个. 因为这个树, 其实也是一个图 
 
-						        int s = dfs(j);
-						        size = max(size, s);
-						        sum += s;
+						        int s = dfs(j); 以儿子j为根的节点个数s {这个个数 包括了儿子j和j下面的所有节点}
+						        size = max(size, s); 看看哪个儿子的块头最大
+						        sum += s; 更新总的节点个数
 						    }
 
-						    size = max(size, n - sum - 1);
-						    ans = min(ans, size);
+						    size = max(size, n - sum - 1); 计算一下u上方的节点个数. 因为 sum是不包括节点u的, 所以还要-1
 
-						    return sum + 1;
+						    ans = min(ans, size);  对于每个u都对应了一个最大连通块, 在所有的最大连通块中, 我们需要的最小的那M个
+
+						    return sum + 1; sum是不包括节点u的, 所以还要+1
 						}
 
 						int main()
 						{
 						    scanf("%d", &n);
 
-						    memset(h, -1, sizeof h);
+						    memset(h, -1, sizeof h); 初始化链表 
 
 						    for (int i = 0; i < n - 1; i ++ )
 						    {
 						        int a, b;
 						        scanf("%d%d", &a, &b);
-						        add(a, b), add(b, a);
+						        add(a, b), add(b, a); 双向的 
 						    }
 
-						    dfs(1);
+						    dfs(1); 从节点1开始遍历
 
 						    printf("%d\n", ans);
 
 						    return 0;
 						}
-
-						作者：yxc
-						链接：https://www.acwing.com/activity/content/code/content/47105/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					2. b
 				3. 5次
 					r1.
@@ -3833,26 +4082,26 @@
 						    memset(d, -1, sizeof d);
 
 						    queue<int> q;
-						    d[1] = 0;
+						    d[1] = 0; 只有index==1的点被遍历, 它距离1号点{自己}的距离是0
 						    q.push(1);
 
 						    while (q.size())
 						    {
-						        int t = q.front();
+						        int t = q.front(); 队头 
 						        q.pop();
 
-						        for (int i = h[t]; i != -1; i = ne[i])
+						        for (int i = h[t]; i != -1; i = ne[i]) 遍历这个点的可以到的点 
 						        {
 						            int j = e[i];
-						            if (d[j] == -1)
+						            if (d[j] == -1) 如果这个点j没有被遍历过 
 						            {
-						                d[j] = d[t] + 1;
+						                d[j] = d[t] + 1; 距离
 						                q.push(j);
 						            }
 						        }
 						    }
 
-						    return d[n];
+						    return d[n]; 我们返回的是 n号点距离1号点的距离 
 						}
 
 						int main()
@@ -3871,11 +4120,6 @@
 
 						    return 0;
 						}
-
-						作者：yxc
-						链接：https://www.acwing.com/activity/content/code/content/47104/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 					2. b
 				3. 5次
 					r1.
@@ -3899,8 +4143,8 @@
 						举例
 							1: 4,5,6
 							2: 6,4
-							4: 1..
-							..
+							4: 1...
+							...
 
 				17. 图的问题
 					1. 有向图问题:
@@ -3947,10 +4191,10 @@
 									其实是DFS
 							2. 求二分图的最大匹配
 								匈牙利算法
-									最坏O(v*e),但是实际运行效果非常好,远小于(ve) 
+									最坏 O(v*e),但是实际运行效果非常好,远小于 O(ve) 
 									思想
 										如果我想要匹配的女生a,被其他男生b占据了,我就让这个b看看有没有其他女生c可以匹配,最后bc匹配,我和a匹配
-									为什么是O(v*e)
+									为什么是 O(v*e)
 										v/2个男生,每个可能都需要让其他男生看看其他e条边能否匹配
 										因为其实其他男生可能不需要找很多次,所以实际运行远小于O(v*e)
 								最大流
@@ -3959,6 +4203,7 @@
 			42. 拓扑- 848. 有向图的拓扑序列
 				0. bug
 				1. 笔记
+					有向无环图一定存在拓扑序列
 				2. 注释
 					1. y
 					2. b
@@ -3982,20 +4227,32 @@
 
 						bool topsort()
 						{
-						    int hh = 0, tt = -1;
+						    int hh = 0, tt = -1;  含义: [hh,tt]区间是有元素的.
+						    	对比之前其他queue的代码:
+						    		int hh = 0, tt = 0; 这里之所以 tt = 0, 是因为我们已经即将加入一个 q[0]. 
+						    							也就是 [hh,tt]即[0,0]区间是有元素的.
+								    q[0] = root;
 
-						    for (int i = 1; i <= n; i ++ )
-						        if (!d[i])
-						            q[ ++ tt] = i;
+								    while (hh <= tt)
+								    {
+								        int t = q[hh ++ ];
+								        if (l.count(t)) q[ ++ tt] = l[t];
+								        if (r.count(t)) q[ ++ tt] = r[t];
+								    }
+								对比完毕
 
-						    while (hh <= tt)
+						    for (int i = 1; i <= n; i ++ ) 遍历所有的点 
+						        if (!d[i]) 如果这个点的入度 == 0:
+						            q[ ++ tt] = i; 就插入我们的队列 
+
+						    while (hh <= tt) 如果队列不空 
 						    {
-						        int t = q[hh ++ ];
+						        int t = q[hh ++ ]; 取队头, 也就是某一个入度 == 0的点t
 
-						        for (int i = h[t]; i != -1; i = ne[i])
+						        for (int i = h[t]; i != -1; i = ne[i])  这个点t可以去的点j
 						        {
 						            int j = e[i];
-						            if (-- d[j] == 0)
+						            if (-- d[j] == 0) 我们把点j的入度 先-1, 如果==0, 就放入我们的queue
 						                q[ ++ tt] = j;
 						        }
 						    }
@@ -4027,11 +4284,6 @@
 
 						    return 0;
 						}
-
-						作者：jackrrr
-						链接：https://www.acwing.com/activity/content/code/content/466157/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				3. 5次
 					r1.
 					r2.
@@ -4234,7 +4486,7 @@
 						    memset(dist, 0x3f, sizeof dist);
 
 						    dist[1] = 0;
-						    for (int i = 0; i < k; i ++ ) //题目要求:不超过k条边
+						    for (int i = 0; i < k; i ++ ) 迭代k次, 就是意味着最多不经过k条边//题目要求:不超过k条边
 						    {
 						        memcpy(last, dist, sizeof dist); //不备份会导致串联, 例如老师给的样例, 正确答案是3因为只能走一条边. 如果没有备份,会导致,先用最短距离的节点2去更新其他所有的点,导致节点3的最短距离变成了2,但是实际上是3
 
@@ -4283,11 +4535,6 @@
 
 						    return 0;
 						}
-
-						作者：jackrrr
-						链接：https://www.acwing.com/activity/content/code/content/467234/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				3. 5次
 					r1.
 					r2.
@@ -4304,8 +4551,8 @@
 						    dist[b] = min(dist[b), dist[a] + w)
 						    所以如果dist[b]减少, 一定是因为disk[a]减少
 						    如果disk[a]不变,它也不能使得其他节点的距离减小
-						    所以我们存储dist变小的节点
-						2. 用queue(其实用heap也可以)存所有dist变小的节点abc
+						    所以我们存储dist"变小"的节点
+						2. 用queue(其实用heap也可以)存所有dist"变小"的节点abc
 						3. 并且更新这个节点abc的邻接点
 				2. 注释
 					1. y
@@ -4337,23 +4584,24 @@
 						    dist[1] = 0;
 
 						    queue<int> q;
-						    q.push(1);
+						    q.push(1); 把起点1放入队列 
 						    st[1] = true; //说明放入queue里面
 
-						    while (q.size())
+						    while (q.size()) 只要队列不空, 队列里面是所有到起点的距离"变小"的节点, 所以队列不空说明还有距离变小的节点
 						    {
-						        int t = q.front();
+						        int t = q.front(); 取出队头t
 						        q.pop();
 
-						        st[t] = false; //说明从queue取出
+						        st[t] = false; //说明从queue取出点t
 
-						        for (int i = h[t]; i != -1; i = ne[i]) //遍历t节点的邻接点
+						        for (int i = h[t]; i != -1; i = ne[i]) 因为t是变小的点, 那t节点的邻接点就"有可能"可以变小{到原点的距离变小}
+						        										这个也验证了, 如果是一个到原点距离没变的点, 它的邻接点就"完全没可能"变小
 						        {
 						            int j = e[i];
 						            if (dist[j] > dist[t] + w[i])
 						            {
 						                dist[j] = dist[t] + w[i];
-						                if (!st[j]) //如果不在queue里面,就放入. 如果在,那以后会在queue中取出它的
+						                if (!st[j]) //如果不在queue里面,就放入. 如果这个点j本身就在queue,那以后会在queue中取出它的
 						                {
 						                    q.push(j);
 						                    st[j] = true;
@@ -4501,7 +4749,10 @@
 				1. 笔记
 					1. d[k,i,j]的意思是,经过节点1到节点k,我们从i节点到j节点的最短距离
 						    = d[k-1, i, k] + d[k-1, k, j]
-						    等于经过节点1到节点k-1,我们从i节点到k节点的最短距离 加上 经过节点1到节点k-1,我们从k节点到j节点的最短距离
+						    等于
+						    	我们从i节点到k节点, 并且经过的是节点1到节点k-1的最短距离{当然你爱经过不经过}
+						    加上 
+						    	我们从k节点到j节点, 并且经过的是节点1到节点k-1的最短距离{当然你爱经过不经过}
 				2. 注释
 					1. y
 					2. b
@@ -4707,7 +4958,7 @@
 						{
 						    scanf("%d%d", &n, &m);
 
-						    for (int i = 0; i < m; i ++ )
+						    for (int i = 0; i < m; i ++ ) 把所有的边读进来
 						    {
 						        int a, b, w;
 						        scanf("%d%d%d", &a, &b, &w);
@@ -4721,11 +4972,6 @@
 
 						    return 0;
 						}
-
-						作者：jackrrr
-						链接：https://www.acwing.com/activity/content/code/content/468062/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				3. 5次
 					r1.
 					r2.
@@ -4736,6 +4982,16 @@
 			51. 染色- 860. 染色法判定二分图
 				0. bug
 				1. 笔记
+					二分图: 当且仅当图中不含有奇数环{环中的节点数是奇数, 或者说环中的边数是奇数}
+					二分图:
+						任意一条边的两个端点都不可能在同一部分中.
+						分成左右两侧, 左侧的所有点, 他们之间是一定是没有边连接的.
+						右侧的所有点, 他们之间是一定是没有边连接的.
+					二分图:
+						分成的左右两侧不一定是一样多. 例如左侧有10个, 右侧有2个也是ok的. 
+					逻辑:
+						我的颜色是1, 我的所有邻点都染成2. 然后dfs我的邻点. 最后会dfs所有的点. 
+						如果我的颜色和我的邻点和我的颜色相同, 那就是有矛盾, 不存在二分图
 				2. 注释
 					1. y
 					2. b
@@ -4748,7 +5004,7 @@
 						const int N = 100010, M = 200010; //因为是无向图, 所以题目给了一条边,我们其实要存两条,所以是20w
 
 						int n, m;
-						int h[N], e[M], ne[M], idx; //临界表
+						int h[N], e[M], ne[M], idx; //邻接表
 						int color[N];
 
 						void add(int a, int b)
@@ -4758,9 +5014,9 @@
 
 						bool dfs(int u, int c)
 						{
-						    color[u] = c; //将u节点染成1
+						    color[u] = c; //将u节点染成颜色c
 
-						    for (int i = h[u]; i != -1; i = ne[i]) //u节点的临街点
+						    for (int i = h[u]; i != -1; i = ne[i]) //u节点的邻接点
 						    {
 						        int j = e[i];
 						        if (!color[j])
@@ -4785,7 +5041,7 @@
 						    {
 						        int a, b;
 						        scanf("%d%d", &a, &b);
-						        add(a, b), add(b, a);
+						        add(a, b), add(b, a); 因为是无向边
 						    }
 
 						    bool flag = true;
@@ -4809,11 +5065,6 @@
 
 						    return 0;
 						}
-
-						作者：jackrrr
-						链接：https://www.acwing.com/activity/content/code/content/468238/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				3. 5次
 					r1.
 					r2.
@@ -4826,6 +5077,12 @@
 				1. 笔记
 				2. 注释
 					1. y
+						题目问的是: 不允许脚踏两条船的情况下, 最多有几对人牵手
+						思路: 
+							一个不受欢迎的男生a, 和某个女生b相互喜欢. 这个女生b还和一个非常受欢迎的男生c相互喜欢
+							为了让尽可能多的对牵手, 我们让ab牵手. 
+								因为c即便没有b, 可c很受欢迎, 还有很多其他的备胎. 
+								如果bc牵手, a可就一直单着了.
 					2. b
 						#include <cstring>
 						#include <iostream>
@@ -4850,11 +5107,12 @@
 						    for (int i = h[x]; i != -1; i = ne[i])
 						    {
 						        int j = e[i];
-						        if (!st[j])//如果这个女生已经被男生i看过了,以后就不会再看了
+						        if (!st[j])//如果这个女生已经被男生x看过了,以后就不会再看了
 						        {
 						            st[j] = true;
-						            if (match[j] == 0 || find(match[j])) //如果这个女生单身: match[j] == 0, 或者虽然脱单但是她男朋match[j]可以找到其他女生. 
-						            //之所以可以用find让这个Match[j]找到其他女生而不是女生j是因为,st[j]==true,但是男生只会接受女生一次.
+						            if (match[j] == 0 || find(match[j])) //如果这个女生单身: match[j] == 0, 或者虽然脱单但是她男朋友match[j] 可以找到其他女生. 
+						            //之所以可以用find让这个男生match[j]找到这个男生相互喜欢的其他女生, 而不是女生j是因为,st[j]==true,但是男生只会接受女生一次.
+						            //如果 find(match[j]) 返回的是false, 说明这个男生match[j]是个不受欢迎的, 所以我们男生x就别强人所难了
 						            {
 						                match[j] = x;
 						                return true;
@@ -4876,27 +5134,22 @@
 						        int a, b;
 						        scanf("%d%d", &a, &b);
 						        add(a, b); //注意, 虽然是无向图,但是我们一直是从男生角度出发来判断匹配.
-						        //男找女,如果此女已经匹配,再看匹配她的男生是否还有其他喜欢的女生
+						        //男找女,如果此女已经匹配,再看匹配她的男生是否还有其他相互喜欢的女生
 						        //所以只用存男生节点的临边
 						    }
 
 						    int res = 0; //当前匹配的数量
 
-						    for (int i = 1; i <= n1; i ++ )
+						    for (int i = 1; i <= n1; i ++ ) 依次分析每个男生 
 						    {
-						        memset(st, false, sizeof st);//对于每个男生i, 都会将所有的女生都设置成false,意思是女生都还没看
-						        if (find(i)) res ++ ;
+						        memset(st, false, sizeof st); //对于每个男生i, 都会将所有的女生都设置成false, 意思是女生都还没看. 因为要保证每个女生只被考虑一次
+						        if (find(i)) res ++ ; 如果这个男生i匹配成功, res++
 						    }
 
 						    printf("%d\n", res);
 
 						    return 0;
 						}
-
-						作者：jackrrr
-						链接：https://www.acwing.com/activity/content/code/content/468306/
-						来源：AcWing
-						著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 				3. 5次
 					r1.
 					r2.
@@ -4905,10 +5158,353 @@
 					r5.
 
 4. 数学知识
-	1. 质数
-			53.
+	质数
+		AcWing 866. 试除法判定质数
+			0. bug
+			1. 笔记
+				这道题是判定某个数是否是质数
+				复杂度, 是很标准的 O(sqrt(N)) 
+			2. 注释
+				#include <iostream>
+				#include <algorithm>
 
+				using namespace std;
 
+				bool is_prime(int x)
+				{
+				    if (x < 2) return false;
+				    for (int i = 2; i <= x / i; i ++ )	从2到 sqrt(x), 看x是否能被这个数整除. 
+				    						细节: 是 i <= x / i; 
+				    						而不是 i * i <= x, 因为 i*i可能溢出变为负数, 负数<=x就一直出不来了
+				        if (x % i == 0)
+				            return false;
+				    return true;
+				}
+
+				int main()
+				{
+				    int n;
+				    cin >> n;
+
+				    while (n -- )
+				    {
+				        int x;
+				        cin >> x;
+				        if (is_prime(x)) puts("Yes");
+				        else puts("No");
+				    }
+
+				    return 0;
+				}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 867. 分解质因数
+			0. bug
+			1. 笔记
+				将某个数分解质因数，并按照质因数从小到大的顺序输出每个质因数的底数和指数
+				复杂度是 
+					最好: O(log_2^N), 最差: O(sqrt(N))
+					解释: 为什么是 O(log_2^N), 因为最好的情况就是 i == 2的时候, 在while里面就把x都整除完了, 也就是x = 2^k, 所以只需要k次计算, k = log_2^x 
+				疑问:
+					我们要找的是x的质因子, 为什么 divide()中的 for()是遍历所有的从2到 sqrt(x)的数字, 这里面有合数呀, 可不应该有合数呀
+					解释:
+						如果 i是合数, 在走 if (x % i == 0) 这一句的时候, 就永远不会是true
+						为什么? 因为如果i是一个合数, 说明这个i是某些比i小的质数的乘积
+						但是因为我们的x, 在之前遍历到质因子i的时候, x /= i, 所以x此时已经不能被一个合数整除了
+						例如 x = 2 * 2 * 2 * 2* 3
+						我们遍历到 i == 2的时候, x/=i, 一直到x=3
+						我们之后遍历到 i == 4{合数}的时候, 我们的x已经不可能被4整除了. 
+						所以, for()是遍历所有的从2到 sqrt(x)的数字, 这里面有合数也不怕
+			2. 注释
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				void divide(int x)
+				{
+				    for (int i = 2; i <= x / i; i ++ )	从2开始看 一直到 sqrt(x)
+				        if (x % i == 0)	如果i能整除x, 说明i是一个质因子. 能满足这个条件的i一定是质数.
+				        {
+				            int s = 0;
+				            while (x % i == 0) x /= i, s ++ ;	我们看有多少个这个质因子, 用s记录
+				            cout << i << ' ' << s << endl;
+				        }
+				    if (x > 1) cout << x << ' ' << 1 << endl;	如果最后还剩余x, 就输出这个数字
+				    cout << endl;
+				}
+
+				int main()
+				{
+				    int n;
+				    cin >> n;
+				    while (n -- )
+				    {
+				        int x;
+				        cin >> x;
+				        divide(x);
+				    }
+				    return 0;
+				}
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 868. 筛质数
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	约数
+		AcWing 869. 试除法求约数
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 870. 约数个数
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 871. 约数之和
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 872. 最大公约数
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	欧拉函数
+		AcWing 873. 欧拉函数
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 874. 筛法求欧拉函数
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	快速幂
+		AcWing 875. 快速幂
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 876. 快速幂求逆元
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	扩展欧几里得算法
+		AcWing 877. 扩展欧几里得算法
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 878. 线性同余方程
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	中国剩余定理
+		AcWing 204. 表达整数的奇怪方式
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	高斯消元
+		AcWing 883. 高斯消元解线性方程组
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 884. 高斯消元解异或线性方程组
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	求组合数
+		AcWing 885. 求组合数 I
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 886. 求组合数 II
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 887. 求组合数 III
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 888. 求组合数 IV
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 889. 满足条件的01序列
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	容斥原理
+		AcWing 890. 能被整除的数
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+	博弈论
+		AcWing 891. Nim游戏
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 892. 台阶-Nim游戏
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 893. 集合-Nim游戏
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
+		AcWing 894. 拆分-Nim游戏
+			0. bug
+			1. 笔记
+			2. 注释
+			3. 5次
+				r1.
+				r2.
+				r3.
+				r4.
+				r5.
 18. 背包问题
 	1. 01背包
 		每种有1个
@@ -4924,8 +5520,6 @@
 			
 		2. 状态计算
 			如何计算每一个状态
-
-
 
 99. 其他经验
 	1.

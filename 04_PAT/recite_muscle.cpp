@@ -101,6 +101,38 @@
 			    quick_sort(q, 0, n - 1);
 			    for(int i = 0; i < n; i++) printf("%d ", q[i]);
 			}
+
+			#include <iostream>
+			using namespace std;
+
+			const int N = 100010;
+			int q[N];
+			int n;
+
+			void quick_sort(int q[], int l, int r){
+			    if(l >= r) return;
+			    int ind = rand() % (r - l + 1) + l;
+			    int x = q[ind];
+			    swap(q[l], q[ind]);
+			    
+			    int i = l - 1, j = r + 1;
+			    while(i < j){
+			        do i++; while(q[i] < x);
+			        do j--; while(q[j] > x);
+			        if(i < j) swap(q[i], q[j]);
+			    }
+			    
+			    quick_sort(q, l, j);
+			    quick_sort(q, j + 1, r);
+			}
+
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0; i < n; i ++) scanf("%d", &q[i]);
+			    quick_sort(q, 0, n - 1);
+			    for(int i = 0; i < n; i++) printf("%d ", q[i]);
+			    return 0;
+			}
 		2. 三路快排
 			#include <iostream>
 			using namespace std;
@@ -117,11 +149,11 @@
 			    int test = l + 1, i = (l + 1) - 1, j = r + 1;
 			    while(test < j){
 			        if(q[test] > x) {
-			            j--;
-			            swap(q[test], q[j]);
+			            j--;	执行完j--后, q[j]指的是一个不知道是什么的元素
+			            swap(q[test], q[j]);	当执行完q[j]后, q[j]是>x的元素, 但是q[test]是一个不知道是什么的元素
 			        }else if(q[test] < x){
-			            i++;
-			            swap(q[test], q[i]); 执行完i++后, q[i]指的是==v的第一个元素
+			            i++;	执行完i++后, q[i]指的是==v的第一个元素
+			            swap(q[test], q[i]); 
 			            test++;
 			        }else{
 			            test++;
@@ -137,8 +169,15 @@
 
 			    swap(q[l], q[i]);	//执行这一句之前, q[l]是==v的那个孤单的元素, q[i]是<v的最后一个元素
 
+			    执行到这里:
+			    	//等于v部分：
+	    				// arr[i,...j-1] == v, 所以test是最后==v的右端点
+				    //小于v部分：
+				    	// arr[l,...,i-1] < v, 所以i是最后<v的右端点
+				    //大于v部分：
+				    	// arr[j,...,r] > v
 			    quick_sort(q, l, i - 1);
-			    quick_sort(q, j, r);
+			    quick_sort(q, j, r);	小心错误, 并不是 (q, j + 1, r)
 			}
 			int main(){
 			    scanf("%d", &n);
@@ -151,6 +190,7 @@
 			    return 0;
 			}
 
+			---
 			#include <iostream>
 			#include <algorithm>
 
@@ -190,6 +230,83 @@
 			    quick_sort(q, 0, n - 1);
 			    for(int i = 0; i < n; i ++) printf("%d ", q[i]);
 			}
+			--
+			#include <iostream>
+
+			using namespace std;
+
+			const int N = 100010;
+			int q[N];
+			int n;
+
+			void quick_sort(int q[], int l, int r){
+			    if(l >= r) return;
+			    int ind = rand() % (r - l + 1) + l;
+			    int x = q[ind];
+			    swap(q[l], q[ind]);
+			    
+			    int test = l + 1, i = l, j = r + 1;
+			    while(test < j){
+			        if(q[test] == x){
+			            test++;
+			        }else if(q[test] < x){
+			            i++;
+			            swap(q[i], q[test]);
+			            test++;
+			        }else{
+			            j--;
+			            swap(q[j], q[test]);
+			        }
+			    }
+			    swap(q[i], q[l]);
+			    quick_sort(q, l, i - 1);
+			    quick_sort(q, j, r);
+			}
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
+			    quick_sort(q, 0, n - 1);
+			    for(int i = 0; i < n ; i ++) printf("%d ", q[i]);
+			    return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+
+			const int N = 100010;
+			int q[N];
+			int n;
+
+			void quick_sort(int q[], int l, int r){
+			    if(l >= r) return;
+			    int ind = rand() % (r - l + 1) + l;
+			    int x = q[ind];
+			    swap(q[l], q[ind]);
+			    
+			    int test = l + 1, i = l, j = r + 1;
+			    while(test < j){
+			        if(q[test] == x) test++;
+			        else if(q[test] < x){
+			            i++;
+			            swap(q[test], q[i]);
+			            test++;
+			        }else{
+			            j--;
+			            swap(q[test], q[j]);
+			        }
+			    }
+			    swap(q[l], q[i]);
+			    quick_sort(q, l, i - 1);
+			    quick_sort(q, j, r);
+			}
+
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0; i < n; i ++) scanf("%d", &q[i]);
+			    quick_sort(q, 0, n - 1);
+			    for(int i = 0; i < n; i++) printf("%d ", q[i]);
+			    return 0;
+			}
 2. AcWing 786. 第k个数
 	1. bug 
 		#include <iostream>
@@ -202,7 +319,7 @@
 		int n, k;
 
 		int quick_sort(int q[], int l , int r, int k){
-		    if(l >= r) return q[l];					不是 l <= r
+		    if(l >= r) return q[l];					不是 l <= r, 也并不是 return 0;
 		    int x = q[rand() % (r - l + 1) + l];	是%
 		    int i = l - 1, j = r + 1;
 		    while(i < j){
@@ -249,6 +366,66 @@
 		    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
 		    printf("%d", quick_sort(q, 0, n - 1, k));
 		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int q[N];
+		int n, k;
+
+		int qs(int q[], int l, int r, int k){
+		    if(l >= r) return q[l];
+		    int ind = rand() % (r - l + 1) + l;
+		    int x = q[ind];
+		    swap(q[l], q[ind]);
+		    
+		    int i = l - 1, j = r + 1;
+		    while(i < j){
+		        do i++; while(q[i] < x);
+		        do j--; while(q[j] > x);
+		        if(i < j) swap(q[i], q[j]);
+		    }
+		    if(k <= j - l + 1) return qs(q, l, j, k);
+		    else return qs(q, j + 1, r, k - (j - l + 1));
+		}
+
+		int main(){
+		    scanf("%d%d", &n, &k);
+		    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
+		    printf("%d", qs(q, 0, n - 1, k));
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int q[N];
+		int n, k;
+
+		int qs(int q[], int l, int r, int k){
+		    if(l >= r) return q[l];
+		    int ind = rand() % (r - l + 1) + l;
+		    int x = q[ind];
+		    swap(q[l], q[ind]);
+		    
+		    int i = l - 1, j = r + 1;
+		    while(i < j){
+		        do i++; while(q[i] < x);
+		        do j--; while(q[j] > x);
+		        if(i < j) swap(q[i], q[j]);
+		    }
+		    
+		    if(k <= j - l + 1) return qs(q, l, j, k);
+		    else return qs(q, j + 1, r, k - (j - l + 1));
+		}
+		int main(){
+		    scanf("%d%d", &n, &k);
+		    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
+		    printf("%d", qs(q, 0, n - 1, k));
+		    return 0;
+		}
 3. AcWing 787. 归并排序
 	1. bug
 	2. ok 
@@ -284,7 +461,7 @@
 		    merge_sort(q, 0, n - 1);
 		    for(int i = 0; i < n; i++) printf("%d ", q[i]);
 		}
-
+		--
 		#include <iostream>
 		#include <algorithm>
 
@@ -317,6 +494,36 @@
 		    merge_sort(q, 0, n - 1);
 		    for(int i = 0; i < n; i++) printf("%d ", q[i]);
 		} 
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int q[N];
+		int n;
+		int temp[N];
+
+		void ms(int q[], int l, int r){
+		    if(l >= r) return;
+		    int mid = (r - l) / 2 + l;
+		    ms(q, l, mid), ms(q, mid + 1, r);
+		    
+		    int k = 0, i = l, j = mid + 1;
+		    while(i <= mid && j <= r){
+		        if(q[i] <= q[j]) temp[k++] = q[i++];
+		        else temp[k++] = q[j++];
+		    }
+		    while(i <= mid) temp[k++] = q[i++];
+		    while(j <= r) temp[k++] = q[j++];
+		    
+		    for(int i = l, j = 0; i <= r; i++, j++) q[i] = temp[j];
+		}
+		int main(){
+		    scanf("%d", &n);
+		    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
+		    ms(q, 0, n - 1);
+		    for(int i = 0; i < n; i++) printf("%d ", q[i]);   
+		}
 4. AcWing 788. 逆序对的数量
 	1. bug
 		#include <iostream>
@@ -390,6 +597,43 @@
 		    printf("%lld", ms(q, 0, n - 1));
 		    return 0;
 		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int q[N];
+		int n;
+		int temp[N];
+
+		typedef long long LL;
+
+		LL ms(int q[], int l, int r){
+		    if(l >= r) return 0;
+		    int mid = (r - l) / 2 + l;
+		    
+		    LL res = ms(q, l, mid) + ms(q, mid + 1, r);
+		    
+		    int k = 0, i = l, j = mid + 1;
+		    while(i <= mid && j <= r){
+		        if(q[i] <= q[j]) temp[k++] = q[i++];
+		        else{
+		            temp[k++] = q[j++];
+		            res += mid - i + 1;
+		        }
+		    }
+		    while(i <= mid) temp[k++] = q[i++];
+		    while(j <= r) temp[k++] = q[j++];
+		    
+		    for(int i = l, j = 0; i <= r; i++, j++) q[i] = temp[j];
+		    return res;
+		}
+
+		int main(){
+		    scanf("%d", &n);
+		    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
+		    printf("%lld", ms(q, 0, n - 1));
+		}
 5. AcWing 789. 数的范围 
 	1. bug 
 	2. ok 
@@ -461,6 +705,43 @@
 		    }
 		    return 0;
 		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int n, m, k;
+		int q[N];
+
+
+
+		int main(){
+		    scanf("%d%d", &n, &m);
+		    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
+		    while(m -- ){
+		        scanf("%d", &k);
+		        
+		        int l = 0, r = n - 1;
+		        while(l < r){
+		            int mid = (r - l) / 2 + l;
+		            if(k <= q[mid]) r = mid;
+		            else l = mid + 1;
+		        }
+		        
+		        if(q[l] != k) printf("-1 -1\n");
+		        else{
+		            printf("%d ", l);
+		            int l = 0, r = n - 1;
+		            while(l < r){
+		                int mid = (r - l) / 2 + l + 1;
+		                if(q[mid] <= k) l = mid;
+		                else r = mid - 1;
+		            }
+		            printf("%d\n", l);
+		        }
+		    }
+		    return 0;
+		}
 6. AcWing 790. 数的三次方根
 	1. bug
 		#include <iostream>
@@ -492,6 +773,22 @@
 		        double mid = (r - l) / 2 + l;
 		        if(x <= mid * mid * mid) r = mid;
 		        else l = mid;
+		    }
+		    printf("%.6lf", l);
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		int main(){
+		    double x;
+		    scanf("%lf", &x);
+		    double l = -100.0, r = 100.0;
+		    while(r - l > 1e-8){
+		        double mid = (r - l) / 2 + l;
+		        if(mid * mid * mid <= x) l = mid;
+		        else r = mid;
 		    }
 		    printf("%.6lf", l);
 		    return 0;
@@ -558,7 +855,7 @@
 		    for(int i = (int)C.size() - 1; ~i; i--) printf("%d", C[i]);
 		    return 0;
 		}
-
+		--
 		#include <iostream>
 		#include <vector>
 
@@ -585,6 +882,34 @@
 		    for(int i = (int)b.size() - 1; ~i; i--) B.push_back(b[i] - '0');
 		    vector<int> C = add(A, B);
 		    for(int i = (int)C.size() - 1; ~i; i--) printf("%d", C[i]);
+		    return 0;
+		}
+		--
+		#include <iostream>
+		#include <vector>
+
+		using namespace std;
+
+		vector<int> add(const vector<int> &A, const vector<int> &B){
+		    int t = 0;
+		    vector<int> res;
+		    for(int i = 0; i < A.size() || i < B.size() || t; i++){
+		        if(i < A.size()) t += A[i];
+		        if(i < B.size()) t += B[i];
+		        res.push_back(t % 10);
+		        t /= 10;
+		    }
+		    return res;
+		}
+
+		int main(){
+		    string a, b;
+		    cin >> a >> b;
+		    vector<int> A, B;
+		    for(int i = a.size() - 1; ~i; i--) A.push_back(a[i] - '0');
+		    for(int i = b.size() - 1; ~i; i--) B.push_back(b[i] - '0');
+		    vector<int> C = add(A, B);
+		    for(int i = C.size() - 1; ~i; i--) printf("%d", C[i]);
 		    return 0;
 		}
 8. AcWing 792. 高精度减法
@@ -688,6 +1013,50 @@
 		    for(int i = C.size() - 1; ~i; i--) printf("%d", C[i]);
 		    return 0;
 		}
+		--
+		#include <iostream>
+		#include <vector>
+
+		using namespace std;
+
+		bool cmp(const vector<int> &A, const vector<int> &B){
+		    if(A.size() != B.size()) return A.size() > B.size();
+		    for(int i = A.size() - 1; ~i; i--){
+		        if(A[i] != B[i]) return A[i] > B[i];
+		    }
+		    return true;
+		}
+
+		vector<int> sub(const vector<int> &A, const vector<int> &B){
+		    int t = 0;
+		    vector<int> res;
+		    for(int i = 0; i < A.size(); i++){
+		        int temp = A[i] - t;
+		        if(i < B.size()) temp -= B[i];
+		        if(temp < 0) t = 1;
+		        else t = 0;
+		        res.push_back((temp + 10) % 10);
+		    }
+		    while(res.size() >= 2 && res.back() == 0) res.pop_back();
+		    return res;
+		}
+
+		int main(){
+		    string a, b;
+		    cin >> a >> b;
+		    vector<int> A, B;
+		    for(int i = a.size() - 1; ~i; i--) A.push_back(a[i] - '0');
+		    for(int i = b.size() - 1; ~i; i--) B.push_back(b[i] - '0');
+		    vector<int> C;
+		    if(cmp(A, B)){
+		        C = sub(A, B);
+		    }else{
+		        printf("-");
+		        C = sub(B, A);
+		    }
+		    for(int i = C.size() - 1; ~i; i--) printf("%d", C[i]);
+		    return 0;
+		}
 9. AcWing 793. 高精度乘法
 	1. bug
 		#include <iostream>
@@ -737,6 +1106,34 @@
 		    vector<int> res;
 		    for(int i = 0; i < A.size() || t ; i++){
 		        if(i < A.size()) t = A[i] * b + t;
+		        res.push_back(t % 10);
+		        t /= 10;
+		    }
+		    while(res.size() >= 2 && res.back() == 0) res.pop_back();
+		    return res;
+		}
+
+		int main(){
+		    string a;
+		    int b;
+		    cin >> a >> b;
+		    vector<int> A;
+		    for(int i = a.size() - 1; ~i; i--) A.push_back(a[i] - '0');
+		    vector<int> C = mul(A, b);
+		    for(int i = C.size() - 1; ~i; i--) printf("%d", C[i]);
+		    return 0;
+		}
+		--
+		#include <iostream>
+		#include <vector>
+
+		using namespace std;
+
+		vector<int> mul(const vector<int> &A, int b){
+		    int t = 0;
+		    vector<int> res;
+		    for(int i = 0; i < A.size() || t; i++){
+		        t = A[i] * b + t;
 		        res.push_back(t % 10);
 		        t /= 10;
 		    }
@@ -829,6 +1226,39 @@
 		    printf("\n%d", r);
 		    return 0;
 		}
+		--
+		#include <iostream>
+		#include <vector>
+		#include <algorithm>
+
+		using namespace std;
+
+		vector<int> div(const vector<int> &A, int b, int &r){
+		    r = 0;
+		    vector<int> res;
+		    for(int i = 0; i < A.size(); i++){
+		        r = r * 10 + A[i];
+		        res.push_back(r / b);
+		        r %= b;
+		    }
+		    reverse(res.begin(), res.end());
+		    while(res.size() >= 2 && res.back() == 0) res.pop_back();
+		    return res;
+		}
+
+		int main(){
+		    string a;
+		    int b;
+		    int r;
+		    cin >> a >> b;
+		    vector<int> A;
+		    for(int i = 0; i < a.size(); i++) A.push_back(a[i] - '0');
+		    vector<int> C = div(A, b, r);
+		    for(int i = C.size() - 1; ~i; i--) printf("%d", C[i]);
+		    printf("\n%d", r);
+		    return 0;
+		    
+		}
 11. AcWing 795. 前缀和
 	1. bug
 	2. ok
@@ -850,8 +1280,482 @@
 		    }
 		    return 0;
 		}
-12. AcWing 796. 子矩阵的和
+		--
+		#include <iostream>
+		using namespace std;
 
+		const int N = 100010;
+		int a[N], S[N];
+		int n, m;
+
+		int main(){
+		    scanf("%d%d", &n, &m);
+		    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+		    for(int i = 1; i <= n; i++) S[i] = S[i-1] + a[i];
+		    while(m --){
+		        int l, r;
+		        scanf("%d%d", &l, &r);
+		        printf("%d\n", S[r] - S[l-1]);
+		    }
+		    return 0;
+		}
+12. AcWing 796. 子矩阵的和
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		错误: const int N = 100010; -> 开的太大了, 输出奇怪的error
+		正确: const int N = 1010;
+		int a[N][N];
+		int S[N][N];
+
+		int main(){
+		    int n, m, q;
+		    scanf("%d%d%d", &n, &m, &q);
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m; j++){
+		            scanf("%d", &a[i][j]);
+		        }
+		    }
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m; j++){
+		            S[i][j] =  S[i-1][j] + S[i][j-1] + a[i][j] - S[i-1][j-1];
+		        }
+		    }
+		    int x1, x2, y1, y2;
+		    while(q--){
+		        scanf("%d%d%d%d", &x1, &y1, &x2, &y2);
+		        int res = S[x2][y2] - S[x1-1][y2] - S[x2][y1-1] + S[x1-1][y1-1];
+		        printf("%d\n", res);
+		    }
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1010;
+		int a[N][N];
+		int S[N][N];
+
+		int main(){
+		    int n, m, q;
+		    scanf("%d%d%d", &n, &m, &q);
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m; j++){
+		            scanf("%d", &a[i][j]);
+		        }
+		    }
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m; j++){
+		            S[i][j] =  S[i-1][j] + S[i][j-1] + a[i][j] - S[i-1][j-1];
+		        }
+		    }
+		    int x1, x2, y1, y2;
+		    while(q--){
+		        scanf("%d%d%d%d", &x1, &y1, &x2, &y2);
+		        int res = S[x2][y2] - S[x1-1][y2] - S[x2][y1-1] + S[x1-1][y1-1];
+		        printf("%d\n", res);
+		    }
+		    return 0;
+		}
+		==
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1010;
+		int a[N][N], S[N][N];
+		int n, m, q;
+
+		int main(){
+		    scanf("%d%d%d", &n, &m, &q);
+		    for(int i = 1; i <= n; i++)
+		        for(int j = 1; j <= m; j++) 
+		            scanf("%d", &a[i][j]);
+		    
+		    for(int i = 1; i <= n; i++)
+		        for(int j = 1; j <= m; j++)
+		            S[i][j] = S[i-1][j] + S[i][j-1] + a[i][j] - S[i-1][j-1];
+		            
+		    while(q--){
+		        int x1, y1, x2, y2;
+		        scanf("%d%d%d%d", &x1, &y1, &x2, &y2);
+		        int res = S[x2][y2] - S[x1-1][y2] - S[x2][y1-1] + S[x1-1][y1-1];
+		        printf("%d\n", res);
+		    }
+		    return 0;
+		}
+13. AcWing 797. 差分
+	1. bug
+	2. 
+		#include <iostream>
+
+		using namespace std;
+
+		const int N = 100010;
+		int a[N], b[N];
+		int n, m;
+
+		void insert(int l, int r, int k){
+		    b[l] += k;
+		    b[r + 1] -= k;
+		}
+
+		int main(){
+		    scanf("%d%d", &n, &m);
+		    for(int i = 1; i <= n; i++) {
+		        scanf("%d", &a[i]);
+		        insert(i, i, a[i]);
+		    }
+		    while(m--){
+		        int l, r, k;
+		        scanf("%d%d%d", &l, &r, &k);
+		        insert(l, r, k);
+		    }
+		    for(int i = 1; i <= n; i++) a[i] = a[i-1] + b[i];
+		    for(int i = 1; i <= n; i++) printf("%d ", a[i]);
+		    return 0;
+		    
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int a[N], b[N];
+		int n, m, l, r, k;
+
+		void insert(int l, int r, int k){
+		    b[l] += k;
+		    b[r + 1] -= k;
+		}
+
+		int main(){
+		    scanf("%d%d", &n, &m);
+		    for(int i = 1 ; i <= n ; i++) {
+		        scanf("%d", &a[i]);
+		        insert(i, i, a[i]);
+		    }
+		    while(m--){
+		        scanf("%d%d%d", &l, &r, &k);
+		        insert(l, r, k);
+		    }
+		    for(int i = 1; i <= n; i++) a[i] = a[i-1] + b[i];
+		    for(int i = 1; i <= n; i++) printf("%d ", a[i]);
+		    return 0;
+		    
+		}
+14. AcWing 798. 差分矩阵
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1010;
+		int a[N][N], b[N][N];
+		int n, m, q;
+
+		void insert(int x1, int y1, int x2, int y2, int k){
+		    b[x1][y1] += k;
+		    错误: b[x2-1][y1] -= k; 正确: b[x2+1][y1] -= k;
+		    错误: b[x1][y2-1] -= k; 正确: b[x1][y2+1] -= k;
+		    b[x2+1][y2+1] += k;
+		}
+
+		int main(){
+		    scanf("%d%d%d", &n, &m, &q);
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m; j++){
+		            scanf("%d", &a[i][j]);
+		            insert(i, j, i, j, a[i][j]);
+		        }
+		    }
+		    while(q--){
+		        int x1, y1, x2, y2, k;
+		        scanf("%d%d%d%d%d", &x1, &y1, &x2, &y2, &k);
+		        insert(x1, y1, x2, y2, k);
+		    }
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m; j++){
+		            a[i][j] = a[i-1][j] + a[i][j-1] + b[i][j] - a[i-1][j-1];
+		        }
+		    }
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m ; j ++){
+		            printf("%d ", a[i][j]);
+		        }
+		        printf("\n");
+		    }
+		    return 0;
+		}
+	2.
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1010;
+		int a[N][N], b[N][N];
+		int n, m, q, x1, y1, x2, y2, k;
+
+		void insert(int x1, int y1, int x2, int y2, int k){
+		    b[x1][y1] += k;
+		    b[x2+1][y1] -= k;
+		    b[x1][y2+1] -= k;
+		    b[x2+1][y2+1] += k;
+		}
+		int main(){
+		    scanf("%d%d%d", &n, &m, &q);
+		    for(int i = 1; i <= n; i++) {
+		        for(int j = 1; j <= m; j++){
+		            scanf("%d", &a[i][j]);
+		            insert(i, j, i, j, a[i][j]);
+		        }
+		    }
+		    while(q--){
+		        scanf("%d%d%d%d%d", &x1, &y1, &x2, &y2, &k);
+		        insert(x1, y1, x2, y2, k);
+		    }
+		    for(int i = 1; i <= n; i++){
+		        for(int j = 1; j <= m; j++){
+		            a[i][j] = a[i-1][j] + a[i][j-1] + b[i][j] - a[i-1][j-1];
+		            printf("%d ", a[i][j]);
+		        }
+		        printf("\n");
+		    } 
+		    return 0;
+		}
+15. AcWing 799. 最长连续不重复子序列 
+	1. bug
+	2. ok
+		1.
+			#include <iostream>
+			using namespace std;
+
+			const int N = 100010;
+			int q[N], b[N];
+			int n;
+
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0; i < n; i++) scanf("%d", &q[i]);
+			    int res = 0;
+			    for(int i = 0, j = 0; i < n; i++){
+			        b[q[i]]++;
+			        while(j < i && b[q[i]] >= 2){	如果新加入的a[i]是两个, 那我们的j就追赶i, 直到a[i]只剩一个
+			        								你如果不相信, 你可以从头开始加元素.
+			            b[q[j]]--;
+			            j++;
+			        }
+			        res = max(res, i - j + 1);
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+
+			const int N = 100010;
+			int a[N], b[N];
+			int n;
+
+			int main(){
+			    scanf("%d", &n);
+			    int res = 0;
+			    for(int i = 0; i < n; i++) scanf("%d", &a[i]);
+			    for(int i = 0, j = 0; i < n; i++){
+			        b[a[i]]++;
+			        while( j < i && b[a[i]] >= 2) b[a[j++]]--;
+			        res = max(res, i - j + 1);
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+		2. 截取空格分割的单词
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+
+			int main(){
+			    char str[1000];
+			    cin.getline(str, 100);
+			    int n = strlen(str);
+			    for(int i = 0; i < n; i++){
+			        int j = i;	j指向单词的第一个字母
+			        while(j < n && str[j] != ' ') j++;
+			        	走出来后, j指向 ' '
+			        for(int k = i; k < j; k++) cout << str[k];
+			        cout << endl;
+			        i = j;
+			    }
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <cstring>
+
+			using namespace std;
+
+			int main(){
+			    char str[1000];
+			    cin.getline(str, 100);
+			    int n = strlen(str);
+			    for(int i = 0; i < n; i++){
+			        int j = i;
+			        while(j < n && str[j] != ' ') j++;
+			        for(int k = i; k < j; k++) cout << str[k];
+			        cout << endl;
+			        i = j;
+			    }
+			    return 0;
+			}
+16. AcWing 800. 数组元素的目标和
+	1. bug
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int a[N], b[N];
+		int n, m, v;
+
+		int main(){
+		    cin >> n >> m >> v;
+		    for(int i = 0; i < n; i++) scanf("%d", &a[i]);
+		    for(int i = 0; i < m; i++) scanf("%d", &b[i]);
+		    
+		    for(int i = 0, j = m - 1; i < n; i++){			就是一个for + 一个while的双指针
+		        while(j >= 0 && a[i] + b[j] > v) j--;
+		        if(j >= 0 && a[i] + b[j] == v){
+		            printf("%d %d", i, j);
+		            break;
+		        }
+		    }
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int a[N], b[N];
+		int n, m, k;
+
+		int main(){
+		    scanf("%d%d%d", &n, &m, &k);
+		    for(int i = 0; i < n; i++) scanf("%d", &a[i]);
+		    for(int i = 0; i < m; i++) scanf("%d", &b[i]);
+		    for(int i = 0, j = m - 1; i < n; i++){
+		        while(j >= 0 && a[i] + b[j] > k) j--;
+		        if(j >= 0 && a[i] + b[j] == k){
+		            cout << i << " " << j << endl;
+		            break;
+		        }
+		    }
+		    return 0;
+		}
+17. AcWing 2816. 判断子序列
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int a[N], b[N];
+		int n, m;
+
+		int main(){
+		    scanf("%d%d", &n, &m);
+		    for(int i = 0; i < n; i++) scanf("%d", &a[i]);
+		    for(int i = 0; i < m; i++) scanf("%d", &b[i]);
+		    int i = 0, j = 0;	byb, 这里还是很好想的, 就是两个指针
+		    while(i < n && j < m){	指针要合法
+		        if(a[i] == b[j]) i++;
+		        错误: else j++; 正确: j++;
+
+		        我的理解:
+		        	j就像是衣服, i就是一个人
+		        	不过i喜不喜欢第j个衣服, 我们每次都要把第j个衣服换掉
+		        	如果i喜欢第j个衣服, 那就看下一个人i+1
+		        	如果i不喜欢第j个衣服, 就给i看下一件衣服j+1
+		        	总之 j是无条件++
+		    }
+		    if(i == n) puts("Yes");
+		    else puts("No");
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int a[N], b[N];
+		int n, m;
+
+		int main(){
+		    cin >> n >> m;
+		    for(int i = 0; i < n; i++) scanf("%d", &a[i]);
+		    for(int i = 0; i < m; i++) scanf("%d", &b[i]);
+		    int i = 0, j = 0;		
+		    while(i < n && j < m){
+		        if(a[i] == b[j]) i++;
+		        j++;
+		    }
+		    if(i == n) puts("Yes");
+		    else puts("No");
+		    return 0;
+		}
+18. AcWing 801. 二进制中1的个数
+	1. bug
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		int n;
+
+		int lowbit(int x){
+		    return x & -x;	渔夫, 与负
+		}
+
+		int main(){
+		    cin >> n;
+		    while(n--){
+		        int x;
+		        cin >> x;
+		        int res = 0;
+		        while(x){
+		            x -= lowbit(x);
+		            res ++;
+		        }
+		        cout << res << " ";
+		    }
+		    cout << endl;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		int n;
+
+		int lowbit(int x){
+		    return x & -x;
+		}
+		int main(){
+		    cin >> n;
+		    while(n --){
+		        int x;
+		        cin >> x;
+		        int res = 0;
+		        while(x){
+		            x -= lowbit(x);
+		            res ++;
+		        }
+		        cout << res << " ";
+		    }
+		    cout << endl;
+		    return 0;
+		}
+19.
+	1. bug
+	2. ok
+		
 
 
 
