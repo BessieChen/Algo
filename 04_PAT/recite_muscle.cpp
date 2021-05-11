@@ -1752,10 +1752,811 @@
 		    cout << endl;
 		    return 0;
 		}
-19.
+19. AcWing 802. 区间和
+	1. bug
+		#include <iostream>
+		#include <algorithm>
+		#include <vector>
+
+		using namespace std;
+
+		错误: const int N = 100010;	 正确: const int N = 3 * 100010;		因为add有1e5个index, query的l有1e5, r也有1e5, 所以一共是三倍. 否则segment fault
+		typedef pair<int, int> PII;
+
+		vector<int> index;
+		vector<PII> add;
+		vector<PII> query;
+
+		int a[N], S[N];
+
+		vector<int>::iterator uniq(vector<int> &A){		小心, 这里是传引用, 因为要修改A的值
+		    int j = 0;
+		    for(int i = 0; i < A.size(); i++){
+		        if(!i || A[i] != A[i-1]) A[j++] = A[i];
+		    }
+		    return A.begin() + j;
+		}
+
+		int find(int v){
+		    int l = 0, r = index.size() - 1;
+		    while(l < r){
+		    	写法1: 推荐
+			        int mid = (r - l) / 2 + l;
+			        if(v <= index[mid]) r = mid;
+			        else l = mid + 1;
+
+		        写法2:
+		        	int mid = (r - l) / 2 + l + 1;
+			        if(index[mid] <= v) l = mid;
+			        else r = mid - 1;
+		    }
+		    return l + 1;			小心, 这里是+1, 因为前缀和一般从1开始
+		}
+
+		int main(){
+		    int n, m;
+		    scanf("%d%d", &n, &m);
+		    while(n--){
+		        int ind, v;
+		        scanf("%d%d", &ind, &v);	我之前错写成了 %d, 应该是%d%d
+		        index.push_back(ind);
+		        add.push_back({ind, v});
+		    }
+		    while(m--){
+		        int l, r;
+		        scanf("%d%d", &l, &r);
+		        index.push_back(l);
+		        index.push_back(r);
+		        query.push_back({l, r});
+		    }
+		    sort(index.begin(), index.end());
+		    index.erase(uniq(index), index.end());
+		    // index.erase(unique(index.begin(), index.end()), index.end());
+		    
+		    for(auto item : add){
+		        int ind = find(item.first);
+		        a[ind] += item.second;
+		    }
+		    
+		    for(int i = 1; i <= index.size(); i++) S[i] = S[i-1] + a[i];
+		    
+		    for(auto item : query){
+		        int l = find(item.first), r = find(item.second);
+		        cout << S[r] - S[l-1] << endl;
+		    }
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		#include <algorithm>
+		#include <vector>
+
+		using namespace std;
+
+		const int N = 3 * 1e5 + 10;
+
+		typedef pair<int, int> PII;
+		vector<int> index;
+		vector<PII> add;
+		vector<PII> query;
+
+		int a[N], S[N];
+
+		vector<int>::iterator uniq(vector<int> &a){
+		    int j = 0;
+		    for(int i = 0 ; i < a.size(); i++){
+		        if(!i || a[i] != a[i-1]) a[j++] = a[i];
+		    }
+		    return a.begin() + j;
+		}
+
+		int find(int v){
+		    int l = 0, r = index.size() - 1;
+		    while(l < r){
+		        int mid = (r - l) / 2 + l;
+		        if(v <= index[mid]) r = mid;
+		        else l = mid + 1;
+		    }
+		    return l + 1;
+		}
+
+		int main(){
+		    int n, m;
+		    cin >> n >> m;
+		    while(n --){
+		        int ind, v;
+		        scanf("%d%d", &ind, &v);
+		        index.push_back(ind);
+		        add.push_back({ind, v});
+		    }
+		    while(m --){
+		        int l, r;
+		        scanf("%d%d", &l, &r);
+		        index.push_back(l);
+		        index.push_back(r);
+		        query.push_back({l, r});
+		    }
+		    sort(index.begin(), index.end());
+		    index.erase(uniq(index), index.end());
+		    
+		    for(auto item : add){
+		        int ind = find(item.first);
+		        a[ind] += item.second;
+		    }
+		    
+		    for(int i = 0; i <= index.size(); i++) S[i] = S[i-1] + a[i];
+		    for(auto item : query){
+		        int l = find(item.first), r = find(item.second);
+		        cout << S[r] - S[l-1] << endl;
+		    }
+		    return 0;
+		}
+20. AcWing 803. 区间合并
 	1. bug
 	2. ok
-		
+		1. 思路清楚版: 做这种题, 就是先默认我们已经在流程中间了, 也就是[begin, end]是上一个符合要求的区间, 然后判断 b <= end这样我们就可以延长当前区间
+			#include <iostream>
+			#include <vector>
+			#include <algorithm>
+
+			using namespace std;
+			const int N = 100010;
+
+			typedef pair<int, int> PII;
+
+			vector<PII> q;
+
+			int main(){
+			    int n;
+			    cin >> n;
+			    while(n--){
+			        int l, r;
+			        scanf("%d%d", &l, &r);
+			        q.push_back({l, r});
+			    }
+			    sort(q.begin(), q.end());
+			    
+			    int beg = -2 * 1e9;
+			    int end = -2 * 1e9;	注意是-2*1e9, 其实只要小于 -1*1e9 就可以, 因为l的最小值就是 -1*1e9
+			    
+			    bool first = true;
+			    int res = 0;
+			    for(auto item : q){
+			        int b = item.first;
+			        int e = item.second;
+			        if(first){	如果是第一次
+			            beg = b;
+			            end = e;
+			            res ++;
+			            first = false;
+			        }else{
+			            if(b <= end){
+			                end = max(end, e);	可以延长之前的
+			            }else{	遇到新区间
+			                res++;
+			                beg = b;
+			                end = e;
+			            }
+			        }
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+		2. 简略版
+			#include <iostream>
+			#include <vector>
+			#include <algorithm>
+
+			using namespace std;
+			int n;
+			vector<pair<int, int>> q;
+			int main(){
+			    cin >> n;
+			    while(n--){
+			       int l, r;
+			       scanf("%d%d", &l, &r);
+			       q.push_back({l, r});
+			    }
+			    
+			    int begin = -2 * 1e9;
+			    int end = -2 * 1e9;
+			    
+			    sort(q.begin(), q.end());
+			    int res = 0;
+			    for(auto item : q){
+			        int b = item.first, e = item.second;
+			        if(b <= end){		因为第一次绝对不可能进入这个if, 因为第一次, end == -2 * 1e9, b不可能小于他
+			            end = max(e, end);
+			        }else{		第一次 || 遇到新区间
+			            begin = b;
+			            end = e;
+			            res ++;
+			        }
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+21. AcWing 826. 单链表
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int head, e[N], ne[N], ind;
+
+		void init(){
+		    head = -1;
+		    ind = 0;
+		}
+
+		void addh(int v){
+		    e[ind] = v, ne[ind] = head, head = ind ++;
+		}
+
+		往第k个加入元素后面的加入元素v
+		void insert(int k, int v){
+		    e[ind] = v, ne[ind] = ne[k], ne[k] = ind++;
+		}
+
+		把第k个加入元素后面的元素去掉
+		void remove(int k){
+		    ne[k] = ne[ne[k]];
+		}
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    init();			忘记 init();
+		    while(n--){
+		        int k, v;
+		        char op;
+		        cin >> op;
+		        if(op == 'H'){
+		            cin >> v;
+		            addh(v);
+		        }else if(op == 'D'){
+		            cin >> k;
+		            if(!k) head = ne[head];		题目说了: k==0的时候, 取出头结点
+		            else remove(k - 1);			题意: 去掉第k个元素 == 把第k-1个加入元素后面的元素去掉. 这里的第k个是从1开始, 第1个就是k==1. 其实我觉得这道题出的不好. 
+		        }else{
+		            cin >> k >> v;
+		            insert(k - 1, v);			因为k是从1开始的, 第一个就是k==1, 但是我们实现是从0开始的, 所以 k - 1. 其实我觉得这道题出的不好. 
+		        }
+		    }
+		    错误!!!!: for(int i = 0; i < ind; i++) cout << e[i] << " ";
+		    正确: for(int i = head; ~i; i = ne[i]) cout << e[i] << " ";
+		    cout << endl;
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+		const int N = 100010;
+		int head, e[N], ne[N], ind;
+
+		void init(){
+		    head = -1;
+		    ind = 0;
+		}
+
+		void addh(int v){
+		    e[ind] = v, ne[ind] = head, head = ind++;
+		}
+
+		void insert(int k, int v){
+		    e[ind] = v, ne[ind] = ne[k], ne[k] = ind++;
+		}
+
+		void remove(int k){
+		    ne[k] = ne[ne[k]];
+		}
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    init();
+		    while(n--){
+		        int k, v;
+		        char op;
+		        cin >> op;
+		        if(op == 'H'){
+		            cin >> v;
+		            addh(v);
+		        }else if(op == 'D'){
+		            cin >> k;
+		            if(!k) head = ne[head];
+		            else remove(k - 1);
+		        }else{
+		            cin >> k >> v;
+		            错误: insert(k, v);	
+		            正确: insert(k - 1, v);	
+		        }
+		    }
+		    for(int i = head; ~i; i = ne[i]) cout << e[i] << " ";
+		    cout << endl;
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+
+		using namespace std;
+
+		const int N = 100010;
+		int head, e[N], ne[N], ind;
+
+		void init(){
+		    head = -1;
+		    ind = 0;
+		}
+
+		void addh(int v){
+		    e[ind] = v, ne[ind] = head, head = ind ++;
+		}
+
+		void remove(int k){
+		    ne[k] = ne[ne[k]];
+		}
+
+		void insert(int k, int v){
+		    e[ind] = v, ne[ind] = ne[k], ne[k] = ind++;
+		}
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    
+		    init();
+		    while(n--){
+		        int k, v;
+		        char op;
+		        cin >> op;
+		        if(op == 'H'){
+		            cin >> v;
+		            addh(v);
+		        }else if(op == 'D'){
+		            cin >> k;
+		            if(!k) head = ne[head];
+		            else remove(k - 1);
+		        }else{
+		            cin >> k >> v;
+		            insert(k - 1, v);
+		        }
+		    }
+		    
+		    for(int i = head; ~i; i = ne[i]) cout << e[i] << " ";
+		    cout << endl;
+		    return 0;
+		}
+22. AcWing 827. 双链表
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int e[N], l[N], r[N], ind;
+
+		void init(){
+		    r[0] = 1, l[1] = 0;
+		    ind = 2;
+		}
+
+		void insert(int k, int v){
+		    e[ind] = v, l[ind] = k, r[ind] = r[k], l[r[k]] = ind, r[k] = ind;
+		    ind ++;		忘记加 ind++; 
+		}
+
+		void remove(int k){
+		    l[r[k]] = l[k];
+		    r[l[k]] = r[k];
+		}
+
+		int main(){
+		    init();
+		    int n;
+		    cin >> n;
+		    while(n--){
+		        int k, v;
+		        string op;
+		        cin >> op;
+		        if(op == "L"){
+		            cin >> v;
+		            insert(0, v);
+		        }else if(op == "R"){
+		            cin >> v;
+		            insert(l[1], v);
+		        }else if(op == "D"){
+		            cin >> k;
+		            remove(k + 1);	我的理解: 假设k==1, 也就是将第1个插入的数字删除, 因为我们分配 idx是从2开始的, 所以 k+1
+		        }else if(op == "IL"){
+		            cin >> k >> v;
+		            insert(l[k + 1], v);	这里是 k + 1. 首先, k+1上面解释过了{因为index从2开始}, 其次, 这里说第 k 个插入的数左侧插入, 但是我们的insert只能往右侧插入, 所以也就是从 第 k 个插入的数左侧{l[k+1]}的右侧插入
+		        }else{
+		            cin >> k >> v;
+		            insert(k + 1, v);	这里是 k + 1. 
+		        }
+		    }
+		    for(int i = r[0]; i != 1; i = r[i]) cout << e[i] << " ";
+		    cout << endl;
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int e[N], l[N], r[N], ind;
+
+		void init(){
+		    r[0] = 1, l[1] = 0;
+		    ind = 2;
+		}
+
+		void insert(int t, int v){ //t == token
+		    e[ind] = v, l[ind] = t, r[ind] = r[t], l[r[t]] = ind, r[t] = ind;
+		    	思考流程:
+		    		先是e
+		    		然后想ind的左右是什么: l[ind] = t, r[ind] = r[t],
+		    		然后再想t的右侧的左侧, t自己的右侧: l[r[t]] = ind, r[t] = ind;
+		    ind ++;
+		}
+
+		void remove(int t){
+		    l[r[t]] = l[t];
+		    r[l[t]] = r[t];
+		}
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    init();
+		    while(n--){
+		        int k, v;
+		        string op;
+		        cin >> op;
+		        if(op == "L"){
+		            cin >> v;
+		            insert(0, v);
+		        }else if(op == "R"){
+		            cin >> v;
+		            insert(l[1], v);
+		        }else if(op == "D"){
+		            cin >> k;
+		            remove(k + 1);
+		        }else if(op == "IL"){
+		            cin >> k >> v;
+		            insert(l[k + 1], v);
+		        }else{
+		            cin >> k >> v;
+		            insert(k + 1, v);
+		        }
+		    }
+		    for(int i = r[0]; i != 1; i = r[i]) cout << e[i] << " ";
+		    cout << endl;
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int e[N], l[N], r[N], ind;
+
+		void init(){
+		    r[0] = 1, l[1] = 0;
+		    ind = 2;
+		}
+
+		void insert(int t, int v){
+		    e[ind] = v, l[ind] = t, r[ind] = r[t], l[r[t]] = ind, r[t] = ind;
+		    ind ++;
+		}
+
+		void remove(int t){
+		    l[r[t]] = l[t];
+		    r[l[t]] = r[t];
+		}
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    init();
+		    while(n--){
+		        int k, v;
+		        string op;
+		        cin >> op;
+		        if(op == "L"){
+		            cin >> v;
+		            insert(0, v);
+		        }else if(op == "R"){
+		            cin >> v;
+		            insert(l[1], v);
+		        }else if(op == "D"){
+		            cin >> k;
+		            remove(k + 1);
+		        }else if(op == "IL"){
+		            cin >> k >> v;
+		            insert(l[k + 1], v);
+		        }else{
+		            cin >> k >> v;
+		            insert(k + 1, v);
+		        }
+		    }
+		    for(int i = r[0]; i != 1; i = r[i]) cout << e[i] << " ";
+		    cout << endl;
+		    return 0;
+		}
+23. AcWing 828. 模拟栈
+	1. bug
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int st[N], tt;
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    while(n--){
+		        string op;
+		        int v;
+		        cin >> op;
+		        if(op == "push"){
+		            cin >> v;
+		            st[++ tt] = v;
+		        }else if(op == "pop"){
+		            tt--;
+		        }else if(op == "empty"){
+		            if(!tt) puts("YES");
+		            else puts("NO");
+		        }else{
+		            cout << st[tt] << endl;
+		        }
+		    }
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int st[N], tt;
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    while(n--){
+		        string op;
+		        int v;
+		        cin >> op;
+		        if(op == "push"){
+		            cin >> v;
+		            st[++ tt] = v;
+		        }
+		        else if(op == "pop"){
+		            tt--;
+		        }else if(op == "query"){
+		            cout << st[tt] << endl;
+		        }else{
+		            if(!tt) puts("YES");
+		            else puts("NO");
+		        }
+		    }
+		    return 0;
+		}
+24. 
+25. AcWing 829. 模拟队列
+	1. bug
+		总结: 
+			模拟栈/队列中的 tt起始是不同的. 
+				栈: tt初始是0
+					tt = 0, 没有元素
+				队列: hh初始是0, tt初始是-1
+					hh > tt, 没有元素
+					while(hh <= tt): while(有元素), 元素是在[hh,tt]
+			模拟栈/队列中, 插入元素都是 xx[++ tt] = yy
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int q[N], hh, tt = -1;
+
+		int main(){
+		    int n;
+		    cin >> n;
+		    while(n--){
+		        string op;
+		        int v;
+		        cin >> op;
+		        if(op == "push"){
+		            cin >> v;
+		            q[++tt] = v;
+		        }else if(op == "pop"){
+		            hh++;
+		        }else if(op == "empty"){
+		            if(hh > tt) puts("YES");
+		            else puts("NO");
+		        }else{
+		            cout << q[hh] << endl; 
+		        }
+		    }
+		    return 0;
+		    
+		}	
+26. AcWing 830. 单调栈
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int stack[N], tt;
+
+		int main(){
+		    int n, v;
+		    cin >> n;
+		    while(n--){
+		        cin >> v;
+		        while(tt && stack[tt] >= v) tt--;		如果左边的元素都大于等于v, 就把左侧的元素删掉. 注意是 >=, 不是 >, 我们要把所有stack中大于v的干掉. 所以就是: 当"有元素, 并且元素大于等于v"的就干掉
+		        	走到这里的tt, 就是 tt == 0, 或者 stack[tt] 是小于v的
+		        if(!tt) cout << "-1 ";
+		        else cout << stack[tt] << " ";
+		        stack[++ tt] = v;		这一句是写在 if else 的后面. 最后才是插入元素 
+		        						注意是 stack[++ tt], 而不是 stack[tt ++]因为tt初始是0, 我们第一个元素是从tt==1的地方插入. 如果tt==0说明stack没有元素
+		    							
+		    							此时把x加入栈顶. 
+				        					之后如果遇到一个比x小的数b, 我们还会把x给删除掉, 一直到找到一个合适的. 
+				        					如果遇到的比x大的c, 我们输出的就是x. 因为这个x是离c最近的比c小的数
+		    }
+		    cout << endl;
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int stack[N], tt;
+
+		int main(){
+		    int n, v;
+		    cin >> n;
+		    while(n--){
+		        cin >> v;
+		        while(tt && stack[tt] >= v) tt--;
+		        if(!tt) printf("-1 ");
+		        else printf("%d ", stack[tt]);
+		        stack[++tt] = v;
+		    }
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int stack[N], n, tt, v;
+
+		int main(){
+		    cin >> n;
+		    while(n--){
+		        cin >> v;
+		        while(tt && stack[tt] >= v) tt--;
+		        if(!tt) cout << "-1 ";
+		        else cout << stack[tt] << " ";
+		        stack[++tt] = v;
+		    }
+		    return 0;
+		}
+* 27. AcWing 154. 滑动窗口
+	0. 小总结:
+		单调栈: 
+			左边第一个比它a[i]小的数
+				stack是"单增"的
+				stack顶部元素, 是不是有比当前a[i]更大的元素, 因为我们求得是比当前a[i]小的元素, "更大的没用", 删除
+				stack的顶部元素就是 左边第一个比它a[i]小的数
+		滑动窗口: 
+			窗口min
+				队列是"单增"的
+				q的队尾是不是比当前a[i]更大的元素, 因为我们求得是min, "大的没用", 删除
+				队首就是min
+			求窗口max
+				队列是"递减"的
+				q的队尾是不是比当前a[i]更小的元素, 因为我们求得是max, "小的没用", 删除
+				队首就是max
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		错误: const int N = 100010;
+		正确: const int N = 1000010; 题目是1e6
+		int a[N], q[N], n, k, hh, tt;
+
+		int main(){
+		    cin >> n >> k;
+		    hh = 0, tt = -1;
+		    for(int i = 0; i < n; i++) scanf("%d", &a[i]);
+		    for(int i = 0; i < n; i++){
+		        if(hh <= tt && q[hh] < i - k + 1) hh++;		
+		        while(hh <= tt && a[q[tt]] >= a[i]) tt--;	
+		        "错误: q[++tt] = a[i]; 正确: q[++tt] = i;"
+		        if(i >= k - 1) printf("%d ", a[q[hh]]);
+		     }
+		     puts("");
+		     hh = 0, tt = -1;
+		     for(int i = 0; i < n; i++){
+		         if(hh <= tt && q[hh] < i - k + 1) hh++;
+		         while(hh <= tt && a[q[tt]] <= a[i]) tt--;
+		         错误: q[++tt] = a[i]; 正确: q[++tt] = i;
+		         if(i >= k - 1)printf("%d ", a[q[hh]]);
+		     }
+		     return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1000010;
+		int a[N], q[N], n, k, hh, tt = -1;
+
+		int main(){
+		    cin >> n >> k;
+		    for(int i = 0; i < n; i++) scanf("%d", &a[i]);
+		    for(int i = 0; i < n; i++){
+		        if(hh <= tt && q[hh] < i - k + 1) hh++;
+		        错误: while(hh <= tt && a[q["hh"]] >= a[i]) tt--; 正确: while(hh <= tt && a[q["tt"]] >= a[i]) tt--;
+		        q[++tt] = i;
+		        if(i >= k - 1) cout << a[q[hh]] << " ";
+		    }
+		    puts("");
+		    hh = 0, tt = -1;
+		    for(int i = 0; i < n; i++){
+		        if(hh <= tt && q[hh] < i - k + 1) hh++;
+		        错误: while(hh <= tt && a[q["hh"]] <= a[i]) tt--; 正确: while(hh <= tt && a[q["tt"]] <= a[i]) tt--;
+		        q[++tt] = i;
+		        if(i >= k - 1) cout << a[q[hh]] << " ";
+		    }
+		    cout << endl;
+		    return 0;
+		}
+	2. ok 非常顺: 
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1000010;
+		int a[N], n;
+		int q[N], hh, tt = -1;
+		int k;
+
+		int main(){
+		    cin >> n >> k;
+		    for(int i = 0 ; i < n; i ++) scanf("%d", &a[i]);
+		    for(int i = 0 ; i < n; i ++){					遍历窗口的终点i
+		        if(hh <= tt && q[hh] < i - k + 1) hh++;		看q的队头是否在窗口内: 也就是是否 起点 <= 队头
+		        while(hh <= tt && a[q[tt]] >= a[i]) tt--;	看q的队尾是否有更大的元素, 因为我们求得是min, 大的没用, 删除
+		        q[++tt] = i;								先插入i, 因为打印的hh可能就是++tt
+		        if(i >= k - 1) printf("%d ", a[q[hh]]);
+		    }
+		    puts("");
+		    hh = 0, tt = -1;
+		    for(int i = 0 ; i < n; i++){					遍历窗口的终点i
+		        if(hh <= tt && q[hh] < i - k + 1) hh++;		看q的队头是否在窗口内: 也就是是否 起点 <= 队头
+		        while(hh <= tt && a[q[tt]] <= a[i]) tt--;	看q的队尾是否有更小的元素, 因为我们求得是max, 小的没用, 删除
+		        q[++tt] = i;								先插入i, 因为打印的hh可能就是++tt
+		        if(i >= k - 1) printf("%d ", a[q[hh]]);
+		    }
+		    puts("");
+		    return 0;
+		}
+28. AcWing 831. KMP字符串
+	1. bug
+	2. ok 
+
+
+
+
+
+
 
 
 
