@@ -1446,6 +1446,83 @@
 		    
 		}
 14. AcWing 798. 差分矩阵
+	0. 总结一下:
+		前缀和:
+			一维:
+				原材料:
+					for(int i = 1; i <= n; i++) 
+						scanf("%d", &a[i]);
+				构建:
+					for(int i = 1; i <= n; i++) 
+						S[i] = S[i-1] + a[i];
+				求答案:
+					int res = S[r] - S[l-1]
+			二维:
+				原材料:
+					for(int i = 1; i <= n; i++)
+				        for(int j = 1; j <= m; j++)
+				            scanf("%d", &a[i][j]);
+				构建:
+					for(int i = 1; i <= n; i++)
+				        for(int j = 1; j <= m; j++)
+				            S[i][j] =  S[i-1][j] + S[i][j-1] + a[i][j] - S[i-1][j-1];
+				求答案:
+					int res = S[x2][y2] - S[x1-1][y2] - S[x2][y1-1] + S[x1-1][y1-1];
+						前缀和的二维的求答案 和 差分的二维的构建非常像:
+							b[x1][y1] += k;
+						    b[x2+1][y1] -= k;
+						    b[x1][y2+1] -= k;
+						    b[x2+1][y2+1] += k;
+		差分:
+			一维:
+				原材料:
+					for(int i = 1; i <= n; i++)
+				        scanf("%d", &a[i]);
+				构建:
+					0. insert()
+						void insert(int l, int r, int k){
+						    b[l] += k;
+						    b[r + 1] -= k;
+						}
+					1. 构建初始的b: 
+						for(int i = 1; i <= n; i++)
+							insert(i, i, a[i]);
+					2. 往[l, r]区间加上值k
+						insert(l, r, k);
+				求答案:
+					for(int i = 1; i <= n; i++) a[i] = a[i-1] + b[i];
+				    for(int i = 1; i <= n; i++) printf("%d ", a[i]);
+			二维:
+				原材料:
+					for(int i = 1; i <= n; i++)
+				        for(int j = 1; j <= m; j++)
+				            scanf("%d", &a[i][j]);
+				构建:
+					0. insert()
+						void insert(int l, int r, int k){
+						    b[x1][y1] += k;
+						    b[x2+1][y1] -= k;
+						    b[x1][y2+1] -= k;
+						    b[x2+1][y2+1] += k;
+						}
+					1. 构建初始的b: 
+						for(int i = 1; i <= n; i++)
+							for(int j = 1; j <= m; j++)
+								insert(i, j, i, j, a[i][j]);
+					2. 往[x1, y1], [x2, y2] 矩形中加上值k
+						insert(x1, y1, x2, y2, k);
+				求答案:
+					 for(int i = 1; i <= n; i++)
+				        for(int j = 1; j <= m; j++)
+				            a[i][j] = a[i-1][j] + a[i][j-1] + b[i][j] - a[i-1][j-1];
+
+				        	差分的二维的求答案 和 前缀和的二维的构建非常像:
+				        		S[i][j] =  S[i-1][j] + S[i][j-1] + a[i][j] - S[i-1][j-1];
+
+				    for(int i = 1; i <= n; i++)
+				        for(int j = 1; j <= m ; j ++)
+				            printf("%d ", a[i][j]);
+
 	1. bug
 		#include <iostream>
 		using namespace std;
@@ -1712,6 +1789,8 @@
 
 		int lowbit(int x){
 		    return x & -x;	渔夫, 与负
+		    	负数 == 补码 == 反码 + 1
+		    	异或: 同0异1, 不进位加法, 我们口语中的或就是异或
 		}
 
 		int main(){
@@ -2344,7 +2423,7 @@
 		    }
 		    return 0;
 		}
-24. 
+todo s 24. AcWing 3302. 表达式求值
 25. AcWing 829. 模拟队列
 	1. bug
 		总结: 
@@ -2548,12 +2627,499 @@
 		    puts("");
 		    return 0;
 		}
-28. AcWing 831. KMP字符串
+* 28. AcWing 831. KMP字符串
+	0. 小总结:
+		+1的
+			知道[l, r], 求区间长度: r - l + 1
+			知道终点r, 知道区间长度j, 求起点: r - j + 1
+		-1的
+			知道起点l, 知道区间长度j, 求终点: l + j - 1
+		另一种说法:
+			知道起点是l, 想去终点r, 应该怎么走: r - l + 1
+				举例: 字符串哈希 h[r] - h[l - 1] * p[r - l + 1];
 	1. bug
-	2. ok 
+	2. ok
+		1. 介绍一下我心里是怎么想的, 动画是什么
+			#include <iostream>
+			using namespace std;
+
+			const int N = 1000010;
+			char p[N];
+			char s[N];
+			int ne[N];
+			int n, m;
+
+			int main(){
+			    cin >> n >> (p + 1) >> m >> (s + 1); 	首先, 我们是
+			    for(int i = 2, j = 0; i <= n; i++){
+			        while(j && p[i] != p[j + 1]) j = ne[j];
+			        // j == 0 or p[i] == p[j+1]
+			        if(p[i] == p[j+1]) j++;
+			        ne[i] = j;
+			    }
+			    for(int i = 1, j = 0; i <= m; i++){
+			        while(j && s[i] != p[j + 1]) j = ne[j];
+			        // j == 0 or s[i] == p[j+1]
+			        if(s[i] == p[j + 1]) j++;
+			        if(j == n){
+			            cout << i - n + 1 - 1 << " ";
+			            j = ne[j];
+			        }
+			    }
+			    return 0;
+			}
+		2. 
+			#include <iostream>
+			using namespace std;
+
+			const int N = 1000010;
+			char p[N];
+			char s[N];
+			int ne[N];
+			int n, m;
+
+			int main(){
+			    cin >> n >> (p + 1) >> m >> (s + 1);
+			    for(int j = 0, i = 2; i <= n; i++){
+			        while(j && p[i] != p[j + 1]) j = ne[j];
+			        //有路可退 && 打不过
+			        //无路可退 or 打得过
+			        if(p[i] == p[j+1]) j++;
+			        ne[i] = j; //不管是打得过{j!=0}还是无路可退{j==0}, 都要记录ne[i]
+			    }
+			    for(int j = 0, i = 1; i <= m; i++){
+			        while(j && s[i] != p[j + 1]) j = ne[j];
+			        if(s[i] == p[j + 1]) j++;
+			        if(j == n){
+			            cout << i - n + 1 - 1 << " ";
+			            j = ne[j];
+			        }
+			    }
+			    return 0;
+			}
+		3.
+			#include <iostream>
+			using namespace std;
+
+			const int N = 1000010;
+			char p[N], s[N];
+			int ne[N], n, m;
+
+			int main(){
+			    cin >> n >> (p + 1) >> m >> (s + 1);	"注意是从index == 1开始输入"
+			    for(int j = 0 "一开始是无路可退的", i = 2 "一开始我们是要比较p的第2个元素和第1个元素, 这里i指向的是第2个元素"; i <= n; i++){	
+			    	"我们一上来就是保守打法: 也就是看我有没有退路, 如果有退路 并且 被打败{也就是不匹配}的话, 我们就到上一个退路. 也就是到简单的一关
+			    	while(有路可退 && 打不过)"
+			        while(j "j >= 1表明还有退路" && p[i] != p[j + 1] "不匹配,也就是打不过") j = ne[j]; "我们退到更加简单的一关游戏"
+			        	"什么是有退路:
+			        		走到这里, 就相当于我们代码是执行到中间了, 上下文都有了. 此时的j, 你想想是什么意思.
+			        		j的意思是, 对于上一轮: [1, j]前缀区间a == [xx, i - 1]后缀区间b, 这里的 xx = i - 1 - j + 1, 因为区间长度是j
+			        		我们这一轮要站在上一轮的肩膀上, 如果这一轮失败了: p[i] != p[j + 1]. 我们就要看 前缀区间a的 小前缀aa 和 小后缀ab
+			        		j = ne[j], 其实是: 新j = ne[老j]
+			        		之前: [1, 老j]前缀区间a == [xx, i - 1]后缀区间b
+			        		现在: [1, 新j] == [yy, 老j] == [zz, i - 1]
+			        			yy = 老j - 新j + 1. 因为区间长度是新j
+			        			zz = i - 1 - 新j + 1. 因为区间长度是新j
+			        		所以我们要比较的是 index == [新j + 1] 的这个点, 和 p[i]是否一样
+			        		如果最后 j == 0, 说明区间长度是0, 也就是一点退路都没有, 要重新来了
+			        		"
+
+			        "走到这里, 有两种可能:	无路可退 or 打得过"
+			        if(p[i] == p[j + 1]) j++; 		"打得过, 就j++"
+			        ne[i] = j;	不管是打得过{j!=0} 	"还是无路可退{j==0}, 都要记录ne[i]"
+			    }
+			    for(int j = 0 "一开始是无路可退的", i = 1 "一开始我们是要比较s的第1个元素和p的第1个元素, 这里i指向的是s的第1个元素";  i <= m; i++){
+			        while(j "j >= 1表明还有退路" && s[i] != p[j + 1] "不匹配,也就是打不过") j = ne[j];
+			        "走到这里, 有两种可能:	无路可退 or 打得过"
+			        if(s[i] == p[j + 1]) j++;	"打得过, 就j++"
+			        if(j == n){					"不需要构造 ne, 这里是看赢了没有, 赢了就是区间长度刚好是pattern的长度n"
+			            cout << i - n + 1 - 1 << " ";	"因为终点是i, 长度是n, 所以起点是 i - n + 1, 因为题目是从0开始, 我们代码从1开始, 所以要-1"
+			            j = ne[j];	"其实这一句要不要没所谓, 不写也是ok的, 这句话就代表着人生, 不能一直在巅峰, 你刚刚才站在山顶, 现在应该退一步, 因为你不可能一直在山顶"
+			        }
+			    }
+			    "补充一下, 永远都有: ne[0] == 0, ne[1] == 0
+			    ne[0] = 0, 因为第0位没用
+			    ne[1] == 0, 因为最长后缀不能和最长前缀重合
+			    	例如: a a a a a a a a a 一共9个字母
+			    		i: 9 	ne[i]: 8  	前8个a 和 后8个a 是最长前后缀. 
+			    		说明最长前后缀是不能完全重叠的, 也就是不能是全部九个a"
+			    return 0;
+			}
+* 29. AcWing 835. Trie字符串统计
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int s[N][26], ind;
+		int cnt[N], n;
+
+		---错误: void insert(string str){ 正确: void insert(char* str) 
+		    int p = 0;
+		   ---错误: for(int i = 0 ; str; i++){ 正确: for(int i = 0; str[i]; i++){
+		        int l = str[i] - 'a';
+		        if(!s[p][l]) s[p][l] = ++ ind;	注意, 是 ++ind, 因为index==0是根节点, 第一个son是从ind==1开始
+		        p = s[p][l];
+		    }
+		    cnt[p] ++;
+		}
+
+		---错误: int query(string str){	正确: int query(char* str). 
+		    int p = 0;
+		    ---错误: for(int i = 0 ; str; i++){ 正确: for(int i = 0; "str[i]"; i++){
+		        int l = str[i] - 'a';
+		        if(!s[p][l]) return 0;
+		        p = s[p][l];
+		    }
+		    return cnt[p];
+		}
 
 
 
+		int main(){
+		    scanf("%d", &n);
+		    while(n--){
+		        char op[2];		注意, 因为输入是 'I xxx' 有空格, 所以用了op[2]
+		        ---错误: string str; 正确: char str[N];	如果用string, 就是会 segment fault
+		        scanf("%s%s", op, str);
+		        if(*op == 'I'){			注意是 *op
+		            insert(str);
+		        }else{
+		            printf("%d", query(str));
+		        }
+		    }
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 100010;
+		int s[N][26], cnt[N * 26], ind;	 
+			ind最多有 N*26个, 所以 cnt[N * 26]
+			s[N][26], 如果某个string的长度刚好是 1e5, 例如全是aaaa...{1e5个}, 就把第一列全填满了
+
+		void insert(char* str){
+		    int root = 0;
+		    for(int i = 0; str[i]; i++){
+		        int son = str[i] - 'a';
+		        if(!s[root][son]) s[root][son] = ++ ind;	看第root行, 有没有这个字母
+		        root = s[root][son];	跳到第ind行
+		    }
+		    cnt[root] ++;
+		}
+
+		int query(char* str){
+		    int root = 0;
+		    for(int i = 0;  str[i]; i++){
+		        int son = str[i] - 'a';
+		        if(!s[root][son]) return 0;
+		        root = s[root][son];
+		    }
+		    return cnt[root];
+		}
+
+		int main(){
+		    int n;
+		    scanf("%d", &n);
+		    while(n--){
+		        char op[2], str[N];
+		        scanf("%s%s", op, str);
+		        if(*op == 'I') insert(str);
+		        else printf("%d\n", query(str));
+		    }
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int s[N][26], cnt[N * 26], ind;
+
+		void insert(char* str){
+		    int root = 0;
+		    for(int i = 0; str[i]; i++){
+		        int son = str[i] - 'a';
+		        if(!s[root][son]) s[root][son] = ++ ind;
+		        root = s[root][son];
+		    }
+		    cnt[root] ++;
+		}
+
+		int query(char* str){
+		    int root = 0;
+		    for(int i = 0; str[i]; i++){
+		        int son = str[i] - 'a';
+		        if(!s[root][son]) return 0;
+		        root = s[root][son];
+		    }
+		    return cnt[root];
+		}
+
+		int main(){
+		    int n;
+		    scanf("%d", &n);
+		    while(n--){
+		        char op[2], str[N];
+		        scanf("%s%s", op, str);
+		        if(*op == 'I') insert(str);
+		        else printf("%d\n", query(str));
+		    }
+		    return 0;
+		    
+		}
+* 30. AcWing 143. 最大异或对
+	1. bug
+		另外的思考:
+			为什么上一题, 不能一边插入, 一边查找? 这道题却可以
+			答案:
+				上一题: 
+					insert的单词 和 query的单词, 都不是同一套单词
+				这一题:
+					insert的单词 和 query的单词, 是同一套单词, 也就是单词两两之间比较, 既然是两两, a和b握手后, b就不需要再次和a握手了
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int s[N * 31][2], ind;	注意, 不要忘了[2]
+
+		void insert(int v){
+		    int root = 0;
+		    错误: for(int i = 31; i; i--){ 	正确: for(int i = 30; ~i; i--){ 
+		    									我们的数字v只有31位{也就是int吧, 首位是符号, 后31位是实际的}. 
+		    									最高位是 v >> 30 & 1, 最低位是 v >> 0 & 1
+		    									反正你就记得, 一共31位,右移了30位只剩下最后1位
+
+		    									如果 i >= 0 是 ~i, 也就是 i != -1
+		    									如果 i > 0 是 i, 也就是 i != 0
+
+		        int son = v >> i & 1;
+		        int &temp = s[root][son];	注意: 这里是别名 &temp, 所以我们可以就把temp当成 s[root][son]
+		        							修改temp相当于修改s[root][son]. temp是左值?
+		        if(!temp) temp = ++ ind;
+		        root = temp;
+		    }
+		}
+
+		int query(int v){
+		    int root = 0;
+		    int res = 0;
+		    错误: for(int i = 31; i; i--){ 	正确: for(int i = 30; ~i; i--){
+		        int son = v >> i & 1;
+		        if(s[root][!son]){			找的是和son不同的, 如果son是1, 我们就找0. 如果有的话, 我们异或就是1
+		            res += 1 << i;			如果有的话, 我们异或就是1. 所以第i位是1. 注意这里第i位也是从0开始 
+		            root = s[root][!son];	然后我们就走 !son的路线, 为什么不是 son的路线, 因为我们走的路线, 本来就不是数字v代表的路线, 而是数字v的异或值代表的路线
+		        }else root = s[root][son];	如果找不到, 就找v的第i位数字代表的路线, 所以有种杂糅的感觉
+		    }
+		    return res;
+		}
+
+		int main(){
+		    int n;
+		    int v;
+		    int res = 0;
+		    scanf("%d", &n);
+		    while(n--){
+		        scanf("%d", &v);
+		        insert(v);
+		        res = max(res, query(v));	因为每个数字v, 都有他能找到的最大疑惑res. 我们要找到所有res里面的最大的res
+		    }
+		    cout << res << endl;
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int s[N * 31][2], ind;
+
+		void insert(int v){
+		    int root = 0;
+		    for(int i = 30; i >= 0; i--){
+		        int son = v >> i & 1;
+		        if(!s[root][son]) s[root][son] = ++ ind;
+		        root = s[root][son];
+		    }
+		}
+
+		int query(int v){
+		    int root = 0, res = 0;
+		    for(int i = 30; i >= 0; i --){
+		        int son = v >> i & 1;
+		        if(s[root][!son]){
+		            res += 1 << i;
+		            root = s[root][!son];
+		        }else root = s[root][son];
+		    }
+		    return res;
+		}
+
+		int main(){
+		    int n, v;
+		    scanf("%d", &n);
+		    int res = 0;
+		    while(n--){
+		        scanf("%d", &v);
+		        insert(v);
+		        res = max(res, query(v));
+		    }
+		    cout << res << endl;
+		    return 0;
+		}
+31. AcWing 836. 合并集合
+	1. bug
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int p[N];
+
+		int find(int x){
+		    if(p[x] != x) p[x] = find(p[x]);	如果我不是祖宗{那我就要找我的祖宗}, 我的父亲 = 父亲的父亲 = 父亲的父亲的父亲 = ... = 祖宗
+		    return p[x];	返回父亲{祖宗}
+		}
+
+		int main(){
+		    int n, m;
+		    cin >> n >> m;
+		    for(int i = 1; i <= n; i++) p[i] = i;
+		    while(m--){
+		        char op[2];
+		        int a, b;
+		        scanf("%s%d%d", op, &a, &b);			 防止题目出现莫名其妙的空格等
+		        if(*op == 'M') p[find(a)] = find(b);
+		        else{
+		            if(find(a) == find(b)) puts("Yes");
+		            else puts("No");
+		        }
+		    }
+		}
+32. AcWing 837. 连通块中点的数量
+	1. bug
+	2. ok
+		看上去是图的问题, 其实连通块其实是 并查集的问题
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int p[N], cnt[N];
+
+		int find(int x){
+		    if(x != p[x]) p[x] = find(p[x]);
+		    return p[x];
+		}
+
+		int main(){
+		    int n, m;
+		    scanf("%d%d", &n, &m);
+		    for(int i = 1; i <= n; i++){
+		        p[i] = i;
+		        cnt[i] = 1;
+		    }
+		    while(m--){
+		        string op;
+		        int a, b;
+		        cin >> op;
+		        if(op == "C"){
+		            cin >> a >> b;
+		            int pa = find(a), pb = find(b);
+		            if(pa != pb){
+		                p[pa] = pb;
+		                cnt[pb] += cnt[pa];
+		            }
+		        }else if(op == "Q1"){
+		            cin >> a >> b;
+		            if(find(a) != find(b)) puts("No");
+		            else puts("Yes");
+		        }else{
+		            cin >> a;
+		            cout << cnt[find(a)] << endl;
+		        }
+		    }
+		    return 0;
+		}
+todo s 33. AcWing 240. 食物链
+34. AcWing 838. 堆排序
+	1. bug
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int h[N], cnt;
+		int n, m;
+
+		void down(int u){
+		    int l = u * 2, r = u * 2 + 1;
+		    int t = u;
+		    if(l <= cnt && h[l] < h[t]) t = l;
+		    if(r <= cnt && h[r] < h[t]) t = r;
+		    if(t != u){
+		        swap(h[t], h[u]);
+		        down(t);			注意, 不是 down(u), u是树靠上方的index, t是树下方的index
+		    }
+		    
+		}
+
+		int main(){
+		    cin >> n >> m;
+		    for(int i = 1; i <= n; i++) scanf("%d", &h[i]);
+		    cnt = n;		因为之后有 h[cnt --]; 所以cnt是会变化的 
+		    
+		    这里是堆排序, 只用到down
+		    for(int i = n / 2; i; i--) down(i); 注意: 最后一个非叶子节点是 cnt / 2, 然后 i >= 1, 写成 i 
+		    		"for(int i = 100; i >= 0; i--)	--> i != -1 --> ~i
+					for(int i = 100; i >= 1; i--)	--> i != 0 --> i"
+		    
+		    while(m--){
+		        printf("%d ", h[1]);
+		        h[1] = h[cnt --];
+		        down(1);
+		    }
+		    puts("");
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int h[N], cnt;
+		int n, m;
+
+		void down(int u){
+		    int l = u * 2, r = u * 2 + 1;
+		    int t = u;
+		    if(l <= cnt && h[l] < h[t]) t = l;
+		    if(r <= cnt && h[r] < h[t]) t = r;
+		    if(t != u){
+		        swap(h[t], h[u]);
+		        down(t);
+		    }
+		}
+
+		int main(){
+		    cin >> n >> m;
+		    for(int i = 1; i <= n; i++) scanf("%d", &h[i]);
+		    cnt = n;
+		    for(int u = cnt / 2; u; u--) down(u);
+		    while(m--){
+		        printf("%d ", h[1]);
+		        h[1] = h[cnt--];
+		        down(1);
+		    }
+		    return 0;
+		}
+35. AcWing 839. 模拟堆
+	1. bug
+	2. ok
+
+
+	哈希, 离散化, kmp算法
+				
 
 
 
