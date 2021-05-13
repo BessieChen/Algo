@@ -4352,10 +4352,206 @@ todo s 33. AcWing 240. 食物链
 		    }
 42. AcWing 846. 树的重心
 	1. bug
+		#include <iostream>
+		#include <cstring>
+		using namespace std;
+
+		const int N = 1e5 + 10, M = 2e5 + 10; //题目的节点数1e5, 题目给的边数也是1e5, 无向边开2倍
+		int h[N], e[M], ne[M], ind;	注意, e,ne的大小是M, 因为边要记录 M==2*1e5, 每记录一次用一个ind, 所以e和ne也要M个
+		bool st[N];
+		int res;
+		int n; //全局变量, 因为dfs()需要用
+
+		void add(int a, int b){
+		    e[ind] = b, ne[ind] = h[a], h[a] = ind ++;
+		}
+
+		int dfs(int u){
+		    st[u] = true;
+		    int maxsonsize = 0, allsize = 1; //是1是因为计算节点u自己
+		    for(int i = h[u]; ~i; i = ne[i]){
+		        int v = e[i];
+		        if(!st[v]){
+		            int sonsize = dfs(v);
+		            maxsonsize = max(sonsize, maxsonsize);	最大的儿子的大小
+		            allsize += sonsize;
+		        }
+		    }
+		    错误: 忘写了
+		    正确: maxsonsize = max(maxsonsize, n - allsize); //将点u删除后，剩余各个连通块中点数的最大值
+		    
+		    错误: res = max(res, maxsonsize);
+		    正确: res = min(res, maxsonsize); //对于重心, 删除它后的{连通块中点数的最大值}, 最小的
+		    return allsize;
+		}
+
+		int main(){
+		    cin >> n;
+		    memset(h, -1, sizeof h);
+
+		    错误: res = 0;
+		    正确: res = 0x3f3f3f3f;
+
+		    错误: while(n--){ n之后还要用的啊!!
+		    正确: for(int i = 0 ; i < n - 1; i ++ ){
+		        int a, b;
+		        scanf("%d%d", &a, &b);
+		        add(a, b), add(b, a);
+		    }
+		    dfs(1);
+		    cout << res << endl;
+		    return 0;
+		}
+	2. ok{很顺}
+		#include <iostream>
+		#include <cstring>
+		using namespace std;
+
+		const int N = 1e5 + 10, M = 2 * N;
+		int h[N], e[M], ne[M], ind;
+		bool st[N];
+		int res, n;
+
+		void add(int a, int b){
+		    e[ind] = b, ne[ind] = h[a], h[a] = ind ++;
+		}
+
+		int dfs(int u){
+		    st[u] = true;						先记录遍历过了 
+		    int maxsonsize = 0, allsize = 1;	最大儿子块的大小, 所有儿子块们的大小+u节点字节
+		    for(int i = h[u]; ~i; i = ne[i]){
+		        int v = e[i];
+		        if(!st[v]){
+		            int sonsize = dfs(v);
+		            maxsonsize = max(sonsize, maxsonsize);	
+		            allsize += sonsize;
+		        }
+		    }
+		    maxsonsize = max(maxsonsize, n - allsize);	看u的父亲块是不是更大 
+		    res = min(res, maxsonsize);
+		    return allsize;
+		}
+
+
+		int main(){
+		    memset(h, -1, sizeof h);
+		    res = 0x3f3f3f3f;
+		    
+		    cin >> n;
+		    for(int i = 0; i < n - 1; i++){
+		        int a, b;
+		        scanf("%d%d", &a, &b);
+		        add(a, b), add(b, a);
+		    }
+		    dfs(2);	其实 dfs(谁)都可以, 但是可能怕没有节点2吧, 老师就写了 dfs(1)
+		    cout << res << endl;
+		    return 0;
+		}
+------------------
+		for(xx)
+			if(合法)
+				dfs(xx)
+
+		for(h[i]; ...)
+			int j = ne[i]
+			if(!st[i]){
+				bfs(xx)
+			}
+------------------
+		既然 add()两次, 无向图
+		疑问:
+			给定一个节点必定会遍历所有和它相连的子节点，这样不就无所谓父子节点了。
+			比如从4开始遍历的话，上面的和下面两个连通块点数, 都被计算过并被加到sum中, 最后sum == N
+			max(n-sum,res)就不合理了
+		回答:
+			max(n-sum,res)对于首次遍历的节点来说是没必要的
+			但对后续的子节点dfs时由于已经过滤掉其父节点{来源的点}了
+				for循环中就不能获取到以父节点为根的子树，这种情况就需要 max(n-sum,res)来保证
+
+			例如:
+				 1 ---
+				 | \   \
+				 2  \   7
+				 | \ \
+				 |  5 \
+				 8	   4
+				 	   |\
+				 	   | 6
+				 	   3
+				 	   |
+				 	   9
+		继续疑问:
+			为什么不能只用一个 add(a,b)?
+		回答:
+			因为你这样指明了方向, 可能就有问题
+			因为你 dfs(起始点)中起始点可能会找错, 然后就不能遍历整张图
+		我的其他观察:
+			老师的代码, 起始dfs(不管是多少), 最后的答案都是正确的
+------------------
+43. AcWing 847. 图中点的层次
+	1. bug
+		#include <iostream>
+		#include <cstring>
+		#include <queue>
+		using namespace std;
+
+		const int N = 1e5;
+		int h[N], e[N], ne[N], ind;
+		int n, m;
+		int dist[N];
+		bool st[N]; 其实可以不用st, 直接看dist[v] ?== -1.
+
+		void add(int a, int b){
+		    e[ind] = b, ne[ind] = h[a], h[a] = ind ++;
+		}
+
+		int bfs(int u){
+		    错误: 忘记写
+		    正确: memset(dist, -1, sizeof dist);
+		    
+		    dist[1] = 0;
+		    
+		    queue<int> q;
+		    q.push(1);
+		    
+		    st[1] = true;
+		    
+		    while(q.size()){
+		        int u = q.front();
+		        q.pop();
+		        
+		        for(int i = h[u]; ~i; i = ne[i]){
+		            int v = e[i];
+		            if(!st[v]){
+		                st[v] = true;	其实可以不用st, 直接看dist[v] ?== -1.
+		                dist[v] = dist[u] + 1;
+		                if(v == n) return dist[v];
+		                q.push(v);
+		            }
+		        }
+		    }
+		    return -1;
+		}
+
+		int main(){
+		    memset(h, -1, sizeof h);
+		    cin >> n >> m;
+		    while(m--){
+		        int a, b;
+		        scanf("%d%d", &a, &b);
+		        add(a, b);
+		    }
+		    cout << bfs(1) << endl;
+		}
 	2. ok
-		
+		最短路问题, 是否连通问题: 都用bfs. dfs要遍历所有的路径太慢了
 
 
+
+dijkstra优化
+	瓶颈在于, 每条边插入heap的效率比较低: loge
+	有e条边, 如果边很多,插入的效率就会很慢
+		可能不如不优化, 因为不优化根本不需要插入heap这个动作
 
 		
 
