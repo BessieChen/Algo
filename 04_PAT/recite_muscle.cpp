@@ -3923,6 +3923,12 @@ todo s 33. AcWing 240. 食物链
 		    dfs(0, 0);
 		}
 * 39. AcWing 843. n-皇后问题
+	0. 小总结
+		相似性:
+			1. 全排问题的path的从左到右的每个格子 
+				== n皇后的棋盘从上到下每一行
+			2. 全排中path的第i个格子填了数字3, 第i+1个格子就不能填3 
+				== n皇后的棋盘第i行的第3列填了皇后, 第i+1行的第3列就不能填皇后{外加对角线/斜对角线的限制} 
 	1. bug
 		#include <iostream>
 		using namespace std;
@@ -4037,10 +4043,320 @@ todo s 33. AcWing 240. 食物链
 		            g[i][j] = '.';
 		    dfs(0);
 		}
-40. AcWing 844. 走迷宫 
+40. AcWing 844. 走迷宫
+	1. bug	
+		#include <iostream>
+		#include <cstring>
+		#include <queue>
+		using namespace std;
+
+		const int N = 110;
+		int g[N][N], dist[N][N];
+		int n, m;
+		typedef pair<int, int> PII;
+
+		int bfs(){
+		    memset(dist, -1, sizeof dist);
+		    dist[0][0] = 0;
+		    
+		    queue<PII> q;
+		    q.push({0, 0}); 					错误: q.push_back({0, 0});
+		    
+		    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+		    	上右下左
+		    	dx和dy是关于 | 对称的
+		    
+		    while(q.size()){
+		        auto t = q.front(); 						错误: auto t = q.top();
+		        q.pop();
+		        
+		        int ox = t.first, oy = t.second;
+		        for(int i = 0; i < 4 ; i++){
+		            int x = ox + dx[i], y = oy + dy[i];
+		            if(0 <= x && x < n && 0 <= y && "y < m" && !g[x][y] && dist[x][y] == -1){ 		错误: if(0 <= x && x < n && 0 <= y && "y < n" && !g[x][y] && dist[x][y] == -1){
+		                dist[x][y] = dist[ox][oy] + 1;
+		                if(x == n - 1 && y == m - 1) return dist[x][y];
+		                q.push({x, y});			错误: q.push_back({x, y});
+		            }
+		        }
+		    }
+		    return dist[n - 1][m - 1];
+		}
+		int main(){
+		    cin >> n >> m;
+		    for(int i = 0; i < n; i++){
+		        for(int j = 0; j < m; j++){
+		            scanf("%d", &g[i][j]);
+		        }
+		    }
+		    printf("%d", bfs());
+		}
+	2. ok
+		因为是二维地图, 所以我们需要 pair<int, int> PII 记录二维坐标
+		这种是无距离题目
+			所以一个点{x,y}, 只能进入queue一次
+			一旦进入了, dist[x][y]就是距离起点的最短距离, 之后不会再被更新{放松}
+			所以合法性判断是 dist[x][y] == -1
+				如果 dist[x][y] != -1, 说明已经进入过queue了, 再进入也没用因为肯定不是最短距离了, 因为bfs层数越大, 距离起点是越来越远的
+		#include <iostream>
+		#include <queue>
+		#include <cstring>
+		using namespace std;
+
+		const int N = 110;
+		int g[N][N], dist[N][N], n, m;
+		typedef pair<int, int> PII;
+
+		int bfs(){
+			看看都有什么东西要初始化: dist, queue
+		    memset(dist, -1, sizeof dist); 都是 0xfffffff, 也就是max最大值
+		    dist[0][0] = 0;
+		    
+		    queue<PII> q;
+		    q.push({0,0});
+		    
+		    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+		    
+		    while(q.size()){
+		        auto t = q.front();
+		        q.pop();
+		        
+		        int ox = t.first, oy = t.second;
+		        for(int i = 0; i < 4; i++){
+		            int x = ox + dx[i], y = oy + dy[i];
+		            if(0 <= x && x < n && 0 <= y && y < m && g[x][y] == 0 && dist[x][y] == -1){
+		                dist[x][y] = dist[ox][oy] + 1;	更新距离
+		                if(x == n - 1 && y == m - 1) return dist[x][y];
+		                q.push({x, y});
+		            }
+		        }
+		    }
+		}
+
+		int main(){
+		    cin >> n >> m;
+		    for(int i = 0 ; i < n; i++)
+		        for(int j = 0 ; j < m; j++)
+		            scanf("%d", &g[i][j]);
+		    cout << bfs() << endl;
+		    return 0;
+		}
+* 41. AcWing 845. 八数码/华容道
+	0. 小总结
+		1. 什么时候需要恢复状态:
+			本题需要, 如果字符串t被修改
+				老师没有备份t, 所以要恢复状态
+				我备份了, 所以不需要回复
+			上一题不需要, 因为{ox,oy}没有修改
+				上一题代码, 其中ox, oy在 for(i < 4) 中一直不变
+				int ox = t.first, oy = t.second;
+		        for(int i = 0; i < 4 ; i++){
+		            int x = ox + dx[i], y = oy + dy[i];
+		            if(0 <= x && x < n && 0 <= y && "y < m" && !g[x][y] && dist[x][y] == -1){ 		错误: if(0 <= x && x < n && 0 <= y && "y < n" && !g[x][y] && dist[x][y] == -1){
+		                dist[x][y] = dist[ox][oy] + 1;
+		                if(x == n - 1 && y == m - 1) return dist[x][y];
+		                q.push({x, y});			错误: q.push_back({x, y});
+		            }
+		        }
+		2. 
+			1. queue
+				存状态: 
+					queue<string> q;
+				存二维地图: 
+					queue<pair<int,int>> q;
+
+			2. dist
+				存状态:	
+					unordered_map<string, int> dist;
+					dist["start"] = 0;
+				存二维地图: 
+					dist[N][N];
+					memset(dist, -1, sizeof dist);
+					dist[0][0] = 0;
+	1. bug
+		#include <iostream>
+		#include <queue>
+		#include <unordered_map>
+		using namespace std;
+
+		const string ending = "12345678x";
+		string start;
+
+		int bfs(){
+		    queue<string> q;
+		    q.push(start);
+		    
+		    unordered_map<string, int> dist;
+		    dist[start] = 0;
+		        
+		    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+		    while(q.size()){
+		        string os = q.front();
+		        q.pop();
+		        
+		        int oind = os.find('x');
+		        int ox = oind / 3, oy = oind % 3;
+		        for(int i = 0; i < 4; i ++){
+		            int x = ox + dx[i], y = oy + dy[i];
+		            string ns = os;
+		            if(0 <= x && x < 3 && 0 <= y && y < 3){
+		                int nind = 3 * x + y;
+		                swap(ns[nind], ns[oind]);
+		                错误:
+		                	if(!dist.count(ns)) dist[ns] = dist[os] + 1;
+		                    if(ns == ending) return dist[ns];
+		                    q.push(ns);	这个是要在括号里面的!
+		                正确:
+			                if(!dist.count(ns)) {  如果dist中没有, 注意是dist, 不是queue中有没有. 对比之前是 dist[x][y] == -1.
+			                    dist[ns] = dist[os] + 1;
+			                    if(ns == ending) return dist[ns];
+			                    q.push(ns);
+			                }
+		            }
+		        }
+		    }
+		    错误: return ending;	另外, 不能用end, 这是关键字
+		   	正确: return -1;
+		}
+ 
+		int main(){
+		    char s[2];
+		    for(int i = 0; i < 9; i++){
+		        cin >> s;	或者 scanf("%s", s); 都可以!!
+		        start += *s;
+		    }
+		    cout << bfs() << endl;
+		}
+	2. ok
+		1. 我的不恢复现场
+			#include <iostream>
+			#include <queue>
+			#include <unordered_map>
+			using namespace std;
+
+			const string ending = "12345678x"; 
+			string start;
+
+			int bfs(){
+			    queue<string> q;
+			    q.push(start);
+			    
+			    unordered_map<string, int> dist;
+			    dist[start] = 0;
+			    
+			    // 1. 旧x的string -> 坐标{ox, oy}
+		        //     old.find(), / 3, % 3
+		        // 2. 新x的坐标{x, y}
+		        //     	1. ox + 4个偏移, oy + 4个偏移
+		        // 		2. {x, y}合法的话
+		        //      3. 坐标 -> string
+		        // 			swap(news[x * 3 + y], news[ox * 3 + oy]);
+		        //			这一步很关键:
+		        //				for里面的每一次, 都要初始化原料, 是 string news = olds
+		        //				
+		        //         如果 dist 中有没有, 注意是dist不是queue. 对比之前是 dist[x][y] == -1.
+		        //             更新: dist[new] = dist[old] + 1 
+		        //             插入queue
+
+			    // 主要是怎么从 老string -> 新string
+				    // 0. 知道老'x'在string中的位置: find() -> 老ind
+				    // 1. 找到老'x'的坐标{ox, oy}: /3, %3
+				    // 2. 新'x'的坐标: 4个偏移 + 判断是否出界
+				    // 3. 合法的新x的坐标{x, y}在string的位置: x * 3 + y -> 新ind
+				    // 4. 用swap来处理string: 交换: 老ind, 新ind -> 实现了'x'在string中的转移
+			    
+			    总结的不错: 
+			        // 1. find()               -> 老ind
+			        // 2. /3,%3                -> 老坐标{ox, oy}
+			        // 3. 偏移 + 判断合法      -> 新坐标{x, y}
+			        // 4. x*3+y                -> 新ind
+			        // 5. swap(老ind, 新ind)   -> 实现了'x'在string中的转移
+			        
+			    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+			    while(q.size()){
+			        string os = q.front();	//old string
+			        q.pop();
+			        
+			        int oind = os.find('x');	//old ind, 旧'x'在string中的位置
+			        int ox = oind / 3, oy = oind % 3; 
+			        for(int i = 0; i < 4; i ++){
+			            int x = ox + dx[i], y = oy + dy[i]; // 新'x'在矩阵中的坐标{x, y}
+			            string ns = os;		//new string, 4次中, 每次都要有: 没被污染的原材料ns
+			            if(0 <= x && x < 3 && 0 <= y && y < 3){
+			                int nind = 3 * x + y; //new indx, 新'x'在string中的位置
+			                swap(ns[nind], ns[oind]); //swap()是用在string上, 所以要知道新旧'x'在string中的位置
+			                if(!dist.count(ns)) { //如果dist中没有, 注意是dist, 不是queue中有没有. 对比之前是 dist[x][y] == -1.
+			                    dist[ns] = dist[os] + 1;
+			                    if(ns == ending) return dist[ns];
+			                    q.push(ns);
+			                }
+			            }
+			        }
+			    }
+			    return -1;
+			}
+
+			// 其实, 为什么只会进入一次queue, 只要有一次就是最短距离? 
+			    // 	因为这道题, 只是'x'在string中移动的方式fancy了一些
+			    // 	你就当做这是一个地图, 'x'只能上下左右移动, 就是无距离的dfs
+			    // 	另外, 这道题, 我们实现上是移动'x', 其实题目的意思是移动数字, 然后移动数字的时候把'x'挤开了
+				//  相当于我们要把数字挪成这个样子:
+				// 	123
+				// 	456
+				// 	78
+
+
+			int main(){
+			    char s[2];
+			    for(int i = 0; i < 9; i++){
+			        cin >> s;
+			        start += *s;
+			    }
+			    cout << bfs() << endl;
+			}
+
+
+
+		2. 老师的恢复现场{不背}
+			老师没有备份, 所以swap两次
+			while (q.size())
+		    {
+		        auto t = q.front();
+		        q.pop();
+
+		        if (t == end) return d[t]; 如果t是终点, 我们就提前结束 
+
+		        int distance = d[t]; 先存一下这个节点t到起点的距离. 
+		        int k = t.find('x'); 求一下, 'x'这个字符, 在状态{字符串}中的下标 
+		        int x = k / 3, y = k % 3;	将下标转化为 第x行, 第y列 
+
+		        for (int i = 0; i < 4; i ++ )
+		        {
+		            int a = x + dx[i], b = y + dy[i]; 3*3矩阵中, 新位置是{a,b}
+		            if (a >= 0 && a < 3 && b >= 0 && b < 3) 如果{a,b}是合法的 
+		            {
+		                swap(t[a * 3 + b], t[k]); 3*3矩阵中的位置, 转换到string后, 就是 a * 3 + b
+		                							这里的 t[a * 3 + b]是某个字符, 例如'1'
+		                							t[k]是我们的字符'x'
+		                							所以我们交换'x'和'1'
+		                if (!d.count(t)) 如果这个新状态, 没有计算过. 
+		                {
+		                    d[t] = distance + 1; 我们就更新下它到起点状态的距离 
+		                    q.push(t); 把这个状态装到queue中, 为了下一层的遍历
+		                }
+
+		                这个是恢复现场, 给下一个方向做准备. 因为下一个方向也是需要老状态t
+		                swap(t[a * 3 + b], t[k]);
+		            }
+		        }
+		    }
+42. AcWing 846. 树的重心
 	1. bug
 	2. ok
 		
+
+
+
 		
 
 
