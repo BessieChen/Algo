@@ -2366,6 +2366,7 @@
 		}
 23. AcWing 828. 模拟栈
 	1. bug
+		[1, tt]区间是有元素的, 所以栈顶是 st[tt], 栈底是 st[1]
 	2. ok
 		#include <iostream>
 		using namespace std;
@@ -2430,7 +2431,7 @@ todo s 24. AcWing 3302. 表达式求值
 			模拟栈/队列中的 tt起始是不同的. 
 				栈: tt初始是0
 					tt = 0, 没有元素
-				队列: hh初始是0, tt初始是-1
+				队列: hh初始是0, tt初始是-1 {你看到tt初始为0的都是因为dijkstra初始就插入了队头}
 					hh > tt, 没有元素
 					while(hh <= tt): while(有元素), 元素是在[hh,tt]
 			模拟栈/队列中, 插入元素都是 xx[++ tt] = yy
@@ -2634,9 +2635,11 @@ todo s 24. AcWing 3302. 表达式求值
 			知道终点r, 知道区间长度j, 求起点: r - j + 1
 		-1的
 			知道起点l, 知道区间长度j, 求终点: l + j - 1
-		另一种说法:
-			知道起点是l, 想去终点r, 应该怎么走: r - l + 1
+		从一个东西变成另一个东西: 这里就不是什么区间长度了, 而是走的距离
+			知道一个点是 l - 1, 想去另一个点 r, 应该怎么走: 也就是 l - 1 + ?? = r
+				?? = r - (l - 1) == r - l + 1
 				举例: 字符串哈希 h[r] - h[l - 1] * p[r - l + 1];
+				这里如果是区间长度, [l-1, r]的区间长度是 r - (l - 1) + 1 == r - l. 
 	1. bug
 	2. ok
 		1. 介绍一下我心里是怎么想的, 动画是什么
@@ -2726,7 +2729,7 @@ todo s 24. AcWing 3302. 表达式求值
 
 			        "走到这里, 有两种可能:	无路可退 or 打得过"
 			        if(p[i] == p[j + 1]) j++; 		"打得过, 就j++"
-			        ne[i] = j;	不管是打得过{j!=0} 	"还是无路可退{j==0}, 都要记录ne[i]"
+			        ne[i] = j;		"不管是打得过{j!=0}  还是无路可退{j==0}, 都要记录ne[i]"
 			    }
 			    for(int j = 0 "一开始是无路可退的", i = 1 "一开始我们是要比较s的第1个元素和p的第1个元素, 这里i指向的是s的第1个元素";  i <= m; i++){
 			        while(j "j >= 1表明还有退路" && s[i] != p[j + 1] "不匹配,也就是打不过") j = ne[j];
@@ -2892,7 +2895,7 @@ todo s 24. AcWing 3302. 表达式求值
 		    									反正你就记得, 一共31位,右移了30位只剩下最后1位
 
 		    									如果 i >= 0 是 ~i, 也就是 i != -1
-		    									如果 i > 0 是 i, 也就是 i != 0
+		    									如果 i > 0 是 i, 也就是 i >= 1 或者 i != 0
 
 		        int son = v >> i & 1;
 		        int &temp = s[root][son];	注意: 这里是别名 &temp, 所以我们可以就把temp当成 s[root][son]
@@ -3044,6 +3047,20 @@ todo s 24. AcWing 3302. 表达式求值
 todo s 33. AcWing 240. 食物链
 34. AcWing 838. 堆排序
 	1. bug
+		void down(int u){
+		    int l = u * 2, r = u * 2 + 1;
+		    int t = u;
+		    if(l <= cnt && h[l] < h[t]) t = l;
+		    if(r <= cnt && h[r] < h[t]) t = r;
+		    错误:
+		    	if(t != u) swap(h[t], h[u]);
+		    	down(t);
+		    正确:
+			    if(t != u){
+			        swap(h[t], h[u]);
+			        down(t);			注意, 不是 down(u), u是树靠上方的index, t是树下方的index
+			    }
+		}
 	2. ok
 		#include <iostream>
 		using namespace std;
@@ -3113,12 +3130,925 @@ todo s 33. AcWing 240. 食物链
 		    }
 		    return 0;
 		}
-35. AcWing 839. 模拟堆
+* 35. AcWing 839. 模拟堆
+	1. bug
+		#include <iostream>
+		#include <cstring>
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int heap[N], hindex[N], order[N];
+		int cnt;
+
+		void hswap(int i, int j){
+		    int oi = order[i], oj = order[j];	oi: a是第oi个到来的人, oj: b是第oj个到来的人. 这个oi和oj是纸质的表上的左侧的内容
+		    swap(hindex[oi], hindex[oj]);
+		    swap(heap[i], heap[j]);
+		    swap(order[i], order[j]);
+		}
+
+		联想故事:
+			1.
+				1. heap的下标: 一座座房子, 是固定的, 一个数组的下标怎么可能会移动呢
+				2. 值: 一个人, 人是可以移动的, 可以从一个房子转移到另一个房子
+				3. 某个人是第o个加入的: o是这个人的固定属性, o和这个人是绑定的, 不管这个人从哪个房子搬家到了哪个房子, 他都是第o个插入的, 永不变
+			2. 现在要交换:
+				1. 人a 和 人b 要互换房子
+					a是第oi个到来的人, b是第oj个到来的人
+					换之前, 他们的房子的编号分别是 参数: i, j
+				2. 如果要换, 有以下的信息需要改:
+					1. swap(hindex[oi], hindex[oj]);
+						我们联想有一张纸质的表 hindex, 上面记载着第o个人的房子的编号: hindex[o]
+						我们把两个人的房子编号换一换就好了, 也就是纸质的表里面 oi 上面记录的内容 hindex[oi] 和 oj上面记录的内容 hindex[oj] 调换
+					2. swap(heap[i], heap[j]);
+						房子i,j都换了新主人, 把主人换了吧{把值换了}
+					3. swap(order[i], order[j]);
+						房子i,j的主人的属性也要换, 因为属性和主人是绑定的. 
+
+
+		void down(int u){
+		    int l = u * 2, r = u * 2 + 1;
+		    int t = u;
+		    if(l <= cnt && heap[l] < heap[t]) t = l;
+		    if(r <= cnt && heap[r] < heap[t]) t = r;
+		    错误:
+		    	if(t != u) hswap(t, u);
+			    down(t);
+		    正确:
+			    if(t != u) {
+			        hswap(t, u);
+			        down(t);
+			    }
+		}
+
+		void up(int u){
+		    while(u / 2 && heap[u] < heap[u / 2]){
+		       hswap(u, u / 2);
+		       u = u / 2;
+		    } 
+		}
+
+		int main(){
+		    int n, o = 0;
+		    scanf("%d", &n);
+		    char op[5]; // 错误: string op;
+		    int k, v;
+		    while(n--){
+		        scanf("%s", op);
+		        if (!strcmp(op, "I")) // 错误: if(op == "I")
+		        {
+		            scanf("%d", &v);
+		            o++, cnt++;		先++, 也就是第o个插入的+1, 下标cnt + 1. 所以下标都是从1开始
+		            hindex[o] = cnt, order[cnt] = o, heap[cnt] = v;	第o个加入的在heap中的index是cnt, 下标是cnt是第o个加入的, 下标是cnt是值是v
+		            up(cnt);
+		        } 
+		        else if (!strcmp(op, "PM"))// 错误:  else if(op == "PM") 
+		        {
+		            printf("%d\n", heap[1]);
+		        }
+		        else if (!strcmp(op, "DM"))// 错误: else if(op == "DM")
+		        {
+		            hswap(1, cnt);
+		            cnt --;
+		            down(1);
+		        }else if (!strcmp(op, "D")){
+		            scanf("%d", &k);
+		            int ind = hindex[k];	找到第k个加入的在heap中的下标
+		            错误: 忘记写这两句
+		            正确:
+			            hswap(ind, cnt);	
+			            cnt --;
+		            up(ind), down(ind);
+		        }
+		        else{
+		            scanf("%d%d", &k, &v);
+		            int ind = hindex[k];
+		            heap[ind] = v;
+		            up(ind), down(ind);
+		        }
+		    }
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		#include <cstring> //strcmp
+		using namespace std;
+
+		const int N = 1e5 + 10;
+		int heap[N];
+		int hindex[N], o;
+		int order[N], cnt;
+
+		void hswap(int ind1, int ind2){
+		    int o1 = order[ind1], o2 = order[ind2];
+		    swap(hindex[o1], hindex[o2]);	纸质表更换
+		    swap(heap[ind1], heap[ind2]);	主人更换
+		    swap(order[ind1], order[ind2]);	主人的属性更换 
+		}
+
+		void down(int u){
+		    int l = u * 2, r = l + 1;
+		    int t = u;
+		    if(l <= cnt && heap[l] < heap[t]) t = l;
+		    if(r <= cnt && heap[r] < heap[t]) t = r;
+		    if(t != u){
+		        hswap(t, u);
+		        down(t);
+		    }
+		}
+
+		void up(int u){
+		    while(u / 2 && heap[u] < heap[u / 2]){
+		        hswap(u, u / 2);
+		        u /= 2;
+		    }
+		}
+
+
+		int main(){
+		    int n;
+		    char op[5];
+		    cin >> n;
+		    while(n--){
+		        scanf("%s", op);
+		        int k, v;
+		        if(strcmp(op, "I") == 0){
+		            scanf("%d", &v);
+		            o++, cnt++;
+		            hindex[o] = cnt, order[cnt] = o, heap[cnt] = v;
+		            up(cnt);
+		        }else if(strcmp(op, "PM") == 0){
+		            printf("%d\n", heap[1]);
+		        }else if(strcmp(op, "DM") == 0){
+		            hswap(1, cnt);
+		            cnt--;
+		            down(1);
+		        }else if(strcmp(op, "D") == 0){ //-> 这个就是老师说的, 我们自己的heap, 可以实现删除任意个元素. 而不一定是堆顶
+		            scanf("%d", &k);
+		            int ind = hindex[k];
+		            hswap(ind, cnt);
+		            cnt--;
+		            up(ind), down(ind);
+		        }else{
+		            scanf("%d%d", &k, &v);
+		            int ind = hindex[k];
+		            heap[ind] = v;
+		            up(ind), down(ind);
+		        }
+		    }
+		    return 0;
+		}
+36. AcWing 840. 模拟散列表
+	1. bug
+		1. 求大于2e5的最小质数:
+			int main(){
+			    for(int i = 2e5; ; i++){
+			        bool f = false;
+			        for(int j = 2; j <= i / j; j++){
+			        	错误: if(i / j == 0){
+			            正确: if(i % j == 0){
+			                f = true;
+			                错误: 忘记写: break;
+			                正确: break; -> 说明i可以被某个j整除, 所以break掉内层for loop, 继续看下一个i. 注意这里是break, 不是continue
+			            }
+			        }
+			        错误: if(f) cout << i << endl; f == true代表不是质数, 而且没有break, 会无限循环i, 就TLE了
+			        正确: 
+			        	if(!f) {
+				            cout << i << endl; 
+				            break;
+				        }
+			    }
+			    return 0;
+			}
+		2. 模拟hash {开放寻址法}
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+
+			const int N = 2e5 + 3, null = 0x3f3f3f3f;
+			错误: int hash[N]; 这个是一个系统的struct
+			正确: int h[N];
+
+			void insert(int v){
+			    int ind = (v % N + N) % N;
+			    while(h[ind] != null && h[ind] != v){
+			        ind++;
+			        if(ind == N + 1) ind = 0;
+			    }
+			    h[ind] = v;
+			}
+
+			bool query(int v){
+			    int ind = (v % N + N) % N;
+			    while(h[ind] != null && h[ind] != v){
+			        ind ++;
+			        if(h == N + 1) ind = 0;
+			    }
+			    return h[ind] == v;
+			}
+			int main(){
+			    错误: 忘记写这一句memset
+			    正确: memset(h, 0x3f, sizeof h);
+			    int n;
+			    cin >> n;
+			    错误: string op; 因为之后 scanf("%s%d", op, &v); 这样op会读出一整行, 包括了v的内容
+			    正确: char op[2]; 限定为2个字符
+			    int v;
+			    while(n--){
+			        scanf("%s%d", op, &v);
+			        if(*op == 'I') insert(v);
+			        else{
+			            if(query(v)) puts("Yes");
+			            else puts("No");
+			        }
+			    }
+			    return 0;
+			}
+		3. 模拟hash{拉链法}, 更短代码
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+
+			const int N = 2e5 + 3;
+			int hh[N], e[N], ne[N], ind;	就是正常的链表
+
+			void insert(int v){
+			    int k = (v % N + N ) % N;	k: 读作坑
+			    e[ind] = v, ne[ind] = hh[k], hh[k] = ind ++;
+			}
+
+			bool query(int v){
+			    int k = (v % N + N) % N;
+			    for(int i = hh[k] ; ~i; i = ne[i]){	遍历
+			        if(e[i] == v) return true;
+			    }
+			    return false;
+			}
+
+			int main(){
+				错误: memset(hh, 0x3f, sizeof hh);
+			    正确: memset(hh, -1, sizeof hh);
+			    int n, v;
+			    char op[2];
+			    cin >> n;
+			    while(n--){
+			        scanf("%s%d", op, &v);
+			        if(*op == 'I') insert(v);
+			        else{
+			            if(query(v)) puts("Yes");
+			            else puts("No");
+			        }
+			    }
+			    return 0;
+			}
+	2. ok{有3个知识}
+		1. 求大于2e5的最小质数:
+			背这个:
+				#include <iostream>
+				using namespace std;
+				int main(){
+				    int i;
+				    for(i = 2e5 ; ; i ++){
+				        int j;
+				        for(j = 2; j <= i / j; j++) if(i % j == 0) break; 也就是看下一个
+				        if(i % j != 0) break;	也就是如果不能被整除, 说明i就是我们要找的质数
+				    }
+				    cout << i << endl;
+				}
+			---
+			#include <iostream>
+			using namespace std;
+
+			int main(){
+			    for(int i = 2e5; ; i++){
+			        int j;
+			        for(j = 2; j <= i / j; j++){
+			            if(i % j == 0){
+			                break;
+			            }
+			        }
+			        if(i % j != 0){	如果不能被整除, 说明i就是我们要找的质数
+			            cout << i << endl;
+			            break;
+			        }
+			    }
+			}
+			--
+			#include <iostream>
+			using namespace std;
+
+			int main(){
+			    for(int i = 200000; ; i++){
+			        bool is_prime = true;
+			        for(int j = 2; j <= i / j; j++){
+			            if(i % j == 0){
+			                is_prime = false;
+			                break;
+			            }
+			        }
+			        if(is_prime) {
+			            cout << i << endl; 
+			            break;
+			        }
+			    }
+			    
+			    return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+
+			int main(){
+			    for(int i = 2e5; ; i++){
+			        bool isp = true;
+			        for(int j = 2; j <= i / j ; j ++){
+			            if(i % j == 0){
+			                isp = false;
+			                break;
+			            }
+			        }
+			        if(isp){
+			            cout << i << endl;
+			            break;
+			        }
+			    }
+			}
+		2. 模拟hash
+			注意的点:
+				hash数组的长度
+					需要是数据范围的2倍以上, 数据是1e5, 所以我们要2e5以上
+					另外长度, 需要是质数, 因为我们找坑位是 馍加馍, 需要质数: int ind = (v % N + N) % N;
+				初始化hash
+					需要是 0x3f3f3f3f, 对应的10进制是: 1 061 109 567 = 1e9
+					为什么不是0, 因为你插入的数据, 值的范围是 −10^9≤x≤10^9
+					所以用 const int null = 0x3f3f3f3f;
+
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+
+			const int N = 2e5 + 3, null = 0x3f3f3f3f; 注意, 这里的null不是关键词. nullptr和NULL才是. 另外N是大于2e5的最小质数 
+			int heap[N];
+
+			void insert(int v){
+			    int ind = (v % N + N) % N;	馍加馍, 肉夹馍
+			    while(heap[ind] != null && heap[ind] != v){	如果这个坑有人, 并且, 这个人不是我
+			        ind++;
+			        if(ind == N + 1) ind = 0;	小心超出范围
+			    }
+			    跳出来的时候, 这个坑没有人, 或者, 坑里的人就是我
+			    if(heap[ind] == null) heap[ind] = v; 总之就把我放进去
+			}
+
+			bool query(int v){
+			    int ind = (v % N + N) % N;
+			    while(heap[ind] != null && heap[ind] != v){
+			        ind ++;
+			        if(ind == N + 1) ind = 0;
+			    }
+			    return heap[ind] == v;
+			}
+			int main(){
+			    memset(heap, 0x3f, sizeof heap);
+			    int n;
+			    cin >> n;
+			    char op[2];
+			    int v;
+			    while(n--){
+			        scanf("%s%d", op, &v);
+			        if(*op == 'I') insert(v);
+			        else{
+			            if(query(v)) puts("Yes");
+			            else puts("No");
+			        }
+			    }
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+
+			const int N = 2e5 + 3, null = 0x3f3f3f3f;
+			int hh[N];
+
+			void insert(int v){
+			    int ind = (v % N + N) % N;
+			    while(hh[ind] != null && hh[ind] != v){
+			        ind++;
+			        if(ind == N + 1) ind = 0;
+			    }
+			    if(hh[ind] == null) hh[ind] = v;
+			}
+
+			bool query(int v){
+			    int ind = (v % N + N) % N;
+			    while(hh[ind] != null && hh[ind] != v){
+			        ind++;
+			        if(ind == N + 1) ind = 0;
+			    }
+			    return hh[ind] == v;
+			}
+
+			int main(){
+			    memset(hh, 0x3f, sizeof hh);
+			    int n, v;
+			    // string op;
+			    char op[2];
+			    cin >> n;
+			    while(n--){
+			        scanf("%s%d", op, &v);
+			        if(*op == 'I') insert(v);
+			        else{
+			            if(query(v)) puts("Yes");
+			            else puts("No");
+			        }
+			    }
+			    return 0;
+			}
+		3. 模拟hash{拉链法}, 更短代码
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+
+			const int N = 2e5 + 3, null = 0x3f3f3f3f;
+			int hh[N], e[N], ne[N], ind;	就是正常的链表
+
+			void insert(int v){
+			    int k = (v % N + N ) % N;	k: 读作坑
+			    e[ind] = v, ne[ind] = hh[k], hh[k] = ind ++;
+			}
+
+			bool query(int v){
+			    int k = (v % N + N) % N;
+			    for(int i = hh[k] ; ~i; i = ne[i]){	遍历
+			        if(e[i] == v) return true;
+			    }
+			    return false;
+			}
+
+			int main(){
+			    memset(hh, -1, sizeof hh);
+			    int n, v;
+			    char op[2];
+			    cin >> n;
+			    while(n--){
+			        scanf("%s%d", op, &v);
+			        if(*op == 'I') insert(v);
+			        else{
+			            if(query(v)) puts("Yes");
+			            else puts("No");
+			        }
+			    }
+			    return 0;
+			}
+* 37. AcWing 841. 字符串哈希
+	0. 小总结:
+		hash: 
+			1. 上一题: 
+				将很多数据放在hash表, 方便查找
+				有点像 离散化, 不过离散化是排好序, 然后通过二分得到的ind来聚合
+			2. 这一题: 找字符串匹配
+				很像 kmp
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		typedef unsigned long long UII; 	因为hash值可能很大, 所以用 UII
+											typedef只能用于类型: {pair<int,int>, unsigned long long}, 不能用于宏定义, 例如 x first y second
+
+		const int N = 1e5 + 10, P = 131;
+		int h[N], p[N];
+
+		UII get(int l, int r){
+		    return h[r] - h[l - 1] * p[r - l + 1];  -> 含义: p[r - l + 1] == P^(r - l + 1)
+		}
+
+		int main(){
+		    int n, m;
+		    scanf("%d%d", &n, &m);
+		    错误: string str; 用  scanf("%s", ...) 的写法就是用 char [], 如果是string就cin>>
+		    正确: char str[N]; 
+		    scanf("%s", str + 1);
+		    错误: 忘记写下一句
+		    正确: p[0] = 1; // p[0] == P^0 == 1
+		    for(int i = 1; i <= n; i++){		注意是 i == 1 开始, 很像 S[i] = S[i - 1] + a[i] 也是从 i == 1开始 
+		        h[i] = h[i - 1] * P + str[i];	因为index小的是高位, 我们往右边面加字符的时候, 左侧{高位}的地位要抬高: h[i - 1] * P
+		        p[i] = p[i - 1] * P; 			这个就是累乘: -> 含义: p[i] == P^i
+		    }
+		    while(m--){
+		        int l1, r1, l2, r2;
+		        scanf("%d%d%d%d", &l1, &r1, &l2, &r2);
+		        if(get(l1, r1) == get(l2, r2)) puts("Yes");
+		        else puts("No");
+		    }
+		    return 0;
+		}
+	2. ok
+		#include <iostream>
+		using namespace std;
+
+		const int N = 1e5 + 10, P = 131;
+		char str[N];
+		int h[N], p[N];
+
+
+		unsigned long long get(int l, int r){
+		    return h[r] - h[l - 1] * p[r - l + 1];	要抬高多少? 就是 l - 1 + ?? == r, ?? == r - (l - 1) == r - l + 1, 注意这里不是求区间长度啊! 是走的距离
+		    这里
+		    	1. h[r] 对应着 a + b + c, 也就是前r个字母的hash
+					    	|\
+							| a\
+							|--- \
+							| b | c\
+							|--------
+					ind 	0        size
+							高位 	 低位
+					三角形高  高 		 低
+				2. h[l - 1] 对应着 a, 也就是前l-1个字母的hash
+							|\
+							| a\
+							|--- \
+				3. 我们的要求的是 c, , 也就是[l,r]字母的hash
+									|\
+									| c\
+									-----
+				4. 所以要把 h[l - 1]抬高成 h[l - 1] * p[r - l + 1], 也就是 a + b
+							|\
+							| a\
+							|--- 
+							| b |
+							|----
+						要抬高多少? 就是 l - 1 如何变成 r
+							l - 1 + ?? == r, ?? == r - (l - 1) == r - l + 1, 注意这里不是求区间长度啊! 是走的距离
+				5. 直观:
+					因为h[r]左侧高位[1,l-1]是已经被抬高了
+					h[l-1]就是上面说的高位部分[1,l-1], 但是没有被抬高
+					所以我们要抬高之后再减去
+				6. 联想前缀和:
+					[l, r]: S[r] - S[l-1], 不存在什么抬高
+		}
+
+		画面:
+			str 0 		1		2		3		4		5		6
+				'0'		|\		|\		
+						| a\	| c\
+						|---\	|--- \
+
+			h 	0 		1		2		3		4		5		6
+				'0'   	|\		|\		
+						| a\	| a\
+						|---\ 	|--- \
+								| b | c\
+								|--------	
+
+			p 	0 		1		2		3		4		5		6
+				'1' 	'131' 	'131^2'
+
+		int main(){
+		    int n, m;
+		    scanf("%d%d", &n, &m);
+		    scanf("%s", str + 1);	图中我们的三角形a,c是从str的ind==1开始的
+		    p[0] = 1;				P^0 == 1
+		    for(int i = 1; i <= n; i++){
+		        h[i] = h[i - 1] * P + str[i];	将左侧的三角形a抬高 加上 新的小三角形c
+		        p[i] = p[i - 1] * P;			记录P^i		
+		    }
+		    while(m--){
+		        int a, b, c, d;
+		        scanf("%d%d%d%d", &a, &b, &c, &d);
+		        if(get(a, b) == get(c, d)) puts("Yes");
+		        else puts("No");
+		    }
+		    return 0;
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		typedef unsigned long long ULL;
+		const int N = 1e5 + 10, P = 131;
+		char str[N];
+		int h[N], p[N];
+
+		ULL get(int l, int r){
+		    return h[r] - h[l - 1] * p[r - l + 1];
+		}
+
+		int main(){
+		    int n, m;
+		    scanf("%d%d", &n, &m);
+		    scanf("%s", str + 1);
+		    p[0] = 1;
+		    for(int i = 1; i <= n; i++){
+		        h[i] = h[i-1] * P + str[i];
+		        p[i] = p[i-1] * P;
+		    }
+		    while(m--){
+		        int a, b, c, d;
+		        scanf("%d%d%d%d", &a, &b, &c, &d);
+		        if(get(a, b) == get(c, d)) puts("Yes");
+		        else puts("No");
+		    }
+		    return 0;
+		    
+		}
+* 38. AcWing 842. 排列数字
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		const int N = 10;
+		int path[N];
+		int n;
+
+		void dfs(int cnt, int state){
+		    if(cnt == n){
+		        for(int i = 0; i < n; i++) printf("%d ", path[i]);
+		        puts("");
+		        return;
+		    }
+
+		    错误: for(int i = n - 1; i >= 0; i--)	要求字典序
+		    正确: for(int i = 0; i < n; i++){		之所以从0开始, 是因为题目要求字典序输出, 所以第一个输出的是 1234567, 第二个是 1 2 3 4 5 7 6. 
+		        if(!(state >> i & 1)){
+		            path[cnt++] = i + 1;
+		            state += 1 << i;
+		            dfs(cnt, state);
+		            state -= 1 << i;
+		            错误: 忘记加: cnt--;
+		            正确: cnt--;
+		        }
+		    }
+		}
+		int main(){
+		    cin >> n;
+		    dfs(0, 0);
+		}
+
+	2. ok{多种版本}
+		关键的点: "填写的位置一直都是从左往右依次填写, 只是填写的值是需要通过dfs全排列出来"
+		#include <iostream>
+		using namespace std;
+
+		const int N = 10;
+		int path[N];
+		int n;
+
+		void dfs(int size, int state){	已经添加了 size 个数字, state是状态{00010}代表数字2被填写过了. 
+										其实这里不需要管细节: 
+											你也可以是{01000}代表数字2被填写过了
+												for(int i = 0; i < n; i++){
+											        if((state >> (n - 1 - i) & 1) == 0){
+											            path[size] = i + 1;
+											            dfs(size + 1, state | (1 << (n - 1 - i)));
+											        }
+											    }
+											反正我们都能遍历完所有情况
+		    if(size == n){
+		        for(int i = 0; i < n; i++) printf("%d ", path[i]);
+		        puts("");
+		        return;
+		    }
+
+
+			题目要求字典序, 所以 path[0] = 1, 所以从 i == 0 开始. 这里的i代表填入的数值. size代表已经添加的数字, 也是下一个要填入的位置的下标
+				写法1: state和cnt都要恢复现场
+					for(int i = 0; i < n; i++){
+				        if(!(state >> i & 1)){
+				            path[size++] = i + 1;
+				            state += 1 << i;	
+				            dfs(size, state);
+				            state -= 1 << i;	恢复现场
+				            size--;				恢复现场
+				        }
+				    }
+				写法2: state不需要恢复现场
+				    for(int i = 0 ; i < n; i++){
+				        if((state >> i & 1) == 0){	==0说明这个数值没有被填写过 {注意不是填写位置的下标,"填写的位置一直都是从左往右依次填写, 只是填写的值是需要通过dfs全排列出来"}
+				            path[size++] = i + 1;
+				            dfs(size, state | (1 << i)); 这里没有改变 state, 不需要恢复现场, 但是下一层 dfs()的的确确收到了已经改变的 state
+				            size --;						恢复现场
+				        }
+				    }
+				写法3: state和cnt都不需要恢复现场
+				    for(int i = 0 ; i < n; i++){
+				        if((state >> i & 1) == 0){
+				            path[size] = i + 1;				
+				            dfs(size + 1, state | (1 << i)); 这里没有改变 state 和 cnt, 不需要恢复现场, 但是下一层 dfs()的的确确收到了已经改变的 state 和 cnt
+				        }
+				    }
+			如果题目不要求字典序: 我们可以从高位开始判断 
+			    for(int i = n - 1; i >= 0; i--){
+			    	if(!(state >> i & 1)){
+			    		path[size++] =  i + 1;
+			    		dfs(size, state | (1 << i));	
+			    		size --;	恢复现场
+			    	}
+			    }
+		}
+		int main(){
+		    cin >> n;
+		    dfs(0, 0);
+		}
+
+
+		想象: 其实就是一棵树
+							  (....)					第一层 for()可以遍历所有n种情况
+						  /  /  |   |  \  \
+				(...) (...) (...) (...) (...) (...)		因为state有1位已经置为1了, 所以第二层的 for()中的 if(!(state >> i & 1)) 只能进入n-1次. 是一定是n-1, 而且 for()里面没有什么break
+				/\
+			(..) (..) (..) (..)	(..)....		(..)	因为state有2位已经置为1了, 所以第3层的 for()中的 if(!(state >> i & 1)) 只能进入n-2次, 而且 for()里面没有什么break
+			/\
+			(.) (.) (.) .... 					  (.)	因为state有3位已经置为1了, 所以第4层的 for()中的 if(!(state >> i & 1)) 只能进入n-3次, 而且 for()里面没有什么break
+
+			从上到下的一条路径, 就是一个答案
+			写代码, 写 dfs()这一句的时候, 是想着某一条路径怎么走到底, 而不是联想第一层, 第二层
+				也就是写 dfs()这一句, 想的是一条条到底的路径的图画, 而不是像 bfs()一层一层的想图画
+		--
+		边写边"讲故事"
+		#include <iostream>
+		using namespace std;
+
+		const int N = 10;
+		int path[N], n;
+
+		void dfs(int size, int state){
+		    if(size == n){
+		        for(int i = 0; i < n; i ++) printf("%d ", path[i]);
+		        puts("");
+		        return;
+		    }
+		    for(int i = 1; i <= n; i++){ 	要填写的数字是i, 从1开始
+		        int ind = i - 1; 			数字i, 对应状态中的右数第i-1位. 例如数字1对应state的右数第0位
+		        if((state >> ind & 1) == 0){	如果这个数字没有被填写过
+		            path[size] = i;
+		            dfs(size + 1, state | (1 << ind)); 	
+		            				注意, 这个 dfs()是写在 if((state >> ind & 1) == 0) 里面的!! 不要写到外面 
+		            				写的时候, 就想着一条路就这么到底了
+		            					第一条: 1234567	倒数第二层的 for(), if(!(state >> i & 1)) 只能6,7进去了{因为12345都填好了}, 假设6进去, 下一层for只能是7. 所以输出1234567
+		            					第二条: 1234576 倒数第二层的 for(), if(!(state >> i & 1)) 只能6,7进去了{因为12345都填好了}, 假设遍历到了7进去, 下一层for只能是6. 所以输出1234576
+		        }
+		    }
+		}
+
+		int main(){
+		    cin >> n;
+		    dfs(0, 0);
+		}
+		--
+		#include <iostream>
+		using namespace std;
+		const int N = 10;
+		int path[N], n;
+
+		void dfs(int size, int state){
+		    if(size == n){
+		        for(int i = 0; i < n; i++) printf("%d ", path[i]);
+		        puts("");
+		        return;
+		    }
+		    for(int i = 1; i <= n; i++){
+		        int ind = i - 1;
+		        if((state >> ind & 1) == 0){
+		            path[size] = i;
+		            dfs(size + 1, state | (1 << ind));
+		        }
+		    }
+		}
+
+		int main(){
+		    cin >> n;
+		    dfs(0, 0);
+		}
+* 39. AcWing 843. n-皇后问题
+	1. bug
+		#include <iostream>
+		using namespace std;
+
+		错误: const int N = 10;
+		正确: const int N = 20;	注意, 对角线是两倍的行数/列数
+
+		错误: char g[N][N], n; 我的n设置成了char. 那肯定不对啊, TLE
+		正确:
+			char g[N][N];
+			int n;
+		bool col[N], dg[N], cdg[N]; //clinodiagonal
+			注意 
+				这里是bool类型
+				只是一维数组, 不是二维, 因为 col[3] == false 就代表了整个第4列都是没有填的. 只要第4列有一个地方填了皇后, col[3] == true;
+				注意没有row[N], 因为dfs就是一行一行来的, 一行不漏
+
+		void dfs(int r){
+			错误: if(r == n - 1){
+		    正确: if(r == n){	这里要小心啊, 只有当最后一层 n - 1层摆放好了之后, 到dfs的第n层越界了才是结束了
+		        for(int i = 0; i < n; i++) puts(g[i]); 这里的 g[i]是一整行
+		        puts("");
+		        return;
+		    }
+		    for(int i = 0; i < n; i++){
+		        if(!col[i] && !dg[r + i] && !cdg[i - r + n]){ 不管是 i - r + n 还是 r - i + n 都行, 只要是相减皆可以, 然后 + n, 防止相减后负数
+		            col[i] = dg[r + i] = cdg[i - r + n] = true;
+		            g[r][i] = 'Q';
+		            dfs(r + 1);
+		            g[r][i] = '.';
+		            col[i] = dg[r + i] = cdg[i - r + n] = false;
+		        }
+		    }
+		}
+
+		int main(){
+		    cin >> n;
+		    我们先画好, 而不是在dfs里面画{虽然在里面也可以}
+		    for(int i = 0 ; i < n; i ++)
+		        for(int j = 0; j < n; j++)
+		            g[i][j] = '.';
+		    dfs(0);
+		}
+	2. ok {只实现第二种方法, 第一种见 practice_basic, recite. 不容易理解} "讲故事"
+		#include <iostream>
+		using namespace std;
+
+		const int N = 2 * 10;	开两倍, 因为有对角线
+		char g[N][N];
+		int n; //需要是全局, 因为这是所有dfs()都要用到的
+		bool col[N], diag[N], clinodiag[N];
+
+		void dfs(int r){	现在将要填的是第r行
+		    if(r == n){	先递归到底, 也就是越界了
+		        for(int i = 0; i < n; i++) puts(g[i]);	打印行
+		        puts("");
+		        return;
+		    }
+		    for(int c = 0; c < n; c ++){	好了, 我们就挨个检查第c列
+		        if(!col[c] && !diag[c + r] && !clinodiag[c - r + n]){			如果第c列是空的, 如果第xx对角线是空的, 如果第yy斜对角线是空的, 注意是c, c + r, c - r + n. 我老是错写成只是 c
+		            col[c] = diag[c + r] = clinodiag[c - r + n] = true;
+		            g[r][c] = 'Q';
+		            dfs(r + 1); 
+		                //第c列填了皇后, 到了下一行, 这个第c列就不能放了. 因为 if(!col[c] && !diag[c] && !clinodiag[c]) 就通不过了
+		                //因为col[N], diag[N], clinodiag[N]都是全局变量
+		            		//在 dfs(r + 1)里面, if(!col[c] && !diag[c] && !clinodiag[c]) 就通不过了, 因为col[c] = diag[c] = clinodiag[c] == true
+		                //这种第r行干的坏事{放皇后}, 第r+1行就干不了的, 就是和全排一样, 路径越往后, 能有的选项越少, 大白话: 路越走越窄.
+		            g[r][c] = '.';
+		            col[c] = diag[c + r] = clinodiag[c - r + n] = false;
+		        }
+		    }
+		}
+		int main(){
+		    cin >> n;
+		    
+		    // 别忘了把初始的图画出来
+		    for(int i = 0; i < n; i++)
+		        for(int j = 0; j < n; j++)
+		            g[i][j] = '.';
+		    dfs(0);	现在将要填的是第0行
+		}
+		--
+		#include <iostream>
+		using namespace std;
+
+		const int N = 2 * 10;
+		char g[N][N];
+		int n;
+		bool col[N], diag[N], cdiag[N];
+
+		void dfs(int r){
+		    if(r == n){
+		        for(int i = 0; i < n; i++) puts(g[i]);
+		        puts("");
+		        return;
+		    }
+		    for(int c = 0; c < n; c++){
+		        if(!col[c] && !diag[c + r] && !cdiag[c - r + n]){
+		            col[c] = diag[c + r] = cdiag[c - r + n] = true;
+		            g[r][c] = 'Q';
+		            dfs(r + 1);
+		            g[r][c] = '.';
+		            col[c] = diag[c + r] = cdiag[c - r + n] = false;
+		        }
+		    }
+		}
+
+		int main(){
+		    cin >> n;
+		    for(int i = 0 ; i < n ; i++)
+		        for(int j = 0 ; j < n; j++)
+		            g[i][j] = '.';
+		    dfs(0);
+		}
+40. AcWing 844. 走迷宫 
 	1. bug
 	2. ok
+		
+		
 
 
-	哈希, 离散化, kmp算法
+		
+		
+
+
+
 				
 
 
