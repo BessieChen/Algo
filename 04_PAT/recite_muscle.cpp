@@ -6508,6 +6508,58 @@
 			    return 0;
 			}
 	55. AcWing 2. 01背包问题
+		0. 小总结:
+			1. 01背包:
+				朴素 -> 优化:
+					1. 删去第一维, 最终: f[N], f[j] = max(f[j], v[i] + f[j - w[i]]), 输出 f[m]
+					2. 必须从右到左遍历: for(int j = 0; j <= m; j++){ 变为 for(int j = m; j - w[i] >= 0; j--){
+							注意是 j--
+			2. 完全背包:
+				朴素 -> 优化:
+					1. 删去第一维, 最终: f[N], f[j] = max(f[j], v[i]+ f[j - w[i]]), 输出 f[m]
+					2. 必须, 依旧是是从左到右遍历: 
+						从 
+							for(int j = 0; j <= m; j++)
+					            if(j - w[i] >= 0) 
+					                f[i][j] = max(f[i-1][j], v[i] + f[i][j - w[i]]);
+					            else
+					                f[i][j] = f[i-1][j];
+					    改为
+					    	for(int j = w[i]; j <= m; j++)
+            					f[j] = max(f[j], f[j - w[i]] + v[i]);
+			3. 多重背包:
+				1. max 
+					这里的取0个第i个物品, ... 取第k个第i物品, 都是在这个公式中
+					所以注意bug:
+						for(int k = 0; k <= s[i]; k++){
+							if(j - k * w[i] >= 0) 
+			                	错误2次: 	f[i][j] = max(f["i-1"][j], k * v[i] + f[i-1][j - k * w[i]]);
+			                	错误1次: f[i][j] = max(f[i][j], k * v[i] + f["i"][j - k * w[i]]);			注意max的第二项, 是考虑前i-1个选法受到的影响 
+			                    正确:	f[i][j] = max(f["i"][j], k * v[i] + f["i-1"][j - k * w[i]]);	因为k==0的时候, 相当于 f[i-1][j];
+			                错误, 不应该写下面这两句: 如果 j - k * w[i] < 0, 也就是什么都别执行. 如果你执行了这一句, 相当于上面的max都白干了
+				                else
+				                    f[i][j] = f[i-1][j];
+				2. for (int k = 0; k <= s[i] && j - k * v[i] >= 0; k ++ )
+						f[i][j] = max(f[i][j], k * v[i] + f[i-1][j - k * w[i]]);
+                	写的时候, 想着: 
+                		有k种选法, 选0个, 1个两个: k * v[i] 
+                		但是然后前i-1种的选法里面, 就要受到影响 f[i-1][j - k * w[i]]
+                		所以所有合法的选法{k <= s[i] && j - k * w[i] >= 0}, 我们用max来滚动判断
+                3. 小优化:
+                	从 
+                		for(int k = 0; k <= s[i]; k++){
+							if(j - k * w[i] >= 0) 		也就是即便 j - k * v[i] < 0 也不会终止, 会一直到 k == s[i] + 1
+								f[i][j] = max()
+					到 
+						for (int k = 0; k <= s[i] && j - k * v[i] >= 0; k ++ )	也就是一旦 j - k * v[i] < 0, for 就终止
+							f[i][j] = max()
+				4. 删除一个维度的优化
+					1. 删去第一维, 最终: f[N], f[j] = max(f[j], v[i] + f[j - w[i]]), 输出 f[m]
+					2. 必须从右到左遍历: for(int j = 0; j <= m; j++){ 变为 for(int j = m; j >= 0; j--){ 
+						因为需要的是左上
+			4. 数据量大的多重背包:
+				1. 二分优化
+				2. 01背包: 只剩一维, 从右到左遍历
 		1. bug
 			1. 非优化 
 				#include <iostream>
@@ -6528,13 +6580,34 @@
 				        for(int j = 0; j <= m; j++){
 				            错误: if(j - v[i] > 0) 
 				            正确: if(j - w[i] >= 0) 首先是体积w, 其次是 >= 0, 也就是==0刚好够一个物品的时候, 也要 max(选项1, 选项2)
-				                f[i][j] = max(f[i-1][j], f[i-1][j - w[i]] + v[i]);
+				                错误: f[i][j] = min(f[i-1][j], f[i-1][j - w[i]] + v[i]);
+				                正确: f[i][j] = max(f[i-1][j], f[i-1][j - w[i]] + v[i]);
 				            else 
 				                f[i][j] = f[i-1][j];
 				        }
 				    }
 				    cout << f[n][m] << endl;
 				    return 0;
+				}
+			2. 优化
+				#include <iostream>
+				using namespace std;
+				const int N = 1010;
+				int f[N], w[N], v[N];
+				int n, m;
+
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i];
+				    for(int i = 1; i <= n; i++){
+				    	错误: for(int j = m; j - w[i] >= 0; j++){
+				        正确: for(int j = m; j - w[i] >= 0; j--){
+				            f[j] = max(f[j], f[j - w[i]] + v[i]);
+				        }
+				    }
+				    cout << f[m] << endl;
+				    return 0;
+				    
 				}
 		2. ok
 			1. 非优化
@@ -6558,6 +6631,45 @@
 				    cout << f[n][m] << endl;
 				    return 0;
 				}
+				--
+				#include <iostream>
+				using namespace std;
+				const int N = 1010;
+				int f[N][N], w[N], v[N];
+				int n, m;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j <= m; j++){
+				            if(j - w[i] >= 0) f[i][j] = max(f[i-1][j], f[i-1][j - w[i]] + v[i]);
+				            else f[i][j] = f[i-1][j];
+				        }
+				    }
+				    cout << f[n][m] << endl;
+				    return 0;
+				}
+				--
+				#include <iostream>
+				using namespace std;
+
+				const int N = 1010;
+				int f[N][N], w[N], v[N], n, m;
+
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i ++) cin >> w[i] >> v[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j <= m; j++){
+				            if(j - w[i] >= 0)
+				                f[i][j] = max(f[i-1][j], f[i-1][j - w[i]] + v[i]);
+				            else 
+				                f[i][j] = f[i-1][j];
+				        }
+				    }
+				    cout << f[n][m] << endl;
+				    return 0;
+				}
 			2. 优化 
 				#include <iostream>
 				using namespace std;
@@ -6569,11 +6681,11 @@
 				int n, m;
 				int main(){
 				    cin >> n >> m;
-				    for(int i = 1; i <= n; ++i) cin >> v[i] >> w[i];
+				    for(int i = 1; i <= n; ++i) cin >> w[i] >> v[i];
 				   	for(int i = 1; i <= n; ++i){ 		
 				        for(int j = m; j >= 0; --j){ 	
-				            if(j - v[i] >= 0){ 
-				                f[j] = max(f[j], f[j-v[i]] + w[i]); 相当于: f[i][j] = max(f[i-1][j], f[i-1][j-v[i]] + w[i]); 因为此时等号右侧的东西, 都是上一轮 i - 1的
+				            if(j - w[i] >= 0){ 
+				                f[j] = max(f[j], f[j-w[i]] + v[i]); 相当于: f[i][j] = max(f[i-1][j], f[i-1][j-v[i]] + w[i]); 因为此时等号右侧的东西, 都是上一轮 i - 1的
 				            }else{
 				                f[j] = f[j]; 相当于 f[i][j] = f[i-1][j];
 				            }
@@ -6597,219 +6709,472 @@
 				{
 				    cin >> n >> m;
 
-				    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i];
-
+				    for (int i = 1; i <= n; i ++ ) cin >> w[i] >> v[i];
 				    for (int i = 1; i <= n; i ++ )
-				        for (int j = m; j >= v[i]; j -- )
-				            f[j] = max(f[j], f[j - v[i]] + w[i]);
+				        for (int j = m; j - w[i] >= 0; j -- )
+				            f[j] = max(f[j], f[j - w[i]] + v[i]);
 
 				    cout << f[m] << endl;
 
 				    return 0;
 				}
 	56. AcWing 3. 完全背包问题
-		1
-		2.
-			#include <iostream>
-			using namespace std;
+		1. bug
+		2. ok
+			1. 朴素 
+				#include <iostream>
+				using namespace std;
 
-			const int N = 1010;
+				const int N = 1010;
+				int f[N][N], w[N], v[N];
+				int n, m;
 
-			int n, m;
-			int v[N], w[N];
-			int f[N];
-
-			int main(){
-				cin >> n >> m;
-				for(int i = 1; i <= n; ++i) cin >> v[i] >> w[i];
-				for(int i = 1; i <= n; ++i){
-					for(int j = 0; j <= m; ++j){ 
-						if(j - v[i] >= 0]) 
-							f[j] = max(f[j], f[j - v[i]] + w[i]);
-							相当于 f[i][j] = max(f[i-1][j], f[i][j - v[i]] + w[i]);
-						else f[j] = f[j];
-							相当于 f[i][j] = f[i-1][j];
-					}
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j <= m; j++){
+				            if(j - w[i] >= 0) 	如果能放下至少一个第i个物品, 我们就比较 max(上方, 左方)
+				            	f[i][j] = max(f[i-1][j], v[i] + f[i][j - w[i]]); 	
+				            else 				放不下, 就只能从上方来, 也就是只选择前i-1个物品
+				            	f[i][j] = f[i-1][j];
+				        }
+				    }
+				    cout << f[n][m] << endl;
+				    return 0;
 				}
-				cout << f[m] << endl;
-				return 0;
-			}
+			2. 优化 
+				#include <iostream>
+				using namespace std;
 
-			#include <iostream>
-			#include <algorithm>
+				const int N = 1010;
+				int f[N], w[N], v[N];
+				int n, m;
 
-			using namespace std;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j <= m; j++){
+				            if(j - w[i] >= 0) 
+				                f[j] = max(f[j], f[j - w[i]] + v[i]);	相当于 f[i][j] = max(f[i-1][j], f[i][j - v[i]] + w[i]);
+				            else 
+				                f[j] = f[j];							相当于 f[i][j] = f[i-1][j];
+				        }
+				    }
+				    cout << f[m] << endl;
+				    return 0;
+				}
+			3. 进一步
+				#include <iostream>
+				using namespace std;
 
-			const int N = 1010;
+				const int N = 1010;
+				int f[N], w[N], v[N];
+				int n, m;
 
-			int n, m;
-			int v[N], w[N];
-			int f[N];
-
-			int main()
-			{
-			    cin >> n >> m;
-			    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i];
-
-			    for (int i = 1; i <= n; i ++ )
-			        for (int j = v[i]; j <= m; j ++ )
-			            f[j] = max(f[j], f[j - v[i]] + w[i]);
-
-			    cout << f[m] << endl;
-
-			    return 0;
-			}
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = w[i]; j <= m; j++){
+				            f[j] = max(f[j], f[j - w[i]] + v[i]);	
+				        }
+				    }
+				    cout << f[m] << endl;
+				    return 0;
+				}
 	57. AcWing 4. 多重背包问题	
-		1
-		2
+		1. bug
 			#include <iostream>
-			#include <algorithm>
-
 			using namespace std;
-
-			const int N = 110;
-
+			const int N = 1010;
+			int f[N][N], w[N], v[N], s[N];
 			int n, m;
-			int v[N], w[N], s[N];
-			int f[N][N];
-
-			int main()
-			{
+			int main(){
 			    cin >> n >> m;
-
-			    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i] >> s[i];
-
-			    for (int i = 1; i <= n; i ++ )
-			        for (int j = 0; j <= m; j ++ )
-			            for (int k = 0; k <= s[i] && j - k * v[i] >= 0; k ++ )	之所以没有优化, 应该是很难确定k的最大值是多少吧. 其实也好确定: k = s[i]; while(j - k * v[i] < 0) k--;
-			                f[i][j] = max(f[i][j], f[i - 1][j - v[i] * k] + w[i] * k);
-
+			    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i] >> s[i];
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 0; j <= m; j++){
+			            for(int k = 0; k <= s[i]; k++){
+			                if(j - k * w[i] >= 0) 
+			                	错误2次: 	f[i][j] = max(f["i-1"][j], k * v[i] + f[i-1][j - k * w[i]]);
+			                	错误1次: f[i][j] = max(f[i][j], k * v[i] + f["i"][j - k * w[i]]);			注意max的第二项, 是考虑前i-1个选法受到的影响 
+			                    正确:	f[i][j] = max(f["i"][j], k * v[i] + f["i-1"][j - k * w[i]]);	因为k==0的时候, 相当于 f[i-1][j];
+			                错误, 不应该写这两句: 如果 j - k * w[i] < 0, 也就是什么都别执行. 如果你执行了这一句, 相当于上面的max都白干了
+				                else
+				                    f[i][j] = f[i-1][j];
+			            }
+			        }
+			    }
 			    cout << f[n][m] << endl;
 			    return 0;
 			}
+		2. ok
+			1. 无优化
+				#include <iostream>
+				using namespace std;
+				const int N = 110;
+				int f[N][N], w[N], v[N], s[N];
+				int n, m;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i] >> s[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j <= m; j++){
+				            for(int k = 0; k <= s[i]; k++){
+				                if(j - k * w[i] >= 0) 
+				                	f[i][j] = max(f[i][j], k * v[i] + f[i-1][j - k * w[i]]);
+				                	写的时候, 想着: 
+				                		有k种选法, 选0个, 1个两个: k * v[i] 
+				                		但是然后前i-1种的选法里面, 就要受到影响 f[i-1][j - k * w[i]]
+				                		所以所有合法的选法{k <= s[i] && j - k * w[i] >= 0}, 我们用max来滚动判断
+				                	而不是想着: 不选第i种{f[i-1][j]}, 选第i种{k * v[i] + f[i-1][j - k * w[i]]}
+				            }
+				        }
+				    }
+				    cout << f[n][m] << endl;
+				    return 0;
+				}
+			2. k的小优化: k <= s[i] && j - k * v[i] >= 0
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 110;
+
+				int n, m;
+				int v[N], w[N], s[N];
+				int f[N][N];
+
+				int main()
+				{
+				    cin >> n >> m;
+
+				    for (int i = 1; i <= n; i ++ ) cin >> w[i] >> v[i] >> s[i];
+
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 0; j <= m; j ++ )
+				            for (int k = 0; k <= s[i] && j - k * w[i] >= 0; k ++ )	之所以没有优化, 应该是很难确定k的最大值是多少吧. 其实也好确定: k = s[i]; while(j - k * v[i] < 0) k--;
+				                f[i][j] = max(f[i][j], k * v[i] + f[i - 1][j - k * w[i]]);
+
+				    cout << f[n][m] << endl;
+				    return 0;
+				}
+				--
+				#include <iostream>
+				using namespace std;
+				const int N = 110;
+				int f[N][N], w[N], v[N], s[N], n, m;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i] >> s[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j <= m; j++){
+				            for(int k = 0; k <= s[i] && j - k * w[i] >= 0; k++){
+				                f[i][j] = max(f[i][j], k * v[i] + f[i-1][j - k * w[i]]);
+				            }
+				        }
+				    }
+				    cout << f[n][m] << endl;
+				}
+				--
+				#include <iostream>
+				using namespace std;
+				const int N = 110;
+				int f[N][N], w[N], v[N], s[N], n, m;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i] >> s[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0 ; j <= m; j++){
+				            for(int k = 0; k <= s[i] && j - k * w[i] >= 0; k++)
+				                f[i][j] = max(f[i][j], k * v[i] + f[i-1][j - k * w[i]]);
+				        }
+				    }
+				    cout << f[n][m] << endl;
+				    return 0;
+				}
+			3. 删除一个维度 
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 110;
+
+				int n, m;
+				int v[N], w[N], s[N];
+				int f[N];
+
+				int main()
+				{
+				    cin >> n >> m;
+
+				    for (int i = 1; i <= n; i ++ ) cin >> w[i] >> v[i] >> s[i];
+
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = m; j >= 0; j -- )
+				            for (int k = 0; k <= s[i] && j - k * w[i] >= 0; k ++ )
+				                f[j] = max(f[j], k * v[i] + f[j - w[i] * k]);
+
+				    cout << f[m] << endl;
+				    return 0;
+				}
+				--
+				#include <iostream>
+				using namespace std;
+				const int N = 110;
+				int f[N], w[N], v[N], s[N], n, m;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i] >> v[i] >> s[i];
+				    for(int i = 1; i <= n; i++){
+				        for(int j = m ; j >= 0; j--){
+				            for(int k = 0; k <= s[i] && j - k * w[i] >= 0; k++)
+				                f[j] = max(f[j], k * v[i] + f[j - k * w[i]]);
+				        }
+				    }
+				    cout << f[m] << endl;
+				    return 0;
+				}
 	58. AcWing 5. 多重背包问题 II
-		1.
+		1. bug
+			1. 很多bug
+				#include <iostream>
+				using namespace std;
+				const int N = 2010; 			因为体积 0<V≤2000
+				const int M = 11 * 1000 + 10; 	因为有1k个输入, 每个输入的数量有2k个, log2(2k) = 11
+				错误: int f[M][N], w[M], v[M], s[N], n, m;	不需要s[N]
+				正确: int f[N], w[M], v[M], n, m;
+				int main(){
+				    cin >> n >> m;
+				    错误: int cnt = 0, k = 1; k要在for里面 
+				    int cnt = 0;
+				    for(int i = 1; i <= n; i++){
+				        int ww, vv, cc;
+				        cin >> ww >> vv >> cc;
+				        正确: int k = 1;
+				        错误: while(cc - k){	这里是非0就会进入, 也就是正数负数都会进入. 
+				        正确Lwhile(cc - k >= 0){
+				            cnt ++;
+				            w[cnt] = k * ww;
+				            v[cnt] = k * vv;
+				            cc -= k;
+				            错误: k >> 1;
+				            错误: k << 1;
+				            正确: k <<= 1;
+				        }
+				        if(cc){
+				            cnt++;
+				            w[cnt] = cc * ww;
+				            v[cnt] = cc * vv;
+				        }
+				    }
+				    n = cnt;
+				    不能用二维, 内存限制: 
+					    for(int i = 1; i <= n; i++){
+					        for(int j = 0; j <= m; j++){
+					            if(j - w[i] >= 0){
+					                f[i][j] = max(f[i-1][j], v[i] + f[i-1][j - w[i]]);
+					            }else{
+					                f[i][j] = f[i-1][j];
+					            }
+					        }
+					    }
+					    cout << f[n][m] << endl;
+					正确:
+						for(int i = 1; i <= n ; i++){
+					        for(int j = m; j >= w[i]; j--)
+					            f[j] = max(f[j], v[i] + f[j - w[i]]);
+					    }
+					    cout << f[m] << endl;
+				    return 0;
+				}
 		2. 
 			#include <iostream>
-			#include <algorithm>
-
 			using namespace std;
-
-			const int N = 12010, M = 2010;
-
+			const int N = 2010; 			因为体积 0<V≤2000
+			const int M = 11 * 1000 + 10; 	因为有1k个输入, 每个输入的数量有2k个, log2(2k) = 11
+			int f[N], w[M], v[M], s[M]; 	这道题, 似乎只能用优化后的一维, 否则MemoryExceed
 			int n, m;
-			int v[N], w[N];
-			int f[M];
-
-			int main()
-			{
+			int main(){
 			    cin >> n >> m;
-
-			    int cnt = 0;
-			    for (int i = 1; i <= n; i ++ )
-			    {
-			        int a, b, s;
-			        cin >> a >> b >> s;
-			        int k = 1;		每个小组, 有k个物品
-			        while (k <= s)
-			        {
-			            cnt ++ ;
-			            v[cnt] = a * k;	k个物品的价值
-			            w[cnt] = b * k; k个物品的重量
-			            s -= k;
-			            k *= 2;
+			    int cnt;
+			    for(int i = 1; i <= n; i++){
+			        int ww, vv, cc;
+			        cin >> ww >> vv >> cc;
+			        int k = 1;	每个小组, 有k个物品
+			        while(cc - k >= 0){
+			            cnt++;  			下标从1开始比较好, 因为平时的题也都是cin >> w[i]从1开始
+			            w[cnt] = ww * k;
+			            v[cnt] = vv * k;
+			            cc -= k;
+			            k <<= 1;
 			        }
-			        if (s > 0)
-			        {
-			            cnt ++ ;
-			            v[cnt] = a * s;
-			            w[cnt] = b * s;
+			        if(cc){
+			            cnt++;
+			            w[cnt] = ww * cc;
+			            v[cnt] = vv * cc;
 			        }
 			    }
-
-			    n = cnt; 修改后的商品的数量
-
-			    变成了01背包: 
-			    for (int i = 1; i <= n; i ++ )
-			        for (int j = m; j >= v[i]; j -- )
-			            f[j] = max(f[j], f[j - v[i]] + w[i]);
-
+			    n = cnt;
+			    
+			    优化版的01背包: 
+			    for(int i = 1; i <= n ; i++){
+			        for(int j = m; j >= w[i]; j--)
+			            f[j] = max(f[j], v[i] + f[j - w[i]]);
+			    }
 			    cout << f[m] << endl;
-
+			    return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+			const int N = 2010, M = 11 * 1010;
+			int f[N], w[M], v[M], n, m;
+			int main(){
+			    cin >> n >> m;
+			    int cnt = 0;
+			    for(int i = 1; i <= n; i++){
+			        int ww, vv, cc;
+			        cin >> ww >> vv >> cc;
+			        int k = 1;
+			        while(cc - k >= 0){
+			            cnt++;
+			            w[cnt] = k * ww, v[cnt] = k * vv;
+			            cc -= k;
+			            k <<= 1;
+			        }
+			        if(cc){
+			            cnt++;
+			            w[cnt] = cc * ww, v[cnt] = cc * vv;
+			        }
+			    }
+			    n = cnt;
+			    for(int i = 1; i <= n; i++){
+			        for(int j = m; j - w[i] >= 0; j--)
+			            f[j] = max(f[j], v[i] + f[j - w[i]]);
+			    }
+			    cout << f[m] << endl;
 			    return 0;
 			}
 	59. AcWing 9. 分组背包问题
 		1. 
-		2. ok
+		2. ok {很顺}
+			1. 未优化
 			#include <iostream>
-			#include <algorithm>
-
 			using namespace std;
-
 			const int N = 110;
-
+			int f[N][N], w[N][N], v[N][N], s[N];
 			int n, m;
-			int v[N][N], w[N][N], s[N];
-			int f[N];
-
-			int main()
-			{
+			int main(){
 			    cin >> n >> m;
-
-			    for (int i = 1; i <= n; i ++ )
-			    {
+			    for(int i = 1; i <= n; i++){
 			        cin >> s[i];
-			        for (int j = 0; j < s[i]; j ++ )
-			            cin >> v[i][j] >> w[i][j];	第i组的j个物品, 每个物品的价值和重量都不同
+			        for(int j = 1; j <= s[i]; j++){
+			            cin >> w[i][j] >> v[i][j];		第i组的j个物品, 每个物品的价值和重量都不同
+			        }
 			    }
-
-			    for (int i = 1; i <= n; i ++ )			这里说的是选前i组的东西{不是之前的前i个物品}
-			        for (int j = m; j >= 0; j -- )
-			            for (int k = 0; k < s[i]; k ++ )	这里是泛化了 v和k, 这里是第i组中可以选的物品有 s[i]个, 我们一个一个看 
-			                if (j - v[i][k] >= 0)		
-			                    f[j] = max(f[j], f[j - v[i][k]] + w[i][k]);
-			    
-
-			    cout << f[m] << endl;
-
+			    for(int i = 1; i <= n; i++){			这里说的是选前i组的东西{不是之前的前i个物品}
+			        for(int j = 0; j <= m; j++){
+			            for(int k = 0; k <= s[i]; k++){	这里是泛化了 v和k, 这里是第i组中可以选的物品有 s[i]个, 我们一个一个看 
+			                if(j - w[i][k] >= 0)
+			                    f[i][j] = max(f[i][j], v[i][k] + f[i-1][j - w[i][k]]);
+			            }
+			        }
+			    }
+			    cout << f[n][m] << endl;
 			    return 0;
 			}
+			2. 优化{一维}
+				#include <iostream>
+				using namespace std;
+				const int N = 110;
+				int f[N], w[N][N], v[N][N], s[N];
+				int n, m;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++){
+				        cin >> s[i];
+				        for(int j = 1; j <= s[i]; j++){
+				            cin >> w[i][j] >> v[i][j];
+				        }
+				    }
+				    for(int i = 1; i <= n; i++){
+				        for(int j = m; j >= 0; j--){
+				            for(int k = 0; k <= s[i]; k++){
+				                if(j - w[i][k] >= 0)
+				                    f[j] = max(f[j], v[i][k] + f[j - w[i][k]]);
+				            }
+				        }
+				    }
+				    cout << f[m] << endl;
+				    return 0;
+				}
+6. 5.21
 	60. AcWing 898. 数字三角形
 		1. 
-		2. 
+		2. ok{很顺}
 			#include <iostream>
-			#include <algorithm>
-
 			using namespace std;
+			const int N = 510, INF = 1e5; //老师: INF = 1e9;
+			int a[N][N], f[N][N], n;
 
-			const int N = 510, INF = 1e9;
-
-			int n;
-			int a[N][N];
-			int f[N][N];
-
-			int main()
-			{
+			int main(){
 			    scanf("%d", &n);
-			    for (int i = 1; i <= n; i ++ )
-			        for (int j = 1; j <= i; j ++ )
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 1; j <= i; j ++)
 			            scanf("%d", &a[i][j]);
-
-			    for (int i = 0; i <= n; i ++ )
-			        for (int j = 0; j <= i + 1; j ++ )
+			    }
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 0; j <= i + 1; j ++)
 			            f[i][j] = -INF;	这是一个在矩阵的左下角的三角形
-
+			    }
 			    f[1][1] = a[1][1];
-			    for (int i = 2; i <= n; i ++ )
-			        for (int j = 1; j <= i; j ++ )
-			            f[i][j] = max(f[i - 1][j - 1] + a[i][j], f[i - 1][j] + a[i][j]); {左上方, 上方}
-
-			    int res = -INF;
-			    for (int i = 1; i <= n; i ++ ) res = max(res, f[n][i]);	这是求最底下的一行, 从左往右的最大值, 这个最大值就是全局的路径之和的最大值
-
+			    for(int i = 2; i <= n; i++){
+			        for(int j = 1; j <= i ; j++){
+			            f[i][j] = max(f[i-1][j] + a[i][j], f[i-1][j-1] + a[i][j]);	{左上方, 上方}
+			        }
+			    }
+			    int res = 0;
+			    for(int i = 1; i <= n; i++){
+			        res = max(res, f[n][i]);	这是求最底下的一行, 从左往右的最大值, 这个最大值就是全局的路径之和的最大值
+			    }
 			    printf("%d\n", res);
 			    return 0;
 			}
+
+			f[][]的初始化:
+				0	0	0	0	0	0	0
+				
+				I 	1,1 I 
+				
+				I 	In 	In 	I
+				
+				I 	In 	In 	In 	I
+				
+				I 	In 	In 	In 	In 	I 
+
+				I 	In 	In 	In 	In 	In 	I 
+
+				解释: 
+					I: INF
+					In: 和a[][]中的n重叠的部分 
+					1,1: f[1][1] = a[1][1];
+			a[][]的初始化:
+				0	0	0	0	0	0	
+
+				0	n
+
+				0	n 	n
+
+				0 	n 	n 	n
+
+				0	n 	n 	n 	n
+
+				0 	n 	n 	n 	n 	N
 	61. AcWing 895. 最长上升子序列
 		1.
 		2.
