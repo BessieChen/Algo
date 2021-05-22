@@ -7176,185 +7176,767 @@
 
 				0 	n 	n 	n 	n 	N
 	61. AcWing 895. 最长上升子序列
-		1.
-		2.
-			未优化: O(n*n) == 状态数(n) * 转移数(n)
+		0. 小总结:
+			朴素法: O(n*n) == 状态数(n) * 转移数(n)
+				f[i]: 以第i个数字为结尾的, 最长上升子序列的"长度", f[以第i个数字结尾的最长上升子序列] == 最长上升子序列的长度
+					所有的f[i]初始化为1, 意思是: 我的左边没有比我小的数字, 所以以我结尾的最长上升子序列只有我, 长度为1
+					我们要遍历完所有i左侧的数字, 才能获得最终的正确的f[i], 因为有n个i, 所以n*n复杂度较高
+					例如:
+						原序列:
+							3 1 2 1 8 5 6
+						对应的f[1]:
+							1 1 2 1 3 3 4 
+			优化: O(nlogn) == 状态数(n) * 转移数(logn)
+				f[i]: 所有的长度为i的最长上升子序列中, 结尾数字最小的最长上升子序列, f[最长上升子序列长度为i] == 结尾数字最小的最长上升子序列
+					我们要遍历完所有数字, 才能获得最终的正确的f[i]
+					两种情况:
+						1. if(a[i] > f[len]) f[++len] = a[i]; //如果这个数字大于我们的 长度为len的最长xx的最小的最后数字, 我们可以继续延伸
+						2. 否则 
+							否则a[i]就拉低前面的某个数字, 假设要拉低的是 f[x], 那么会满足: f[x-1] < a[i] <= f[x]
+								所以我们要找到所有满足大于等于target{a[i]}的所有f[xx]中"最左侧"的f[x]
+       						不存在 f[x-1] == f[x] 的情况, 因为题目说的是: 数值严格单调递增的子序列的长度最长是多少
+       							例如题目的原序列: 	1	3	3	3
+       							我们的最长上升子序列长度是2, 也就是 {1,3}.
+       							而不是最长上升子序列长度是4
+		1. bug
+			#include<iostream>
+			using namespace std;
+			const int N = 1010;
+			int a[N], f[N], n;
+			int main(){
+			    cin >> n;
+			    for(int i = 1; i <= n; i++) cin >> a[i];
+			    错误: f[1] = a[1];	是==长度
+			    错误: f[1] = 1;		每个f[i]都是初始化为1
+			    for(int i = 1; i <= n; i++){
+			        错误: f[1] = 1;	每个f[i]都是初始化为1
+			        正确: f[i] = 1;
+			        for(int j = 1; j < n; j++)
+			            if(a[j] < a[i])
+			                f[i] = max(f[i], f[j] + 1);
+			    }
+			    int res = 0;
+			    for(int i = 1; i <= n; i++) res = max(res, f[i]);	易错: 不要以为f[n]是最大值, 不是的, f[n]可能==1也就是第n个数字是最小的
+			    cout << res << endl;
+			    return 0;
+			}
+		2. ok: O(n*n) == 状态数(n) * 转移数(n)
+			#include <iostream>
+			using namespace std;
+			const int N = 1010;
+			int a[N], f[N], n, res;
+			int main(){
+			    cin >> n;
+			    for(int i = 1; i <= n; i++) cin >> a[i];
+			    for(int i = 1; i <= n; i++){
+			        f[i] = 1;					只有a[i]一个数, 所以长度为1
+			        for(int j = 1; j < i; j++) 	检查所有第i个数字的左侧的数字, 不包括第i个数字
+			            if(a[j] < a[i]) 
+			            	f[i] = max(f[i], f[j] + 1);	第j个数他也有自己的最长上升子序列吧, 那就是f[j], 我们站在他的肩膀上, 求我的f[i]的最大值
+			    }
+			    for(int i = 1; i <= n; i++) res = max(res, f[i]);	看所有的 最长上升子序列 中的最大值 
+			    cout << res << endl;
+			    return 0;
+			}
+	62. AcWing 896. 最长上升子序列 II 
+		1. bug
+			#include <iostream>
+			using namespace std;
+			const int N = 1e5 + 10;
+			int a[N], f[N], n, len; 注意: 不能用size代替len, size是cpp的关键词, bobo老师是用java所以不冲突
+			int main(){
+			    cin >> n;
+			    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+			    f[++len] = a[1];
+			    for(int i = 2; i <= n; i++){
+			        if(a[i] > f[len]) f[++len] = a[i];
+			        else{
+			            错误: int l = 1, r = i;
+			            正确: int l = 1, r = len;
+			            while(l < r){
+			                int mid = (r - l) / 2 + l;
+			                if(f[mid] >= a[i]) r = mid;	这是"大于等于target"{a[i]}的所有f[xx], 如果是true, 我们要找"最左侧"的f[x], 往左找, 并且mid可能是答案, 所以是r = mid
+			                else l = mid + 1;
+			            }
+			            f[r] = a[i];
+			        }
+			    }
+			    cout << len << endl;
+			    return 0;
+			}
+		2. ok: O(nlogn) == 状态数(n) * 转移数(logn)
+			0. 我的 很顺:
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int a[N], f[N], n, len;
+				int main(){
+				    cin >> n;
+				    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+				    f[++len] = a[1];						长度为1的最长上升子序列的最后一个数字是a[1];
+				    for(int i = 2; i <= n; i++){			往右看每个数字
+				        if(a[i] > f[len]) f[++len] = a[i];	如果这个数字大于我们的 长度为len的最长xx的最小的最后数字, 我们可以继续延伸
+				        else{								否则a[i]就拉低前面的某个数字, 假设要拉低的是 f[x], 那么会满足: f[x-1] < a[i] <= f[x]
+				        									所以我们要找到所有满足大于等于target{a[i]}的所有f[xx]中"最左侧"的f[x]
+				        									注意: 不存在 f[x-1] == f[x] 的情况, 因为题目说的是: 数值严格单调递增的子序列的长度最长是多少
+								       							例如题目的原序列: 	1	3	3	3
+								       							我们的最长上升子序列长度是2, 也就是 {1,3}.
+								       							而不是最长上升子序列长度是4
+				            int l = 1, r = len;				这个是f里面, 下标的范围[1, len]
+				            while(l < r){
+				                int mid = (r - l) / 2 + l;
+				                if(f[mid] >= a[i]) r = mid;	这是"大于等于target"{a[i]}的所有f[xx], 如果是true, 我们要找"最左侧"的f[x], 往左找, 并且mid可能是答案, 所以是r = mid
+				                else l = mid + 1;
+				            }
+				            f[l] = a[i];
+				        }
+				    }
+				    cout << len << endl;
+				    return 0;
+				}
+				--
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int a[N], f[N], n, len;
+				int main(){
+				    cin >> n;
+				    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+				    f[++len] = a[1];
+				    for(int i = 2; i <= n; i++){
+				        if(a[i] > f[len]) f[++len] = a[i];
+				        else{
+				            int target = a[i];
+				            int l = 1, r = len;
+				            while(l < r){
+				                int mid = (r - l) / 2 + l;
+				                if(f[mid] >= target) r = mid;
+				                else l = mid + 1;
+				            }
+				            f[l] = target;
+				        }
+				    }
+				    cout << len << endl;
+				    return 0;
+				}
+			1. 老师的, 没背
 				#include <iostream>
 				#include <algorithm>
-
 				using namespace std;
-
-				const int N = 1010;
-
+				const int N = 100010;
 				int n;
-				int a[N], f[N];
-
+				int a[N];
+				int q[N];
 				int main()
 				{
 				    scanf("%d", &n);
-				    for (int i = 1; i <= n; i ++ ) scanf("%d", &a[i]);
-
-				    for (int i = 1; i <= n; i ++ )
+				    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+				    int len = 0;
+				    for (int i = 0; i < n; i ++ )
 				    {
-				        f[i] = 1; // 只有a[i]一个数
-				        for (int j = 1; j < i; j ++ )
-				            if (a[j] < a[i])
-				                f[i] = max(f[i], f[j] + 1); 第j个数他也有自己的最长上升子序列吧, 那就是f[j], 我们站在他的肩膀上, 求我的f[i]的最大值
-				    }
-
-				    int res = 0;
-				    for (int i = 1; i <= n; i ++ ) res = max(res, f[i]); 看所有的 最长上升子序列 中的最大值 
-
-				    printf("%d\n", res);
-
-				    return 0;
-				}
-			二分: O(nlogn) == 状态数(n) * 转移数(logn)
-				#include <iostream>
-
-				using namespace std;
-
-				const int N = 1010;
-				int n, cnt;
-				int w[N], f[N];
-
-				int main() {
-				    cin >> n;
-				    for (int i = 0 ; i < n; i++) cin >> w[i];
-
-				    f[cnt++] = w[0];
-				    for (int i = 1; i < n; i++) {
-				        if (w[i] > f[cnt-1]) f[cnt++] = w[i];
-				        else {
-				            int l = 0, r = cnt - 1;
-				            while (l < r) {
-				                int mid = (l + r) >> 1;
-				                if (f[mid] >= w[i]) r = mid;
-				                else l = mid + 1;
-				            }
-				            f[r] = w[i];
+				        int l = 0, r = len;
+				        while (l < r){
+				            int mid = l + r + 1 >> 1;
+				            if (q[mid] < a[i]) l = mid;
+				            else r = mid - 1;
 				        }
+				        len = max(len, r + 1);
+				        q[r + 1] = a[i];
 				    }
-				    cout << cnt << endl;
+				    printf("%d\n", len);
 				    return 0;
 				}
-5.17
-	62. AcWing 896. 最长上升子序列 II 
-		1. bug
-		2. ok
-			#include <iostream>
-			#include <algorithm>
-
-			using namespace std;
-
-			const int N = 100010;
-
-			int n;
-			int a[N];
-			int q[N];
-
-			int main()
-			{
-			    scanf("%d", &n);
-			    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
-
-			    int len = 0;
-			    for (int i = 0; i < n; i ++ )
-			    {
-			        int l = 0, r = len;
-			        while (l < r)
-			        {
-			            int mid = l + r + 1 >> 1;
-			            if (q[mid] < a[i]) l = mid;
-			            else r = mid - 1;
-			        }
-			        len = max(len, r + 1);
-			        q[r + 1] = a[i];
-			    }
-
-			    printf("%d\n", len);
-
-			    return 0;
-			}
-
-			作者：yxc
-			链接：https://www.acwing.com/activity/content/code/content/62458/
-			来源：AcWing
-			著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 	63. AcWing 897. 最长公共子序列
 		1.
+		2. ok 很顺 
+			#include <iostream>
+			using namespace std;
+			const int N = 1010;
+			int f[N][N], n, m;
+			char a[N], b[N];
+			int main(){
+			    scanf("%d%d%s%s", &n, &m, a + 1, b + 1);   //这里会自动处理空格, 换行
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 1; j <= m; j++){
+			            if(a[i] == b[j])
+			                f[i][j] = f[i-1][j-1] + 1;
+			            else{
+			                简化版: f[i][j] = max(f[i - 1][j], f[i][j - 1]);
+			                详细版:
+				                f[i][j] = max(f[i-1][j-1], f[i-1][j]);
+				                f[i][j] = max(f[i][j], f[i][j-1]);
+			            }
+			        }
+			    }
+			    cout << f[n][m] << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+			const int N = 1010;
+			int f[N][N], n, m;
+			char a[N], b[N];
+			int main(){
+			    scanf("%d%d%s%s", &n, &m, a + 1, b + 1);
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 1; j <= m; j++){
+			            if(a[i] == b[j]) f[i][j] = f[i-1][j-1] + 1;
+			            else f[i][j] = max(f[i-1][j], f[i][j-1]);
+			        }
+			    }
+			    cout << f[n][m] << endl;
+			    return 0;
+			}
+	64. AcWing 902. 最短编辑距离
+		0. 小总结:
+			过程很简单:
+				1. 初始化
+					如果a是空的{只有0个元素}, 要匹配j个b[1到j], 就要添加所有b里面的元素, 即添加j次
+					如果b是空的{只有0个元素}, a[1到j]要匹配b, 就要删除所有的a里面的元素, 即删除i次
+				2. 遍历行和列
+					min(4个选项)
+						左上: 改掉a[i], 包含两个选项					上方: 删除a[i]
+							a[i] != b[j]: f[i-1][j-1] + 1
+							a[i] == b[j]: f[i-1][j-1] + 0
+
+				    	左方: a[i]后插入
+		1. bug
+		2. ok 很顺
+		 	#include <iostream>
+			using namespace std;
+			const int N = 1010;
+			int f[N][N], n, m;
+			char a[N], b[N];
+			int main(){
+			    scanf("%d%s%d%s", &n, a + 1, &m, b + 1);
+			    //求的是min, 按道理说你的初始化是+INF, 但是这里可以不需要
+			    for(int i = 0; i <= n; i++) f[i][0] = i; //[0,n], 一共n+1个数字要遍历
+			    for(int i = 0; i <= m; i++) f[0][i] = i;
+
+			    for(int i = 1; i <= n; i ++){
+			        for(int j = 1; j <= m; j++)
+			        {
+			            f[i][j] = min(f[i-1][j] + 1, f[i][j-1] + 1);	min(上方, 左方)
+			            f[i][j] = min(f[i][j], f[i-1][j-1] + (a[i] != b[j])); //我们希望a[i]==b[i]什么都不用改, 什么动作都不要是0, 所以需要a[i] == b[j]是false
+			        
+			        	总结:
+
+				    		左上: 改掉a[i]			上方: 删除a[i]
+
+				    		左方: a[i]后插入
+			        }
+			    }
+			    cout << f[n][m] << endl;
+			    return 0;
+			}
+	65. AcWing 899. 编辑距离
+		0. 补充:	
+			1. 
+				sizeof(...)是 运算符，而不是一个函数。
+					如果传入char*, 返回的长度大小包括'\0'。
+				strlen(...)是函数, 参数必须是字符型指针（char*）, 且必须是以'\0'结尾的。
+					返回的长度大小不包括'\0', strlen考虑细密, 会帮你-1
+		1. bug
+		2. ok
+			保守写法: dp问题都是从i==1读入char[]
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 1010, M = 15;
+			char a[N][M], t[N][M];
+			int f[M][M];	不需要设置在 query()里面, 因为我们有l1,l2限定了查找的范围. 
+			int query(char x[], char y[]){
+			    int l1 = strlen(x + 1), l2 = strlen(y + 1);	注意, 这里是 (x + 1), (y + 1).
+			    for(int i = 0; i <= l1; i++) f[i][0] = i;
+			    for(int i = 0; i <= l2; i++) f[0][i] = i;
+			    for(int i = 1; i <= l1; i++){
+			        for(int j = 1; j <= l2; j++){
+			            f[i][j] = min(f[i-1][j] + 1, f[i][j-1] + 1);
+			            f[i][j] = min(f[i][j], f[i-1][j-1] + (x[i] != y[j]));
+			        }
+			    }
+			    return f[l1][l2];
+			}
+			int main(){
+			    int n, q;
+			    scanf("%d%d", &n, &q);
+			    for(int i = 0; i < n; i++) scanf("%s", a[i] + 1);
+			    for(int i = 0; i < q; i++){
+			        int limit;
+			        scanf("%s%d", t[i] + 1, &limit);
+			        int res = 0;
+			        for(int j = 0; j < n; j++){
+			            if(query(a[j], t[i]) <= limit) res ++;
+			        }
+			        cout << res << endl;
+			    }
+			    return 0;
+			}
+			--
+			易错写法: 从i==0读入char[]
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 1010, M = 15;
+			char a[N][M], t[N][M];
+			int f[M][M];
+			int query(char x[], char y[]){
+			    int l1 = strlen(x), l2 = strlen(y);
+			    for(int i = 0; i <= l1; i++) f[i][0] = i;
+			    for(int i = 0; i <= l2; i++) f[0][i] = i;
+			    for(int i = 1; i <= l1; i++){
+			        for(int j = 1; j <= l2; j++){
+			            f[i][j] = min(f[i-1][j] + 1, f[i][j-1] + 1);
+			            f[i][j] = min(f[i][j], f[i-1][j-1] + (x[i-1] != y[j-1]));	注意, 这里是(x[i-1] != y[j-1])
+			        }
+			    }
+			    return f[l1][l2];
+			}
+			int main(){
+			    int n, q;
+			    scanf("%d%d", &n, &q);
+			    for(int i = 0; i < n; i++) scanf("%s", a[i]);
+			    for(int i = 0; i < q; i++){
+			        int limit;
+			        scanf("%s%d", t[i], &limit);
+			        int res = 0;
+			        for(int j = 0; j < n; j++){
+			            if(query(a[j], t[i]) <= limit) res ++;
+			        }
+			        cout << res << endl;
+			    }
+			    return 0;
+			}
+	66. AcWing 282. 石子合并
+		1. bug
+			#include <iostream>
+			using namespace std;
+			const int N = 310;
+			int a[N], s[N], f[N][N], n;
+			int main(){
+			    cin >> n;
+			    for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+			    for(int i = 1; i <= n; i++) s[i] = s[i-1] + a[i];
+			    for(int len = 2; len <= n; len++){
+			        错误: for(int l = 1; len - l + 1 <= n; l++){ 你错在求的是区间长度
+			        正确: for(int l = 1; l + len - 1 <= n; l++){ 我们要求的是右端点...
+			            错误: int r = len - l + 1;
+			            正确: int r = l + len - 1;
+			            正确: f[l][r] = 1e8;
+			            错误: for(int k = l; k < len - l + 1; k ++){
+			            正确: for(int k = l; k < r; k ++){
+			                错误: f[l][r] = 1e8; 那每次for一次k就又回到原点了
+			                错误: f[l][r] = max(f[l][r], f[l][k] + f[k+1][r] + s[r] - s[l - 1]); 不是max啊
+			                正确: f[l][r] = min(f[l][r], f[l][k] + f[k+1][r] + s[r] - s[l - 1]);
+			            }
+			        }
+			    }
+			    cout << f[1][n] << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+			const int N = 310;
+			int a[N], s[N], f[N][N], n;
+			int main(){
+			    cin >> n;
+			    for(int i = 1; i <= n; i++){
+			        scanf("%d", &a[i]);
+			        s[i] = s[i-1] + a[i];
+			    }
+			    for(int i = 1; i <= n; i++)
+			        for(int j = 1; j <= n; j++)
+			        	错误: f[i][j] = 1e8; f[i][i] == 0, 也就是第i个元素自己是不需要有任何代价的
+			            正确: if(i != j) f[i][j] = 1e8; //300 * 1000 = 3e5
+			            	初始化问题:
+								f[i][i] == 0, 也就是第i个元素自己是不需要有任何代价的
+								但是f[i][非i], 也就是长度>=2的区间, 是有代价的
+							另外, 我们遍历的区间[i,j]
+								我们是先遍历小区间, 然后遍历大区间
+								有种树从底部叶子节点开始, 逐层往上的感觉 
+			    for(int len = 2; len <= n; len++){
+			        for(int l = 1; l + len - 1 <= n; l++){
+			            int r = l + len - 1;
+			            for(int k = l; k < r; k++){
+			                f[l][r] = min(f[l][r], f[l][k] + f[k+1][r] + s[r] - s[l-1]);
+			            }
+			        }
+			    }
+			    cout << f[1][n] << endl;
+			    return 0;
+			}
 		2. ok
 			#include <iostream>
-			#include <algorithm>
-
 			using namespace std;
-
-			const int N = 1010;
-
-			int n, m;
-			char a[N], b[N];
-			int f[N][N];
-
-			int main()
-			{
-			    scanf("%d%d", &n, &m);
-			    scanf("%s%s", a + 1, b + 1);
-
-			    for (int i = 1; i <= n; i ++ )
-			        for (int j = 1; j <= m; j ++ )
-			        {
-			            f[i][j] = max(f[i - 1][j], f[i][j - 1]);
-			            if (a[i] == b[j]) f[i][j] = max(f[i][j], f[i - 1][j - 1] + 1);
+			const int N = 310, INF = 310 * 1e4; //INF如果是 310 * 1e3就会报错, 尽可能开大一些
+			int a[N], s[N], f[N][N], n;
+			int main(){
+			    cin >> n;
+			    for(int i = 1; i <= n; i++){    //初始化前缀和, 用于计算代价
+			        scanf("%d", &a[i]);
+			        s[i] = s[i-1] + a[i];
+			    }
+			    for(int i = 1; i <= n; i++){    //初始化f, 我们dp问题一般都是从1开始
+			        for(int j = 1; j <= n; j++){
+			            if(i != j) f[i][j] = INF;   //f[i][i] == 0, 也就是第i个元素自己是不需要有任何代价的
 			        }
-
-			    printf("%d\n", f[n][m]);
-
+			    }
+			    for(int len = 2; len <= n; len ++){
+			        for(int l = 1; l + len - 1 <= n; l ++){
+			            for(int k = l; k < l + len - 1; k++){
+			                int r = l + len - 1;
+			                f[l][r] = min(f[l][r], f[l][k] + f[k+1][r] + s[r] - s[l - 1]);
+			            }
+			        }
+			    }
+			    cout << f[1][n] << endl;
 			    return 0;
 			}
+7. 5.22
+	* 67. AcWing 900. 整数划分
+		0. 小总结:
+			1. 求的是max, 初始化一般为0或者-INF
+				题目 		min/max 		初始化
+				各种背包 		max 			0
+				数字三角形 	max 			-INF
+				最长上升子序列 max 			f[i] = 1 / f[++len] = a[1]
+				最长公共子序列 max 			0
 
-			作者：yxc
-			链接：https://www.acwing.com/activity/content/code/content/58527/
-			来源：AcWing
-			著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
-	64. AcWing 902. 最短编辑距离
-		1.
-		2.
-		 	#include <iostream>
-			#include <algorithm>
 
+			2. 求的是min, 初始化一般为INF{1e8}, 或者大数
+				题目 		min/max 		初始化
+				最短编辑距离 	min 			for(int i = 0; i <= n; i++) f[i][0] = i; //[0,n], 一共n+1个数字要遍历
+			    							for(int i = 0; i <= m; i++) f[0][i] = i;
+
+			    石子合并  	min 			for(int i = 1; i <= n; i++){    //初始化f, 我们dp问题一般都是从1开始
+										        for(int j = 1; j <= n; j++){
+										            if(i != j) f[i][j] = INF;   //f[i][i] == 0, 也就是第i个元素自己是不需要有任何代价的
+										        	else f[i][i] = 0;
+										        }
+										    }
+			3. 求方案数{加总}
+				题目 		方法 		初始化 			状态转移
+				整数划分		方案数加总 	f[0] = 1;		if(j - i >= 0) f[j] = (f[j] + f[j-i]) % mod;
+		1. bug
+			不知道为什么, 就是通不过
+				#include <iostream>
+				using namespace std;
+				const int N = 1010, mod = 1e9 + 7;
+				int f[N][N], n;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i <= n; i++) f[i][0] = 1;
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j <= n; j++){
+				            if(j - i >= 0) f[i][j] = (f[i-1][j] + f[i][j-i]) % mod;
+				        }
+				    }
+				    cout << f[n][n] << endl;
+				    return 0;
+				}
+			--
+			#include <iostream>
 			using namespace std;
-
-			const int N = 1010;
-
-			int n, m;
-			char a[N], b[N];
-			int f[N][N];
-
-			int main()
-			{
-			    scanf("%d%s", &n, a + 1);
-			    scanf("%d%s", &m, b + 1);
-
-			    for (int i = 0; i <= m; i ++ ) f[0][i] = i;
-			    for (int i = 0; i <= n; i ++ ) f[i][0] = i;
-
-			    for (int i = 1; i <= n; i ++ )
-			        for (int j = 1; j <= m; j ++ )
-			        {
-			            f[i][j] = min(f[i - 1][j] + 1, f[i][j - 1] + 1);
-			            if (a[i] == b[j]) f[i][j] = min(f[i][j], f[i - 1][j - 1]);
-			            else f[i][j] = min(f[i][j], f[i - 1][j - 1] + 1);
+			const int N = 1010, mod = 1e9 + 7;
+			int f[N], n;
+			int main(){
+			    cin >> n;
+			    f[0] = 1;
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 0; j <= n; j++){
+			            错误: if(j - 1 >= 0) f[j] = (f[j] + f[j-1]) % mod; 注意, 往左走i步, 因为我们的取一个i数字, 我们的总和是从j到j-i. 
+			            正确: if(j - i >= 0) f[j] = (f[j] + f[j-i]) % mod;
 			        }
-
-			    printf("%d\n", f[n][m]);
-
+			    }
+			    cout << f[n] << endl;
 			    return 0;
 			}
+		2. ok {总之就是用一维优化来做, 从左到右遍历}
+			#include <iostream>
+			using namespace std;
+			const int N = 1010, mod = 1e9 + 7;
+			int f[N], n;
+			int main(){
+			    cin >> n;
+			    f[0] = 1;
+			    	//的本质其实是f[0][0] f[1][0]......f[n][0] = 1: 
+			    	//从 1到0 中选, 总体积恰好是0 的所有选法的"数量"是1, 也就是一个都不选的选法是1
+			    	//...
+			    	//从 1到n 中选, 总体积恰好是0 的所有选法的"数量"是1, 也就是一个都不选的选法是1
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 0; j <= n; j++){
+			            if(j - i >= 0) f[j] = (f[j] + f[j-i]) % mod;
+			        }
+			    }
+			    cout << f[n] << endl;
+			    return 0;
+			}
+	* 68. AcWing 338. 计数问题
+		0. 小总结:
+			1. 预处理: 5个东西
+				一共几位数 d: while (n) ++ res, n /= 10;	res++: 最右侧位的计数加一, n /= 10: 将最右侧位删除
+				右侧的指数: int p = pow(10, j - 1);		计算右边j-1个数字的0有多少个
+				左侧数字的值: int l = n / pow(10, j);		把右边的j个数字都删掉
+				右侧数字的值: int r = n % p; 				只留下右边j-1个数字
+				第j位数字的值: dj = n / p % 10;			把右边的j-1个数字都删掉, 然后留下最后一个数字
+			2. 思路:
+				1. 如果目标数字是 i != 0
+					从右到左遍历第j位
+						1. 预处理得到 p, l, r, dj 
+						2. 情况1: xxx = [000, abc - 1]
+							无条件地计算: 1. res += l * p;
+						3. 情况1: xxx = [abc]
+							二选一的计算:
+								1. 我们喜欢的 i < dj{i在dj大佬下面躲着}
+									res += p;
+								2. i == dj {注意是 else if 不是 else, 如果是else就变成 i >= dj}
+									res += r + 1;
+								}
+				2. 如果目标数字是 i == 0
+					从右到左遍历第j位, "注意第j位不包括最左边一位"
+						1. 预处理得到 p, l, r, dj 
+						2. 情况1: xxx = ["001", abc - 1], 注意从001开始
+							无条件地计算: 1. res += (l - 1) * p;
+						3. 情况1: xxx = [abc]
+							二选一的计算:
+								1. dj > 0	{0在dj大佬下面躲着}
+									res += p;
+								2. dj == 0
+									res += r + 1;
+			3. 其他技巧 
+				1. 用前缀和思想: 
+					cnt(a, x): 意思是: 求从1到a数, x这个数字的出现个数
+					所以 从a到b数, x这个数字的出现个数就是 
+						cnt(b, x) - cnt(a-1, x)
+				2. 读入
+					依旧是用int, 而不是用什么 char[]
+					while(cin >> a >> b, a || b){    先读入a, b. 如果 a == 0 && b == 0就停止
+		1. bug
+			#include <iostream>
+			#include <cmath>
+			using namespace std;
+			const int N = 1e8;
 
-			作者：yxc
-			链接：https://www.acwing.com/activity/content/code/content/62472/
-			来源：AcWing
-			著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+			int dig(int n){
+			    int res = 0;
+			    while(n) ++ res, n /= 10; //res++: 最右侧位的计数加一, n /= 10: 将最右侧位删除
+			    return res;
+			}
+
+			int cnt0(int n){
+			    int res = 0, d = dig(n);
+			    for(int j = 1; j <= d - 1; j++){
+			        int p = pow(10, j - 1), l = n / pow(10, j), r = n % p, dj = n / p % 10;
+			        res += (l - 1) * p;
+			        if(0 < dj) res += p;
+			        else res += r + 1;
+			    }
+			    错误: 忘记写 return, 竟然也会返回一个错误值
+			    正确: return res;
+			}
+
+			int cnt(int n, int i){
+			    int res = 0, d = dig(n);
+			    错误: for(int j = 1; j <= n; j++){
+			    正确: for(int j = 1; j <= d; j++){
+			        int p = pow(10, j - 1), l = n / pow(10, j), r = n % p, dj = n / p % 10;
+			        res += l * p;
+			        if(i < dj) res += p;
+			        错误: else res += r + 1;
+			        正确: else if(i == dj) res += r + 1;
+			    }
+			    return res;
+			}
+
+			int main(){
+			    int a, b;
+			    while(cin >> a >> b, a || b){    //先读入a, b. 如果 a == 0就停止
+			        if(a > b) swap(a, b);
+			        int res = cnt0(b) - cnt0(a - 1);
+			        cout << res << " ";
+			        for(int i = 1; i <= 9; i++){
+			            res = cnt(b, i) - cnt(a - 1, i);
+			            cout << res << " ";
+			        }
+			        cout << endl;
+			    }
+			    return 0;
+			}
+		2. ok{保守写法}
+			# include <iostream>
+			# include <cmath>
+			using namespace std;
+			int dgt(int n) // 计算整数n有多少位
+			{
+			    int res = 0;
+			    while (n) ++ res, n /= 10;
+			    return res;
+			}
+			int cnt(int n, int i) // 计算从1到n的整数中数字i出现多少次 
+			{
+			    int res = 0, d = dgt(n);
+			    for (int j = 1; j <= d; ++ j) // 从右到左第j位上数字i出现多少次
+			    {
+			        // l和r是第j位左边和右边的整数 (视频中的abc和efg); dj是第j位的数字
+			        int p = pow(10, j - 1), l = n / pow(10, j), r = n % p, dj = n / p % 10;
+			        // 1. 视频中xxx = [000, abc - 1])的情况
+			        res += l * p;  
+			        // 2. 视频中xxx = abc 的情况
+			        if(i < dj) res += p; //{视频中xxx = abc, yyy = [0, 999]共1000个 的情况}
+			        else if (i == dj) res += r + 1; //{视频中xxx = abc, yyy = [0, edg] 的情况}
+			    }
+			    return res;
+			}
+			int cnt0(int n) // 计算从1到n的整数中数字0出现多少次 
+			{
+			    int res = 0, d = dgt(n);
+			    for (int j = 1; j <= d - 1; ++ j) // 从右到左第j位上数字i出现多少次
+			    {
+			        // l和r是第j位左边和右边的整数 (视频中的abc和efg); dj是第j位的数字
+			        // 这里我们因为 j <= d - 1; 所以保证了左侧还剩一位数, 所以 l != 0.
+			        int p = pow(10, j - 1), l = n / pow(10, j), r = n % p, dj = n / p % 10;
+			        //1. 视频中xxx = [001, abc - 1]的情况, 注意xxx不能为000, 所以l-1
+			        res += (l - 1) * p;  
+			        //2. 视频中xxx = abc 的情况
+			        if(0 < dj) res += p; //{视频中xxx = abc, yyy = [0, 999]共1000个 的情况}
+			        else res += r + 1; //{视频中xxx = abc, yyy = [0, edg] 的情况}
+			    }
+			    return res;
+			}
+			int main()
+			{
+			    int a, b;
+			    while (cin >> a >> b , a || b)
+			    {
+			        if (a > b) swap(a, b);
+			        cout << cnt0(b) - cnt0(a - 1) << ' ';
+			        for (int i = 1; i <= 9; ++ i) cout << cnt(b, i) - cnt(a - 1, i) << ' ';
+			        cout << endl;
+			    }
+			    return 0;
+			}
+			--{很顺}
+			#include <iostream>
+			#include <cmath>
+			using namespace std;
+			const int N = 1e8 + 10;
+			int a, b;
+
+			int dig(int n){
+			    int res = 0;
+			    while(n) ++res, n /= 10;
+			    return res;
+			}
+			int cnt0(int n){
+			    int res = 0, d = dig(n);
+			    for(int j = 1; j <= d - 1; j++){
+			        int p = pow(10, j - 1), l = n / pow(10, j), r = n % p, dj = n / p % 10;
+			        res += (l - 1) * p;
+			        if(dj) res += p;
+			        else res += r + 1;
+			    }
+			    return res;
+			}
+			int cnt(int n, int i){
+			    int res = 0, d = dig(n);
+			    for(int j = 1; j <= d; j++){
+			        int p = pow(10, j - 1), l = n / pow(10, j), r = n % p, dj = n / p % 10;
+			        res += l * p;
+			        if(i < dj) res += p;
+			        else if(i == dj) res += r + 1;
+			    }
+			    return res;
+			}
+			int main(){
+			    while(cin >> a >> b, a || b){
+			        if(a > b) swap(a, b);
+			        int res = cnt0(b) - cnt0(a - 1);
+			        cout << res << " ";
+			        for(int i = 1; i <= 9; i++){
+			            res = cnt(b, i) - cnt(a - 1, i);
+			            cout << res << " ";
+			        }
+			        cout << endl;
+			    }
+			    return 0;
+			}
+	* 69. AcWing 291. 蒙德里安的梦想
+		1. bug
+			#include <iostream>
+			#include <vector>
+			#include <cstring>
+			using namespace std;
+			错误: M = 2 ^ 11 + 10; 这里的^是异或运算啊亲
+			正确: const int N = 15, M = 1 << N;
+			错误: int f[N][M]; 如果是12*12的矩阵f的值会很大,会溢出为负值
+			正确: long long f[N][M];
+			int n, m;
+			bool st[M];
+			错误: vector<vector<int>> state;
+			正确: vector<vector<int>> state(M);	要预先开好大小
+
+			void prep(int n){
+			    //预处理st[M];
+			    memset(st, false, sizeof st);	 因为我们有很多个矩阵, 每个矩阵的行数n不同
+			    for(int s = 0; s < 1 << n; s ++){
+			        bool isvalid = true;
+			        int cnt = 0;
+			        for(int i = 0; i < n; i++){
+			            if(s >> i & 1){
+			                if(cnt & 1){
+			                    isvalid = false;
+			                    break;
+			                }
+			            }else{
+			                cnt++;
+			            }
+			        }
+			        if(cnt & 1) isvalid = false;
+			        st[s] = isvalid;
+			    }
+			    
+			    //预处理state[j] = k;
+			    for(int s = 0; s < 1 << n; s ++){
+			        state[s].clear();			 因为我们有很多个矩阵, 每个矩阵的行数n不同
+			        for(int k = 0; k < 1 << n; k++){
+			            if((s & k) == 0 && st[s | k]) state[s].push_back(k);
+			        }
+			    }
+			}
+
+			int main(){
+			    错误: while(cin >> n >> m";" n || m){ 
+			    正确: while(cin >> n >> m, n || m){ 
+			        prep(n);
+			        错误: 忘写了
+			        正确: memset(f, 0, sizeof f); 因为我们有很多个矩阵, 每个矩阵的行数n不同
+			        f[0][0] = 1;
+			        for(int i = 1; i <= m - 1; i++){
+			            for(int s = 0; s < 1 << n; s++){
+			                for(int k : state[s]){
+			                    f[i][s] += f[i-1][k];
+			                }
+			            }
+			        }
+			        for(int k : state[0]){
+			            错误: f[m][0] = f[m-1][k];
+			            正确: f[m][0] += f[m-1][k];
+			        }
+			        cout << f[m][0] << endl;
+			    }
+			}
+		2. ok
+
+	* 70. AcWing 91. 最短Hamilton路径
+	71. AcWing 285. 没有上司的舞会
+	72. AcWing 901. 滑雪 
+	73. 
+	74. 
+
+
+
 
 ------------
 	1. 为什么是 0x3f, 不是-1{0xfffffff},
