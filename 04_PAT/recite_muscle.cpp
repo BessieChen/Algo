@@ -7870,7 +7870,7 @@
 			using namespace std;
 			错误: M = 2 ^ 11 + 10; 这里的^是异或运算啊亲
 			正确: const int N = 15, M = 1 << N;
-			错误: int f[N][M]; 如果是12*12的矩阵f的值会很大,会溢出为负值
+			错误2次: int f[N][M]; 如果是12*12的矩阵f的值会很大,会溢出为负值
 			正确: long long f[N][M];
 			int n, m;
 			bool st[M];
@@ -7881,7 +7881,8 @@
 			    //预处理st[M];
 			    memset(st, false, sizeof st);	 因为我们有很多个矩阵, 每个矩阵的行数n不同
 			    for(int s = 0; s < 1 << n; s ++){
-			        bool isvalid = true;
+			    	错误: bool isvalid = false;
+			        正确: bool isvalid = true;
 			        int cnt = 0;
 			        for(int i = 0; i < n; i++){
 			            if(s >> i & 1){
@@ -7910,7 +7911,7 @@
 			    错误: while(cin >> n >> m";" n || m){ 
 			    正确: while(cin >> n >> m, n || m){ 
 			        prep(n);
-			        错误: 忘写了
+			        错误2次: 忘写了memset
 			        正确: memset(f, 0, sizeof f); 因为我们有很多个矩阵, 每个矩阵的行数n不同
 			        f[0][0] = 1;
 			        for(int i = 1; i <= m - 1; i++){
@@ -7928,16 +7929,1267 @@
 			    }
 			}
 		2. ok
+			#include <iostream>
+			#include <vector>
+			#include <cstring>
+			using namespace std;
+			const int N = 13, M = 1 << N;
+			long long f[N][M];
+			bool st[M];
+			vector<vector<int>> state(M);
+			int n, m;
 
+			void prep(int n){
+			    //预处理st[M]
+			    memset(st, false, sizeof st);
+			    for(int s = 0; s < 1 << n; s++){
+			        bool isvalid = true;
+			        int cnt = 0;
+			        for(int i = 0; i < n ; i++){
+			            if(s >> i & 1){
+			                if(cnt & 1){
+			                    isvalid = false;
+			                    break;
+			                }
+			            }else cnt ++;
+			        }
+			        if(cnt & 1) isvalid = false;
+			        st[s] = isvalid;
+			    }
+			    
+			    //预处理state[j] = k; 其中k是j的左侧的一列 
+			    for(int j = 0 ; j < 1 << n; j++){
+			        state[j].clear();
+			        for(int k = 0; k < 1 << n; k++){
+			            if((j & k) == 0 && st[j | k]) state[j].push_back(k);
+			        }
+			    }
+			    return;
+			}
+
+			int main(){
+			    while(cin >> n >> m, n || m){
+			        prep(n);
+			        memset(f, 0, sizeof f);
+			        f[0][0] = 1;
+			        for(int i = 1; i <= m; i++){
+			            if(i < m){
+			                for(int s = 0; s < 1 << n; s ++){
+			                    for(auto k : state[s]){
+			                        f[i][s] += f[i-1][k];
+			                    }
+			                }
+			            }else{
+			                for(auto k : state[0]){
+			                    f[m][0] += f[m-1][k];
+			                }
+			            }
+			        }
+			        cout << f[m][0] << endl;
+			    }
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <vector>
+			#include <cstring>
+			using namespace std;
+			const int N = 12, M = 1 << N;
+			long long f[N][M]; //N列, 每列M个状态
+			bool st[M]; //状态 j | k 的合法性
+			vector<vector<int>> state(M); //M个状态需要记录合法的上一个状态
+			int n, m;
+
+			void prep(int n){
+			    memset(st, false, sizeof st);
+			    for(int s = 0; s < 1 << n; s++){ //既然是准备st, 就要遍历每个状态
+			        bool isvalid = true;
+			        int cnt = 0; 
+			        for(int i = 0; i < n; i++) //从状态的最后一位开始判断 
+			        {
+			            if(s >> i & 1){     //遇到1
+			                if(cnt & 1){    //是否是奇数
+			                    isvalid = false;
+			                    break;
+			                }
+			            }else cnt ++;
+			        }
+			        if(cnt & 1) isvalid = false;
+			        st[s] = isvalid;
+			    }
+			    
+			    for(int j = 0; j < 1 << n; j++){        //既然是准备state, 就要遍历每个状态
+			        state[j].clear();
+			        for(int k = 0; k < 1 << n; k++){    //要遍历左边一列的每一个状态
+			            if((j & k) == 0 && st[j | k]) state[j].push_back(k);
+			        }
+			    }
+			    return;
+			}
+
+			int main(){
+			    while(cin >> n >> m, n || m){
+			        prep(n); //准备st和state
+			        memset(f, 0, sizeof f);
+			        f[0][0] = 1;
+			        for(int i = 1; i < m; i++){          //从第2列{i==1}开始
+			            for(int s = 0; s < 1 << n; s++){ //看所有的状态
+			                for(auto k : state[s]) f[i][s] += f[i-1][k];    //s状态可以从k状态转移过来 
+			            }
+			        }
+			        for(auto k : state[0]) f[m][0] += f[m-1][k];
+			        cout << f[m][0] << endl;
+			    }
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <vector>
+			#include <cstring>
+			using namespace std;
+			const int N = 12, M = 1 << N;
+			long long f[N][M];
+			bool st[M];
+			vector<vector<int>> state(M);
+			int n, m, alls;	
+
+			void prep(int n){
+				错误: int alls = 1 << n; 这样alls就是局部变量, 全局变量alls就一直是0了
+			    正确: alls = 1 << n;
+			    //st[s]
+			    memset(st, false, sizeof st);
+			    for(int s = 0; s < alls; s ++){
+			        bool isvalid = true;
+			        int cnt = 0;
+			        for(int i = 0; i < n; i++){
+			            if(s >> i & 1){
+			                if(cnt & 1){
+			                    isvalid = false;
+			                    break;
+			                }
+			            }else cnt++;
+			        }
+			        if(cnt & 1) isvalid = false;
+			        st[s] = isvalid;
+			    }
+			    
+			    //state[j] = k;
+			    for(int j = 0; j < alls; j ++){
+			        state[j].clear();
+			        for(int k = 0; k < alls ; k++){
+			            if((j & k) == 0 && st[j | k]) state[j].push_back(k);
+			        }
+			    }
+			    return;
+			}
+
+			int main(){
+			    while(cin >> n >> m, n || m){
+			        prep(n);
+			        memset(f, 0, sizeof f);
+			        f[0][0] = 1;
+			        for(int i = 1; i < m; i++){
+			            for(int s = 0; s < alls; s++){
+			                for(int k : state[s]) f[i][s] += f[i-1][k];
+			            }
+			        }
+			        for(int k : state[0]){
+			            f[m][0] += f[m-1][k];
+			        }
+			        cout << f[m][0] << endl;
+			    }
+			    return 0;
+			}
 	* 70. AcWing 91. 最短Hamilton路径
-	71. AcWing 285. 没有上司的舞会
-	72. AcWing 901. 滑雪 
-	73. 
-	74. 
+		1. bug 
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 21, M = 1 << N; 错误: INF = 1e9;
+			int d[N][N], f[M][N];
+			int n;
+			int main(){
+			    cin >> n;
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0; j < n; j++){
+			            cin >> d[i][j];
+			        }
+			    }
+			    错误: memset(f, INF, sizeof f); 这个数目还是不够 
+			    正确: memset(f, 0x3f, sizeof f); 保守的做法 
+			    f[1][0] = 0;
+			    for(int s = 0; s < 1 << n; s ++){
+			        for(int i = 0; i < n; i++){
+			            if(s >> i & 1){
+			                for(int j = 0 ; j < n; j++){
+			                    int last = s - (1 << i);
+			                    if(last >> j & 1){	//上一个状态: (s - (1 << i)), 如果走了第j步
+			                        f[s][i] = min(f[s][i], f[last][j] + d[j][i]);
+			                    }
+			                }
+			            }
+			        }
+			    }
+			    cout << f[(1 << n) - 1][n - 1] << endl;
+			    return 0;
+			}
+		2. ok
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 21, M = 1 << N;	//21个要走的地点, 状态是 1 << 21
+			int d[N][N], f[M][N], n;
+			int main(){
+			    cin >> n;
+			    for(int i = 0 ; i < n; i++)
+			        for(int j = 0 ; j < n; j++)
+			            cin >> d[i][j];
+			    memset(f, 0x3f, sizeof f);
+			    f[1][0] = 0;	//状态000..001 是只走了第0个点, 终点是第0个点, 距离就是0
+			    for(int s = 0 ; s < 1 << n; s ++){
+			        for(int i = 0; i < n ; i++){	//从第0个点出发, 当前的走到的点是i
+			            if(s >> i & 1){	
+			                for(int j = 0 ; j < n; j++){	/i的上一个点是j
+			                    int last = s - (1 << i);
+			                    if(last >> j & 1){	//上一个状态: (s - (1 << i)), 如果走了第j步
+			                        f[s][i] = min(f[s][i], f[last][j] + d[j][i]);
+			                        				不走j  	走j, 那就是上一步的状态是没走过i: s - (1 << i)
+			                    }
+			                }
+			            }
+			        }
+			    }
+			    cout << f[(1 << n) - 1][n - 1] << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 21, M = 1 << N; //21个要走的地点, 状态是 1 << 21
+			int d[N][N], f[M][N], n;
+			int main(){
+			    cin >> n;
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0; j < n; j++) cin >> d[i][j];
+			    }
+			    memset(f, 0x3f, sizeof f);
+			    f[1][0] = 0; //状态000..001 是只走了第0个点, 终点是第0个点, 距离就是0
+			    for(int s = 0; s < 1 << n; s ++){
+			        for(int i = 0; i < n; i++){ //从第0个点出发, 当前的走到的点是i
+			            if(s >> i & 1){
+			                for(int j = 0; j < n; j++) {//i的上一个点是j
+			                    int last = s - (1 << i);
+			                    if(last >> j & 1){	//上一个状态: (s - (1 << i)), 如果走了第j步
+			                        f[s][i] = min(f[s][i], f[last][j] + d[j][i]);
+			                    }
+			                }
+			            }
+			        }
+			    }
+			    cout << f[(1 << n) - 1][n - 1] << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 21, M = 1 << N;
+			int d[N][N], f[M][N];
+			int n;
+			int main(){
+			    cin >> n;
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0 ; j < n; j++)
+			            cin >> d[i][j];
+			    }
+			    memset(f, 0x3f, sizeof f); //因为求最短, 所以初始化正无穷
+			    f[1][0] = 0;
+			    for(int s = 0; s < 1 << n; s ++){
+			        for(int i = 0; i < n; i++){
+			            if(s >> i & 1){
+			                for(int j = 0 ; j < n; j++){
+			                    int last = s - (1 << i);
+			                    if(last >> j & 1){	//上一个状态: (s - (1 << i)), 如果走了第j步
+			                        f[s][i] = min(f[s][i], f[last][j] + d[j][i]);
+			                        				不走j  	走j, 那就是上一步的状态是没走过i: s - (1 << i)
+			                    }
+			                        				
+			                }
+			            }
+			        }
+			    }
+			    cout << f[(1 << n) - 1][n - 1] << endl;
+			    return 0;
+			}
+	* 71. AcWing 285. 没有上司的舞会
+		1. bug 
+		2. ok {很顺}
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 6010;
+			int h[N], e[N], ne[N], ind;
+			int ha[N], n, f[N][2];
+			bool hasf[N];
+
+			void add(int a, int b){
+			    e[ind] = b, ne[ind] = h[a], h[a] = ind ++;
+			}
+
+			void dfs(int u){
+			    f[u][1] = ha[u];
+			    f[u][0] = 0;		其实这一句可以不写, 因为本身全局变量就是0
+			    for(int i = h[u]; ~i; i = ne[i]){
+			        int v = e[i];
+			        dfs(v);
+			        	我之前的疑惑: 为什么先dfs到最底层叶子
+			        	答案:
+			        		不然呢, 如果你写成 
+			        			f[u][1] += f[v][0];
+			        			f[u][0] += max(f[v][1], f[v][0]);
+			        			dfs(v);
+			        		那这样你的f[j][0], f[j][1]的值都还不知道啊
+			        f[u][1] += f[v][0];
+			        	当前u结点选，子结点一定不能选: f[u][1]=∑(f[si,0])
+			        f[u][0] += max(f[v][1], f[v][0]);
+			        	当前u结点不选，子结点可选可不选, 具体是选还是不选, 看哪个大: f[u][0]=∑max(f[si,0],f[si,1])
+			    }
+			}
+
+			int main(){
+			    memset(h, -1, sizeof h);
+			    cin >> n;
+			    for(int i = 1; i <= n; i++){
+			        scanf("%d", &ha[i]);
+			    }
+			    for(int i = 0; i < n - 1; i++){
+			        int s, f;
+			        scanf("%d%d", &s, &f);
+			        add(f, s);
+			        hasf[s] = true;
+			    }
+			    
+			    int root = 1;
+			    while(hasf[root]) root++;
+			    
+			    dfs(root);
+			    cout << max(f[root][1], f[root][0]) << endl;
+			}
+			--
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 6010;
+			int h[N], e[N], ne[N], ind;
+			int ha[N], f[N][2], n;
+			bool hasf[N];
+
+			void add(int a, int b){
+			    e[ind] = b, ne[ind] = h[a], h[a] = ind ++;
+			}
+
+			void dfs(int u){
+			    f[u][1] = ha[u], f[u][0] = 0;
+			    for(int i = h[u]; ~i; i = ne[i]){
+			        int v = e[i];
+			        dfs(v); 
+			        f[u][1] += f[v][0];
+			        f[u][0] += max(f[v][1], f[v][0]);
+			    }
+			    return;
+			}
+			int main(){
+			    memset(h, -1, sizeof h);
+			    cin >> n;
+			    for(int i = 1; i <= n; i++) cin >> ha[i];
+			    for(int i = 0; i < n - 1; i++){
+			        int s, f;
+			        cin >> s >> f;
+			        add(f, s);
+			        hasf[s] = true;
+			    }
+			    int root = 1;
+			    while(hasf[root]) root++;
+			    dfs(root);
+			    cout << max(f[root][1], f[root][0]) << endl;
+			    return 0;
+			}
+	* 72. AcWing 901. 滑雪 
+		1. bug 
+		2. ok{很顺}
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 310;
+			int g[N][N], f[N][N]; //f[i][j]是从{i,j}点出发, 能滑的最长长度 
+			int n, m;
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+			其实是dfs深搜算法, 一条路到底 
+			int dfs(int x, int y) //返回f[x][y]: 从{x, y}点出发, 能滑的最长长度
+			{
+			    if(f[x][y] != -1) return f[x][y];
+			    	判断 f[x][y]是否已经被计算过, 计算过就不是==-1了, 计算过就返回 
+			    	我的疑惑, 为什么f[x][y]被计算过就不能再被计算了 
+			    		理解:
+			    			如果 f[x][y]被计算过, 那么它就只能为其他人贡献自己的值 f[x][y], 而不能被其他人在更新成最优值 
+			    			因为如果 f[x][y]被计算过, 那么这个 f[x][y]就肯定是最优值
+			    				为什么, 因为这是深搜, 只有遍历完整个路径, 才会计算出 f[x][y]
+			    				这个路径的终点, 要么就是终点的是一个海拔洼地, 要么处于四个边界的点
+			    		理解2:
+			    			这里是因为信息的传导是单向的, 也就是一个 dp(x2, y2)能调用 dp(x1, y1)是因为 {x2, y2}的点的高度更高
+			    			也就是只有海拔更高的点 dp(), 能调用海拔更低的点的 dp()
+			    			调用这个dp函数的上一个dp函数, 上一个dp函数对应的点海拔肯定比这个dp函数对应的点的海拔高
+			    f[x][y] = 1; // 如果哪里都走不了, 起码路径长度也是1. 其实这个也是递归到底的情况
+			    for(int i = 0; i < 4; i++){
+			        int a = x + dx[i], b = y + dy[i];
+			        if(a >= 1 && a <= n && b >= 1 && b <= m && g[a][b] < g[x][y]){	我们要判断是否出界, 并且海拔必须是减少的
+			            写法1:
+				            f[a][b] = dfs(a, b);	dp(a, b): 如果点{a,b}的四周都走不通, dp(a, b)返回的给我们的是v==1
+				            if(f[a][b] + 1 > f[x][y]) f[x][y] = f[a][b] + 1;
+				        写法2:
+				            int fab = dfs(a, b);
+				            if(fab + 1 > f[x][y]) f[x][y] = fab + 1;
+			        }
+			    }
+			    return f[x][y];
+			}
+
+			int main(){
+			    cin >> n >> m;
+			    for(int i = 1; i <= n; i++)
+			        for(int j = 1; j <= m; j++)
+			            cin >> g[i][j];
+			    memset(f, -1, sizeof f);	因为求的是max, 所以初始化为-1
+			    int res = 0;
+			    for(int i = 1; i <= n; i++){
+			        for(int j = 1; j <= m; j++){
+			            res = max(res, dfs(i, j));	每个点都试一试, 总有一个点返回的路径是最长的 
+			        }
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 310;
+			int g[N][N], f[N][N], n, m;
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+			int dfs(int x, int y) //返回f[x,y]: 从{x,y}出发的最长长度
+			{
+			    if(f[x][y] != -1) return f[x][y];
+			    f[x][y] = 1; //起码长度是1
+			    for(int i = 0; i < 4; i++){
+			        int a = x + dx[i], b = y + dy[i];
+			        if(a >= 1 && a <= n && b >= 1 && b <= m && g[a][b] < g[x][y]){
+			            int fab = dfs(a, b);
+			            if(fab + 1 > f[x][y]) f[x][y] = fab + 1;
+			        }
+			    }
+			    return f[x][y];
+			}
+			int main(){
+			    cin >> n >> m;
+			    for(int i = 1; i <= n; i++)
+			        for(int j = 1; j <= m; j++)
+			            cin >> g[i][j];
+			    memset(f, -1, sizeof f);
+			    int res = 0;
+			    for(int i = 1; i <= n; i++)
+			        for(int j = 1; j <= m; j++)
+			            res = max(res, dfs(i, j));
+			    cout << res << endl;
+			    return 0;
+			}
+			--
+			你如果要弄个清楚, 可以打印一下遍历的深度:
+				#include <cstring>
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 310;
+
+				int n, m;
+				int g[N][N];
+				int f[N][N];
+
+				int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1}; 
+
+				int dp(int x, int y, int dep)
+				{
+				    for(int i = 0; i < dep; i++){
+				        cout << "-*";
+				    }
+				    cout << "{" <<  x << ", " << y << "}:" << g[x][y] << " " << f[x][y] << endl;
+				    
+				    int &v = f[x][y];
+				    if (v != -1) return v; 
+				    v = 1;
+				    for (int i = 0; i < 4; i ++ )
+				    {
+				        int a = x + dx[i], b = y + dy[i];
+				        if (a >= 1 && a <= n && b >= 1 && b <= m && g[x][y] > g[a][b]) 
+				            v = max(v, dp(a, b, dep + 1) + 1);
+				    }
+
+				    return v;
+				}
+
+				int main()
+				{
+				    scanf("%d%d", &n, &m);
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 1; j <= m; j ++ )
+				            scanf("%d", &g[i][j]);
+
+				    memset(f, -1, sizeof f);
+
+				    int res = 0;
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 1; j <= m; j ++ )
+				            res = max(res, dp(i, j, 1));
+
+				    printf("%d\n", res);
+
+				    return 0;
+				} 
+					题目样例的输出:
+						-*{1, 1}:1 -1
+						-*{1, 2}:2 -1
+						-*-*{1, 1}:1 1
+						-*{1, 3}:3 -1
+						-*-*{1, 2}:2 2
+						-*{1, 4}:4 -1
+						-*-*{1, 3}:3 3
+						-*{1, 5}:5 -1
+						-*-*{1, 4}:4 4
+						-*{2, 1}:16 -1	这里就是找到一条长长的路径, 当f[2][1]也就是16这个点更新好后, 就是最优值, 因为这条长长的路径是找到底了 
+						-*-*{1, 1}:1 1
+						-*-*{3, 1}:15 -1
+						-*-*-*{4, 1}:14 -1
+						-*-*-*-*{5, 1}:13 -1
+						-*-*-*-*-*{5, 2}:12 -1
+						-*-*-*-*-*-*{5, 3}:11 -1
+						-*-*-*-*-*-*-*{5, 4}:10 -1
+						-*-*-*-*-*-*-*-*{5, 5}:9 -1
+						-*-*-*-*-*-*-*-*-*{4, 5}:8 -1
+						-*-*-*-*-*-*-*-*-*-*{3, 5}:7 -1
+						-*-*-*-*-*-*-*-*-*-*-*{2, 5}:6 -1
+						-*-*-*-*-*-*-*-*-*-*-*-*{1, 5}:5 5 	这个就是路径的底部, 然后路径长度: 5 + 1 + 1 + ... + 1 = 16, 最后 f[2][1] = 16
+						-*{2, 2}:17 -1
+						-*-*{1, 2}:2 2
+						-*-*{2, 1}:16 16
+						-*{2, 3}:18 -1
+						-*-*{1, 3}:3 3
+						-*-*{2, 2}:17 17
+						-*{2, 4}:19 -1
+						-*-*{1, 4}:4 4
+						-*-*{2, 5}:6 6
+						-*-*{2, 3}:18 18
+						-*{2, 5}:6 6
+						-*{3, 1}:15 15
+						-*{3, 2}:24 -1
+						-*-*{2, 2}:17 17
+						-*-*{4, 2}:23 -1
+						-*-*-*{4, 3}:22 -1
+						-*-*-*-*{4, 4}:21 -1
+						-*-*-*-*-*{3, 4}:20 -1
+						-*-*-*-*-*-*{2, 4}:19 19
+						-*-*-*-*-*-*{3, 5}:7 7
+						-*-*-*-*-*{4, 5}:8 8
+						-*-*-*-*-*{5, 4}:10 10
+						-*-*-*-*{5, 3}:11 11
+						-*-*-*{5, 2}:12 12
+						-*-*-*{4, 1}:14 14
+						-*-*{3, 1}:15 15
+						-*{3, 3}:25 -1
+						-*-*{2, 3}:18 18
+						-*-*{3, 4}:20 20
+						-*-*{4, 3}:22 22
+						-*-*{3, 2}:24 24
+						-*{3, 4}:20 20
+						-*{3, 5}:7 7
+						-*{4, 1}:14 14
+						-*{4, 2}:23 23
+						-*{4, 3}:22 22
+						-*{4, 4}:21 21
+						-*{4, 5}:8 8
+						-*{5, 1}:13 13
+						-*{5, 2}:12 12
+						-*{5, 3}:11 11
+						-*{5, 4}:10 10
+						-*{5, 5}:9 9
+						25
+8. 5.25
+	73. AcWing 905. 区间选点
+		0. 题意:
+			给定 N 个闭区间 [ai,bi]，请你在数轴上选择尽量少的点，使得每个区间内至少包含一个选出的点。
+			输出选择的点的最小数量。
+			位于区间端点上的点也算作区间内。
+		1. bug
+		2. ok{很顺}
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			struct Edge{
+			    int l, r;
+			    bool operator<(const Edge &e) const{
+			        return r < e.r;
+			    }
+			}edges[N];
+			int n;
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0 ; i < n; i++){
+			        int a, b;
+			        scanf("%d%d", &a, &b);
+			        edges[i] = {a, b};
+			    }
+			    sort(edges, edges + n);
+			    int ed = edges[0].r, res = 1;	 //当最小的右端点当做支撑
+			    for(int i = 1; i < n; i++){
+			        if(ed < edges[i].l){	//如果ed支撑不了了
+			            res ++;
+			            ed = edges[i].r; 
+			        }
+			        //如果 edges[i].l < ed, 说明我们的ed还能支撑, 所以没必要res++, 因为我们希望res尽可能小
+			        	// 注意如果 edges[i].l < ed, 不能 ed = edges[i].r; 因为一旦 ed = edges[i].r 就要 res++
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			struct Edge{
+			    int l, r;
+			    bool operator<(const Edge &e) const{
+			        return r < e.r;
+			    }
+			}edges[N];
+			int main(){
+			    int n;
+			    scanf("%d", &n);
+			    for(int i = 0; i < n; i++){
+			        int a, b;
+			        scanf("%d%d", &a, &b);
+			        edges[i] = {a, b};
+			    }
+			    sort(edges, edges + n);
+			    int ed = edges[0].r, res = 1; 
+			    for(int i = 1; i < n; i++){
+			        if(ed < edges[i].l) {
+			            res ++;
+			            ed = edges[i].r;
+			        }
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+	74. AcWing 908. 最大不相交区间数量
+		0. 题意:
+			上一题:
+				给定 N 个闭区间 [ai,bi]，请你在数轴上选择尽量少的点，使得每个区间内至少包含一个选出的点。
+				输出选择的点的最小数量。
+				位于区间端点上的点也算作区间内。
+			本题: {有种希望区间互斥的感觉}
+				给定 N 个闭区间 [ai,bi]，请你在数轴上选择若干区间，使得选中的区间之间互不相交（包括端点）.
+				输出可选取区间的最大数量
+		1. bug
+		2. ok{完全可以把上一题的代码复制到这道题...}
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			struct Edge{
+			    int l, r;
+			    bool operator<(const Edge &e) const{
+			        return r < e.r;
+			    }
+			}edges[N];
+			int main(){
+			    int n;
+			    scanf("%d", &n);
+			    for(int i = 0; i < n; i++){
+			        int a, b;
+			        scanf("%d%d", &a, &b);
+			        edges[i] = {a, b};
+			    }
+			    sort(edges, edges + n);
+			    int ed = edges[0].r, res = 1; //当最小的右端点当做支撑
+			    for(int i = 1; i < n; i++){
+			        if(ed < edges[i].l) {//如果ed支撑不了了
+			            res ++;
+			            ed = edges[i].r;
+			        }
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+	75. AcWing 906. 区间分组
+		1. bug
+			0. 传统做法
+				#include <iostream>
+				#include <algorithm>
+				#include <queue>
+				using namespace std;
+				const int N = 1e5 + 10;
+				struct Edge{
+				    int l, r;
+				    bool operator<(const Edge &e) const{
+				    	错误: return l < e.r;
+				        正确: return l < e.l;
+				    }
+				}edges[N];
+				int n;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++){
+				        int a, b;
+				        cin >> a >> b;
+				        edges[i] = {a, b};
+				    }
+				    sort(edges, edges + n);
+				    priority_queue<int, vector<int>, greater<int>> heap;
+				    for(int i = 0; i < n; i++){
+				        auto ne = edges[i];
+				        if(heap.empty()) heap.push(ne.r);
+				        错误: else if(ne.l < heap.top()) heap.push(ne.r);
+				        正确: else if(ne.l <= heap.top()) heap.push(ne.r);
+				        else{
+				            heap.pop();
+				            heap.push(ne.r);
+				        }
+				    }
+				    cout << heap.size() << endl;
+				    return 0;
+				}
+			1. 教室做法{很顺}
+		2. ok 
+			0. 传统做法
+				#include <iostream>
+				#include <algorithm>
+				#include <queue>
+				using namespace std;
+				const int N = 1e5 + 10;
+				struct Edge{
+				    int l, r;
+				    bool operator<(const Edge &e) const{
+				        return l < e.l;
+				    }
+				}edges[N];
+				int n;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++){
+				        int a, b;
+				        cin >> a >> b;
+				        edges[i] = {a, b};
+				    }
+				    sort(edges, edges + n);	上课时间从小到大排序
+				    priority_queue<int, vector<int>, greater<int>> heap;	heap是最小堆, 返回最早下课的课, 所以插入的是下课时间 
+				    heap.push(edges[0].r); 			插入第一节课的下课时间
+				    for(int i = 1; i < n; i++){
+				    	if(heap.top() < edges[i].l){    下一个上课时间{edges[i].l} 晚于 我们的最早下课时间{heap.top()}, 不需要新教室
+				            heap.pop();
+				            heap.push(edges[i].r);		我们就可以等那节课下课后, 再上课, 所以不需要新教室, 所以pop后再push. 此时heap的size还是1
+				        }else{                          下一个上课时间 早于等于 我们的最早下课时间, 需要新教室
+				            heap.push(edges[i].r);
+				            	如果下一个课的上课时间, 早或者等于, 第一个要下课的课{heap.top()是最早下课的课}. 
+				            	注意等于也算, 也就是一个课的下课时间要严格大于一个课的上课时间
+				        		那么我们就要多开一个新的教室, 然后把这个课的下课时间插入 heap. 此时heap的size是2
+				        }
+				    }
+				    cout << heap.size() << endl;	
+				    	我觉得很神奇的地方就是heap的size记录的是历史上最大的教室数
+				    	为什么? 
+				    		1. 我们的size是只增或者不变, 但是绝对不减的
+				    			因为:
+				    				1. 要么push{size增加}
+				    				2. 如果pop就一定有push{size不变}
+				    		2. 具体的样例我没想到
+				    return 0;
+				}
+				--
+				#include <iostream>
+				#include <algorithm>
+				#include <queue>
+				using namespace std;
+				const int N = 1e5 + 10;
+				struct Edge{
+				    int l, r;
+				    bool operator<(const Edge &e) const{
+				        return l < e.l;
+				    }
+				}edges[N];
+				int n;
+				int main(){
+				    scanf("%d", &n);
+				    for(int i = 0; i < n; i++){
+				        int a, b;
+				        scanf("%d%d", &a, &b);
+				        edges[i] = {a, b};
+				    }
+				    sort(edges, edges + n); 			上课时间排序
+				    priority_queue<int, vector<int>, greater<int>> heap;
+				    heap.push(edges[0].r);  			最早下课的下课时间
+				    for(int i = 1; i < n; i++){
+				        if(heap.top() < edges[i].l){    下一个上课时间 晚于 我们的最早下课时间, 不需要新教室
+				            heap.pop();
+				            heap.push(edges[i].r);
+				        }else{                          下一个上课时间 早于等于 我们的最早下课时间, 需要新教室
+				            heap.push(edges[i].r);
+				        }
+				    }
+				    cout << heap.size() << endl;
+				    return 0;
+				}
+			1. 至少需要几个教室
+				求最大”区间厚度的问题。
+				大家可以把这个问题想象成活动安排问题
+				有若干个活动，第i个活动开始时间和结束时间是[SiSi,fifi]，同一个教室安排的活动之间不能交叠，求要安排所有活动，少需要几个教室？
+				有时间冲突的活动不能安排在同一间教室，与该问题的限制条件相同，即最小需要的教室个数即为该题答案。
+				我们可以把所有开始时间和结束时间排序，遇到开始时间就把需要的教室加1，遇到结束时间就把需要的教室减1,在一系列需要的教室个数变化的过程中，峰值就是多同时进行的活动数，也是我们至少需要的教室数。
+	
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int a[N * 2], ind, n;
+				int main(){
+				    scanf("%d", &n);
+				    for(int i = 0; i < n; i++){
+				        int l, r;
+				        scanf("%d%d", &l, &r);
+				        a[ind ++] = l * 2;
+				        a[ind ++] = r * 2 + 1; 一定是+1, 不是-1
+				        	这么做的好处:
+				        		1. 离散化处理并不会影响上下课时间的顺序, 
+				        			题目保证: l <= r
+				        			同时: l*2 < r*2 + 1, 所以我们保证在sort之后, 某一堂课的上课时间是在下课时间之前
+				        		2. 如果一堂课的下课时间r1 == 另一堂课的上课时间l2, 经过我们的离散化处理后, 上课时间 早于 下课时间, 所以依旧可以保证我们会开新的教室
+				        			因为上课时间是 l2 * 2,
+				        			下课时间是 r1 * 2 + 1, 
+				        			所以我们 l2 * 2 < r1 * 2 + 1, 依旧会开新教室
+				        		3. 就是离散化, 两个格子代表一个时间t, 左边的格子代表上课为t, 右边的格子代表下课为t
+				    }
+				    sort(a, a + n + n); //最精华的一句就在这里了, 去掉了就都错了
+				    	如果去掉了这一句, 全错了, 因为去掉这一句, a[i]肯定是一个奇数一个偶数的来 
+				    int t = 0, res = 0;
+				    for(int i = 0; i < ind; i++){	
+				        if(a[i] & 1) t--;		如果是奇数, 说明是下课, 且之前一定有上课才会有下课.
+				        else t++;				偶数, 说明是上课
+				        	我们的t:
+				        		1. 增加: 某堂课上课
+				        		2. 减少: 某堂课下课
+				        		3. 肯定是先增后减, 最后减到0
+				        			例如调试的打印t:
+				        				1 2 3 4 3 4 5 6 7 8 9 10 9 10 11 10 11 12 13 14 15 16 15 16 15 14 13 12 11 10 11 10 11 12 11 10 11 12 11 10 11 10 11 10 9 8 9 10 9 8 9 8 7 6 5 4 3 2 1 0
+				        res = max(res, t); 		记录最大的t
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
+				--
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int a[N * 2], ind, n;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++){
+				        int l, r;
+				        cin >> l >> r;
+				        a[ind++] = l * 2;
+				        a[ind++] = r * 2 + 1;
+				    }
+				    sort(a, a + n + n);
+				    int t = 0, res = 0;
+				    for(int i = 0; i < ind; i++){
+				        if(a[i] & 1) t--;
+				        else t++;
+				        res = max(res, t);
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
+	76. AcWing 907. 区间覆盖
+	77. AcWing 148. 合并果子
+	78. AcWing 913. 排队打水
+	79. AcWing 104. 货仓选址
+	80. AcWing 125. 耍杂技的牛 
+	81. AcWing 866. 试除法判定质数
+	82. AcWing 867. 分解质因数
+	83. AcWing 868. 筛质数
+	84. AcWing 869. 试除法求约数
+	85. AcWing 870. 约数个数
+	86. AcWing 871. 约数之和
+	87. AcWing 872. 最大公约数
+	88. AcWing 873. 欧拉函数
+	89. AcWing 874. 筛法求欧拉函数
+	90. AcWing 875. 快速幂
+9. 5.25 todo 
+	91. AcWing 876. 快速幂求逆元
+	92. AcWing 877. 扩展欧几里得算法
+	93. AcWing 878. 线性同余方程
+	94. AcWing 204. 表达整数的奇怪方式
+	95. AcWing 883. 高斯消元解线性方程组
+	96. AcWing 884. 高斯消元解异或线性方程组
+	97. AcWing 885. 求组合数 I
+	98. AcWing 886. 求组合数 II
+	99. AcWing 887. 求组合数 III
+	100. AcWing 888. 求组合数 IV
+	101. AcWing 889. 满足条件的01序列
+	102. AcWing 890. 能被整除的数
+	103. AcWing 891. Nim游戏
+	104. AcWing 892. 台阶-Nim游戏
+	105. AcWing 893. 集合-Nim游戏
+	106. AcWing 894. 拆分-Nim游戏
+
+		#include <iostream>
+		#include <algorithm>
+
+		using namespace std;
+
+		const int N = 100010;
+
+		int n;
+		struct Range
+		{
+		    int l, r;
+		    bool operator< (const Range &W)const
+		    {
+		        return l < W.l;
+		    }
+		}range[N];
+
+		int main()
+		{
+		    int st, ed;
+		    scanf("%d%d", &st, &ed);
+		    scanf("%d", &n);
+		    for (int i = 0; i < n; i ++ )
+		    {
+		        int l, r;
+		        scanf("%d%d", &l, &r);
+		        range[i] = {l, r};
+		    }
+
+		    sort(range, range + n);
+
+		    int res = 0;
+		    bool success = false;
+
+		    整个故事的大概逻辑:
+		    	1. 题目给了我们一个区间[st, ed]
+		    	2. 我们将所有的小区间, 按照左端点从小到大排序, 例如:
+
+		    		
+	           	3. 我们首先找到, 所有左端点l <= st的区间, 然后找到这些区间的最右的右端点r, 这个右端点r需要超越st
+	           		1. 如果没找到, 那么是以下两种情况导致没找到, 说明没有能够完全覆盖题目要求的[st, ed]
+	           			1. 不存在"左端点l <= st的区间"
+	           				举例:
+	           					|st
+			            	  1 	-------------
+			            	  2 	  ------
+			            	  3 	   --
+			            	  4 	       ---
+			            	  5 	         -------
+			           	2. 右端点r没有超越st: r <= st就是没超越, r > st才是超越
+			           		举例:
+			           						 |st点
+			            	  1 -------------
+			            	  2   ------
+			            	  3    --
+			            	  4        			---
+			            	  5          		  -------
+	           		2. 如果找到, 例子:	
+	           						|st点
+			            	  1 -------------
+			            	  2   ------
+			            	  3    --
+			            	  4        ---
+			            	  5          -------
+	           			所有左端点 <= st的区间: 在图中就是区间1,2,3
+	           			这些区间的最右的右端点: 区间1的右端点 
+	           	4. 如果找到了超越st的右端点r
+	           		1. 说明我们找到能延伸st的区间, 或者说覆盖掉st的区间
+	           			res++
+	           		2. 看看这个区间是否已经功德圆满: if (r >= ed)
+	           		3. 如果还是没有满足条件{覆盖题目要求的[st, ed]}, 我们就让r成为新的st参照物
+	           			为什么, 因为处理逻辑是一样的:
+	           				之前我们想覆盖掉st, 就是希望"某个区间的左端点在st的前面{或者就等于st}, 这个区间的右端点在st的后面{不能单单只是等于st, 需要r严格大于st}"
+	           				现在, 因为要区间和区间是密封的, 或者说重叠的, 反正不能有一个地方是漏风的
+	           				那么我们希望下一个区间的左端点在r的前面{或者就等于r}, 这个区间的右端点在r的后面{不能单单只是等于r, 需要r严格大于r}
+	           			因为处理逻辑一样, 所以让 st = r.
+
+		    for (int i = 0; i < n; i ++ )
+		    {
+		        int j = i, r = -2e9;	
+		        while (j < n && range[j].l <= st)	双指针算法 
+		        {
+		            r = max(r, range[j].r);
+		            	注意, 这里的 range[i].r 可能还没有r大 
+		            		例如: 左端点排序后, 1是先遍历的, 2是后遍历的, 2的r没有1的r大, 所以我们选的还是第1区间
+		            				|st点
+			            	  1 -----------
+			            	  2   ------
+			            	因为题目没有问题选择具体哪些区间, 而是问你需要选多少个区间, 所以我们这里的代码, 其实没有体现选了第1区间
+			            	但是我们最后的 st = r, 依旧是用的第1区间的r
+		            j ++ ;
+		        }
+
+		        if (r <= st)	如果while里面没有一个区间的r可以在st的右侧
+		        				也就是没有找到新区间, 怎么理解, 因为最后更新st的时候是: st = r 
+		        				因为开头刚进入for的时候, r = -2e9, 所以如果没有找到新区间{也就是右端点能延伸的区间}, 那么 -2e9 < st, 就说明失败了 
+		        				虽然可能很远的后面有一个区间例如区间3, 但是这样的话就不是连续覆盖了 
+		        						|st点
+				            	  1 -----------
+				            	  2   ------
+				            	  3 					-------
+				            	我的疑惑, 有没有可能当前的st是已经覆盖完我们题目要求的区间了, 答案是没可能:
+				            		因为如果是这样, 我们在上一轮for的时候, 已经发现满足条件 if (r >= ed)了, 就退出了
+		        {
+		            res = -1;
+		            break;
+		        }
+
+		        res ++ ;		找到了新区间 
+		        if (r >= ed)	如果已经满足要求, 直接退出
+		        {
+		            success = true;
+		            break;
+		        }
+
+		        st = r;
+		        i = j - 1;	因为我们之后要i++, 总之i到下一轮for就是刚退出while的那个j, 这个j在此轮是不合法的, 但是在下一轮可能就合法了因为 st已经更新了
+		    }
+
+		    if (!success) res = -1;
+		    printf("%d\n", res);
+
+		    return 0;
+		}
 
 
+	果子:
+		#include <iostream>
+		#include <algorithm>
+		#include <queue>
+
+		using namespace std;
+
+		int main()
+		{
+		    int n;
+		    scanf("%d", &n);
+
+		    priority_queue<int, vector<int>, greater<int>> heap;
+		    while (n -- )
+		    {
+		        int x;
+		        scanf("%d", &x);
+		        heap.push(x);
+		    }
+
+		    int res = 0;
+		    while (heap.size() > 1)
+		    {
+		        int a = heap.top(); heap.pop();
+		        int b = heap.top(); heap.pop();
+		        res += a + b;
+		        heap.push(a + b);
+		    }
+
+		    printf("%d\n", res);
+		    return 0;
+		}
+	这道题, 说的不是连续的堆, 任意两堆合并起来就好
+	符合二叉树的性质, 一种选法就是一棵二叉树, 另一种选法是另一棵二叉树
+	我们要构建代价最小的二叉树
+		代价 == 到根的路径长度 * 该节点的值
+		因为叶子节点的路径最长, 所以叶子节点需要是值最小的
+	所以思路就是:
+		找到值最小的两个, 合并, 组成新节点
+		再找到值最小的两个, 再合并, 再组成新节点
 
 
+	--
+	打水
+		#include <iostream>
+		#include <algorithm>
+
+		using namespace std;
+
+		typedef long long LL;
+
+		const int N = 100010;
+
+		int n;
+		int t[N];
+
+		int main()
+		{
+		    scanf("%d", &n);
+		    for (int i = 0; i < n; i ++ ) scanf("%d", &t[i]);
+
+		    老师:
+				sort(t, t + n);
+			    reverse(t, t + n);
+
+			    LL res = 0;
+			    for (int i = 0; i < n; i ++ ) res += t[i] * i;
+			我的:
+				sort(t, t + n);
+				LL res = 0;
+				for(int i = 0 ; i < n; i++) res += t[i] * (n - 1 - i); (n - 1 - i)也就是第i个人后面有几个人在等他
+
+		    printf("%lld\n", res);
+
+		    return 0;
+		}
+	-- 选址 
+		#include <iostream>
+		#include <algorithm>
+
+		using namespace std;
+
+		const int N = 100010;
+
+		int n;
+		int q[N];
+
+		int main()
+		{
+		    scanf("%d", &n);
+
+		    for (int i = 0; i < n; i ++ ) scanf("%d", &q[i]);
+
+		    sort(q, q + n);
+
+		    int res = 0;
+		    for (int i = 0; i < n; i ++ ) res += abs(q[i] - q[n / 2]); 	q[n / 2]就是中位数 
+
+		    printf("%d\n", res);
+
+		    return 0;
+		}
+		因为 
+			|xa - n| + |xb - n| >= xb - xa
+			要满足 |xa - n| + |xb - n| == xb - xa, 就要让n在[xa, xb]内部
+			对于所有的[x1, xn], [x2, x_{n-1}], [x_{n/2}, x_{n/2+1}]]都要满足在区间的内部, 在最中间的区间的内部, 就是中位数了
+	-- 牛 
+		#include <iostream>
+		#include <algorithm>
+
+		using namespace std;
+
+		typedef pair<int, int> PII;
+
+		const int N = 50010;
+
+		int n;
+		PII cow[N];
+
+		int main()
+		{
+		    scanf("%d", &n);
+		    for (int i = 0; i < n; i ++ )
+		    {
+		        int s, w;
+		        scanf("%d%d", &w, &s);
+		        cow[i] = {w + s, w};
+		    }
+
+		    sort(cow, cow + n);
+
+		    int res = -2e9, sum = 0;
+		    for (int i = 0; i < n; i ++ )
+		    {
+		        int s = cow[i].first - cow[i].second, w = cow[i].second;
+		        res = max(res, sum - s); sum是第i头牛上面的0到i-1头牛的重量之和 
+		        	注意, 我们求的是 res = max(第0头牛的危险值, 第1头牛的危险值, ..., 第n-1头牛的危险值). 我们希望一个方案使得res最小, 这个方案就是: w+s从小到大排序, 然后最上面的是w+s最小的
+		        sum += w;
+		    }
+
+		    printf("%d\n", res);
+
+		    return 0;
+		}
+		逻辑非常简单, 就是w+s从小到大排序, 然后最上面的是w+s最小的
+		证明很不错: https://www.acwing.com/solution/content/26316/
+	-- 简单的判断质数 
+		#include <iostream>
+		#include <algorithm>
+
+		using namespace std;
+
+		bool is_prime(int x)
+		{
+		    if (x < 2) return false;
+		    for (int i = 2; i <= x / i; i ++ )
+		        if (x % i == 0)
+		            return false;
+		    return true;
+		}
+
+		int main()
+		{
+		    int n;
+		    cin >> n;
+
+		    while (n -- )
+		    {
+		        int x;
+		        cin >> x;
+		        if (is_prime(x)) puts("Yes");
+		        else puts("No");
+		    }
+
+		    return 0;
+		}
+
+	--质因数 	
+		#include <iostream>
+		#include <algorithm>
+
+		using namespace std;
+
+		void divide(int x)
+		{
+		    for (int i = 2; i <= x / i; i ++ )	从2开始看 一直到 sqrt(x)
+		        if (x % i == 0)	如果i能整除x, 说明i是一个质因子. 能满足这个条件的i一定是质数.
+		        {
+		            int s = 0;
+		            while (x % i == 0) x /= i, s ++ ;	我们看有多少个这个质因子, 用s记录
+		            cout << i << ' ' << s << endl;
+		        }
+		    if (x > 1) cout << x << ' ' << 1 << endl;	如果最后还剩余x, 就输出这个数字
+		    cout << endl;
+		}
+
+		int main()
+		{
+		    int n;
+		    cin >> n;
+		    while (n -- )
+		    {
+		        int x;
+		        cin >> x;
+		        divide(x);
+		    }
+		    return 0;
+		}
 ------------
 	1. 为什么是 0x3f, 不是-1{0xfffffff},
 		0xff: 只是判断是否是-1, 然后 dist[v] = dist[u] + 1
