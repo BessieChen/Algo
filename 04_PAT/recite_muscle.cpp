@@ -8315,7 +8315,7 @@
 			    cout << max(f[root][1], f[root][0]) << endl;
 			    return 0;
 			}
-	* 72. AcWing 901. 滑雪 
+	* 72. AcWing 901. 滑雪
 		1. bug 
 		2. ok{很顺}
 			#include <iostream>
@@ -8782,7 +8782,7 @@
 				        			所以我们 l2 * 2 < r1 * 2 + 1, 依旧会开新教室
 				        		3. 就是离散化, 两个格子代表一个时间t, 左边的格子代表上课为t, 右边的格子代表下课为t
 				    }
-				    sort(a, a + n + n); //最精华的一句就在这里了, 去掉了就都错了
+				    sort(a, a + n + n); 最精华的一句就在这里了, 去掉了就都错了
 				    	如果去掉了这一句, 全错了, 因为去掉这一句, a[i]肯定是一个奇数一个偶数的来 
 				    int t = 0, res = 0;
 				    for(int i = 0; i < ind; i++){	
@@ -8823,22 +8823,1058 @@
 				    cout << res << endl;
 				    return 0;
 				}
-	76. AcWing 907. 区间覆盖
+	* 76. AcWing 907. 区间覆盖
+		0. 小总结:
+			之前的3道题, 我都是先将排序后的第一个区间push到我们的heap, 或者 int ed = edges[0].r, 然后从第二个区间开始判断
+			但是这道题, 我没有特别对待第一个区间, 为什么?
+				因为前3道题, 我们都是自由的玩儿区间
+				可是这道题, 是已知st, ed. 所以我们不能擅自用第一个区间来自己制造st, ed
+		1. bug
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			struct Edge{
+			    int l, r;
+			    bool operator<(const Edge &e) const{
+			        return l < e.l;
+			    }
+			}edges[N];
+			int st, ed, n;
+			int main(){
+			    cin >> st >> ed;
+			    cin >> n;
+			    for(int i = 0; i < n; i++){
+			        int l, r;
+			        cin >> l >> r;
+			        edges[i] = {l, r};
+			    }
+			    sort(edges, edges + n);
+			    int tempr = -2e9, res = 0;
+			    错误: bool success = true;
+			    	因为假如说下面的 for()是全部执行完, 没有经过什么break, 说明其实是没有成功的
+			    	为什么, 因为成功的标志是 if(tempr >= ed) 为真.
+			    正确: bool success = false;
+			    for(int i = 0; i < n; i++){
+			        int j = i;
+			        while(j < n && edges[j].l <= st){
+			            tempr = max(tempr, edges[j].r);
+			            错误: 忘写了
+			            正确: j ++;
+			        }
+			        错误: if(tempr < st){	如果这么写, tempr == st的话, 也不会break, 之后 st = tempr, 然后j还是原来的j, 下一个while就会无限循环下去没有结果 
+			        正确: if(tempr <= st){
+			            错误: success = false; 正确的是 bool success = false; 所以不需要写这一句
+			            正确: 直接break
+			            break;
+			        }
+			        res++;
+			        if(tempr >= ed){
+			            success = true;
+			            break;
+			        }
+			        st = tempr;
+			        i = j - 1;
+			    }
+			    if(success) cout << res << endl;
+			    else cout << -1 << endl;
+			    return 0;
+			}
+		2. ok
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			int st, ed, n;
+			struct Edge{
+			    int l, r;
+			    bool operator<(const Edge &e) const{
+			        return l < e.l;
+			    }
+			}edges[N];
+			int main(){
+			    cin >> st >> ed;
+			    cin >> n;
+			    for(int i = 0; i < n; i++){
+			        int l, r;
+			        cin >> l >> r;
+			        edges[i] = {l, r};
+			    }
+			    sort(edges, edges + n);
+			    int mostr = -2e9, res = 0;
+			    bool s = false;				自然退出for的情况下也是false, 只有mostr >= ed才是成功
+			    for(int i = 0; i < n; i++){
+			        int j = i;
+			        while(j < n && edges[j].l <= st){
+			            mostr = max(mostr, edges[j].r);
+			            j++;
+			        }
+			        if(mostr > st) res++;	说明往前走了, res++, 选到了一个能够覆盖st的区间, 并且这个区间的右端点是最右的
+			        else break;				说明没找到, 存在缝隙
+			        	
+			        if(mostr >= ed){		这个才是成功的标志
+			            s = true;
+			            break;
+			        }
+			        st = mostr;
+			        i = j - 1; 				注意双指针, 如果有j=i, 都要看一下上一步的i是多少
+			    }
+			    if(s) cout << res << endl;
+			    else cout << -1 << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			struct Edge{
+			    int l, r;
+			    bool operator<(const Edge &e) const{
+			        return l < e.l;
+			    }
+			}edges[N];
+			int n, st, ed;
+			int main(){
+			    cin >> st >> ed >> n;
+			    for(int i = 0; i < n; i++){
+			        int l, r;
+			        cin >> l >> r;
+			        edges[i] = {l, r};
+			    }
+			    sort(edges, edges + n);
+			    int mostr = -2e9, res = 0;
+			    bool s = false; 	自然退出for的情况下也是false, 只有mostr >= ed才是成功
+			    for(int i = 0; i < n; i++){
+			        int j = i;
+			        while(j < n && edges[j].l <= st){
+			            mostr = max(mostr, edges[j].r);
+			            j++;
+			        }
+			        if(mostr > st) res++;
+			        else break;
+			        if(mostr >= ed){
+			            s = true;
+			            break;
+			        }
+			        st = mostr, i = j - 1;
+			    }
+			    if(s) cout << res << endl;
+			    else cout << -1 << endl;
+			    return 0;
+			}
 	77. AcWing 148. 合并果子
+		1. bug
+			#include <iostream>
+			#include <queue>
+			using namespace std;
+			const int N = 1e4 + 10;
+			typedef long long LL;
+			int n;
+			int main(){
+			    cin >> n;
+			    priority_queue<int, vector<int>, greater<int>> heap;
+			    int a;
+			    while(n--){
+			        cin >> a;
+			        heap.push(a);
+			    }
+			    错误: LL res; 局部变量未初始化, 是乱值
+			    正确: LL res = 0;
+			    while(heap.size() >= 2){
+			        int a = heap.top(); heap.pop();
+			        int b = heap.top(); heap.pop();
+			        res += (a + b);
+			        错误: heap.push(res); 写啥呢!
+			        正确: heap.push(a + b);
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+		2. ok 
+			这道题, 说的不是连续的堆, 任意两堆合并起来就好
+			符合二叉树的性质, 一种选法就是一棵二叉树, 另一种选法是另一棵二叉树
+			我们要构建代价最小的二叉树
+				代价 == 到根的路径长度 * 该节点的值
+				因为叶子节点的路径最长, 所以叶子节点需要是值最小的
+			所以思路就是:
+				找到值最小的两个, 合并, 组成新节点
+				再找到值最小的两个, 再合并, 再组成新节点
+			#include <iostream>
+			#include <queue>
+			using namespace std;
+			const int N = 1e4 + 10;
+			typedef long long LL;
+			int n, a;
+			priority_queue<int, vector<int>, greater<int>> heap;
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        heap.push(a);
+			    }
+			    LL res = 0;
+			    while(heap.size() >= 2){
+			        int a = heap.top(); heap.pop();
+			        int b = heap.top(); heap.pop();
+			        res += (a + b);
+			        heap.push(a + b);
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
 	78. AcWing 913. 排队打水
+		1. bug
+		2. ok{超级顺}
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			int q[N], n;
+			int main(){
+			    cin >> n;
+			    for(int i = 0; i < n; i++){
+			        cin >> q[i];
+			    }
+			    sort(q, q + n);
+			    long long res = 0;
+			    for(int i = 0; i < n; i++){
+			        res += q[i] * (n - 1 - i);	(n - 1 - i)也就是第i个人后面有几个人在等他: [i+1, n-1]的区间长度: n-1 - (i+1) + 1 = n - i - 1;
+			    }
+			    cout << res << endl; //或者 printf("%lld\n", res);
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			int n, q[N];
+			int main(){
+			    cin >> n;
+			    for(int i = 0 ; i < n; i++) cin >> q[i];
+			    sort(q, q + n);
+			    long long res = 0;
+			    for(int i = 0 ; i < n; i++){
+			        res += q[i] * (n - 1 - i);
+			    }
+			    printf("%lld\n", res);
+			    return 0;
+			}
 	79. AcWing 104. 货仓选址
-	80. AcWing 125. 耍杂技的牛 
+		1. bug
+		2. ok{超级顺}
+			因为 
+				|xa - n| + |xb - n| >= xb - xa
+				要满足 |xa - n| + |xb - n| == xb - xa, 就要让n在[xa, xb]内部
+				对于所有的[x1, xn], [x2, x_{n-1}], [x_{n/2}, x_{n/2+1}]]都要满足在区间的内部, 在最中间的区间的内部, 就是中位数了
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 1e5 + 10;
+			int q[N], n;
+			long long res;
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0 ; i < n; i++) scanf("%d", &q[i]);
+			    sort(q, q + n);
+			    for(int i = 0 ; i < n; i++){
+			        res += abs(q[i] - q[n / 2]);	q[n / 2]就是中位数 
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+	* 80. AcWing 125. 耍杂技的牛
+		1. bug
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 5e5 + 10;
+			typedef pair<int, int> PII;
+			PII q[N];
+			int n;
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0 ; i < n; i++){
+			        int w, s;
+			        scanf("%d%d", &w, &s);
+			        q[i] = {w + s, s};	注意: 很容易想着插入 w + s, s, w. 但是w可以由相减得到 
+			    }
+			    sort(q, q + n);
+			    错误: int res = 0, sum = 0; 因为res可以是负数 
+			    正确: int res = -2e9, sum = 0;	注意, sum很容易不知道怎么实现 
+			    for(int i = 0 ; i < n; i++){
+			        auto t = q[i];
+			        int s = t.second, w = t.first - t.second;
+			        int risk = sum - s;			这一层的risk值
+			        if(risk > res) res = risk;  第一层的风险值是负值, 因为第一层的上面没有东西sum==0
+			        sum += w;
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+		2. ok 
+			逻辑非常简单, 就是w+s从小到大排序, 然后最上面的是w+s最小的
+			证明很不错: https://www.acwing.com/solution/content/26316/
+				结论:
+					如果存在上面的第i层的 wi + si, 大于或者等于底下的第i+1层的 w(i+1) + s(i+1)
+					我们就交换这两层, 交换后, max(交换后) <= max(交换后), 达到更优的地步
+					所以, 最优的状态就是对于每一层: wi + si < w(i+1) + s(i+1)
+						即上层的 w + s, 要更小, 所以直接是sort.
+				记住一个:
+					当满足 wi + si ≥ w(i+1) + s(i+1): 所有危险值中的"最大值", 在交换后, 只会不变或者变小
+				详细:
+					变化			第i个位置上的牛	第i+1个位置上的牛
+					交换前		s(i+1)			wi + si
+					交换后		si 				w(i+1) + s(i+1)
+				目标, 证明: max(交换前) ≥ max(交换后)
+					1. 即: max(s(i+1), wi + si) ≥ max(si , w(i+1) + s(i+1))
+					2. 证明:
+						1.
+							1. 已知:
+								wi + si > si 			 : 显而易见
+								wi + si ≥ w(i+1) + s(i+1): 这个是假设的条件
+							2. 得到:
+								wi + si ≥ max(si, w(i+1) + s(i+1))
+						2.
+							1. 已知:
+								wi + si ≥ w(i+1) + s(i+1)
+							2. 得到:	
+								wi + si > s(i+1)
+								max(s(i+1), wi + si) = wi + si
+						3. 综上: max(s(i+1), wi + si) >= max(si, w(i+1) + s(i+1))
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 5e5 + 10;
+			typedef pair<long long, long long> PLL;
+				这里是一个数组, 每个元素是tuple {w + s, s}, 我们sort是按照数组的第一个关键词, 也就是{w + s}
+			PLL q[N];
+			int n;
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0 ; i < n; i++){
+			        int w, s;
+			        scanf("%d%d", &w, &s);
+			        q[i] = {w + s, s};
+			    }
+			    sort(q, q + n);
+			    int res = -2e9, sum = 0;	sum是第i头牛上面的0到i-1头牛的重量之和 
+			    for(int i = 0; i < n; i++){
+			    	auto t = q[i];
+			        int w = t.first - t.second, s = t.second;
+			        int risk = sum - s;		这一层的risk值
+			        if(risk > res) res = risk;	注意, 我们求的是 res = max(第0头牛的危险值, 第1头牛的危险值, ..., 第n-1头牛的危险值). 我们希望一个方案使得res最小, 这个方案就是: w+s从小到大排序, 然后最上面的是w+s最小的
+			        sum += w;
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 5e5 + 10;
+			typedef pair<long long, long long> PLL;
+			PLL q[N];
+			int n;
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0 ; i < n; i++){
+			        int w, s;
+			        scanf("%d%d", &w, &s);
+			        q[i] = {w + s, s};
+			    }
+			    sort(q, q + n);
+			    int sum = 0, res = -2e9;
+			    for(int i = 0; i < n; i++){
+			        auto t = q[i];
+			        int w = t.first - t.second, s = t.second;
+			        int risk = sum - s;
+			        if(risk > res) res = risk;
+			        sum += w;
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
 	81. AcWing 866. 试除法判定质数
+		1. bug
+			#include <iostream>
+			using namespace std;
+			const int N = 110;
+			int n, a;
+			bool isp(int n){
+			    错误: 忘写了
+			    正确: if(n < 2) return false;	如果是n==0,1. 直接return false
+			    for(int i = 2; i <= n / i; i++){
+			        if(n % i == 0) return false;
+			    }
+			    return true;	如果是n==2,3. 那么for就根本走不进去, 直接return true
+			}
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        if(isp(a)) puts("Yes");
+			        else puts("No");
+			    }
+			    return 0;
+			}
+		2. ok
+			#include <iostream>
+			using namespace std;
+			const int N = 110;
+			int n, a;
+			bool isp(int n){
+			    if(n < 2) return false; 		n == 0, 1都是false
+			    for(int i = 2; i <= n / i; i++){
+			        if(n % i == 0) return false;
+			    }
+			    return true; 					n == 2, 3都是true
+			}
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        if(isp(a)) puts("Yes");
+			        else puts("No");
+			    }
+			}
 	82. AcWing 867. 分解质因数
-	83. AcWing 868. 筛质数
+		1. bug 
+			#include <iostream>
+			using namespace std;
+			const int N = 110;
+			int n, a;
+			void dis(int n){
+			    其实这个可以不写, 见ok: if(n < 2){
+			        cout << n << " " << 1 << endl;
+			        return;
+			    }
+			    for(int i = 2; i <= n / i; i++){
+			        int cnt = 0;
+			        while(n % i == 0){
+			            cnt++;
+			            n /= i;
+			        }
+			        错误: cout << i << " " << cnt << endl; 	否则会输出什么 3 0
+			        正确: if(cnt) cout << i << " " << cnt << endl;
+			    }
+			    错误: if(n) cout << n << " " << 1 << endl; 	否则一定会输出 1 1	
+			    正确: if(n > 1) cout << n << " " << 1 << endl;
+			}
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        dis(a);
+			        puts("");
+			    }
+			    return 0;
+			}
+		2. ok
+			#include <iostream>
+			using namespace std;
+			const int N = 110;
+			int n, a;
+			void div(int n){
+			    for(int i = 2; i <= n / i; i++){	从2开始看 一直到 sqrt(x)
+			        int cnt = 0;
+			        while(n % i == 0){				如果i能整除x, 说明i是一个质因子. 能满足这个条件的i一定是质数.
+			            n /= i;
+			            cnt++;
+			        }
+			        if(cnt) cout << i << " " << cnt << endl;
+			    }
+			    if(n > 1) cout << n << " " << 1 << endl; 		如果输入的参数n == 1, 2, 3. 直接跳过for走到这里
+			}
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        div(a);
+			        puts("");
+			    }
+			    return 0;
+			}
+	* 83. AcWing 868. 筛质数
+		1. bug
+			#include <iostream>
+			using namespace std;
+			const int N = 1e6 + 10;
+			int n, cnt, prime[N];
+			bool st[N];
+
+			void get_primes(int n){
+			    错误: for(int i = 2; i <= n / i; i++){, 是每个数字都要判断呀
+			    正确: for(int i = 2; i <= n; i++){
+			        if(!st[i]) prime[cnt++] = i;
+			        for(int j = i; j <= n; j += i) st[j] = true;
+			    }
+			}
+
+			void get_primes2(int n){
+			    错误: for(int i = 2; i <= n / i; i++){, 是每个数字都要判断呀
+			    正确: for(int i = 2; i <= n; i++){
+			        if(!st[i]){
+			            prime[cnt++] = i;
+			            for(int j = i; j <= n; j += i) st[j] = true;
+			        }
+			    }
+			}
+
+			void get_primes3(int n){
+			    错误: for(int i = 2; i <= n / i; i++){, 是每个数字都要判断呀
+			    正确: for(int i = 2; i <= n; i++){
+			        if(!st[i]) prime[cnt++] = i;
+			        for(int j = 0; prime[j] <= n / i; j++){
+			            if(i % prime[j] == 0){
+			                st[prime[j] * i] = true;
+			                break;
+			            }
+			            st[prime[j] * i] = true;
+			        }
+			    }
+			}
+			int main(){
+			    cin >> n;
+			    get_primes3(n);
+			    cout << cnt << endl;
+			    return 0;
+			}
+		2. ok
+			#include <iostream>
+			using namespace std;
+			const int N = 1e6 + 10;
+			int n, cnt, prime[N];
+			bool st[N];
+
+			//朴素筛法-O(nlogn): 对于每个数字i, 无论i是质数还是合数, 我们都无脑的将后面的(n - i)/2数字都设置为合数
+			void get_primes(int n){
+			    for(int i = 2; i <= n; i++){
+			        if(!st[i]) prime[cnt ++] = i; //如果i不是合数, 那我们记录prime, 注意是函数的一开始, 就可以知道数字i是不是合数, 因为我们早就筛选好了
+			        //写法1:
+			            for(int j = 2; j <= n / i; j++) st[j * i] = true; 
+			        //写法2:
+			        	for(int j = i; j <= n; j += i) st[j] = true;  //不管i是合数还是质数, 我们都用将 i, 2i, 3i, ...ki <= n 都设置为合数, 这个没问题吧? 
+
+			    }
+			}
+
+			//埃式筛法-O(nloglogn)
+			//上面的方法, 每个合数都被前面很多个质因子多次设置了 st[j] = true. 其实很多是重复没必要的
+			//优化, 只用质数i, 来将后面的(n - i)/2数字都设置为合数
+			void get_primes2(int n){
+			    for(int i = 2; i <= n; i++){
+			        if(!st[i]){             //如果i不是合数
+			            prime[cnt ++] = i;  //i是质数
+			            //写法1:
+			            for(int j = 2; j <= n / i; j++) st[j * i] = true;   //i是质数, 我们都用将 i, 2i, 3i, ...j*i <= n 都设置为合数, 这个没问题吧? 
+			                            //之所以是 j < n / i, 因为我们只需判断n之前的数字是否是合数, 所以我们只需要判断 j * i <= n的数字
+			            //写法2:
+			            for(int j = i; j <= n; j += i) st[j] = true;  //i是质数, 我们都用将 i, 2i, 3i, ...k*i <= n 都设置为合数, 这个没问题吧? 
+			        }
+			        
+			    }
+			}
+
+			//线性筛法-O(n), n = 1e7的时候基本就比埃式筛法快一倍了
+			//最好的优化: 数字i, 只会被其最小质因子筛去, 而不是被所有的质因子筛去, 速度就很快了
+			void get_primes3(int n){
+			    for(int i = 2; i <= n; i++){
+			        if(!st[i]) prime[cnt++] = i;
+			        //下面的故事: 我们遍历所有的质数prime[j], 如果这个质数prime[j]小于数字i的最小质因子, 我们就筛去prime[j] * i这个合数;
+			        // 这里是固定了 i, 但是我们会看所有小于等于i的最小质因数的质数: 
+			        	//遍历的是: 	prime[0], prime[1], prime[2], ... , prime[xx]. 只要prime[xx] <= i的最小质因数
+			        	//筛的是:  	prime[0]*i, prime[1]*i, prime[2]*i, ... , prime[xx]*i
+			        for(int j = 0; prime[j] <= n / i; j++){ //为什么是 prime[j] <= n / i: 我们想筛的是的数字是不大于n的, 这里筛的是 prime[j] * i, 所以prime[i] * j没必要大于n
+			            // 1.i % pj == 0, pj是i的最小质因子, pj也是pj*i的最小质因子 {i是否是合数, 在一开头的if(!st[i])就知道了, 但是pj*i肯定是合数}
+			            // 2.i % pj != 0, pj小于i的最小质因子, 但pj就是pj*i的最小质因子, 这句话能理解吧, pj肯定是pj的最小质因子, 但是pj<i的最小质因子, 所以pj就是pj*i的最小质因子
+			            if(i % prime[j] == 0){
+			                st[prime[j] * i] = true;    //我们的pj*i被它的最小质因子筛去了
+			                break;                      //需要结束了, 否则之后接着用st[primes[j+1]*i]=true去筛合数时，就不是用最小质因子去筛了
+			            }
+			            else st[prime[j] * i] = true;
+			        }
+			    }
+			}
+			int main(){
+			    cin >> n;
+			    get_primes(n);
+			    cout << cnt << endl;
+			    return 0;
+			}
 	84. AcWing 869. 试除法求约数
-	85. AcWing 870. 约数个数
-	86. AcWing 871. 约数之和
+		1. bug
+		2. ok 
+			求n的约数
+				思路很简单, 就是求所有小于n的所有的数字i是否可以整除n
+				如果i能整除n, 那么n/i也可以整除n, 因为是成对出现的
+			#include <iostream>
+			#include <vector>
+			#include <algorithm>
+			using namespace std;
+			vector<int> res;
+			int n, a;
+			void divisor(int n){
+			    res.clear();
+			    for(int i = 1; i <= n / i; i++){	注意是从1开始, 因为1也是约数 
+			        if(n % i == 0){
+			            res.push_back(i);
+			            if(i != n / i) res.push_back(n / i);
+			        }
+			    }		
+			    sort(res.begin(), res.end());		注意写法 
+			    for(auto i : res) cout << i << " ";
+			}
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        divisor(a);
+			        puts("");
+			    }
+			    return 0;
+			}
+	* 85. AcWing 870. 约数个数
+		1. bug{错的很厉害}
+			下面的整个逻辑都错了:
+				错在哪里:
+				 	我的错误逻辑是:
+				 		对于每个数字a, 都求出它的: α1, α2, αk.
+				 			然后res * (α1 + 1) * (α2 + 1) * ... * (αk + 1)
+				 			然后看下一个数字
+				 	正确逻辑:
+				 		求出全部数字a的 α1, α2, αk
+				 		求完之后: (α1 + 1) * (α2 + 1) * ... * (αk + 1)
+				全都错了:
+					#include <iostream>
+					#include <unordered_map>
+					using namespace std;
+					const int N = 110, mod = 1e9 + 7;
+					int n, a;
+					int main(){
+					    cin >> n;
+					    long long res = 1;
+					    while(n--){
+					        cin >> a;
+					        unordered_map<int, int> prime;
+					        for(int i = 2; i <= a / i; i++){
+					            int cnt = 0;
+					            while(a % i == 0){
+					                cnt ++;
+					                a /= i;
+					            }
+					            if(cnt) prime[i] = cnt;	不能是=cnt, 这样会覆盖掉前面数字的prime[i], 我们的正确的逻辑是 prime[i]++
+					        }
+					        if(a > 1) prime[a] = 1;
+					        for(auto item : prime){
+					            res = (res * (item.second + 1)) % mod;
+					        }
+					    }
+					    cout << res << endl;
+					    return 0;
+					}
+				正确:
+					#include <iostream>
+					#include <unordered_map>
+					using namespace std;
+					const int N = 110, mod = 1e9 + 7;
+					int n, a;
+					int main(){
+					    cin >> n;
+					    long long res = 1;
+					    unordered_map<int, int> prime;	这里放置的是全部数字的prime的个数, 为什么不是 prime[N], 而是用map
+					    									因为我们要记录的是两个信息: {质因子的值 : 这个质因子有多少个}.
+					    									如果用prime[N], 就只能记录质因子的值 和 一共多少个不同的质因子
+					    while(n--){
+					        cin >> a;
+					        for(int i = 2; i <= a / i; i++){
+					            while(a % i == 0){
+					                prime[i] ++;
+					                a /= i;
+					            }
+					        }
+					        if(a > 1) prime[a]++;
+					    }
+					    for(auto item : prime){
+					        res = (res * (item.second + 1)) % mod;
+					    }
+					    cout << res << endl;
+					    return 0;
+					}
+			2. ok 
+				#include <iostream>
+				#include <unordered_map>
+				using namespace std;
+				unordered_map<int, int> prime;
+				const int mod = 1e9 + 7;
+				int n, a;
+				int main(){
+				    cin >> n;
+				    int res = 1; //不能是全局变量, 否则res = 0;
+				    while(n--){
+				        cin >> a;
+				        for(int i = 2; i <= a / i; i ++){  //质因数是从2开始的
+				            while(a % i == 0){ //i是质因子
+				                prime[i] ++;
+				                a /= i;
+				            }
+				        }
+				        if(a > 1) prime[a]++;
+				    }
+				    for(auto item : prime) res = (res * (item.second + 1)) % mod;
+				    cout << res << endl;
+				    return 0;
+				}
+	* 86. AcWing 871. 约数之和
+		1. bug 
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int mod = 1e9 + 7;
+			unordered_map<int, int> prime;
+			int n, a;
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        for(int i = 2; i <= a / i; i++){
+			            while(a % i == 0){
+			                prime[i]++;
+			                a /= i;
+			            }
+			        }
+			        if(a > 1) prime[a] ++;
+			    }
+			    错误: long long res;
+			    正确: long long res = 1;
+			    for(auto item : prime){
+			        int p = item.first, pcnt = item.second;
+			        long long t = 1;
+			        while(pcnt--) t = (t * p + 1) % mod;
+			        res = (res * t) % mod;
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+		2. ok
+			#include <iostream>
+			#include <unordered_map>
+			using namespace std;
+			typedef long long LL;
+			const int mod = 1e9 + 7;
+			unordered_map<int, int> prime;
+			int n, a;
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a;
+			        for(int i = 2; i <= a / i; i++){
+			            while(a % i == 0){
+			                prime[i]++;
+			                a /= i;
+			            }
+			        }
+			        if(a > 1) prime[a]++;
+			    }
+			    LL res = 1;
+			    for(auto item : prime){
+			        int p = item.first, pcnt = item.second;
+			        LL t = 1;
+			        while(pcnt--) t = (t * p + 1) % mod; //这一句是计算 (p1^0+p1^1+…+p1^α1) ∗ … ∗ (pk^0+pk^1+…+pk^αk) 中的 (pk^0+pk^1+…+pk^αk)
+			                                            // t抬高p个高度, 然后后面跟一个小尾巴1
+			        res = (res * t) % mod; //这一句是计算 () * () * ()
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
 	87. AcWing 872. 最大公约数
+		0. 小总结:
+			1. 一个数字 N
+				1. 属性: 是否是质数 
+					方法: 
+						1. 从2开始看, 因为1不是质数也不是合数 
+						2. 如果某个数能够整除N, N就不是质数 
+				2. 分解: 分到不能再分 
+					1. N = p1^α1 ∗ p2^α2 ∗ ⋯ ∗ pk^αk, 其中pk是质因子, ak是这个质因子出现的个数
+						方法:
+							1. 质因子就是质数, 从2开始看, 每找到一个质因子就用 while()把这个质因子都除掉
+								for (int i = 2; i <= x / i; i ++ )
+						            while (x % i == 0)
+						            {
+						                x /= i;
+						                primes[i] ++ ;	质因数i的个数有prime[i]个
+						            }
+								不用怕i是合数, 合数是不会进入while的
+									例如: 前面的质因子2已经让后面的合数4无法整除N了
+							2. 最后需要写一句:
+								if (x > 1) primes[x] ++ ;
+								因为上面的 for()只是判断了小于 sqrt(x)的情况, 有的质因子在右边
+								例如 
+									1. 47本身就是质数, 所以for结束也找不到整除47的, 所以走 if (47 > 1) primes[47] ++ ;
+									2. 6的for结束之后也是剩余一个在 sprt(6)=2.44 右侧的质数3, 所以走 if (3 > 1) primes[3] ++ ;
+									2. 15的for结束之后也是剩余一个在 sprt(15)=3.87 右侧的质数5, 所以走 if (5 > 1) primes[5] ++ ;
+					2. 利用分解的相关题目: 
+						1. 求N的所有约数的个数: 
+							约数d = p1^β1 ∗ p2^β2 ∗ ⋯ ∗ pk^βk
+								d想要几个质因数p1? 那β1是在[0,α1]的值中选一个
+								d想要几个质因数p2? 那β2是在[0,α2]的值中选一个
+								…
+								d想要几个质因数pk? 那βk是在[0,αk]的值中选一个
+							约数个数是: (α1 + 1) * (α2 + 1) * ... * (αk + 1)
+						2. 求N的所有约数的和:
+							你能想到就是全排没错吧
+											β1 		β2 	 	... 	βk   	也就是d想要几个质因数pk
+								第1个约数d:   0 		0 		0  		0
+								第2个约数d:   1 		0 		0  		0
+								第3个约数d:   2 		0 		0  		0
+								第3个约数d:   2 		1 		0  		0
+								...
+								最后一个约数d: α1 		α2 		... 	αk
+							全排的一个实现方法, 神奇而又平凡的结合律:
+								 (p1^0+p1^1+…+p1^α1) ∗ … ∗ (pk^0+pk^1+…+pk^αk)
+				3. 它的约数:
+					0. 最小的约数: 1, 最大的约数: N本身
+					1. 约数可以是{质数},{合数},{非质数非合数}
+						非质数非合数: 1 
+						质数: 2, 3, ...
+						合数: 4, 6, 8, 15, ...
+					3. 相关题目:
+						1. N的约数有哪些?
+							方法: 
+								1. 约数从1开始判断, 因为约数可以是1
+								2. 约数是成对的, 如果i能整除n, 那么 n/i 也能整除n
+									因为是成对的, 所以 n/i 在 sprt(n)的右侧, 所以我们不需要写 if (x > 1) primes[x] ++ ;
+			2. 求最大公约数:
+				1. {a, b}的公约数集合和{b, a % b}的公约数集合相同, 他们的最大公约数d也相同 
+					d == gcd(a, b) == gcd(b, a % b), 其中d是a 和 b 的最大公约数, 也是 b 和 a % b 的最大公约数
+					证明: 为什么{a, b}的公约数集合和{b, a % b}的公约数集合相同
+						1. 我们约定: d | a 称为d可以整除a, 也就是 a % d == 0
+						2. 如果 d | a 且 d | b , 则有 d | (x*a + y*b)
+							为什么?
+								d | a 说明a / d == s, 其中s是整数
+								d | b 说明b / d == t, 其中t是整数
+								(x*a + y*b) / d = x*a / d + y*b / d = x*s + y*t, 这个肯定是整数
+									所以d可以整除:(x*a + y*b), 所以 d | (x*a + y*b) 
+						3. 回到我们的题目:
+							a % b == a - k*b, 其中 k = a/b下取整. 举例: 16 % 5 == 3余1, k = 16/5 = 3
+						4. 记{b, a - k*b}的最大公约数 d
+							意味着d可以整除b, d也可以整除a - k*b
+								即, d|b 且 d | (a − k*b)
+							那么这个d也是{a, b}的公约数
+								因为 d|b 且 d | (a − k*b), 则 d | (a − k*b + k*b) = d | a 
+						5. 因此{a, b}的公约数集合和{b, a % b}的公约数集合相同 所以他们的最大公约数也相同 
+				2. int gcd(int a, int b)	return b ? gcd(b, a % b) : a; 
+					1. 递归到底的情况是b == 0
+						gcd(24, 15)
+						gcd(15, 9)
+						gcd(9, 6)
+						gcd(6, 3)
+						gcd(3, 0) = 3, 所以答案是3
+					2. 我们不需要担心 a < b的情况, 因为会自动翻转过来 
+						gcd(15, 24)
+						gcd(24, 15)
+					3. 如果是两个质数 
+						gcd(47, 13)
+						gcd(13, 8)
+						gcd(8, 5)
+						gcd(5, 3)
+						gcd(3, 2)
+						gcd(2, 1)
+						gcd(1, 0) = 1, 所以答案是1
+		1. bug
+		2. ok{很顺}
+			#include <iostream>
+			using namespace std; 
+			int n, a, b;
+			int gcd(int a, int b){
+			    return b ? gcd(b, a % b) : a;	记忆: b, b, ab, a 
+			}
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a >> b;
+			        cout << gcd(a, b) << endl;
+			    }
+			    return 0;
+			}
 	88. AcWing 873. 欧拉函数
-	89. AcWing 874. 筛法求欧拉函数
-	90. AcWing 875. 快速幂
-9. 5.25 todo 
+		0. 只要知道公式就好了
+			phi(i) = i × {(p1−1)/p1} × {(p2−1)/p2} × … × {(pm−1)/pm}
+			老师的证明:
+				互斥原理:
+					一个数a和i互斥, 这个数a, 可以是p1, p2, ..., pm
+					但是我们有些会重叠, 例如p1*p2, p1*p3..., 减去这些
+					我们会减多了, 例如p1*p2*p3, p1*p3*p4... 之后再加上这些
+				总之最后就是公式
+		1. bug 
+			#include <iostream>
+			using namespace std;
+			const int N = 1e6 + 10;
+			int q, n, prime[N], cnt;
+			int main(){
+			    cin >> q;
+			    while(q--){
+			        cnt = 0;
+			        cin >> n;
+			        正确: long long res = n;
+			        for(int i = 2; i <= n / i; i++){
+			            if(n % i == 0){
+			               prime[cnt++] = i;
+			               while(n % i == 0) n /= i;
+			            }
+			        }
+			        if(n > 1) prime[cnt++] = n;
+			        错误: long long res = n; 不能放在这里n已经不是原来的n了 
+			        for(int i = 0; i < cnt; i++){
+			            res = (res / prime[i] * (prime[i] - 1));
+			        }
+			        cout << res << endl;
+			    }
+			    return 0;
+			}
+		2. ok{很顺}
+			#include <iostream>
+			using namespace std;
+			int q, n;
+			int main(){
+			    cin >> q;
+			    while(q--){
+			        cin >> n;
+			        long long phi = n;
+			        for(int i = 2; i <= n / i; i++){	i是遍历质因子, 从2开始
+			            if(n % i == 0){					如果i是质因子 
+			                phi = phi / i * (i - 1); //这里是 phi * (i-1)/i, 但是怕*会溢出所以先除/
+			                while(n % i == 0) n /= i;
+			            }
+			        }
+			        if(n > 1) phi = phi / n * (n - 1);
+			        cout << phi << endl;
+			    }
+			    return 0;
+			}
+	* 89. AcWing 874. 筛法求欧拉函数
+		1. bug
+			#include <iostream>
+			using namespace std;
+			const int N = 1e6 + 10;
+			int phi[N], prime[N];
+			bool st[N]; //st[i] == true, 则i是合数
+			int n, cnt;
+			int main(){
+			    cin >> n;
+			    错误: 忘了写
+			    正确: phi[1] = 1; 	这里需要特殊对待
+			    错误: for(int i = 1; i <= n; i++){ 	不能从1开始, 因为st[1]是不会被算的, 因为不是质数也不是合数, 否则答案会错
+			    正确: for(int i = 2; i <= n; i++){    //遍历数字i, for里面做的事: i是否是质数, phi[i]是多少 
+			        if(!st[i]){
+			            prime[cnt++] = i;   //记录质数, 相当于也是筛质数
+			            phi[i] = i - 1;     //质数i, 前面[1, i-1]和i都是互质的
+			        }
+			        for(int j = 0; prime[j] <= n / i; j++){
+			            if(i % prime[j] == 0){ //prime[j]是i的最小质因子, 也是prime[j]*i的最小质因子
+			                st[prime[j] * i] = true;
+			                phi[prime[j] * i] = phi[i] * prime[j]; 
+			                break;
+			            }else{
+			                st[prime[j] * i] = true;
+			                phi[prime[j] * i] = phi[i] * (prime[j] - 1);
+			            }
+			        }
+			    }
+			    long long res = 0;
+			    for(int i = 1; i <= n; i++) res += phi[i];
+			    cout << res << endl;
+			    return 0;
+			}
+		2. ok 
+			解释的很好:
+				首先, 我们的 phi()函数, 只和质因子的值有关, 和某个质因子有多少个无关
+					所以: i, prime[j]*i 有很特殊的关系:
+						如果 i % primes[j] == 0: 即 prime[j] == i的最小质因子p1
+							prime[j]*i 的所有质因子 == i 的所有质因子
+						如果 i % primes[j] != 0: 即 prime[j] < i的最小质因子p1
+							prime[j]*i 的所有质因子 == i 的所有质因子 + prime[j]这个质因子
+				如果 i % primes[j] == 0: prime[j] == i的最小质因子p1, 但是prime[j] == prime[j]*i 的最小质因子p1
+					phi(i) 			= i 			× {(p1−1)/p1} × {(p2−1)/p2} × … × {(pm−1)/pm}, 其中p1就是 prime[j]
+					phi(prime[j]*i) = (prime[j]*i) 	× {(p1−1)/p1} × {(p2−1)/p2} × … × {(pm−1)/pm}, 其中p1就是 prime[j]
+									= prime[j] * phi(i)
+				如果 i % primes[j] != 0: prime[j] < i的最小质因子p1, 但是prime[j] == prime[j]*i 的最小质因子p1
+					phi(i) 			= i 										× {(p1−1)/p1} × {(p2−1)/p2} × … × {(pm−1)/pm}, 其中p1就是 prime[j]
+					phi(prime[j]*i) = (prime[j]*i) 	× {(prime[j]-1)/prime[j]}	× {(p1−1)/p1} × {(p2−1)/p2} × … × {(pm−1)/pm}, 其中p1就是 prime[j]
+									= prime[j] * phi(i) × {(prime[j]-1)/prime[j]}
+									= phi(i) × (prime[j]-1)
+	* 90. AcWing 875. 快速幂
+		1. bug
+			#include <iostream>
+			using namespace std;
+			typedef long long LL;
+			int q;
+			错误: int a, b, p; 因为 1 ≤ ai, bi, pi ≤ 2×1e9, 所以 a * a 会溢出
+			正确: LL a, b, p;
+
+			错误: int qmi(int a, int b, int p){
+			正确: int qmi(LL a, LL b, LL p){
+				错误: LL res = 0;
+			    正确: LL res = 1;
+			    while(b){
+			    	错误: if(b & 1) res = (res + a) % p;
+			        正确: if(b & 1) res = (res * a) % p;		幂是加法, 所以底数就是乘法. 所以我们为了实现b的二分的加法, 就是实现底数res和a的乘法
+			        b >>= 1;
+			        a = a * a % q;
+			    }
+			    return res;
+			}
+			int main(){
+			    cin >> q;
+			    while(q--){
+			        cin >> a >> b >> p;
+			        cout << qmi(a, b, p) << endl;
+			    }
+			    return 0;
+			}
+		2. ok 
+			二分:
+				k = k0*(1 << 0) + k1*(1 << 1) + k2*(1 << 2) + ... + kn*(1 << n), kn == 0或者1
+				a^k = a^{k0 * (1 << 0)} * a^{k1 * (1 << 1)} * ... * a^{kn * (1 << n)}
+						 		aa 				bb 						nn 
+					如何计算aa, bb?
+						我们使用叠罗汉的方法						
+						所以一个重要的事情:
+							aa: a^{k0 * (1 << 0)} = a^1
+							bb: a^{k1 * (1 << 1)} = a^2, 也就是 a = a * a % p;
+							cc: a^{k2 * (1 << 2)} = a^4, 也就是 a = a * a % p;
+								因为 a * a = a^2 = (a^2)^2
+					上面求aa, bb, ..., nn, 基于的假设是: k0 == k1 == k2 == ... == kn == 1
+						但是我们的题目的k, 可能kn是0
+						所以:
+							如果末位kn的确是1, 那么就真的 res * a
+							如果末位kn是0, 那么什么都不用做
+				对于模运算有一个重要结论：AB%M=(A%M)*(B%M)%M
+			#include <iostream>
+			using namespace std;
+			typedef long long LL;
+			int n;
+			LL a, b, p;
+			LL qmi(LL a, LL b, LL p){
+			    LL res = 1;
+			    while(b){   //我们是把b二分, 例如b的二进制是 1110101...0111. 
+			        if(b & 1) res = (res * a) % p;  //末位是1的话, 我们就把幂的加法, 变为底数的乘法: (res * a)
+			        b >>= 1;
+			        a = a * a % p;                  //这是为了准备b的下一位, 因为我们的是分解成了 a^b = a^1 * a^2 * a^4 * a^8 ... * a^32. 
+			    }
+			    return res;
+			}
+			int main(){
+			    cin >> n;
+			    while(n--){
+			        cin >> a >> b >> p;
+			        cout << qmi(a, b, p) << endl;
+			    }
+			    return 0;
+			}
+9. after 5.25 
 	91. AcWing 876. 快速幂求逆元
 	92. AcWing 877. 扩展欧几里得算法
 	93. AcWing 878. 线性同余方程
@@ -8855,453 +9891,1228 @@
 	104. AcWing 892. 台阶-Nim游戏
 	105. AcWing 893. 集合-Nim游戏
 	106. AcWing 894. 拆分-Nim游戏
-
-		#include <iostream>
-		#include <algorithm>
-
-		using namespace std;
-
-		const int N = 100010;
-
-		int n;
-		struct Range
-		{
-		    int l, r;
-		    bool operator< (const Range &W)const
-		    {
-		        return l < W.l;
-		    }
-		}range[N];
-
-		int main()
-		{
-		    int st, ed;
-		    scanf("%d%d", &st, &ed);
-		    scanf("%d", &n);
-		    for (int i = 0; i < n; i ++ )
-		    {
-		        int l, r;
-		        scanf("%d%d", &l, &r);
-		        range[i] = {l, r};
-		    }
-
-		    sort(range, range + n);
-
-		    int res = 0;
-		    bool success = false;
-
-		    整个故事的大概逻辑:
-		    	1. 题目给了我们一个区间[st, ed]
-		    	2. 我们将所有的小区间, 按照左端点从小到大排序, 例如:
-
-		    		
-	           	3. 我们首先找到, 所有左端点l <= st的区间, 然后找到这些区间的最右的右端点r, 这个右端点r需要超越st
-	           		1. 如果没找到, 那么是以下两种情况导致没找到, 说明没有能够完全覆盖题目要求的[st, ed]
-	           			1. 不存在"左端点l <= st的区间"
-	           				举例:
-	           					|st
-			            	  1 	-------------
-			            	  2 	  ------
-			            	  3 	   --
-			            	  4 	       ---
-			            	  5 	         -------
-			           	2. 右端点r没有超越st: r <= st就是没超越, r > st才是超越
-			           		举例:
-			           						 |st点
-			            	  1 -------------
-			            	  2   ------
-			            	  3    --
-			            	  4        			---
-			            	  5          		  -------
-	           		2. 如果找到, 例子:	
-	           						|st点
-			            	  1 -------------
-			            	  2   ------
-			            	  3    --
-			            	  4        ---
-			            	  5          -------
-	           			所有左端点 <= st的区间: 在图中就是区间1,2,3
-	           			这些区间的最右的右端点: 区间1的右端点 
-	           	4. 如果找到了超越st的右端点r
-	           		1. 说明我们找到能延伸st的区间, 或者说覆盖掉st的区间
-	           			res++
-	           		2. 看看这个区间是否已经功德圆满: if (r >= ed)
-	           		3. 如果还是没有满足条件{覆盖题目要求的[st, ed]}, 我们就让r成为新的st参照物
-	           			为什么, 因为处理逻辑是一样的:
-	           				之前我们想覆盖掉st, 就是希望"某个区间的左端点在st的前面{或者就等于st}, 这个区间的右端点在st的后面{不能单单只是等于st, 需要r严格大于st}"
-	           				现在, 因为要区间和区间是密封的, 或者说重叠的, 反正不能有一个地方是漏风的
-	           				那么我们希望下一个区间的左端点在r的前面{或者就等于r}, 这个区间的右端点在r的后面{不能单单只是等于r, 需要r严格大于r}
-	           			因为处理逻辑一样, 所以让 st = r.
-
-		    for (int i = 0; i < n; i ++ )
-		    {
-		        int j = i, r = -2e9;	
-		        while (j < n && range[j].l <= st)	双指针算法 
-		        {
-		            r = max(r, range[j].r);
-		            	注意, 这里的 range[i].r 可能还没有r大 
-		            		例如: 左端点排序后, 1是先遍历的, 2是后遍历的, 2的r没有1的r大, 所以我们选的还是第1区间
-		            				|st点
-			            	  1 -----------
-			            	  2   ------
-			            	因为题目没有问题选择具体哪些区间, 而是问你需要选多少个区间, 所以我们这里的代码, 其实没有体现选了第1区间
-			            	但是我们最后的 st = r, 依旧是用的第1区间的r
-		            j ++ ;
-		        }
-
-		        if (r <= st)	如果while里面没有一个区间的r可以在st的右侧
-		        				也就是没有找到新区间, 怎么理解, 因为最后更新st的时候是: st = r 
-		        				因为开头刚进入for的时候, r = -2e9, 所以如果没有找到新区间{也就是右端点能延伸的区间}, 那么 -2e9 < st, 就说明失败了 
-		        				虽然可能很远的后面有一个区间例如区间3, 但是这样的话就不是连续覆盖了 
-		        						|st点
-				            	  1 -----------
-				            	  2   ------
-				            	  3 					-------
-				            	我的疑惑, 有没有可能当前的st是已经覆盖完我们题目要求的区间了, 答案是没可能:
-				            		因为如果是这样, 我们在上一轮for的时候, 已经发现满足条件 if (r >= ed)了, 就退出了
-		        {
-		            res = -1;
-		            break;
-		        }
-
-		        res ++ ;		找到了新区间 
-		        if (r >= ed)	如果已经满足要求, 直接退出
-		        {
-		            success = true;
-		            break;
-		        }
-
-		        st = r;
-		        i = j - 1;	因为我们之后要i++, 总之i到下一轮for就是刚退出while的那个j, 这个j在此轮是不合法的, 但是在下一轮可能就合法了因为 st已经更新了
-		    }
-
-		    if (!success) res = -1;
-		    printf("%d\n", res);
-
-		    return 0;
-		}
-
-
-	果子:
-		#include <iostream>
-		#include <algorithm>
-		#include <queue>
-
-		using namespace std;
-
-		int main()
-		{
-		    int n;
-		    scanf("%d", &n);
-
-		    priority_queue<int, vector<int>, greater<int>> heap;
-		    while (n -- )
-		    {
-		        int x;
-		        scanf("%d", &x);
-		        heap.push(x);
-		    }
-
-		    int res = 0;
-		    while (heap.size() > 1)
-		    {
-		        int a = heap.top(); heap.pop();
-		        int b = heap.top(); heap.pop();
-		        res += a + b;
-		        heap.push(a + b);
-		    }
-
-		    printf("%d\n", res);
-		    return 0;
-		}
-	这道题, 说的不是连续的堆, 任意两堆合并起来就好
-	符合二叉树的性质, 一种选法就是一棵二叉树, 另一种选法是另一棵二叉树
-	我们要构建代价最小的二叉树
-		代价 == 到根的路径长度 * 该节点的值
-		因为叶子节点的路径最长, 所以叶子节点需要是值最小的
-	所以思路就是:
-		找到值最小的两个, 合并, 组成新节点
-		再找到值最小的两个, 再合并, 再组成新节点
-
-
-	--
-	打水
-		#include <iostream>
-		#include <algorithm>
-
-		using namespace std;
-
-		typedef long long LL;
-
-		const int N = 100010;
-
-		int n;
-		int t[N];
-
-		int main()
-		{
-		    scanf("%d", &n);
-		    for (int i = 0; i < n; i ++ ) scanf("%d", &t[i]);
-
-		    老师:
-				sort(t, t + n);
-			    reverse(t, t + n);
-
-			    LL res = 0;
-			    for (int i = 0; i < n; i ++ ) res += t[i] * i;
-			我的:
-				sort(t, t + n);
-				LL res = 0;
-				for(int i = 0 ; i < n; i++) res += t[i] * (n - 1 - i); (n - 1 - i)也就是第i个人后面有几个人在等他
-
-		    printf("%lld\n", res);
-
-		    return 0;
-		}
-	-- 选址 
-		#include <iostream>
-		#include <algorithm>
-
-		using namespace std;
-
-		const int N = 100010;
-
-		int n;
-		int q[N];
-
-		int main()
-		{
-		    scanf("%d", &n);
-
-		    for (int i = 0; i < n; i ++ ) scanf("%d", &q[i]);
-
-		    sort(q, q + n);
-
-		    int res = 0;
-		    for (int i = 0; i < n; i ++ ) res += abs(q[i] - q[n / 2]); 	q[n / 2]就是中位数 
-
-		    printf("%d\n", res);
-
-		    return 0;
-		}
-		因为 
-			|xa - n| + |xb - n| >= xb - xa
-			要满足 |xa - n| + |xb - n| == xb - xa, 就要让n在[xa, xb]内部
-			对于所有的[x1, xn], [x2, x_{n-1}], [x_{n/2}, x_{n/2+1}]]都要满足在区间的内部, 在最中间的区间的内部, 就是中位数了
-	-- 牛 
-		#include <iostream>
-		#include <algorithm>
-
-		using namespace std;
-
-		typedef pair<int, int> PII;
-
-		const int N = 50010;
-
-		int n;
-		PII cow[N];
-
-		int main()
-		{
-		    scanf("%d", &n);
-		    for (int i = 0; i < n; i ++ )
-		    {
-		        int s, w;
-		        scanf("%d%d", &w, &s);
-		        cow[i] = {w + s, w};
-		    }
-
-		    sort(cow, cow + n);
-
-		    int res = -2e9, sum = 0;
-		    for (int i = 0; i < n; i ++ )
-		    {
-		        int s = cow[i].first - cow[i].second, w = cow[i].second;
-		        res = max(res, sum - s); sum是第i头牛上面的0到i-1头牛的重量之和 
-		        	注意, 我们求的是 res = max(第0头牛的危险值, 第1头牛的危险值, ..., 第n-1头牛的危险值). 我们希望一个方案使得res最小, 这个方案就是: w+s从小到大排序, 然后最上面的是w+s最小的
-		        sum += w;
-		    }
-
-		    printf("%d\n", res);
-
-		    return 0;
-		}
-		逻辑非常简单, 就是w+s从小到大排序, 然后最上面的是w+s最小的
-		证明很不错: https://www.acwing.com/solution/content/26316/
-	-- 简单的判断质数 
-		#include <iostream>
-		#include <algorithm>
-
-		using namespace std;
-
-		bool is_prime(int x)
-		{
-		    if (x < 2) return false;
-		    for (int i = 2; i <= x / i; i ++ )
-		        if (x % i == 0)
-		            return false;
-		    return true;
-		}
-
-		int main()
-		{
-		    int n;
-		    cin >> n;
-
-		    while (n -- )
-		    {
-		        int x;
-		        cin >> x;
-		        if (is_prime(x)) puts("Yes");
-		        else puts("No");
-		    }
-
-		    return 0;
-		}
-
-	--质因数 	
-		#include <iostream>
-		#include <algorithm>
-
-		using namespace std;
-
-		void divide(int x)
-		{
-		    for (int i = 2; i <= x / i; i ++ )	从2开始看 一直到 sqrt(x)
-		        if (x % i == 0)	如果i能整除x, 说明i是一个质因子. 能满足这个条件的i一定是质数.
-		        {
-		            int s = 0;
-		            while (x % i == 0) x /= i, s ++ ;	我们看有多少个这个质因子, 用s记录
-		            cout << i << ' ' << s << endl;
-		        }
-		    if (x > 1) cout << x << ' ' << 1 << endl;	如果最后还剩余x, 就输出这个数字
-		    cout << endl;
-		}
-
-		int main()
-		{
-		    int n;
-		    cin >> n;
-		    while (n -- )
-		    {
-		        int x;
-		        cin >> x;
-		        divide(x);
-		    }
-		    return 0;
-		}
-------------
-	1. 为什么是 0x3f, 不是-1{0xfffffff},
-		0xff: 只是判断是否是-1, 然后 dist[v] = dist[u] + 1
-		0x3f: 因为要加值 dist[j] = min(dist[j], dist[t] + g[t][j])
-						例如 0x3f3f3f3f = min(0x3f3f3f3f, 3 + 0x3f3f3f3f)
-			加值后怕溢出, 如果是0xffff还会溢出为负数 
-	2. 
-	3. heap存的是 pair<int, int>  -> pair<dis, ver>
-		对应 dist[ver] = dis;
-	4. 优化版本:
-		for (int i = h[ver]; i != -1; i = ne[i])
-		因为边数少, 所以用邻接表, 所以遍历的是邻接表
-		
-		未优化:
-			for (int j = 1; j <= n; j ++ )
-				dist[j] = min(dist[j], dist[t] + g[t][j]);
-			因为边数多, 所以用邻接矩阵, 所以遍历的是邻接矩阵的第t行: g[t][j]
-	5. dijkstra优化
-		瓶颈在于, 每条边插入heap的效率比较低: loge
-		有e条边, 如果边很多,插入的效率就会很慢
-			可能不如不优化, 因为不优化根本不需要插入heap这个动作
---------------
-	1. edge[]
-		因为bellmanford要遍历所有的边
-		所以干脆把边都记录下来
-		邻接矩阵的边很分散
-		邻接表的边其实倒还好, 可以一行一行航遍历
-	2. last:
-		防止占便宜
-		如果是用dist[]
-		因为遍历所有的边
-			所以如果有的边, a>b变得更小了, b->c变得更小了, 其实是占了便宜的
-			因为不能 a->b->c 
-			最多只能一步
-		有了 last
-			a->b能变小
-				dist[b点] = min(dist[b点], last[a点] + w[a->b] )
-							= min(0x3f3f3f3f, 0 + 1)
-			但是b->c不能更新 
-				dist[c点] = min(dist[c点], last[b点] + w[b->c] )
-							= min(0x3f3f3f3f, 0x3f3f3f3f + 1)
-
-	3. 0x3f3f3f3f / 2
-		因为由负权边
-
-		
--------
-	/列%行: 	除列强, 模航{航模}
-	*列+y: 	乘着列强
-------
-	bellman
-	------- 
-	\  \
-	 \  \
-
-	------|------
-	\  \
-	 \  \ |-----
-	  -  -
-	   \  \
-	    \  \	
-
-	感觉 bellmanford 就像是一盏灯, 一闪一闪, 每次闪就向外辐射一层{仅仅一层}
-		上次闪的地方原封不动, 并且更外层的层也是原封不动
-
-	之所以负环问题
-		应该是负环问题, 我们限定 k == n吧{或者n+1,n-1}我也不确定
-		如果辐射完k次还是能够继续 min, 说明有负环? 
-
-	for(辐射k次){
-		for(每条边都试着辐射, 但是只有某一层的边能辐射成功){
-
-		}
-	}
------
-	spfa
-		queue<int> q; 记录所有距离变小的节点 
-			很像 priority_queue中放入被放松的边
-			但是queue 的top不需要是当前距离最短的点
-	为什么spfa是bellman的优化:
-		bellmanford 就像是一盏灯, 一闪一闪, 每次闪就向外辐射一层{仅仅一层}
-		上次闪的地方原封不动, 并且更外层的层也是原封不动
-		所以bellman的瓶颈就在于, 他做了很多无用功: 辐射了每条边, 但并不是所有边都能成功放松, 即上次闪的地方还是原封不动, 并且更外层的层还是原封不动
-
-		spfa, 就是类似 dfs()的层序遍历, 每次只辐射某一层
-	我的感觉
-		bellman, spfa就是层序遍历所有的点, 并把每个点到起点的距离都做更新
-		如果有环也不怕, 就当做是走了无限层数.
-		所以通过卡层数来防止在环里无限绕圈
-
-		他们的理论逻辑, 就和负权边没有什么关系了, 因为存在负权边也不会影响正确性
-		因为他们就不是找{当前状态下最强的那个}
-			这里感觉dij属于近视的算法, 只找当前状态下最强的, 殊不知在未来某个负权边能有更大的威力
-
-
-----
-dijks
-	a修仙 -> 人间最强b{放松别人} -> 
-
-为什么dijk不能有负权边:
-	因为dijk的思路是: 只要st[t] == true, 代表 dist[t]就一定是点t到起点的最短距离, 点t之后再也不用被更新{不会有更短的距离了}, 为什么?
-		为什么 st[t] == true, 就代表u的最近距离找到了
-		为什么 heap弹出的节点t, 代表u的最近距离找到了
-			因为 第一个从heap弹出的节点, 就是全局距离起点最近的
-			我的疑惑, 有没可能这个节点t后来发现还有更近的路
-				不可能, 因为如果有更近的路, 假设这个路径是 a->b->c->t
-				那么 第一个从heap弹出的节点就应该是a, 而不是t
-		如果有负权边c
-			因为 第一个从heap弹出的节点, 就是全局距离起点最近的
-			我的疑惑, 有没可能这个节点t后来发现还有更近的路
-				不可能, 因为如果有更近的路, 假设这个路径是 a{dist[a] > dist[t]}->b->c{c是非常负的负数}->t
-				我们应该的答案是这个 a->b->c->t, 因为{c是非常负的负数}
-				但是我们的 dij 第一个从heap弹出的节点是t, dij 的方法就一定是先走t. 但答案应该先走a,因为路径上有个负数可以抵消掉a
-----
-
+	零散笔记:
+		--------
+			1. 为什么是 0x3f, 不是-1{0xfffffff},
+				0xff: 只是判断是否是-1, 然后 dist[v] = dist[u] + 1
+				0x3f: 因为要加值 dist[j] = min(dist[j], dist[t] + g[t][j])
+								例如 0x3f3f3f3f = min(0x3f3f3f3f, 3 + 0x3f3f3f3f)
+					加值后怕溢出, 如果是0xffff还会溢出为负数 
+			2. 
+			3. heap存的是 pair<int, int>  -> pair<dis, ver>
+				对应 dist[ver] = dis;
+			4. 优化版本:
+				for (int i = h[ver]; i != -1; i = ne[i])
+				因为边数少, 所以用邻接表, 所以遍历的是邻接表
+				
+				未优化:
+					for (int j = 1; j <= n; j ++ )
+						dist[j] = min(dist[j], dist[t] + g[t][j]);
+					因为边数多, 所以用邻接矩阵, 所以遍历的是邻接矩阵的第t行: g[t][j]
+			5. dijkstra优化
+				瓶颈在于, 每条边插入heap的效率比较低: loge
+				有e条边, 如果边很多,插入的效率就会很慢
+					可能不如不优化, 因为不优化根本不需要插入heap这个动作
+		--------------
+			1. edge[]
+				因为bellmanford要遍历所有的边
+				所以干脆把边都记录下来
+				邻接矩阵的边很分散
+				邻接表的边其实倒还好, 可以一行一行航遍历
+			2. last:
+				防止占便宜
+				如果是用dist[]
+				因为遍历所有的边
+					所以如果有的边, a>b变得更小了, b->c变得更小了, 其实是占了便宜的
+					因为不能 a->b->c 
+					最多只能一步
+				有了 last
+					a->b能变小
+						dist[b点] = min(dist[b点], last[a点] + w[a->b] )
+									= min(0x3f3f3f3f, 0 + 1)
+					但是b->c不能更新 
+						dist[c点] = min(dist[c点], last[b点] + w[b->c] )
+									= min(0x3f3f3f3f, 0x3f3f3f3f + 1)
+
+			3. 0x3f3f3f3f / 2
+				因为由负权边
+
+				
+		-------
+			/列%行: 	除列强, 模航{航模}
+			*列+y: 	乘着列强
+		------
+			bellman
+			------- 
+			\  \
+			 \  \
+
+			------|------
+			\  \
+			 \  \ |-----
+			  -  -
+			   \  \
+			    \  \	
+
+			感觉 bellmanford 就像是一盏灯, 一闪一闪, 每次闪就向外辐射一层{仅仅一层}
+				上次闪的地方原封不动, 并且更外层的层也是原封不动
+
+			之所以负环问题
+				应该是负环问题, 我们限定 k == n吧{或者n+1,n-1}我也不确定
+				如果辐射完k次还是能够继续 min, 说明有负环? 
+
+			for(辐射k次){
+				for(每条边都试着辐射, 但是只有某一层的边能辐射成功){
+
+				}
+			}
+		-----
+			spfa
+				queue<int> q; 记录所有距离变小的节点 
+					很像 priority_queue中放入被放松的边
+					但是queue 的top不需要是当前距离最短的点
+			为什么spfa是bellman的优化:
+				bellmanford 就像是一盏灯, 一闪一闪, 每次闪就向外辐射一层{仅仅一层}
+				上次闪的地方原封不动, 并且更外层的层也是原封不动
+				所以bellman的瓶颈就在于, 他做了很多无用功: 辐射了每条边, 但并不是所有边都能成功放松, 即上次闪的地方还是原封不动, 并且更外层的层还是原封不动
+
+				spfa, 就是类似 dfs()的层序遍历, 每次只辐射某一层
+			我的感觉
+				bellman, spfa就是层序遍历所有的点, 并把每个点到起点的距离都做更新
+				如果有环也不怕, 就当做是走了无限层数.
+				所以通过卡层数来防止在环里无限绕圈
+
+				他们的理论逻辑, 就和负权边没有什么关系了, 因为存在负权边也不会影响正确性
+				因为他们就不是找{当前状态下最强的那个}
+					这里感觉dij属于近视的算法, 只找当前状态下最强的, 殊不知在未来某个负权边能有更大的威力
+
+
+		----
+		dijks
+			a修仙 -> 人间最强b{放松别人} -> 
+
+		为什么dijk不能有负权边:
+			因为dijk的思路是: 只要st[t] == true, 代表 dist[t]就一定是点t到起点的最短距离, 点t之后再也不用被更新{不会有更短的距离了}, 为什么?
+				为什么 st[t] == true, 就代表u的最近距离找到了
+				为什么 heap弹出的节点t, 代表u的最近距离找到了
+					因为 第一个从heap弹出的节点, 就是全局距离起点最近的
+					我的疑惑, 有没可能这个节点t后来发现还有更近的路
+						不可能, 因为如果有更近的路, 假设这个路径是 a->b->c->t
+						那么 第一个从heap弹出的节点就应该是a, 而不是t
+				如果有负权边c
+					因为 第一个从heap弹出的节点, 就是全局距离起点最近的
+					我的疑惑, 有没可能这个节点t后来发现还有更近的路
+						不可能, 因为如果有更近的路, 假设这个路径是 a{dist[a] > dist[t]}->b->c{c是非常负的负数}->t
+						我们应该的答案是这个 a->b->c->t, 因为{c是非常负的负数}
+						但是我们的 dij 第一个从heap弹出的节点是t, dij 的方法就一定是先走t. 但答案应该先走a,因为路径上有个负数可以抵消掉a
+		----
+10. 5.27
+	1. AcWing 1097. 池塘计数
+		1. bug
+			#include <iostream>
+			using namespace std;
+			错误: const int N = 1010;
+			正确: const int N = 1010, M = N * N;
+			typedef pair<int, int> PII;
+			错误: PII q[N];
+			正确: PII q[M];
+			char g[N][N];
+			bool st[N][N];  
+			int n, m, res;
+
+			void bfs(int ox, int oy){
+			    错误: int hh = tt = 0;
+			    正确: int hh = 0, tt = 0;
+			    q[0] = {ox, oy};
+			    
+			    写法1: st[ox][oy] = true; 写法1写法2任选一个, 写法1更好, 因为写法2会有重复, 也就是push的时候设置了st=true, pop的时候又设置了一次st=true
+			    while(hh <= tt){
+			        auto t = q[hh++];
+			        int x = t.first, y = t.second;
+			        写法2次一点: st[x][y] = true;
+			        for(int i = x - 1; i <= x + 1; i++){
+			            for(int j = y - 1; j <= y + 1; j ++){
+			                错误: 忘记写 if(i == x && j == y) continue;
+			                正确: if(i == x && j == y) continue;
+			                if(i < 0 || i >= n || j < 0 || j >= m || st[i][j]) continue;
+			                if(g[i][j] == '.') continue;
+			                st[i][j] = true;
+			                q[++ tt] = {i, j};
+			            }
+			        }
+			    }
+			}
+
+			int main(){
+			    scanf("%d%d", &n, &m);
+			    for(int i = 0; i < n; i ++) scanf("%s", g[i]);	注意这里可以读取一行 
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0 ; j < m; j++){
+			            if(g[i][j] == 'W' && !st[i][j]){
+			                bfs(i, j);
+			                res++;
+			            }
+			        }
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+		2. ok 
+			#include <iostream>
+			using namespace std;
+			const int N = 1010, M = N * N;  // 边长是1010, 所有的坐标的个数是 边长*边长 
+			typedef pair<int, int> PII;     // 我们的bfs队列存的是坐标, 所以用PII
+			#define x first
+			#define y second 
+			PII q[M];                       //q可能会插入所有坐标, 所以是M个 
+			char g[N][N];
+			bool st[N][N];                  //st[i][j] == true, 说明ij坐标已经遍历过, 一旦遍历就是最近的一层 
+			int n, m, res;
+
+			void dfs(int ox, int oy){
+			    int hh = 0, tt = -1;
+			    q[++ tt] = {ox, oy};
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        //开始遍历点t周围的8个合法元素
+			        for(int i = t.x - 1; i <= t.x + 1; i++){
+			            for(int j = t.y - 1; j <= t.y + 1; j++){
+			                if(i == t.x && j == t.y) continue;
+			                if(i < 0 || i >= n || j < 0 || j >= m || st[i][j]) continue;
+			                if(g[i][j] == '.') continue;
+			                st[i][j] = true;
+			                q[++ tt] = {i, j};
+			            }
+			        }
+			    }
+			}
+			int main(){
+			    scanf("%d%d", &n, &m);
+				for(int i = 0; i < n; i ++) scanf("%s", g[i]);
+				for(int i = 0; i < n; i++){
+				    for(int j = 0; j < m; j++){
+				        if(g[i][j] == 'W' && !st[i][j]){
+				            dfs(i, j);
+				            res ++;
+				        }
+				    }
+				}
+				cout << res << endl;
+				return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+			const int N = 1010, M = N * N;
+			typedef pair<int, int> PII;
+			PII q[M];
+			bool st[N][N];
+			char g[N][N];
+			int n, m, cnt;
+			void dfs(int ox, int oy){
+			    int hh = 0, tt = -1;
+			    q[++ tt] = {ox, oy};
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        int x = t.first, y = t.second;
+			        for(int i = x - 1; i <= x + 1; i++){
+			            for(int j = y - 1; j <= y + 1; j++){
+			                if(i == x && j == y) continue;
+			                if(i < 0 || i >= n || j < 0 || j >= m || st[i][j] || g[i][j] == '.') continue;
+			                q[++ tt] = {i, j};
+			                st[i][j] = true;
+			            }
+			        }
+			    }
+			}
+			int main(){
+			    scanf("%d%d", &n, &m);
+			    for(int i = 0; i < n; i++) scanf("%s", g[i]);
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0; j < m; j++){
+			            if(!st[i][j] && g[i][j] == 'W'){
+			                dfs(i, j);
+			                cnt ++;
+			            }
+			        }
+			    }
+			    cout << cnt << endl;
+			}
+	2. AcWing 1098. 城堡问题
+		1. bug 
+		2. ok {顺利}
+			#include <iostream>
+			using namespace std;
+			const int N = 60, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			PII q[M];
+			bool st[N][N];
+			int g[N][N];
+			int n, m, area, cnt;
+			int dx[4] = {0, -1, 0, 1}, dy[4] = {-1, 0, 1, 0};
+			int bfs(int ox, int oy){
+			    int hh = 0, tt = -1;
+			    写法1: int temparea = 0;
+			    q[++tt] = {ox, oy};
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        写法1: 记录q中历史上存了多少个元素, 就看q弹出了几个
+			        写法1: temparea ++;
+			        for(int i = 0; i < 4 ; i++){
+			            int tx = t.x + dx[i], ty = t.y + dy[i];
+			            if(tx < 0 || tx >= n || ty < 0 || ty >= m || st[tx][ty]) continue;
+			            if(g[t.x][t.y] >> i & 1) continue;
+			            q[++ tt] = {tx, ty};
+			            st[tx][ty] = true;
+			        }
+			    }
+			    写法2: return tt + 1; 因为tt是从0开始的, 写法2适用于我们用数组创建的queue
+			    写法1: return temparea; 写法1适用于stl的queue
+			}
+			int main(){
+			    scanf("%d%d", &n, &m);
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0; j < m ; j++) scanf("%d", &g[i][j]);
+			    }
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0 ; j < m; j++){
+			            if(!st[i][j]){
+			                area = max(area, bfs(i, j));
+			                cnt ++;
+			            }
+			        }
+			    }
+			    cout << cnt << endl;
+			    cout << area << endl;
+			    return 0;
+			}
+			--
+			#include <iostream>
+			using namespace std;
+			const int N = 60, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			PII q[M];
+			bool st[N][N];
+			int g[N][N];
+			int n, m, maxa, cnt;
+			int dx[4] = {0, -1, 0, 1}, dy[4] = {-1, 0, 1, 0};
+			int bfs(int ox, int oy){
+			    int hh = 0, tt = -1;
+			    q[++ tt] = {ox, oy};// 先挪出空地, 然后放入 ++ tt
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        for(int i = 0; i < 4; i++){
+			            int x = t.x + dx[i], y = t.y + dy[i];
+			            if(x < 0 || x >= n || y < 0 || y >= m || st[x][y]) continue;
+			            if(g[t.x][t.y] >> i & 1) continue; //精华: 我想去的格子是{x,y}, 但是我们要看{t.x, t.y}到{x, y}之间是否有墙
+			            st[x][y] = true;
+			            q[++ tt] = {x, y};
+			        }
+			    }
+			    return tt + 1;
+			}
+			int main(){
+			    scanf("%d%d", &n, &m);
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0; j < m ; j++) scanf("%d", &g[i][j]);
+			    }
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0 ; j < m; j++){
+			            if(!st[i][j]){
+			                maxa = max(maxa, bfs(i, j));
+			                cnt ++;
+			            }
+			        }
+			    }
+			    cout << cnt << endl;
+			    cout << maxa << endl;
+			    return 0;
+			}
+11. 5.31
+	3. AcWing 1106. 山峰和山谷
+		0. 这道题不难, 注意逻辑就好
+			0. 我们dfs的联通块是高度相同的元素
+				不仅要涂满高度相同的元素
+				而且对于连通块的边缘轮廓部分, 都要看看是否有高于或者低于自己的部分{我觉得有意思的地方!!}
+			1. 4个分类:
+				has_lower && has_higher: 
+					这个连通块a的四周, 有比a高的, 也有比a低的
+					所以a什么都不是
+				!has_lower && has_higher: 
+					这个连通块a的四周, 有比a高的, 但是没有比a低的
+					所以a是 valley
+				has_lower && !has_higher: 
+					这个连通块a的四周, 有比a低的, 但是没有比a高的
+					所以a是 peak
+				!has_lower && !has_higher: 
+					这个连通块a的四周, 没有比a低的, 也没有比a高的
+					题目说: 说明a就是整个地图, 说明整个地图都有相同的高度，那么a即是山峰，又是山谷
+					所以 valley ++, peak ++ 
+			2. dfs的连通块
+				1. 如果我的邻居{i,y}和我高度不同:
+					1. 那么邻居不需要 !st[i,j], 也就是即便 邻居是被遍历过的 st[i,j] == true, 也没关系
+					2. 如果邻居高, has_higher = true
+					3. 如果邻居矮, has_lower = true
+				2. 如果我的邻居{i,y}和我高度相同:
+					就是普通的遍历联通块的逻辑
+						q[++ tt] = {i, j};
+			            st[i][j] = true;
+		1. bug
+			#include <iostream>
+			using namespace std;
+			const int N = 1010, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			int g[N][N];
+			PII q[M];
+			bool st[N][N];
+			int n, peak, valley;
+			void dfs(int ox, int oy, bool &has_higher, bool &has_lower){
+			    int hh = 0, tt = -1;
+			    q[++ tt] = {ox, oy};
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        for(int i = t.x - 1; i <= t.x + 1; i++){
+			            for(int j = t.y - 1; j <= t.y + 1; j++){
+			                if(i == t.x && j == t.y) continue;
+			                错误: if(i < 0 || i >= n || j < 0 || j > = n || st[i][j]) continue;
+			                	一个非常无语的错误, 又是小书写错误导致了很难找: if(i < 0 || i >= n || j < 0 || j >= 0) continue; 发现了吗, 错在: j >= 0
+			                正确: if(i < 0 || i >= n || j < 0 || j >= n) continue;
+			                if(g[i][j] != g[t.x][t.y]){
+			                    if(g[i][j] > g[t.x][t.y]) has_higher = true;
+			                    else has_lower = true;
+			                }
+			                错误: else{
+			                正确: else if(!st[i][j]){
+			                    q[++ tt] = {i, j};
+			                    st[i][j] = true;
+			                }
+			            }
+			        }
+			    }
+			}
+
+			int main(){
+			    cin >> n;
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0 ; j < n; j++) cin >> g[i][j];
+			    }
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0 ; j < n; j++){
+			            正确: if(!st[i][j]){
+			                bool has_higher = false, has_lower = false;
+			                dfs(i, j, has_higher, has_lower); 
+			                错误:
+				                if(!has_higher) valley++;
+				                if(!has_lower) peak++;
+			                正确:
+				                if(!has_higher) peak++;
+				                if(!has_lower) valley++;
+			            }
+			            错误: 错在 if(!has_lower)应该写在 if(!st[i][j]) {} 里面
+			            	if(!st[i][j])
+				                dfs(i, j, has_higher, has_lower); // 为什么是传引用, 因为不像python可以返回两个值
+				            if(!has_lower) peak++;
+				            if(!has_higher) valley++;
+			        }
+			    }
+			    cout << peak << " " << valley << endl;
+			    return 0;
+			}
+		2. ok 
+			#include <iostream>
+			using namespace std;
+			const int N = 1010, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			PII q[M];
+			int g[N][N];
+			bool st[N][N];
+			int n, peak, valley;
+			void bfs(int ox, int oy, bool &has_higher, bool &has_lower){ // 为什么是传引用, 因为不像python可以返回两个值
+			    int hh = 0, tt = -1;
+			    q[++ tt] = {ox, oy};
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        for(int i = t.x - 1; i <= t.x + 1; i++){
+			            for(int j = t.y - 1; j <= t.y + 1; j++){
+			                if(i == t.x && j == t.y) continue;
+			                if(i < 0 || i >= n || j < 0 || j >= n) continue;
+			                int &nn = g[i][j], &oo = g[t.x][t.y];
+			                if(nn != oo){
+			                    if(nn < oo) has_lower = true;
+			                    else has_higher = true;
+			                }else if(!st[i][j]){
+			                    q[++ tt] = {i, j};
+			                    st[i][j] = true;
+			                }
+			            }
+			        }
+			    }
+			}
+			int main(){
+			    scanf("%d", &n);
+			    for(int i = 0 ; i < n; i ++)
+			        for(int j = 0 ; j < n; j++) scanf("%d", &g[i][j]);
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0 ; j < n; j++){
+			            if(!st[i][j]){
+			                bool has_higher = false, has_lower = false;
+			                bfs(i, j, has_higher, has_lower);
+			                if(!has_higher) peak++;
+			                if(!has_lower) valley++;
+			            }
+			        }
+			    }
+			    cout << peak << " " << valley << endl;
+			    return 0;
+			}
+	4. AcWing 1076. 迷宫问题
+		0. 注意语法:
+			PII cur(0, 0);	也就是初始化: PII cur = {0, 0};
+			cur = ne[cur.x][cur.y];
+		1. bug
+			1. 写法1: 我更习惯: 用st, 输出的时候考虑是否 == -1
+				#include <iostream>
+				#include <cstring>
+				using namespace std;
+				const int N = 1010, M = N * N;
+				typedef pair<int, int> PII;
+				#define x first
+				#define y second
+				PII q[M];
+				PII ne[N][N];
+				写法1: bool st[N][N];
+				int g[N][N], n;
+				int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1}; 
+				void bfs(int ox, int oy){
+				    int hh = 0, tt = -1;
+				    q[++ tt] = {ox, oy};
+				    st[ox][oy] = true;
+				    while(hh <= tt){
+				        auto t = q[hh ++];
+				        for(int i = 0 ; i < 4 ; i++){
+				            int a = t.x + dx[i], b = t.y + dy[i];
+				            if(a < 0 || a >= n || b < 0 || b >= n) continue;
+				            写法1: if(st[a][b] || g[a][b]) continue;
+				            st[a][b] = true;
+				            q[++ tt] = {a, b};
+				            错误: ne[a][b] = {ox, oy}; --------
+				            正确: ne[a][b] = {t.x, t.y};
+				            if(a == 0 && b == 0) break;
+				        }
+				    }
+				}
+				int main(){
+				    cin >> n;
+				    for(int i = 0 ; i < n; i++){
+				        for(int j = 0 ; j < n; j++) cin >> g[i][j];
+				    }
+				    memset(ne, -1, sizeof ne);
+				    bfs(n - 1, n - 1);
+				    PII cur(0, 0);
+				    while(true){
+				        cout << cur.x << " " << cur.y << endl;
+				        cur = ne[cur.x][cur.y];
+				        写法1: if(cur.x == -1 && cur.y == -1) break;
+				    }
+				}
+			写法2: 老师的: 不用st, 输出的时候考虑是否 == n - 1. 
+				原因, 因为不用st, 我们是用 ne ?== -1来判断是否遍历过
+				我们会让所有的点, 包括终点的pre最后都是 != -1
+				所以输出的时候就不能是 ne ?== -1, 因为都不等于-1, 于是就会无穷尽输出 
+
+				#include <iostream>
+				#include <cstring>
+				using namespace std;
+				const int N = 1010, M = N * N;
+				typedef pair<int, int> PII;
+				#define x first
+				#define y second
+				PII q[M];
+				PII ne[N][N];
+				int g[N][N], n;
+				int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1}; 
+				void bfs(int ox, int oy){
+				    int hh = 0, tt = -1;
+				    q[++ tt] = {ox, oy};
+				    st[ox][oy] = true;
+				    while(hh <= tt){
+				        auto t = q[hh ++];
+				        for(int i = 0 ; i < 4 ; i++){
+				            int a = t.x + dx[i], b = t.y + dy[i];
+				            if(a < 0 || a >= n || b < 0 || b >= n) continue;
+				            错误: if(ne[a][b].x == -1 || g[a][b]) continue;	
+				            正确: if(ne[a][b].x != -1 || g[a][b]) continue;	如果已经被遍历过: != -1, 就下一个
+				            if(st[a][b] || g[a][b]) continue;
+				            st[a][b] = true;
+				            q[++ tt] = {a, b};
+				            错误: ne[a][b] = {ox, oy}; --------
+				            正确: ne[a][b] = {t.x, t.y};
+				            if(a == 0 && b == 0) break;
+				        }
+				    }
+				}
+				int main(){
+				    cin >> n;
+				    for(int i = 0 ; i < n; i++){
+				        for(int j = 0 ; j < n; j++) cin >> g[i][j];
+				    }
+				    memset(ne, -1, sizeof ne);
+				    bfs(n - 1, n - 1);
+				    PII cur(0, 0);
+				    while(true){
+				        写法1:
+					        cout << cur.x << " " << cur.y << endl;
+					        cur = ne[cur.x][cur.y];
+					        if(cur.x == -1 && cur.y == -1) break;	如果刚才下一个的数字是非法值, ok可以停了
+					    写法2:
+					    	cout << cur.x << " " << cur.y << endl;
+					        if(cur.x == n - 1 && cur.y == n - 1) break; 如果刚才输出的数字是终点, ok可以停了
+					        cur = ne[cur.x][cur.y];
+				    }
+				}
+		2. ok
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 1010, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			PII q[M];
+			PII ne[N][N];
+			bool st[N][N];
+			int g[N][N], n;
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1}; 
+			void bfs(int ox, int oy){
+			    int hh = 0, tt = -1;
+			    q[++ tt] = {ox, oy};
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        for(int i = 0; i < 4; i++){
+			            int a = t.x + dx[i], b = t.y + dy[i];
+			            if(a < 0 || a >= n || b < 0 || b >= n) continue;
+			            if(st[a][b] || g[a][b]) continue;
+			            q[++ tt] = {a, b};
+			            st[a][b] = true;
+			            ne[a][b] = {t.x, t.y};
+			            if(a == 0 && b == 0) break;
+			        }
+			    }
+			    
+			}
+			int main(){
+			    cin >> n;
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0 ; j < n; j++) cin >> g[i][j];
+			    }
+			    memset(ne, -1, sizeof ne);
+			    bfs(n - 1, n - 1);
+			    PII cur = {0, 0};
+			    while(true){
+			        cout << cur.x << " " << cur.y << endl;
+			        cur = ne[cur.x][cur.y];
+			        if(cur.x == -1) break;
+			    }
+			    return 0;
+			}
+	5. AcWing 188. 武士风度的牛
+		1. bug
+		2. ok{很顺}
+			#include <iostream>
+			using namespace std;
+			const int N = 160, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			PII q[M];
+			int dist[N][N];
+			bool st[N][N];
+			char g[N][N];
+			int n, m, res;
+			int dx[8] = {-2, -1, 1, 2, 2, 1, -1, -2};
+			int dy[8] = {1, 2, 2, 1, -1, -2, -2, -1};
+			int bfs(int ox, int oy){
+			    int hh = 0, tt = -1;
+			    q[++ tt] = {ox, oy};
+			    st[ox][oy] = true;
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        for(int i = 0 ; i < 8; i++){
+			            int a = t.x + dx[i], b = t.y + dy[i];
+			            if(a < 0 || a >= n || b < 0 || b >= m) continue;
+			            if(st[a][b] || g[a][b] == '*') continue;
+			            q[++ tt] = {a, b};
+			            st[a][b] = true;
+			            dist[a][b] = dist[t.x][t.y] + 1;	说明从 {t.x, t.y} -> {a, b}跳了一步
+			            if(g[a][b] == 'H') return dist[a][b];
+			        }
+			    }
+			    return -1; 
+			}
+			int main(){
+			    cin >> m >> n;
+			    for (int i = 0; i < n; i ++ ) cin >> g[i];
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0; j < m; j++){
+			            if(g[i][j] == 'K'){
+			                res = bfs(i, j);
+			                break;
+			            }
+			        }
+			    }
+			    cout << res << endl;
+			    return 0;
+			}
+	6. AcWing 1100. 抓住那头牛
+		1. bug
+		2. ok {之前觉得复杂, 现在觉得超级简单, 顺利}
+			#include <iostream>
+			using namespace std;
+			const int N = 1e5 + 10;
+			int g[N], q[N], dist[N]; 	dist[i]: 数字i在图上距离数字起点a的最短距离 
+			bool st[N];
+			int a, b;
+			int bfs(int a, int b){
+			    int hh = 0, tt = -1;
+			    q[++ tt] = a;
+			    st[a] = true;
+			    dist[a] = 0;
+			    while(hh <= tt){
+			        int t = q[hh ++];
+			        if(t == b) return dist[b];
+			        //遍历3个邻点:
+			        int ne[3] = {t - 1, t + 1, t * 2};
+			        for(int i : ne){
+			            if(0 <= i && i < N && !st[i]){	只要是合法的
+			                q[++ tt] = i;
+			                st[i] = true;
+			                dist[i] = dist[t] + 1;
+			            }
+			        }
+			    }
+			    return dist[b];
+			}
+			int main(){
+			    cin >> a >> b;
+			    cout << bfs(a, b) << endl;
+			    return 0;
+			}
+	7. AcWing 173. 矩阵距离
+		1. bug{无语的bug, 输入的问题, 其他都很顺}
+			#include <iostream>
+			using namespace std;
+			const int N = 1010, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			char g[N][N];
+			PII q[M];
+			bool st[N][N];
+			int dist[N][N];
+			int n, m;
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+			void bfs(){
+			    int hh = 0, tt = -1;
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0 ; j < m; j++){
+			            if(g[i][j] == '1'){
+			                q[++ tt] = {i, j};
+			                st[i][j] = true;
+			            }
+			        }
+			    }
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        for(int i = 0 ; i < 4; i ++){
+			            int a = t.x + dx[i], b = t.y + dy[i];
+			            if(a < 0 || a >= n || b < 0 || b >= m) continue;
+			            错误: if(st[a][b] || g[a][b]) continue;
+			            正确: if(st[a][b] || g[a][b] == '1') continue; 因为读入是char
+			            dist[a][b] = dist[t.x][t.y] + 1;
+			            st[a][b] = true;
+			            q[++ tt] = {a, b};
+			        }
+			    }
+			}
+			int main(){
+			    scanf("%d%d", &n, &m);
+			    for(int i = 0; i < n; i++) scanf("%s", g[i]); 读的是一整行 
+			    bfs();
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0; j < m; j++)
+			        {
+			            cout << dist[i][j] << " ";
+			        }
+			        cout << endl;
+			    }
+			    return 0;
+			}
+		2. ok: 我还是习惯用 st[] 来代替 dist[]是否为-1
+			逻辑非常简单, 见 practice_advanced.cpp 
+			#include <iostream>
+			using namespace std;
+			const int N = 1010, M = N * N;
+			typedef pair<int, int> PII;
+			#define x first
+			#define y second
+			char g[N][N];
+			PII q[M];
+			bool st[N][N];
+			int dist[N][N]; //dist[i][j] 这是0类点{i,j}距离最近的1类点的最近距离
+			int n, m;
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+			void bfs(){
+			    int hh = 0, tt = -1;
+			    for(int i = 0 ; i < n; i++){
+			        for(int j = 0; j < m; j++){
+			            if(g[i][j] == '1'){
+			                q[++ tt] = {i, j};
+			                st[i][j] = true;
+			            }
+			        }
+			    }
+			    while(hh <= tt){
+			        auto t = q[hh ++];
+			        for(int i = 0 ; i < 4; i ++){
+			            int a = t.x + dx[i], b = t.y + dy[i];
+			            if(a < 0 || a >= n || b < 0 || b >= m) continue;
+			            if(st[a][b] || g[a][b] == '1') continue; //如果这个点已经被遍历过, 或者这个点是1类点{我们要去的终点是0类点, 所以不要理会1类点}, 就跳过
+			            dist[a][b] = dist[t.x][t.y] + 1; //这个就是1类点的连通块, bfs层序遍历, 先遍历到的距离最近, 因为每个dis == 1 
+			            q[++ tt] = {a, b};
+			            st[a][b] = true;
+			        }
+			    }
+			}
+			int main(){
+			    scanf("%d%d", &n, &m);
+			    for(int i = 0; i < n; i++) scanf("%s", g[i]);
+			    bfs();
+			    for(int i = 0; i < n; i++){
+			        for(int j = 0 ; j < m; j++){
+			            cout << dist[i][j] << " ";
+			        }
+			        cout << endl;
+			    }
+			    return 0;
+			}
+	8. AcWing 1107. 魔板
+		0. 小总结:
+			其实这道题, 并不难.
+			主要是: 我们怎么计算从一个 string -三种操作-> 另一个string
+				需要一个 char g[2][4];
+				一个 string "--变为-->" g[2][4] "--在g[][]上才能进行三种操作-->" 另一个string
+		0. 比较:
+			二维图 vs string:
+				st:
+					bool st[N][N];
+					unordered_map<string, bool> st;
+				queue:
+					PII q[N] / queue<PII> q;
+					string q[N] / queue<string> q;
+				dist:
+					int dist[N][N];		想象画面, 容器的形状: [][], 容器装的: int
+					unordered_map<string, int> dist;
+				pre:
+					PII pre[N][N];
+					unordered_map<string, string> pre; / unordered_map<string, pair<int, string>> pre; 后者主要是记录了操作编号
+		1. bug{不难, 主要是细节}
+			主要的bug都是小bug:
+				1. 
+					错误: string q[N]; 没有pop, 所以会有segmentation fault 
+					正确: 应该是 queue<string> q; 因为有pop, 所以不会超出界限
+				2. 输出的截止, 见code 
+			#include <iostream>
+			#include <unordered_map>
+			#include <algorithm>
+			#include <queue>
+			using namespace std;
+			const int N = (1 << 8) + 10;
+			char g[3][5];
+			string start, endd;
+			queue<string> q;
+			unordered_map<string, bool> st;
+			unordered_map<string, pair<int, string>> pre;
+			unordered_map<string, int> dist;
+			void tog(string str){
+			    for(int i = 0; i < 4; i++) g[0][i] = str[i];
+			    for(int i = 7, j = 0; j < 4; i --, j ++) g[1][j] = str[i]; 
+			}
+			string tostr(){
+			    string res;
+			    for(int i = 0; i < 4; i ++) res += g[0][i];
+			    for(int i = 3; i >= 0; i--) res += g[1][i];
+			    return res;
+			}
+			string act1(string prev){
+			    tog(prev);
+			    for(int i = 0; i < 4; i++) swap(g[0][i], g[1][i]);
+			    return tostr();
+			}
+
+			string act2(string prev){
+			    tog(prev);
+			    int a = g[0][3], b = g[1][3];
+			    for(int i = 3; i >= 1; i--){
+			        g[0][i] = g[0][i-1];
+			        g[1][i] = g[1][i-1];
+			    }
+			    g[0][0] = a, g[1][0] = b;
+			    return tostr();
+			}
+
+			string act3(string prev){
+			    tog(prev);
+			    int a = g[0][1];
+			    g[0][1] = g[1][1];
+			    g[1][1] = g[1][2];
+			    g[1][2] = g[0][2];
+			    g[0][2] = a;
+			    return tostr();
+			}
+
+			int bfs(){
+			    if (start == endd) return 0;
+			    int hh = 0, tt = -1;
+			    q.push(start);
+			    st[start] = true;
+			    dist[start] = 0;
+			    pre[start] = {-1, ""};
+			    while(q.size()){
+			        string t = q.front(); q.pop();
+			        string ne[3];
+			        ne[0] = act1(t);
+			        ne[1] = act2(t);
+			        ne[2] = act3(t);
+			        for(int i = 0 ; i < 3; i++){
+			            string nn = ne[i];
+			            if(st.count(nn)) continue;
+			            dist[nn] = dist[t] + 1;
+			            pre[nn] = {i, t};
+			            q.push(nn);
+			            st[nn] = true;
+			        }
+			    }
+			}
+			int main(){
+			    for(int i = 1; i <= 8; i++){
+			        char c;
+			        cin >> c;
+			        start += (i + '0');
+			        endd += c;
+			    }
+			    bfs();
+			    cout << dist[endd] << endl;
+			    if(dist[endd] > 0){
+				    string res;
+				    string cur = endd;
+				    错误: 因为我们的res, 不需要 start的pre, 所以我们不希望cur是start, 
+			    	    while(true){
+			    	        char op = pre[cur].first + 'A';
+			    	        res += op;
+			    	        cur = pre[cur].second;
+			    	        if(cur == "") break;
+			    	    } //错在: 最后的op是"@", 因为最后的 pre[cur].first 是  pre[start].first = -1;
+			    	正确: 
+			    		while(true){
+			    			if(cur == start) break;
+			    	        char op = pre[cur].first + 'A';
+			    	        res += op;
+			    	        cur = pre[cur].second;
+			    	    }
+			    	    更简洁的:
+			    	    while(cur != start){
+			    	        char op = pre[cur].first + 'A';
+			    	        res += op;
+			    	        cur = pre[cur].second;
+			    	    }
+				    错误: reverse(res, res + 8);
+				    正确: reverse(res.begin(), res.end());
+				    cout << res << endl;
+			    }
+			    return 0;
+			}
+		2. ok 
+	9. AcWing 175. 电路维修
+		0. 小总结:
+
+		1. bug
+
+		2. ok 
+
+	10. AcWing 190. 字串变换
+	11. AcWing 178. 第K短路
+	12. AcWing 179. 八数码
+	13. AcWing 1112. 迷宫
+	14. AcWing 1113. 红与黑
+	15. AcWing 1116. 马走日
+	16. AcWing 1117. 单词接龙
+	17. AcWing 1118. 分成互质组
+	18. AcWing 165. 小猫爬山
+	19. AcWing 166. 数独
+	20. AcWing 167. 木棒
+	21. AcWing 168. 生日蛋糕
+	22. AcWing 170. 加成序列
+	23. AcWing 171. 送礼物
+	24. AcWing 180. 排书
+	25. AcWing 181. 回转游戏
+12. 6.2 
+	26. AcWing 1015. 摘花生
+	27. AcWing 1018. 最低通行费
+	28. AcWing 1027. 方格取数
+	29. AcWing 275. 传纸条
+	30. AcWing 1017. 怪盗基德的滑翔翼
+	31. AcWing 1014. 登山
+	32. AcWing 482. 合唱队形
+	33. AcWing 1012. 友好城市
+	34. AcWing 1016. 最大上升子序列和
+	35. AcWing 1010. 拦截导弹
+	36. AcWing 187. 导弹防御系统
+	37. AcWing 272. 最长公共上升子序列
+	38. AcWing 423. 采药
+	39. AcWing 1024. 装箱问题
+	40. AcWing 1022. 宠物小精灵之收服
+	AcWing 278. 数字组合
+	AcWing 1023. 买书
+	AcWing 1021. 货币系统
+	AcWing 532. 货币系统
+	AcWing 6. 多重背包问题 III
+	AcWing 1019. 庆功会
+	AcWing 7. 混合背包问题
+	AcWing 8. 二维费用的背包问题
+	AcWing 1020. 潜水员
+	AcWing 1013. 机器分配8
+	AcWing 426. 开心的金明
+	AcWing 10. 有依赖的背包问题
+	AcWing 11. 背包问题求方案数
+	AcWing 12. 背包问题求具体方案
+	AcWing 734. 能量石
+	AcWing 487. 金明的预算
+	AcWing 1049. 大盗阿福
+	AcWing 1057. 股票买卖 IV
+	AcWing 1058. 股票买卖 V
+	AcWing 1052. 设计密码
+	AcWing 1053. 修复DNA
+	AcWing 1064. 小国王
+	AcWing 327. 玉米田
+	AcWing 292. 炮兵阵地
+	AcWing 524. 愤怒的小鸟
+	AcWing 529. 宝藏
+	AcWing 1068. 环形石子合并
+	AcWing 320. 能量项链
+	AcWing 479. 加分二叉树
+	AcWing 1069. 凸多边形的划分
+	AcWing 321. 棋盘分割
+	AcWing 1072. 树的最长路径
+	AcWing 1073. 树的中心
+	AcWing 1075. 数字转换
+	AcWing 1074. 二叉苹果树
+	AcWing 323. 战略游戏
+	AcWing 1077. 皇宫看守
+	AcWing 1081. 度的数量
+	AcWing 1082. 数字游戏
+	AcWing 1083. Windy数
+	AcWing 1084. 数字游戏 II
+	AcWing 1085. 不要62
+	AcWing 1086. 恨7不成妻
+	AcWing 135. 最大子序和
+	AcWing 1087. 修剪草坪
+	AcWing 1088. 旅行问题
+	AcWing 1089. 烽火传递
+	AcWing 1090. 绿色通道
+	AcWing 1091. 理想的正方形
+	AcWing 300. 任务安排
+	AcWing 301. 任务安排
+	AcWing 302. 任务安排
+	AcWing 303. 运输小猫
+13. 6.3
+	第十四章 基础算法与数据结构
+		1. AcWing 1506. 中位数150人打卡
+		2. AcWing 1530. 最短距离130人打卡
+		3. AcWing 1571. 完美序列116人打卡
+		4. AcWing 1581. 急性中风93人打卡
+		5. AcWing 1641. 狼人杀-简单版91人打卡
+		6. AcWing 1535. 弹出序列97人打卡
+		7. AcWing 1541. 世界首富75人打卡
+		8. AcWing 1543. 栈64人打卡
+		9. AcWing 1607. 爱丁顿数87人打卡
+		10. AcWing 1528. 火星购物71人打卡
+		11. AcWing 1524. 最长回文子串94人打卡
+	第十三章 链表
+		1. AcWing 1516. 共享135人打卡
+		2. AcWing 1560. 反转链表133人打卡
+		3. AcWing 1587. 链表重复数据删除124人打卡
+		4. AcWing 1626. 链表元素分类116人打卡
+	第十二章 贪心
+		1. AcWing 1521. 魔术卷99人打卡
+		2. AcWing 1522. 排成最小的数字91人打卡
+		3. AcWing 1553. 用 Swap(0, i) 操作进行排序76人打卡
+		4. AcWing 1556. 月饼88人打卡
+		5. AcWing 1603. 整数集合划分81人打卡
+		6. AcWing 1618. 结绳80人打卡
+		7. AcWing 1517. 是否加满油47人打卡
+	第十一章 模拟
+		1. AcWing 1480. 电梯145人打卡
+		2. AcWing 1483. 世界杯投注125人打卡
+		3. AcWing 1486. 排队等候78人打卡
+		4. AcWing 1515. U 形 Hello World110人打卡
+		5. AcWing 1525. 独一无二110人打卡
+		6. AcWing 1526. 洗牌机101人打卡
+		7. AcWing 1531. 课程学生列表96人打卡
+		8. AcWing 1540. 主导颜色99人打卡
+		9. AcWing 1542. 老鼠和大米88人打卡
+		10. AcWing 1548. 才华与德行90人打卡
+		11. AcWing 1551. A + B 和 C96人打卡
+		12. AcWing 1555. 数字黑洞94人打卡
+		13. AcWing 1566. 研究生入学62人打卡
+		14. AcWing 1569. 成绩单87人打卡
+		15. AcWing 1582. 买还是不买89人打卡
+		16. AcWing 1585. 校园内的汽车63人打卡
+		17. AcWing 1595. 螺旋矩阵78人打卡
+		18. AcWing 1599. 合影68人打卡
+		19. AcWing 1614. 单身狗84人打卡
+		20. AcWing 1621. N 皇后问题72人打卡
+		21. AcWing 1622. 推荐系统73人打卡
+		22. AcWing 1625. 切整数78人打卡
+		23. AcWing 1633. 外观数列70人打卡
+		24. AcWing 1640. 堆74人打卡
+	第十章 并查集
+		1. AcWing 1485. 战争中的城市153人打卡
+		2. AcWing 1604. 家产114人打卡
+		3. AcWing 1608. 森林里的鸟137人打卡
+		4. AcWing 1597. 社会集群117人打卡
+		5. AcWing 836. 合并集合103人打卡
+	第九章 哈希表
+		1. AcWing 1532. 找硬币159人打卡
+		2. AcWing 1549. 集合相似度147人打卡
+		3. AcWing 1610. 朋友数144人打卡
+		4. AcWing 1637. 漏掉的数字141人打卡
+		5. AcWing 1642. 危险品装箱139人打卡
+		6. AcWing 1564. 哈希128人打卡
+		7. AcWing 1630. 期终成绩115人打卡
+		8. AcWing 1638. 哈希 - 平均查找时间107人打卡
+	第八章 动态规划
+		1. AcWing 1479. 最大子序列和111人打卡
+		2. AcWing 1529. 最佳彩色带93人打卡
+		3. AcWing 1554. 找更多硬币81人打卡
+		4. AcWing 1583. PAT 计数88人打卡
+		5. AcWing 1591. 快速排序86人打卡
+	第七章 数学完成情况：1/10
+		1. AcWing 1533. 1 的个数125人打卡
+		2. AcWing 1545. 质因子127人打卡
+		3. AcWing 1567. 有理数的和115人打卡
+		4. AcWing 1578. 有理数运算108人打卡
+		5. AcWing 1586. 连续因子113人打卡
+		6. AcWing 1593. 整数分解59人打卡
+		7. AcWing 1594. 数段之和110人打卡
+		8. AcWing 1602. 卡住的键盘91人打卡
+		9. AcWing 1606. C 语言竞赛86人打卡
+		10. AcWing 1646. 谷歌的招聘88人打卡
+	第六章 图论完成情况：16/19
+		1. AcWing 1475. 紧急情况198人打卡
+		2. AcWing 1507. 旅行计划184人打卡
+		3. AcWing 1518. 团伙头目155人打卡
+		4. AcWing 1577. 条条大路通罗马155人打卡
+		5. AcWing 1601. 在线地图129人打卡
+		6. AcWing 1615. 哈密顿回路149人打卡
+		7. AcWing 1619. 欧拉路径142人打卡
+		8. AcWing 1624. 地铁地图75人打卡
+		9. AcWing 1627. 顶点覆盖128人打卡
+		10. AcWing 1632. 第一次接触96人打卡
+		11. AcWing 1635. 最大集团114人打卡
+		12. AcWing 1639. 拓扑顺序119人打卡
+		13. AcWing 1643. 旅行商问题105人打卡
+		14. AcWing 1648. 顶点着色113人打卡
+		15. AcWing 1495. 公共自行车管理56人打卡
+		16. AcWing 1558. 加油站75人打卡
+		17. AcWing 1562. 微博转发82人打卡 
+		18. AcWing 849. Dijkstra求最短路 I115人打卡
+		19. AcWing 850. Dijkstra求最短路 II84人打卡
+	第五章 树完成情况：27/27
+		1. AcWing 1476. 数叶子结点250人打卡
+		2. AcWing 1497. 树的遍历235人打卡
+		3. AcWing 1498. 最深的根211人打卡
+		4. AcWing 1527. 判断二叉搜索树194人打卡
+		5. AcWing 1550. 完全二叉搜索树197人打卡
+		6. AcWing 1576. 再次树遍历184人打卡
+		7. AcWing 1589. 构建二叉搜索树188人打卡
+		8. AcWing 1592. 反转二叉树183人打卡
+		9. AcWing 1600. 完全二叉树182人打卡
+		10. AcWing 1605. 二叉搜索树最后两层结点数量178人打卡
+		11. AcWing 1609. 前序和后序遍历153人打卡
+		12. AcWing 1620. Z 字形遍历二叉树161人打卡
+		13. AcWing 1631. 后序遍历167人打卡
+		14. AcWing 1552. AVL树的根129人打卡
+		15. AcWing 1616. 判断完全 AVL 树122人打卡
+		16. AcWing 1628. 判断红黑树103人打卡
+		17. AcWing 1539. 等重路径141人打卡
+		18. AcWing 1584. 最大的一代147人打卡
+		19. AcWing 1565. 供应链总销售额116人打卡
+		20. AcWing 1580. 供应链最高价格115人打卡
+		21. AcWing 1596. 供应链最低价格112人打卡
+		22. AcWing 1649. 堆路径115人打卡
+		23. AcWing 1623. 中缀表达式117人打卡
+		24. AcWing 1636. 最低公共祖先108人打卡
+		25. AcWing 1644. 二叉树中的最低公共祖先104人打卡
+		26. AcWing 826. 单链表105人打卡
+		27. AcWing 836. 合并集合101人打卡
+	第四章 排序完成情况：11/11
+		1. AcWing 1484. 最佳排名185人打卡
+		2. AcWing 1499. 数字图书馆171人打卡
+		3. AcWing 1502. PAT 排名169人打卡
+		4. AcWing 1505. 列表排序166人打卡
+		5. AcWing 1523. 学生课程列表161人打卡
+		6. AcWing 1538. 链表排序151人打卡
+		7. AcWing 1561. PAT 评测127人打卡
+		8. AcWing 1588. 插入还是堆排序130人打卡
+		9. AcWing 1579. 插入还是归并98人打卡
+		10. AcWing 789. 数的范围103人打卡
+		11. AcWing 838. 堆排序108人打卡
+	第三章 进位制完成情况：5/5
+		1. AcWing 1482. 进制176人打卡
+		2. AcWing 1492. 可逆质数196人打卡
+		3. AcWing 1504. 火星颜色198人打卡
+		4. AcWing 1590. 火星数字173人打卡
+		5. AcWing 1496. 普通回文数149人打卡
+	第二章 高精度完成情况：6/6
+		1. AcWing 1474. 多项式 A + B251人打卡
+		2. AcWing 1481. 多项式乘积235人打卡
+		3. AcWing 1500. 趣味数字237人打卡
+		4. AcWing 1501. 回文数228人打卡
+		5. AcWing 1544. 霍格沃茨的 A + B151人打卡
+		6. AcWing 1629. 延迟的回文数145人打卡
+	第一章 字符串处理完成情况：19/20
+		1. AcWing 1473. A + B 格式399人打卡
+		2. AcWing 1477. 拼写正确382人打卡
+		3. AcWing 1478. 签到与签出359人打卡
+		4. AcWing 1519. 密码340人打卡
+		5. AcWing 1520. 男孩 vs 女孩324人打卡
+		6. AcWing 1534. 字符串减法322人打卡
+		7. AcWing 1557. 说话方式302人打卡
+		8. AcWing 1547. 约会270人打卡
+		9. AcWing 1493. 电话账单189人打卡
+		10. AcWing 1494. 银行排队166人打卡
+		11. AcWing 1503. 乒乓球66人打卡
+		12. AcWing 1546. 它们是否相等121人打卡
+		13. AcWing 1559. 科学计数法119人打卡
+		14. AcWing 1563. Kuchiguse116人打卡
+		15. AcWing 1568. 中文读数字78人打卡
+		16. AcWing 1570. 坏掉的键盘119人打卡
+		17. AcWing 1598. 求平均值108人打卡
+		18. AcWing 1617. 微博转发抽奖114人打卡
+		19. AcWing 1634. PAT单位排行105人打卡
+		20. AcWing 1647. 解码PAT准考证
