@@ -13280,20 +13280,435 @@
 		AcWing 454. 表达式求值71人打卡
 		AcWing 43. 不分行从上往下打印二叉树79人打卡
 	第七讲完成情况：0/6
-		AcWing 1572. 递归实现指数型枚举 II90人打卡
-		AcWing 93. 递归实现组合型枚举92人打卡
-		AcWing 1573. 递归实现组合型枚举 II85人打卡
-		AcWing 55. 连续子数组的最大和99人打卡
-		AcWing 62. 丑数91人打卡
-		AcWing 29. 删除链表中重复的节点83人打卡
-	第六讲完成情况：0/6
-		AcWing 92. 递归实现指数型枚举108人打卡
-		AcWing 94. 递归实现排列型枚举107人打卡
-		AcWing 1537. 递归实现排列类型枚举 II101人打卡
-		AcWing 145. 超市83人打卡
-		AcWing 1057. 股票买卖 IV77人打卡
-		AcWing 36. 合并两个排序的链表93人打卡
-	第五讲完成情况：0/7
+		todo AcWing 1572. 递归实现指数型枚举 II90人打卡
+		todo AcWing 93. 递归实现组合型枚举92人打卡
+		todo AcWing 1573. 递归实现组合型枚举 II85人打卡
+		AcWing 55. 连续子数组的最大和
+			1. 有意思. 一维的dp问题, 优化成一个点了
+			2. 解释:
+				f[k]: 
+					集合: 所有 以ind==k为结尾的连续子数组的元素和 的集合 
+					属性: 元素和 
+					状态转移: f[k] = max(0 + a[k], f(k-1) + a[k]) = max(a[k], f(k-1))
+						解释: f[k] 一定选了a[k]元素 
+							f[k]对应的连续子数组:
+								第一种情况: {a[0], a[1], a[], a[k-1], a[k]} 	|
+								第二种情况: {				..., a[k-1], a[k]} 	|-> 前面的情况都可以用 f(k-1) + a[k] 表示, 也就是一定选了 a[k-1], a[k]
+								...											|
+								第xx种情况: {					 a[k-1], a[k]} 	|
+								最后一种情况: {					 	 a[k]} 	 -> 最后一种情况用 0 + a[k] 表示 
+				计算完所有的f[0], f[1], ..., f[n-1] 之后, 我们求这些f[xx]的max
+			3. 因为 f[k] 只需要 前一个f[k-1]的值, 所以可以优化成一个点s
+			4. 
+				class Solution {
+				public:
+				    int maxSubArray(vector<int>& a) {
+				        int res = a[0], f = a[0];
+				        for (int i = 1; i < a.size(); i ++ )
+				        {
+				            f = a[i] + max(0, f); -> 对应了 f[k] = max(a[k], f[k-1])
+				            res = max(res, f);
+				        }
+
+				        return res;
+				    }
+				};
+		AcWing 62. 丑数
+
+		AcWing 29. 删除链表中重复的节点
+
+	第六讲
+		todo AcWing 92. 递归实现指数型枚举
+			#include <iostream>
+			using namespace std;
+			const int N = 20;
+			int n;
+			bool st[N];
+			void dfs(int u)
+			{
+			    if (u > n)  // 叶子节点
+			    {
+			        for (int i = 1; i <= n; i ++ )
+			            if (st[i])
+			                cout << i << ' ';
+			        cout << endl;
+			        return;
+			    }
+			    st[u] = true;
+			    dfs(u + 1);  // 选择当前数的分支
+
+			    st[u] = false;
+			    dfs(u + 1);  // 不选当前数的分支
+			}
+			int main()
+			{
+			    cin >> n;
+			    dfs(1);
+			    return 0;
+			}
+		todo AcWing 94. 递归实现排列型枚举
+			1. 和全排列的逻辑是一样的, 只不过全排列我们排列的是1,2,3,...,n是值
+				这里的1,2,3,...,n是ind, 对应的值是a[1], a[2], ... , a[n]
+			2. 
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 10;
+
+				int n;
+				int a[N], nums[N];
+				bool st[N];
+
+				void dfs(int u)
+				{
+				    if (u == n)
+				    {
+				        for (int i = 0; i < n; i ++ ) cout << nums[i] << ' ';
+				        cout << endl;
+				        return;
+				    }
+
+				    for (int i = 0; i < n; i ++ )
+				        if (!st[i])
+				        {
+				            nums[u] = a[i];
+				            st[i] = true;
+				            dfs(u + 1);
+				            st[i] = false;
+				            while (i + 1 < n && a[i + 1] == a[i]) i ++ ;
+				            	我的很棒的想法:
+				            		求下一个不一样的数字
+				            		你要不一样的, 那我while就和你反着来就很好了, 我就偏while一样的
+				            		那么 while(下一个下标合法 && 下一个数字还是和当前数字一样) 往下看 
+				        }
+				}
+
+				int main()
+				{
+				    cin >> n;
+				    for (int i = 0; i < n; i ++ ) cin >> a[i];
+
+				    sort(a, a + n);
+
+				    dfs(0);
+
+				    return 0;
+				}
+		todo AcWing 1537. 递归实现排列类型枚举 II
+		AcWing 145. 超市
+			#include <iostream>
+			#include <algorithm>
+			#include <queue>
+
+			#define x first
+			#define y second
+
+			using namespace std;
+
+			typedef pair<int, int> PII;
+
+			int main()
+			{
+			    int n;
+			    while (cin >> n)
+			    {
+			        vector<PII> prod(n);
+			        for (int i = 0; i < n; i ++ ) cin >> prod[i].y >> prod[i].x;
+			        sort(prod.begin(), prod.end()); //过期时间排序
+
+			        priority_queue<int, vector<int>, greater<int>> heap; //存的都是要卖的东西, 不在heap中的就是要抛弃的东西
+			        for (auto p : prod) //最早过期的东西先出来
+			        {
+			            heap.push(p.y);
+			         //   写法1:
+			         //   if (p.x >= heap.size()) // 我过期的时间 晚于 要卖的东西{包括我在内}卖光的那天
+			         //   	continue;
+			         //   heap.pop();
+			            
+			         // 写法2: 保守
+			         //   while(heap.size() > p.x) heap.pop();  //如果堆太拥挤了, 就抛弃最没用的, 注意这里抛弃的可能是我, 可是没关系
+			         
+			         // 写法3:
+			            if(heap.size() > p.x) heap.pop();
+			         //   注意过期时间是绝对值, 不是相对值. 也就是大家都从第1天开始, 第p.x天到期, 而不是说自己过了p.x天到期
+			         //   我p已经在堆里面了, 然后我要看看这个堆里面有多少人
+			         //   我是第p.x天到期, 如果堆里面的人超过了p.x个人, 就一定有一个人要被删除了 
+			         //       不用担心说, 之前加入的人, 他们会不会遇到堆里的人多过他们的第p.x天到期
+			         //       因为我这里是在证明我这一环没问题, 因为前面的他们也是和我同样的方法
+			         //       所以我没问题, 他们也没问题. 有种递归的感觉哈
+			         //       我没问题依赖于他们也没问题, 可是, 我没问题可以导致历史的他们也没问题
+			         //   至于删除谁, 不用考虑日期, 因为删掉那个人之后, 大家的日期肯定都是合格的 
+			         //       所以就删除最没用的
+
+			         //   为什么不用while? 因为没必要 
+			         //   很好的故事: 这个题目的确是可以体现贪心思想 
+			         //   	1. 每次往堆里加入一个元素, 如果加入的元素太多, 很挤的话, 我们就删掉一个
+			         //   	2. 删掉对没用的那一个 
+			         //   每次只是往堆里加入一个元素, 所以增加的速度是恒为1
+			         //   我们判断的限制{p.x}, 因为排序好的, 所以增加的速度最少为0, 最大是无穷
+			                 //   我们不考虑过期日期是无穷, 我们考虑最紧张的值, 也就是最晚的过期日期不变, 那也依旧是每次加一个删一个就好了, 用if就好了
+			         //   所以没必要用while, 用if就好了, 用while也可以{更保守}
+			         // 举例
+    			         //加入了第一个元素, 这个元素的过期是第一天, ok, 继续
+    			         //再加入一个元素, 这个元素的过期还是第一天, 删除, 保证堆不拥挤, 还是 heap.size() <= 最晚过期的第一天
+    			         //再加入一个元素, 这个元素的过期还是第一天, 删除, 保证堆不拥挤, 还是 heap.size() <= 最晚过期的第一天
+    			         //所以每次pop一次就够了
+
+			        }
+
+			        int res = 0;
+			        while (heap.size()) res += heap.top(), heap.pop();
+
+			        cout << res << endl;
+			    }
+
+			    return 0;
+			}
+			--
+			贪心策略：
+				在不过期的时间内优先卖出利润更大的产品。
+			新方法:
+				按照价值降序，每次扫描到一个价值，尝试一下在过期之前能不能卖出去；
+				此时可能已经有比它更大价值的产品占用了一些日期，于是从过期时间往前面找，直到找到一个空位置。
+				如果这个空位置大于0，那么就把这个产品安排在这天卖出。
+
+			暴力
+				找位置最坏复杂度可以达到 O(n^2)，所以用并查集优化
+				ff(i)返回的是, 记录他最近的前面的没卖东西的日期是哪天
+					区别于f[i], f[]是并查集, 存的是属于那一个集合. 也就是连续卖出东西的那一段日子
+				第i天: 	0		1		2		3		4		5
+					  	根		卖过		卖过				卖过
+				ff(1) = 0, 说明不能在第1天之前卖东西, 0是特殊值, 表示之前的天数都卖过东西了
+				ff(2) = 0, 说明不能在第2天之前卖东西, 0是特殊值, 表示之前的天数都卖过东西了
+				ff(3) = 3, 说明在第3天之前, 能卖东西的日子, 就是第3天
+				ff(4) = 3, 说明在第4天之前, 能卖东西的日子, 是第3天
+				ff(5) = 3, 说明在第5天之前, 能卖东西的日子, 就是第5天
+
+				更新也非常巧妙:
+					int pos = ff(e);	第e天过期, 那么第e天的前一个可以卖东西的日子是第pos天 
+					f[pos]--;
+					例如, pos == 4
+						刚开始, f[4] = 3, 于是我们在第3天卖东西
+						现在 f[4] --;
+							也就是原先, 第4天的前一个可以卖东西的日子是第3天, 现在第3天卖过了, 可以卖东西的日子就往前推
+							f[4] = 2;
+							你可能会疑惑了, 第2天已经卖了呀. 
+							别忘了, f[4] == 2 并不是说第4天的前一个卖东西的日子是第2天, 而是4的爸爸是2, 也就是4和2属于同一个集合
+							我们 ff(4) == 0
+			实测比优先队列快了三倍
+				#include <iostream>
+				#include <vector>
+				#include <algorithm>
+				using namespace std;
+				const int INF = 1e4 + 233;
+				typedef pair<int, int> PII;
+				vector<PII> a;
+				int f[INF];
+				int ff(int x)	
+				{
+				    if(f[x] == x) return x;
+				    return f[x] = ff(f[x]);
+				}
+				int main()
+				{
+				    int n;
+				    while(cin >> n)
+				    {
+				        int ans = 0;
+				        a.clear();
+				        int maxe = 0;
+
+				        for(int i = 1; i <= n; i++)
+				        {
+				            int v, e;
+				            scanf("%d%d", &v, &e);
+				            a.push_back({-v, e});
+				            maxe = max(maxe, e);
+				        }
+				        for(int i = 0; i <= maxe; i++) f[i] = i;	第i天的前一个没卖东西的是第i天, 其中f[0]=0是为了表示前面的日子都卖过了
+				        sort(a.begin(), a.end());					价值从大到小排序 
+				        for(int i = 0; i < (int)a.size(); i++)
+				        {
+				            int v = -a[i].first, e = a[i].second;
+				            int pos = ff(e);	第e天过期, 那么第e天的前一个可以卖东西的日子是第pos天 
+				            if(pos != 0) 		如果pos != 0, 说明可以卖东西
+				            {
+				                ans += v;		卖价值最大的
+				                f[pos]--;		这个非常巧妙
+				            }
+				        }
+				        printf("%d\n", ans);
+				    }
+				}
+		AcWing 1057. 股票买卖 IV {leetcode的题目:https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iv/}
+			注意:
+				第j笔交易: 买卖一轮算一笔交易
+			代码:
+				#include <cstring>
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 100010, M = 110, INF = 0x3f3f3f3f;
+
+				int n, m;
+				int w[N];
+				int f[N][M][2];
+
+				int main()
+				{
+				    scanf("%d%d", &n, &m);
+				    for (int i = 1; i <= n; i ++ ) scanf("%d", &w[i]);
+
+				    memset(f, -0x3f, sizeof f);
+				    for (int i = 0; i <= n; i ++ ) f[i][0][0] = 0; -> 前0,1,2,...,n天没有进行过股票交易, 没有持有股票的收益 == 0
+				    for (int i = 0; i <= n; i ++ ) f[i][0][1] = 0; -> 这一句写不写都行, 意为, 前0,1,2,...,n天没有进行过股票交易, 持有股票的收益{不可能的事情, 没交易怎么有股票} == 0
+				    	其实是否是0都无所谓, 因为我们求得是max
+				    	不过不能全都是-INF, 至少需要一个0来扩散
+
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 1; j <= m; j ++ )
+				        {
+				            f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
+				            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
+				        }
+
+				    int res = 0;
+				    for (int i = 0; i <= m; i ++ ) res = max(res, f[n][i][0]);
+
+				    printf("%d\n", res);
+
+				    return 0;
+				}
+			核心代码:
+			    for (int i = 1; i <= n; i ++ )
+			        for (int j = 1; j <= m; j ++ )
+			        {
+			            f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
+			            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
+			        }
+		    解释:
+		    	f[i][j][0/1]
+					表示第i天，正在位于或者已经完成了j笔交易{一买一卖}，现在手中有/没有票
+			代码解释:
+				注意, 这里的持有还是不持有, 都是闭市之后的状态
+					所以, 昨天持有, 今天没有{意味着是今天卖出的}
+					所以转移应该是:
+						"[j][1] 	-> 	[j][0]" --> "[j+1][1] -> [j+1][0]"
+						正在位于第j笔交易  完成第j笔	
+				f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
+					第i天, 已经完成第j笔交易, 且手里没有持有股票
+						两种解释, 对应不同的途径来:
+							1. 昨天持有:
+								f[i][j][0]解释为: 卖了第j笔股票
+								所以来源是: f[i - 1][j][1] : 昨天依旧是第j笔股票持有的状态
+							2. 昨天没持有:
+								f[i][j][0]解释为: 没有动股票, 依旧是第j笔交易 
+								所以来源是: f[i - 1][j][0]
+		        f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
+		        	第i天, 闭市之后手里持有股票
+						两种解释, 对应不同的途径来:
+							1. 昨天持有:
+								f[i][j][1]解释为: 没有动股票, 依旧是第j笔交易 
+								所以来源是: f[i - 1][j][1]
+							2. 昨天没持有:
+								f[i][j][1]解释为: 说明今天买的股, 开启了第j笔交易
+								所以来源是: f[i - 1][j - 1][0] : 昨天第j-1笔交易已经结束
+			初始化
+				代码:
+					memset(f, -0x3f, sizeof f); 负无穷
+				    for (int i = 0; i <= n; i ++ ) f[i][0][0] = 0;
+
+				解释:
+					如果一种状态不合法，或者不希望从这个状态转移过来 ，那么就把它设成正无穷或负无穷
+					因为这个题要求最大值，所以把不合法的设成负无穷，也这样这个状态不可能用来更新后来的状态
+					f[i][0][1] = 负无穷
+						例如这道题中f[i][0][1]表示，如果我们处理了0笔股票，并且我们手中居然还有票，这显然是不可能的
+					f[0][j][0]
+						例如这道题中f[0][j][0]表示，第0天就有一笔已经完成的第j个股票, 那难道是第-1天买入的这只股票? 这显然是不可能的
+					如果我们处理了0笔股票并且目前手里没有票，那收入就是0
+						即f[i][0][0] = 0
+
+			老师的另一种写法:
+				#include <cstring>
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 100010, M = 110, INF = 0x3f3f3f3f;
+
+				int n, m;
+				int w[N];
+				int f[N][M][2];
+
+				int main()
+				{
+				    scanf("%d%d", &n, &m);
+				    for (int i = 1; i <= n; i ++ ) scanf("%d", &w[i]);
+
+				    memset(f, -0x3f, sizeof f);
+				    f[0][0][0] = 0;
+
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 0; j <= m; j ++ )
+				        {
+				            f[i][j][0] = f[i - 1][j][0];
+				            if (j) f[i][j][0] = max(f[i][j][0], f[i - 1][j - 1][1] + w[i]);
+				            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j][0] - w[i]);
+				        }
+
+				    int res = 0;
+				    for (int k = 0; k <= m; k ++ ) res = max(res, f[n][k][0]);
+
+				    printf("%d\n", res);
+
+				    return 0;
+				}
+		AcWing 36. 合并两个排序的链表
+			1. 我特别喜欢链表
+				一个是可以把lt, lt->next看成实实在在的节点
+				另一个我们可以设置结构: lt->next = xx, 就是说明了 lt节点 和 xx节点 的关系
+			2. 解释 
+				1. 新建头部的保护结点dummy，设置cur指针指向dummy。
+				2. 若
+					1. 当前l1指针指向的结点的值val比l2指针指向的结点的值val小
+						则令cur的next指针指向l1，且l1后移, cur也后移
+					2. 否则
+						令cur的next指针指向l2，且l2后移, cur也后移
+				3. 循环以上步骤直到l1或l2为空。
+				4. 将剩余的l1或l2接到cur指针后边。
+				5. 返回链表的实际首部: dummy->next;
+			2. 代码
+				/**
+				 * Definition for singly-linked list.
+				 * struct ListNode {
+				 *     int val;
+				 *     ListNode *next;
+				 *     ListNode(int x) : val(x), next(NULL) {}
+				 * };
+				 */
+				class Solution {
+				public:
+				    ListNode* merge(ListNode* l1, ListNode* l2) {
+				        ListNode* dummy = new ListNode(0);
+				        ListNode* cur = dummy;
+				        while (l1 && l2) {
+				            if (l1->val < l2->val) cur = cur->next = l1, l1 = l1->next;	很流畅, 我喜欢 
+            				else cur = cur->next = l2, l2 = l2->next;
+				        }
+				        if (l1) cur->next = l1;
+				        if (l2) cur->next = l2;
+				        ListNode* res = dummy->next;
+				        delete dummy;
+				        return res;
+				    }  
+				};
+
+	第五讲
 		AcWing 104. 货仓选址
 		AcWing 1536. 均分纸牌
 			1. 这道题有意思, 画面就跟, 起伏的海浪, 最后都是根据势能, 逐个向左回落或者上涨, 最后海面恢复平静
@@ -13329,12 +13744,352 @@
 				a[4] += a[3] - 10 
 					 += 14 - 10 = 4
 					 == 6 + 4 == 10
-		AcWing 122. 糖果传递85人打卡
-		AcWing 106. 动态中位数82人打卡
-		AcWing 146. 序列75人打卡
-		AcWing 33. 链表中倒数第k个节点100人打卡
-		AcWing 786. 第k个数88人打卡
-	第四讲完成情况：0/6
+		* AcWing 122. 糖果传递
+			1. 本题+上题: 微软出过, 答对就special offer
+			2. 推导:
+				1. 公式:
+					a1 - x1 + xn 			= avg
+					a2 - x2 + x1 			= avg
+					a3 - x3 + x2 			= avg
+					...
+					a(n-1) - x(n-1) + x(n-2) = avg
+					an - xn + x(n-1) = avg
+				2. 分析
+					这里有n个已知数: a1, a2, ..., an, avg
+					这里有n个未知数: x1, x2, ..., xn
+					有n个方程, 因为解是唯一的, 所以我们一个方程是多余的, 可以删去, 我们删去第一个方程
+				3. 变形, 把所有的等号左侧的 -x1, -x2, ..., -xn 挪到等号右侧
+					// a1 + xn - avg 			= x1
+					a2 + x1 - avg 			= x2
+					a3 + x2 - avg 			= x3
+					...
+					a(n-1) + x(n-2) - avg 	= x(n-1)
+					an - xn + x(n-1) - avg 	= xn
+				4. 将所有的x2, x3... 都表示成x1的函数
+					x2 = x1 + a2 - avg
+					x3 = (x1 + a2 - avg) + a3 - avg  	= x1 + (a2 + a3) - 2*avg
+					...
+					xn = ...							= x1 + (a2 + a3 + ... + an) - (n-1)*avg
+				5. 简化:
+					设 c1 = 0 = 0*avg
+					设 c2 = a2 - 1*avg
+					设 c3 = (a2 + a3) - 2*avg
+					设 cn = (a2 + a3 + ... + an) - (n-1)*avg
+					错了! 不能这么设置, 需要取反
+						上述的错误设置, 会让 xn = x1 + cn, 但是我们要的是 xn = x1 - cn 
+					正确:
+						设 c1 = 0 = 0*avg
+						设 c2 = -(a2 - avg)	= 1*avg - a2
+						设 c3 = -((a2 + a3) - 2*avg) = 2*avg - (a2 + a3)
+						设 cn = -((a2 + a3 + ... + an) - (n-1)*avg) = (n-1)*avg - (a2 + a3 + ... + an)
+					实现:
+						c1, ..., cn都是常数, 都是可以计算出来的值!!! 
+						用前缀和来计算: (a2 + a3 + ... + an) = S[n] - a[1]
+						cn = (n-1) * avg - (S[n] - a[1])
+				6. 目标: 所有人传递糖果的个数最少
+					希望: |x1| + |x2| + ... + |xn| 最小
+					希望: |x1 - 0| + |x1 - c2| + |x1 - c3| + ... + |x1 - cn| 最小 
+				7. 这样就ok了
+					x1的取值就是 c1, ... cn的中位数 
+			3. 
+				#include <cstdio>
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				typedef long long LL;
+
+				const int N = 1000010;
+
+				int n;
+				LL s[N], c[N];
+
+				int main()
+				{
+				    scanf("%d", &n);
+				    for (int i = 1; i <= n; i ++ )
+				    {
+				        scanf("%lld", &s[i]);
+				        s[i] += s[i - 1];
+				    }
+
+				    LL avg = s[n] / n;
+				    求c1到cn:
+				    for (int i = 2; i <= n; i ++ ) c[i] = (i - 1) * avg - (s[i] - s[1]);	完全按照公式来 {c1, ..., cn}
+
+				    sort(c + 1, c + n + 1);
+
+				    LL md = c[(n + 1) / 2];	求{cn}序列的中位数的
+				    LL res = 0;
+				    for (int i = 1; i <= n; i ++ ) res += abs(c[i] - md);
+
+				    printf("%lld\n", res);
+
+				    return 0;
+				}
+		AcWing 106. 动态中位数
+			0. 非常智慧的一道题
+			1. 对顶堆
+				左边: 大根堆heap1, 堆顶ht1, ht1是堆的最大值
+				右边: 小根堆heap2, 堆顶ht2, ht2是堆的最小值
+
+					|\		  	  /|
+					| \		 	 / |
+					|  \ht1	 ht2/  |
+					|  /	    \  |
+	  				| /		     \ |
+	  				|/		      \|
+	  		2. 
+	  			#include <cstdio>
+				#include <cstring>
+				#include <iostream>
+				#include <algorithm>
+				#include <queue>
+
+				using namespace std;
+
+				int main()
+				{
+				    int T;
+				    scanf("%d", &T);
+				    while (T -- )
+				    {
+				        int id, n;
+				        scanf("%d%d", &id, &n);
+				        printf("%d %d\n", id, (n + 1) / 2);	输出编号, 输出的中位数的个数
+
+				        priority_queue<int> left;							左边: 大根堆
+				        priority_queue<int, vector<int>, greater<int>> right;	右边: 小根堆
+
+				        int cnt = 0;
+				        for (int i = 0; i < n; i ++ )
+				        {
+				            int x;
+				            scanf("%d", &x);	读入每个数字 
+
+				            看看读入的这个数字应该插在左边还是右边 
+				            if (left.empty() || x <= left.top()) 	如果左边是空的, 或者数字x小于左边的堆顶, x就属于左侧 
+				            	left.push(x);	
+				            else right.push(x);						否则就是右侧 
+
+				            接下来看看左右堆是否个数相当: 
+				            	我们的目标是: 
+				            		如果左右一共有偶数个数字, 那么移动完之后: 左 == 右
+				            		如果左右一共有奇数个数字, 那么移动完之后: 左比右多一个, 即, 左 == 右 + 1 > 右
+
+				            左比右多2个, 即, 左 - 右 >= 2, 例如{5个,3个}, 那么移动完之后, 左 == 右, 例如{4个,4个}
+				            if (left.size() - right.size() >= 2) 		左边多了2个
+				            	right.push(left.top()), left.pop();		右边加上左边的堆顶
+
+				            右比左多1个, 即, 右 - 左 >= 1, 例如{2个,3个}, 那么移动完之后, 左 == 右 + 1 > 右, 例如{3个,2个}
+				            if (right.size() - left.size() >= 1) 
+				            	left.push(right.top()), right.pop();	左边加上右边的堆顶
+				            我之前的疑问:
+				            	1. 如果右比左多2个呢, 那么我们只从右边移动了一个数字给左边是不是不够, 是不是用while而不是用if
+				            		其实不需要, 为什么, 要出现: 右比左多2个 的情况需要两个条件:
+				            			1. 前面代码中, right.push(x);	
+				            			2. 并且, 在此之前 右比左已经多1个 -> 这个条件不可能成立
+				            		所以还没等 右比左多1个 呢, 右就已经被打回原形了, 所以永远不会有 右比左多2个
+				            	2. 存不存在, 插入了偶数个数字, 左比右多几个数字, 而不是我们目标的左==右?
+				            		不存在, 为什么? 分情况讨论:
+				            			1. 情况1: 左比右多1个, 那他们两个之和就是奇数, 矛盾了
+				            			2. 情况2: 左比右多2个, 我们的代码会让左给右, 最后左==右
+				            			3. 情况3: 左比右多3个, 多2个都没可能, 你怎么来的3个
+				            	3. 存不存在, 插入了奇数个数字, 最后: 左 == 右, 不可能, 显而易见, 他们两个之和就是偶数, 矛盾了
+				            	3. 总结: 
+				            		如果左右一共有偶数个数字, 那么移动完之后: 左 == 右
+				            		如果左右一共有奇数个数字, 那么移动完之后: 左比右多一个, 即, 左 == 右 + 1 > 右
+
+				            如果插入了奇数个数字, 打印的就是左的顶, 因为左比右多一个
+				            if (i % 2 == 0){
+				                printf("%d ", left.top());
+				                if ( ++ cnt % 10 == 0) puts("");
+				            }
+				        }
+				        if (cnt % 10) puts("");
+				    }
+
+				    return 0;
+				}
+		* AcWing 146. 序列
+			1. 多路归并, 实在是太漂亮了, 我喜欢, 老师说面试必面多路归并
+			2. 故事:
+				1. 首先是题意:
+					1. 画面:	
+									第1个数字		第2个数字 	... 		第n个数字
+						第1行序列		x11  ----   x12 ---- x13 --------------			-> 挑一个数字 b1
+						第2行序列		--------------------------------------- 		-> 挑一个数字 b2
+						...
+						第m行序列		--------------------------------------- 		-> 挑一个数字 bm
+					2. {b1, b2, b3, ..., bm} -> 新序列, 序列的元素和 S = b1 + b2 + ... + bm 
+					3. 新序列{b}有多少种, 有 n^m 种
+						为什么?
+							第一行序列有n种选法, 第二行序列有n种选法, ..., 第m行序列有n种选法
+							n * n * n * ... * n = n^m
+					4. 每个新序列{b}都有它的序列的元素和 S = b1 + b2 + ... + bm 
+						所以有 n^m 个S
+					5. 题目是求S中, 最小的那n个的值 //这里是最小的n个, 而不是什么最小的100个200个, 而是最小的n个, 这是有讲究的 
+				2. 数学归纳法 + 多路归并
+					既然是元素和, 我们就可以用归纳法
+					1. 假设不是在前m行序列中选, 而是在前2行序列中选
+						会得到 n^2种不同的新序列: {b1, b2}
+						所以元素和S也是有 n^2 种 
+						我们将S里面的值都从小到大排序: {s1, s2, ... s{n^2}}
+							s1 = b1 + b2, 这里的b1肯定是第1行的最小值, b2肯定是第2行的最小值 
+							s2 = b1 + b2, 这里的b1是第1行的哪个数字? b2是第2行的哪个数字?
+								这里就用到了多路归并!!
+									1. 图画
+												-------------------------> 第一行的数字从小到大排序
+											|		A1 			A2 			A3 .... 		An
+											|B1   	{A1,B1}  	{A2,B1}		{A3,B1}        	{An,B1}
+											|
+											|B2 	{A1,B2}  	{A2,B2}		{A3,B2}			{An,B2}
+											|
+											|B3 	{A1,B3} 
+											|
+											↓Bn		{A1,Bn} 
+
+										第二行的数字不需要排序
+									2. 想象画面:
+										{A1,B1}, {A2,B1}, {A3,B1}, {An,B1} 
+											他们的和S = Ax+Bx, 这是一条递增的线a, 没错吧
+											因为A1到An是递增的, B1是不变的, 所以和是一条递增的线
+										{A1,B2}, {A2,B2}, {A3,B2}, {An,B2} 
+											他们的和S = Ax+Bx, 这是一条递增的线b, 没错吧
+											因为A1到An是递增的, B2是不变的, 所以和是一条递增的线
+										线a和线b的形状是一样的, 只是高低平移的关系没错吧
+										想象很多形状一样, 但是高低不同的线在一个空间里面 
+									3. 看S的最小值, 第二小的值
+										1. 最小值在哪里? 将第一列的所有元素放入一个集合中, 集合的最小值 
+												-------------------------> 第一行的数字从小到大排序
+											|		A1 			A2 			A3 .... 		An
+											|B1   	"{A1,B1}"  	{A2,B1}		{A3,B1}        	{An,B1}
+											|
+											|B2 	"{A1,B2}"  	{A2,B2}		{A3,B2}			{An,B2}
+											|
+											|B3 	"{A1,B3}"-> 假设这个是第一列最小值, 也就是全局的最小值
+											|		...
+											|
+											↓Bn		"{A1,Bn} "
+										2. 第二小的值在哪里? 将{A1,B3}从集合中删除, {A2,B3}插入我们的集合中, 集合的最小值就是
+												-------------------------> 第一行的数字从小到大排序
+											|		A1 			A2 			A3 .... 		An
+											|B1   	"{A1,B1}"  	{A2,B1}		{A3,B1}        	{An,B1}
+											|
+											|B2 	"{A1,B2}"  	{A2,B2}		{A3,B2}			{An,B2}
+											|
+											|B3 	x 			"{A2,B3}"
+											|		...
+											|
+											↓Bn		"{A1,Bn} "
+											解释:
+												1. 下一个最小值, 肯定在刚刚描述的集合中
+												2. 下一个最小值, 不可能是 {A2,B1}, 因为有 {A1,B1} < {A2,B1}, 所以轮不到{A2,B1}做最小值
+													其他的类似 
+					2. 现在我们已经通过多路归并, 找到S里面的最小的n个值: {s1, s2, ... sn}
+						那么现在数学归纳法, 考虑第3行序列, 那么第3行序列的S = b1 + b2 + b3, 我们要找到最小的前n个
+							1. 最小的一个, 很简单, 那就是b1,b2,b3对应的是第1,2,3行序列的最小值
+							2. 第二小的, 怎么求?
+								是b1,b2对应的是第1,2行序列的最小值 + b3对应的是第3行的第二小值
+								还是b1+b2对应的是第1,2行序列的第二小S + b3对应的是第3行的最小值
+							3. 又变成了上面的多路归并问题
+								只不过, 新的b1是上一轮的{b1+b2}, 新的b2是这一轮的b3 
+							4. 疑问, 我们是真的只会用到上一轮{b1+b2}的前n小的和吗, 会不会用到第n+1小的和 
+								不可能, 有更小的, 为什么不用更小的, 却要用第n+1小的
+			3. 
+				#include <cstdio>
+				#include <cstring>
+				#include <algorithm>
+				#include <queue>
+
+				#define x first
+				#define y second
+
+				using namespace std;
+
+				typedef pair<int, int> PII;		记录的是{b1+b2的和, 棋盘中的b2数字对应的行, 我们要遍历它的第i列, 也就是要看a[i] + b2}
+
+				const int N = 2010;				
+
+				int m, n;
+				int a[N], b[N], temp[N];
+
+				void merge()
+				{
+				    priority_queue<PII, vector<PII>, greater<PII>> heap;		小根堆, 记录最小的n个和
+
+				    for (int i = 0; i < n; i ++ ) heap.push({b[i] + a[0], 0}); 	把棋盘中的第一列元素推入, 第一列元素是 S = b[i] + a[0]
+				    															第二个维度是xx, 赛马场景中, b[i]对应的那一行, 我们应该判断的是第xx列, 也就是a[xx]
+				    for (int i = 0; i < n; i ++ ){
+				        auto p = heap.top();									最小值从集合里取出
+				        heap.pop();
+				        temp[i] = p.x;
+				        heap.push({p.x - a[p.y] + a[p.y + 1], p.y + 1});		非常的简洁:
+				        														刚推出的是 p.x == S = b[i] + a[0]
+				        														现在插入的是 b[i] + a[1] == S - a[0] + a[1] 
+				        																			   == p.x - a[p.y] + a[p.y + 1]
+				    }
+
+				    memcpy(a, temp, sizeof temp);								将temp数组, 复制到a中 {目标, 源, 源长}
+				}
+
+				int main()
+				{
+				    int T;
+				    scanf("%d", &T);
+				    while (T -- )
+				    {
+				        scanf("%d%d", &m, &n);				
+				        for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);	读入第一行的n个元素
+				        sort(a, a + n);										这一行排序 
+				        for (int i = 0; i < m - 1; i ++ ){					剩下的行
+				            for (int j = 0; j < n; j ++ ) scanf("%d", &b[j]);	读入下一行的n个元素, 不需要排序
+				            merge();										合并两行
+				        	merge完之后, 我们获得的新a[]依旧是排好序
+				        }
+				        for (int i = 0; i < n; i ++ ) printf("%d ", a[i]);
+				        puts("");
+				    }
+
+				    return 0;
+				}
+		AcWing 33. 链表中倒数第k个节点
+			0. 熟练:
+				1. 倒数第k个数, 就是ind == n-k的数字
+					很简单, 倒数第1个数 == 最后一个数 == ind是n-1
+				2. for()找到链表的第i个节点, 假设头结点的ind == 0
+					去第i个节点, 需要走i条边, for(遍历边数i)
+					去ind==1个节点, 需要走1条边, for(遍历边数), 即 for(int i = 0 ; i < 1; i++)
+				3. 总结
+					去倒数第k个数, 就是ind == n-k的数字
+					去ind==n-k个节点, 需要走n-k条边, for(遍历边数), 即 for(int i = 0 ; i < n-k; i++)
+				4. 宏观: 链表和数组是一模一样的:
+					数组: 访问ind==n-k个节点, arr[n-k]
+					链表: 访问ind==n-k个节点, for(int i = 0 ; i < n-k; i++) p = p->next; 最后的p就是
+			1.
+				/**
+				 * Definition for singly-linked list.
+				 * struct ListNode {
+				 *     int val;
+				 *     ListNode *next;
+				 *     ListNode(int x) : val(x), next(NULL) {}
+				 * };
+				 */
+				class Solution {
+				public:
+				    ListNode* findKthToTail(ListNode* pListHead, int k) {
+				        int n = 0;
+				        for (auto p = pListHead; p; p = p->next) n ++ ;     //为了得到链表长度需要遍历一次
+				        if (k > n) return nullptr;                          //k大于链表长度
+				        auto p = pListHead;
+				        for (int i = 0; i < n - k; i ++ ) p = p->next;      //倒数第k个数, 就是ind == n-k的数字
+
+				        return p;
+				    }
+				};
+		AcWing 786. 第k个数: 快排的应用 
+	第四讲
 		AcWing 1490. 最长上升子串 
 			1. 子串 != 子序列 
 			2. 有限集合的最值问题: 方案的个数是有限的, 在所有的方案中找min/max
