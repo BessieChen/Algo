@@ -13215,7 +13215,7 @@
 		AcWing 623. 投票30人打卡
 		AcWing 578. 去观光22人打卡
 		AcWing 80. 骰子的点数31人打卡
-	第十六讲完成情况：0/7
+	第十六讲
 		AcWing 1768. H 指数50人打卡
 		AcWing 1769. H 指数 II47人打卡
 		AcWing 1158. H指数39人打卡
@@ -13223,66 +13223,1583 @@
 		AcWing 558. 乘积三元组30人打卡
 		AcWing 1060. 墙的重建26人打卡
 		AcWing 53. 最小的k个数39人打卡
-	第十五讲完成情况：0/6
+	第十五讲
 		AcWing 1318. 取石子游戏56人打卡
 		AcWing 1302. 矩阵 A × B54人打卡
 		AcWing 1262. 鱼塘钓鱼42人打卡
 		AcWing 1274. 奶牛排队43人打卡
 		AcWing 1306. 迷路16人打卡
 		AcWing 89. a^b42人打卡
-	第十四讲完成情况：0/6
+	第十四讲
 		AcWing 1254. 找树根和孩子57人打卡
 		AcWing 1255. 医院设置55人打卡
 		AcWing 1256. 扩展二叉树53人打卡
 		AcWing 1764. 修塔游戏38人打卡
 		AcWing 1120. 埃及分数33人打卡
 		AcWing 79. 滑动窗口的最大值45人打卡
-	第十三讲完成情况：0/6
-		AcWing 1099. 仙岛求药64人打卡
+	第十三讲
+		AcWing 1099. 仙岛求药
+			bfs:
+				内部搜索: 就是遍历4个方向, 8个方向的题目. 
+				外部搜索: 像是八数码那种, 整个棋盘看做一个状态.
+			状态表示:
+				string 
+				二进制 
+					效率高, 代码短 
+
 		AcWing 1102. 移动骑士60人打卡
 		AcWing 1103. 棋盘游戏58人打卡
 		AcWing 1111. 字母60人打卡
-		AcWing 1114. 棋盘问题52人打卡
+		AcWing 1114. 棋盘问题
+			#include <iostream>
+			using namespace std;
+			const int N = 10;
+			int n, k;
+			char g[N][N];
+			bool col[N];                        //表示哪些列被占用了
+			int dfs(int u, int s)
+			{
+			    if (s == k) return 1;           //已经放够了棋子
+			    if (u == n) return 0;           //棋盘已经放满
+
+			    int res = dfs(u + 1, s);         该行不放棋子的情况. 这里用的是=而不是+=, 因为一上来就 dfs(), 那么第一次回溯的时候, 底部情况是全都不放旗子, 所以执行了: if (u == n) return 0;  , 所以返回的是0, res = 0
+			    for (int i = 0; i < n; i ++ )
+			        if (g[u][i] == '#' && !col[i])
+			        {
+			            col[i] = true;
+			            res += dfs(u + 1, s + 1);
+			            col[i] = false;         //恢复现场
+			        }
+			    return res;
+			}
+
+			int main()
+			{
+			    while (cin >> n >> k, ~n || ~k)
+			    {
+			        for (int i = 0; i < n; i ++ ) cin >> g[i];
+
+			        cout << dfs(0, 0) << endl;      //从第0行开始，当前有0个棋子
+			    }
+
+			    return 0;
+			
 		AcWing 75. 和为S的两个数字59人打卡
-	第十二讲完成情况：0/6
-		AcWing 1051. 最大的和68人打卡
-		AcWing 1026. 乘积最大62人打卡
-		AcWing 1698. 余数的最大值58人打卡
-		AcWing 1025. 开餐馆58人打卡
-		AcWing 1028. 复制书稿50人打卡
-		AcWing 1090. 绿色通道36人打卡
-	第十一讲完成情况：0/6
-		AcWing 48. 复杂链表的复刻69人打卡
-		AcWing 680. 剪绳子74人打卡
-		AcWing 1645. 不同的二叉搜索树73人打卡
-		AcWing 415. 栈62人打卡
+	第十二讲
+		AcWing 1051. 最大的和
+			注意s和f, s和g的含义是不一样的
+			s[i]是一定以i为右端点的最大...
+			f[i]是s[0]到s[i]之间的最大值, 所以不一定选择了i为右端点
+		AcWing 1026. 乘积最大
+			#include <iostream>
+			using namespace std;
+			typedef long long LL;
+			int n, k;
+			string num;
+			LL dfs(int u, int s, LL v, LL p)
+			{
+			    if (u == n)	如果遍历到了最后一个数字的下一位, 说明所有的数字都遍历了
+			    {
+			        if (s == k + 1) return p;       一定要用够所有的乘号
+			        return -1;						否则方案就是不合法的, 因为我们之后会用 max(), 所以这里返回一个-1, 表示不会用到
+			    }
+			    else 
+			    {
+			        v = v * 10 + num[u] - '0';      当前用到的数字是 num[u] - '0', 因为我们是从u=0开始, 所以先遍历到的是高位的数字, 所以之前的高位数字要被抬高: v * 10
+
+			        
+			        return max(dfs(u + 1, s, v, p), 		//在第u位后面不加乘号的情况: 所以s不变, 值v要继续算, p待定
+			        		dfs(u + 1, s + 1, 0, p * v));	//在第u位后面加乘号的情况: s+1, 值v要从头开始算所以是0, p乘上之前算好的那一段数字v
+
+			    }
+			}
+
+			int main()
+			{
+			    cin >> n >> k >> num;
+			    cout << dfs(0, 0, 0, 1) << endl;    四个参数分别为：枚举到ind==0的数字，当前用到ind==0的乘号，当前用乘号分割出来的那一段数字的值{例如"xx*123*xxx"就是值123}，累积的乘积
+
+			    return 0;
+			}
+		AcWing 1698. 余数的最大值{双向dfs + 双指针}
+			1. 背包不行: n*m = 3.4*1e10
+				每个数字, 选或者不选2种方案, 34个数字一共是2^34种方案
+			2. dfs: 
+				dfs也就是暴搜, 他的时间复杂度取决于要遍历的节点个数 
+			3. 这道题因为n很小, 所以用暴搜
+			4. 经常考: 阿里面试题
+				双向搜索/双向dfs : 空间换时间??
+			5. 2^34 -> 2*(2^17)
+			6. 复杂度: 2^17 * log(2^17)
+			的确很棒
+			也就是任意的选法, 都可以看成从左边选+从右边选的组合
+			所以把左边选看成单独的小问题
+			最后两个集合混在一起
+			因为求<m的最大值, 所以用双指针 
+		AcWing 1025. 开餐馆{dp + 双指针}
+			其实这道题, 说难也难说简单也简单
+				1. 难在: 状态表示: f(i) 一定选ind==i的餐厅, 且ind==i之前的餐厅可选可不选的利润最大值 
+				2. 简单在: 状态转移:
+					ind==i之前的餐厅可以选的有哪些:
+						可以不选, 选ind == 1, 2, ,3..., j
+						j的条件是: 在i的左边, 最近的那个距离i的距离大于k的餐馆						
+					f[i] = max(f[0] + f[1] + ... + f[j]) + p[i]	
+						如果是 f[0] + p[i], 也就是左边什么都不选, 只选第i个餐馆
+						如果是 f[1] + p[i], 也就是选第1个餐馆{它的左边可选可不选我们不知道}, 选第i个餐馆
+						如果是 f[j] + p[i], 也就是选第j个餐馆{它的左边可选可不选我们不知道}, 选第i个餐馆
+					设 maxf = max(f[0] + f[1] + ... + f[j]), 所以不要以为maxf一定是选了第j个餐馆的
+						f[i] = max(f[0] + f[1] + ... + f[j]) + p[i]	
+						f[i + 1] = max(f[0] + f[1] + ... + f[j] + f[j + 1]) + p[i + 1]
+						所以maxf的计算也是可以滚动往后的, 所以只需要 O(1)存储就好了
+
+			#include <iostream>
+			#include <algorithm>
+
+			using namespace std;
+
+			const int N = 110;
+
+			int n, k;
+			int m[N], p[N], f[N];                   //f[i]表示在第i个点开餐馆的最大利润
+
+			int main()
+			{
+			    int T;
+			    cin >> T;
+
+			    while (T -- )
+			    {
+			        cin >> n >> k;
+			        for (int i = 1; i <= n; i ++ ) cin >> m[i];
+			        for (int i = 1; i <= n; i ++ ) cin >> p[i];
+
+			        for (int i = 1, j = 0, maxf = 0; i <= n; i ++ )
+			        {
+			            while (m[i] - m[j + 1] > k)     //j是指向i的前面第2个, 如果j+1是合法的, 即m[i]和m[j+1]的距离足够远, 我们就去j+1判断两家餐馆距离是否大于k
+			            {
+			            	j ++ ;					//去j+1的位置
+			                maxf = max(maxf, f[j]); //maxf
+			            }
+			            while出来的时候, j依旧是合法的
+			            f[i] = maxf + p[i];        
+			        }
+
+			        int res = 0;                    //遍历所有状态找最大值
+			        for (int i = 1; i <= n; i ++ ) res = max(res, f[i]);	
+
+			        cout << res << endl;
+			    }
+
+			    return 0;
+			}
+		AcWing 1028. 复制书稿
+			一看到题目要求最大值最小，就要条件反射想到二分：
+				一个情况{世界}下存在一个最慢完成的人
+				所有的情况{所有的平行世界}, 总有一个情况{世界}的那个最慢的人速度是最快的
+				二分的就是不同的世界
+			二分的是最慢的那个人需要的时间sum
+				sum越大, 我们划分出来需要的人数也就越小
+				sum越小, 我们划分出来需要的人数也就越多 
+			假设划分出来的需要的人是x
+				如果x小于题目给的k, 说明没有利用全部人, 再利用一点人, 每个人工作量减小, sum减小
+				如果x大于题目给的k, 说明人数不够, 每个人工作量增大, sum增加
+				如果x==题目给的k, 因为题目要的是最小的sum, 所以在危险的边缘再试探试探, sum减小
+			代码
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 510;
+
+				int n, k;
+				int w[N], L[N], R[N];           //L和R记录每个人负责的书目
+
+				bool check(int sum)
+				{
+				    int s = 0, cnt = 1;         //s：某个人它需要的时间，cnt：我们当前是判断第cnt个人
+				    R[cnt] = n;		第1个人的右边界是第n本书
+				    for (int i = n; i; i -- )   //题目要求则尽可能让前面的人少抄写{抄写的书本个数少},所以从后往前枚举
+				    {
+				        if (s + w[i] <= sum) s += w[i];	如果加上第i本书之后, 还是没有超过时间sum, 就让这个人再继续抄这本书
+				        else						否则就是超过时间了, 判断下一个人 
+				        {
+				            L[cnt] = i + 1;			第cnt个人的左边界是第i + 1本书, 注意这句话不能再上面的if中写, 因为上面的if还在继续抄书
+				            cnt ++ ;
+				            R[cnt] = i;				第cnt + 1个人的右边界是第i本书
+				            s = w[i];
+				        }
+				    }
+				    L[cnt] = 1;
+
+				    return cnt <= k;            //判断需要的人手是否小于等于给定人手
+				}
+
+				int main()
+				{
+				    cin >> n >> k;
+
+				    int l = 0, r = 1e9;
+				    for (int i = 1; i <= n; i ++ )
+				    {
+				        cin >> w[i];
+				        l = max(l, w[i]);       
+				    }
+
+				    while (l < r)               //二分出最短时间内每个人能抄的最大页数
+				    {
+				        int mid = l + r >> 1;
+				        if (check(mid)) r = mid;    //若k个人每人抄mid页能够抄完，说明还有提升空间
+				        else l = mid + 1;
+				    }
+
+				    check(r);                   首先, 退出while的时候的r肯定是合法的, 但是最后更新一次L和R
+
+				    for (int i = k; i; i -- ) cout << L[i] << ' ' << R[i] << endl;
+
+				    return 0;
+				}
+
+				作者：我要出去乱说
+				链接：https://www.acwing.com/solution/content/35776/
+				来源：AcWing
+				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+		AcWing 1090. 绿色通道
+			1. 在空题长度不超过limit的情况下, 最小需要的时间是t
+			2. 
+				一个情况{世界}下存在很多段空题, 有一段空题长度是最长的
+				所有的情况{所有的平行世界}, 总有一个情况{世界}的那个最长空题是最短的
+				二分的就是不同的世界
+			3.
+				#include <cstring>
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 50010;
+				int n, m;
+				int w[N];
+				int q[N], f[N];
+				bool check(int limit)
+				{
+				    int hh = 0, tt = 0;
+				    for (int i = 1; i <= n; i ++ )
+				    {
+				        if (q[hh] < i - limit - 1) hh ++ ;
+				        f[i] = f[q[hh]] + w[i];
+				        while (hh <= tt && f[q[tt]] >= f[i]) tt -- ;
+				        q[ ++ tt] = i;
+				    }
+				    for (int i = n - limit; i <= n; i ++ )
+				        if (f[i] <= m)
+				            return true;
+				    return false;
+				}
+
+				i-k-1 [i-k, i-1]      i
+				抄     不抄的长度为k     抄
+					  (i-k)+k-1=(i-1)
+
+				int main()
+				{
+				    cin >> n >> m;
+				    for (int i = 1; i <= n; i ++ ) cin >> w[i];
+				    int l = 0, r = n;
+				    while (l < r){
+				        int mid = l + r >> 1;		mid是最长的空题长度
+				        if (check(mid)) r = mid;	如果mid这个长度还是可以在规定时间完成所有的题目, 那么我们就再让mid减小, 让老师更满意 
+				        else l = mid + 1;			如果mid这个长度已经完不成了, 我们到达极限了, 就退出 
+				    }
+				    printf("%d\n", r);
+				    return 0;
+				}
+	第十一讲
+		AcWing 48. 复杂链表的复刻{感觉像语法题, 真的非常灵活的考验了链表节点}
+			1. 首先先忽略random指针, 把整个链表复制
+			2. hash表{unordered_map}做映射
+			3. 复制random指针: 
+				假设 a->random = b
+				那么, 我们就将: a的映射点->random = b映射点
+			/**
+			 * Definition for singly-linked list with a random pointer.
+			 * struct ListNode {
+			 *     int val;
+			 *     ListNode *next, *random;
+			 *     ListNode(int x) : val(x), next(NULL), random(NULL) {}
+			 * };
+			 */
+			时间：O(n)， 额外空间：O(n)
+			class Solution {
+			public:
+			    ListNode *copyRandomList(ListNode *head) {
+			        if (!head) return head;
+			        unordered_map<ListNode*, ListNode*> pos;    //哈希表储存映射
+
+			        pos[NULL] = NULL;
+			        for (auto p = head; p; p = p->next)
+			            pos[p] = new ListNode(p->val);		左侧p是实际点, 右侧是用值p->val创建映射点 new ListNode(p->val) , pos[p] = xxx, 是映射关系 
+
+			        for (auto p = head; p; p = p->next)
+			        {
+			            pos[p]->next = pos[p->next];            p的映射点{pos[p]}的next, 指向p的next的映射点{pos[p->next]}
+			            pos[p]->random = pos[p->random];		p的映射点{pos[p]}的random, 指向p的random的映射点{pos[p->random]}
+			        }
+
+			        return pos[head];	返回的是头结点的映射点. 所以映射点们, 就是我们的复制后的结果
+			    }
+			};
+
+			时间：O(n)， 额外空间：O(1), 时间无法再优化因为最少也要遍历一遍链表, 但是空间可以优化
+			class Solution {
+			public:
+			    ListNode *copyRandomList(ListNode *head) {
+			        for (auto p = head; p;)                     在每个点后面添加一个它的复制:
+			        											5->4->3->2->1->null
+			        											5->'5'->4->'4'->3->'3'->2->'2'->1->'1'->null
+			        {
+			            auto np = new ListNode(p->val);	new一个p的映射点np
+			            auto next = p->next;			随便找个东西, 指向实际点p的next
+			            p->next = np;					我们让p的next从原来的next变为映射点np
+			            np->next = next;				映射点np的next再指向原来实际点p的next
+			            p = next; 						p变为, 原来实际点p的next
+			        }
+
+			        for (auto p = head; p; p = p->next->next)   //复制random指针
+			            if (p->random)	new出的节点的random默认是空, 如果只有当random有值的时候才需要复制 
+			                p->next->random = p->random->next;
+			            		我超级喜欢这一句:
+			            			p的映射点{p->next}的random, 是p的random的映射点{p->random->next}
+
+
+			        题目要求不能修改原链表的结构, 所以我们分离两个链表
+			        auto dummy = new ListNode(-1);
+			        auto cur = dummy;
+			        我们要做的, dummy将所有映射点都串起来, 然后恢复原来的结构: 实际点p的next从映射点改为原来实际点p的next
+			        for (auto p = head; p; p = p->next)
+			        {
+			            cur->next = p->next;		dummy/cur的next指向映射点{p->next}
+			            cur = cur->next;			cur变为映射点
+			            p->next = p->next->next;	实际点p的next从映射点改为原来实际点p的next
+			        }
+
+			        return dummy->next;	返回的就是复制的链表 
+			    }
+			};
+		AcWing 680. 剪绳子
+			1. 类似的题目: 砍树, 怎么砍, 能有M根房梁, 我们房梁最长可以多长
+			2. 很简单, 就是二分长度
+			3. 
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 1e5 + 10;
+
+				int n, m;
+				double maxv;
+				double len[N];
+
+				bool check(double x)
+				{
+				    int res = 0;
+				    for (int i = 0; i < n; i ++ )
+				    {
+				        res += len[i] / x;			这里也是我没有想到的, 那就是直接除法就好了, 也就是第i根绳子的长度, 可以剪出几根长度为x的绳子 
+				        							我之前以为是减法, 然后小段可以拼接, 但是绳子是不能够拼的, 所以直接无脑剪成一样的长度x就好了
+				        							res是指剪出了几条我们要的绳子
+				        if (res >= m) return true;	
+				    }
+
+				    return false;
+				}
+
+				int main()
+				{
+				    scanf("%d%d", &n, &m);
+
+				    for (int i = 0; i < n; i ++ )
+				    {
+				        scanf("%lf", &len[i]);
+				        maxv = max(maxv, len[i]);	剪完之后的长度的最大值maxv, 不可能长过最长的那根绳子
+				    }
+
+				    double l = 0, r = maxv;         //裁剪最后的长度范围
+				    while (r - l > 1e-6)
+				    {
+				        double mid = (l + r) / 2;
+				        if (check(mid)) l = mid;    小数二分, 是精度的100倍, 例如要求保留小数点的后k=4位, 那我们就保证l和r的差值在 10^(-(k+2)) = 1e-6
+				        else r = mid;
+				    }
+
+				    printf("%.2lf\n", l);
+
+				    return 0;
+				}
+		AcWing 1645. 不同的二叉搜索树
+			1. 两种问法是一样的:
+				1. 节点编号不同, 能构成多少种不同形态的二叉搜索树{即中序遍历的话节点编号递增}
+				2. 节点编号相同, 能构成多少种不同形态的树
+			2. 其实非常简单:
+				1. 状态表示: f(i): 一棵树的节点个数是i, 它的不同形态个数是 f(i)
+				2. 状态计算:
+					1. 划分
+						原则: 不重复不遗漏
+							本题是求个数, 所以划分一定要不重不漏 
+							如果是求什么max, 划分要不遗漏, 但是可以重复 
+						本题划分: 左子树的节点个数
+							其中, 我们要枚举左子树的节点个数: k = 0, 1, ..., i - 1
+							假设一棵树的节点个数是i, 如果它的左子树的节点个数是k, 那么它的右子树的节点个数是: (i - 1 - k)
+								因为除去自己这个节点, 所以要i-1
+					2. 计算: 这棵树的形态个数 == 左子树的形态个数 * 右子树的形态个数
+						f(i) = sum(f(k) * f(i - 1 - k)), k = 0, 1, ..., i - 1
+			3. 初始化:
+				如果一棵树不存在, 我们也初始化为1, 因为如果初始化为0, 0乘上谁都是0, 会破坏我们的规律中乘法的一般性
+			3. 
+				#include <iostream>
+				using namespace std;
+				typedef long long LL;
+				const int N = 1010, MOD = 1e9 + 7;
+				int n;
+				int f[N];
+				写法1:
+				int main()
+				{
+				    cin >> n;
+				    f[0] = 1;	但是我们不能多此一举写上 f[1] = 1, 虽然的确是如果一棵树只有一个节点, 那么它的形态个数是1.可是我们的递推式子中, 是从i==1开始的, 所以 f[1] = (f[1] + (LL)f[0] * f[0]) % MOD; 就会变为 f[1] = (1 + 1) % mod 
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 0; j < i; j ++ )
+				            f[i] = (f[i] + (LL)f[j] * f[i - 1 - j]) % MOD;
+				    cout << f[n] << endl;
+				    return 0;
+				}
+				写法2:
+				int main()
+				{
+				    cin >> n;
+				    f[0] = 1, f[1] = 1;	其实可以这么初始化, 不过 i要从2开始计算. 
+				    for (int i = 2; i <= n; i ++ )
+				        for (int j = 0; j < i; j ++ )
+				            f[i] = (f[i] + (LL)f[j] * f[i - 1 - j]) % MOD;
+				    
+				    cout << f[n] << endl;
+				    return 0;
+				}
+		AcWing 415. 栈
+			1. 23:48 https://www.acwing.com/video/1091/
+			1. 33:05 https://www.acwing.com/video/1091/
+			3. 35:07 https://www.acwing.com/video/1091/
+				两者相通
 		AcWing 50. 序列化二叉树59人打卡
-		AcWing 60. 礼物的最大价值64人打卡
-	第十讲完成情况：0/6
-		AcWing 730. 机器人跳跃问题81人打卡
-		AcWing 845. 八数码72人打卡
-		AcWing 167. 木棒50人打卡
-		AcWing 731. 毕业旅行问题54人打卡
-		AcWing 45. 之字形打印二叉树64人打卡
-		AcWing 46. 二叉搜索树的后序遍历序列62人打卡
-	第九讲完成情况：0/6
-		AcWing 1611. 寻找峰值95人打卡
-		AcWing 843. n-皇后问题85人打卡
-		AcWing 1613. 数独简单版78人打卡
-		AcWing 1612. 最大正方形88人打卡
-		AcWing 52. 数组中出现次数超过一半的数字89人打卡
-		AcWing 901. 滑雪70人打卡
-	第八讲完成情况：0/6
-		AcWing 131. 直方图中最大的矩形93人打卡
-		AcWing 152. 城市游戏81人打卡
-		AcWing 1574. 接雨水80人打卡
-		AcWing 1575. 盛水最多的容器76人打卡
-		AcWing 454. 表达式求值71人打卡
-		AcWing 43. 不分行从上往下打印二叉树79人打卡
-	第七讲完成情况：0/6
-		todo AcWing 1572. 递归实现指数型枚举 II90人打卡
-		todo AcWing 93. 递归实现组合型枚举92人打卡
-		todo AcWing 1573. 递归实现组合型枚举 II85人打卡
+		AcWing 60. 礼物的最大价值
+			1. 数字三角形/摘花生
+			2. class Solution {
+				public:
+				    int getMaxValue(vector<vector<int>>& grid) {
+				        int n = grid.size(), m = grid[0].size();
+
+				        // vector<vector<int>> f(n + 1, vector<int>(m + 1));   //格式要统一用二维vector
+				        int f[n + 1][m + 1];
+				        memset(f, 0, sizeof f);
+				        for (int i = 1; i <= n; i ++ )
+				            for (int j = 1; j <= m; j ++ )
+				                f[i][j] = max(f[i - 1][j], f[i][j - 1]) + grid[i - 1][j - 1];	因为在每个位置，我们可以从其上方及其左方走来，理所当然，我们也从左方与上方转移状态。
+
+				        return f[n][m];
+				    }
+				};
+
+	第十讲
+		AcWing 730. 机器人跳跃问题
+			今日头条: 5题2h, 有点难
+			此题目: 难度刚刚好, 容易出
+			题目的分类:
+				1. 模拟题
+					有确定解, 用数据结构优化等
+				2. 优化题
+					有限集合: dp/贪心/暴搜{dfs}
+					无限集合: 数学, 二分{需要有序}
+			问面试官, 数据范围, 暗示了用什么方法 
+				一般ACM或者笔试题的时间限制是1秒或2秒。
+				在这种情况下，C++代码中的操作次数控制在 10^7∼10^8 为最佳。
+				下面给出在不同数据范围下，代码的时间复杂度和算法该如何选择：
+					n≤30, 指数级别, dfs+剪枝，状态压缩dp
+					n≤100 => O(n^3)，floyd，dp，高斯消元
+					n≤1000 => O(n^2)，O(n^2*logn)，dp，二分，朴素版Dijkstra、朴素版Prim、Bellman-Ford
+					n≤10000 => O(n∗sqrt(n))，块状链表、分块、莫队
+					n≤100000 => O(nlogn) => 各种sort，线段树、树状数组、set/map、heap、拓扑排序、dijkstra+heap、prim+heap、spfa、求凸包、求半平面交、二分、CDQ分治、整体二分
+					n≤1000000 => O(n)O(n), 以及常数较小的 O(nlogn)O(nlogn) 算法 => 单调队列、 hash、双指针扫描、并查集，kmp、AC自动机，常数比较小的 O(nlogn)O(nlogn) 的做法：sort、树状数组、heap、dijkstra、spfa
+					n≤10000000 => O(n)O(n)，双指针扫描、kmp、AC自动机、线性筛素数
+					n≤10^9 => O(sqat(n))，判断质数
+					n≤10^18 => O(logn)O(logn)，最大公约数，快速幂
+					n≤10^1000 => O((logn)^2)，高精度加减乘除
+					n≤10^100000 => O(logk×loglogk)，k表示位数，高精度加减、FFT/NTT
+					链接：https://www.acwing.com/blog/content/32/
+			这道题是经典的二分, 是在初始能量的所有可能值中去二分. 因为具有单调性.
+			具体地说: 
+				如果初始能量分别是 x0, x1, x2. 其中 x0 < x1 < x2, 那么最终能量 y0, y1, y2 的关系也是 y0 < y1 < y2.
+				因为我们的能量计算公式是:
+					初始能量: E0
+					楼高: h0, h1, h2... hn 
+					第一次跳跃后的能量: 2*E0 - h0 
+						解释: 
+							当 E0 < h0, E0 - (h0 - E0) = 2*E0 - h0
+							当 E0 > h0, E0 + (E0 - h0) = 2*E0 - h0
+					同理, 第二次跳跃后的能量: 2*(2*E0 - h0) - h1 
+					...
+					如果某次跳跃之后是负值, 那就一直是负值
+					如果某次跳跃之后的值大于我们 max(h0, h1, ..., hn), 那就一直是正值{也就是我们成功了}
+						解释:
+							因为 E(n+1) = 2En - hn = En + (En - hn), 如果我们的 En > max(h0, h1, ..., hn)
+							那么 E(n+1) = En + 正数 > En > max(h0, h1, ..., hn)
+							同样的道理可以延伸到 E(n+2)也是正数, 总之就是一直是正数 
+				题目问: 机器人至少以多少能量值开始游戏，才可以保证成功完成游戏{成功: 在这个过程中能量值不能为负数个单位}
+					所以我们就是二分初始能量值E0
+					二分的起始范围: [0, max(h0, h1, ..., hn)], 题目说了 1 <= Hi < 1e5, 所以二分的范围就是 [0, 1e5]. 
+					我们希望找到最小的E0, 这个E0能在某次跳跃之后的值大于我们 max(h0, h1, ..., hn), 那就一直是正值{也就是我们成功了}
+
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int n;
+				int h[N];
+				bool check(int e)                       //判断机器人初始能量为e时能否到达N号建筑
+				{
+				    for (int i = 1; i <= n; i ++ )
+				    {
+				        e = e * 2 - h[i];
+				        if (e >= 1e5) return true;      //e只要大于1e5，之后就只会增加不会减少了，故返回true
+				        if (e < 0) return false;        //同理，e只要小于0就只会减少不会增加了，故返回false
+				    }
+				    return true;
+				}
+				int main()
+				{
+				    cin >> n;
+				    for (int i = 1; i <= n; i ++ ) cin >> h[i];
+				    int l = 0, r = 1e5;                 //经典二分模板
+				    while (l < r)
+				    {
+				        int mid = l + r >> 1;
+				        if (check(mid)) r = mid;	如果是的话, 我们希望往左找, 并且r本身可能是答案
+				        else l = mid + 1;			否则就只往右找
+				    }
+				    cout << l << endl;
+				    return 0;
+				}
+		AcWing 845. 八数码
+		AcWing 167. 木棒
+			1. 从小到大枚举长木棒的长度, 第一个找到的就是答案
+			2. 剪枝:
+				1. 从大到小, 枚举短木棍, 这样深度浅, 提前结束
+				2. 
+		AcWing 731. 毕业旅行问题{哈密顿回路}
+			复杂度: n*n*2^n = 20*20*2^20 = 4*10^8
+				但是因为必须要走0号点北京, 所以1/2的状态是无效的可以删除 
+				另外, 状态i必须要包括j, 且不包括j的必须包括k, 所以又是可以删除一堆状态
+				所以复杂度其实没那么高
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+
+			const int N = 20;
+
+			int n;
+			int w[N][N];
+			int f[1 << N][N];
+
+			int main()
+			{
+			    cin >> n;
+			    for (int i = 0; i < n; i ++ )
+			        for (int j = 0; j < n; j ++ )
+			            cin >> w[i][j];
+
+			    memset(f, 0x3f, sizeof f);          //所有状态初始化为不合法，即无穷大
+			    f[1][0] = 0;                        //最开始在0号城市，而且已经走过了0号城市
+
+			    //关于为何i += 2，因为要保证状态的最后一位是1而不是0{从北京出发}
+			    for (int i = 1; i < 1 << n; i += 2) 
+			        for (int j = 0; j < n; j ++ )   
+			            if (i >> j & 1)                     //经过的城市中包括j
+			                for (int k = 0; k < n; k ++ )
+			                    if (i - (1 << j) >> k & 1)  //经过的城市中除去j还包括k
+			                        f[i][j] = min(f[i][j], f[i - (1 << j)][k] + w[k][j]);
+			                        //比较 从i到j 和 从i到k再到j 的车票价格
+
+			    int res = 0x3f3f3f3f;
+
+			    //遍历最后一站是i，并从i到起点北京的车票价格的最小值
+			    //这里 (1 << n) - 1 二进制表示为20个1，即经过了所有20个城市当前在i城市，最后从i城市返回北京
+			    for (int i = 1; i < n; i ++ ) res = min(res, f[(1 << n) - 1][i] + w[i][0]);
+
+			    cout << res << endl;
+
+			    return 0;
+			}
+		AcWing 45. 之字形打印二叉树
+			最简洁的做法, 其实主要就是要记录在push下一层之前, queue中存的本层的元素个数
+			reverse()函数是大家都用到的
+			/**
+			 * Definition for a binary tree node.
+			 * struct TreeNode {
+			 *     int val;
+			 *     TreeNode *left;
+			 *     TreeNode *right;
+			 *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+			 * };
+			 */
+			class Solution {
+			public:
+			    vector<vector<int>> printFromTopToBottom(TreeNode* root) {
+			        vector<vector<int>> res;
+			        if(!root) return res;
+			        queue<TreeNode*> q;
+			        q.push(root); int i = 1;
+			        while(q.size())
+			        {
+			            int len = q.size();
+			            vector<int> lev;
+			            for(int j = 0; j < len; j++)    //队列长度，为该层的节点个数
+			            {
+			                auto t = q.front();
+			                q.pop();
+			                lev.push_back(t->val);
+			                if(t->left) q.push(t->left);
+			                if(t->right) q.push(t->right);                      
+			            }
+			            写法1:
+			            // if(i % 2 == 0) reverse(lev.begin(),lev.end());    //偶数行直接数组倒排就是了！！！
+			            // res.push_back(lev);  
+			            // i++;
+
+			            写法2:
+			            if(i % 2 == 0) res.emplace_back(lev.rbegin(),lev.rend());    ////针对反转情况，可以用vector反转序列迭代器构建匿名对象 这样就不需要单独反转了
+			            else res.push_back(lev);  
+			            i++;
+			        }
+			        return res;
+			    }
+			};
+		AcWing 46. 二叉搜索树的后序遍历序列
+			二叉搜索树: 按顺序排列
+			后序遍历的特点:
+				1. |左子树|右子树|最后一位是root|
+				2. 左子树的点的值都小于root的值, 右子树的点的值都大于root的值
+				3. 所以第一个大于root的数字是右子树的第一个数字 
+			class Solution {
+			public:
+			    vector<int> seq;        //把seq变为全局数组，便于dfs函数调用，否则每次调用dfs都要传一个数组进去
+
+			    bool verifySequenceOfBST(vector<int> sequence) {
+			        seq = sequence;
+			        return dfs(0, seq.size() - 1);
+			    }
+
+			    bool dfs(int l, int r)
+			    {
+			        if (l >= r) return true;                //当数为空时，返回true
+			        int root = seq[r];                      //最后一个元素为根节点
+			        int k = l;
+
+			        while (k < r && seq[k] < root) k ++ ;   //从前往后找第一个大于root的元素
+
+			        for (int i = k; i < r; i ++ )           //判断右子树节点是否都大于根节点
+			            if (seq[i] < root)
+			                return false;                   //若小于则返回false
+
+			        return dfs(l, k - 1) && dfs(k, r - 1);  //继续dfs
+			    }
+			};
+	第九讲
+		AcWing 1611. 寻找峰值
+			这道题我们能调用 query()的次数是有限的, 所以用二分.
+			其实很简单: 两个数字比较: l, r. 题目保证每个数字大小不同
+				1. l < r /
+					那么峰值一定在右边, 为什么, 只有两种情况:
+						1. l < r > rr  /\, 那么r就是峰值 
+						2. l < r < rr, r < rr 等同于情况1 l < r, 我们的峰值一定在r的右边, 极端情况下, 峰值就是全局数组的最右侧的数字
+				2. l > r \ 
+					那么峰值一定在左边, 原因如上, 因为是对称的.
+			代码
+				// Forward declaration of queryAPI.
+				// int query(int x);
+				// return int means nums[x].
+
+				class Solution {
+				public:
+				    int findPeakElement(int n) {
+				        int l = 0, r = n - 1;
+				        while (l < r)
+				        {
+				            int mid = l + (r - l) / 2;                         		//二分查找
+				            if (query(mid) < query(mid + 1)) l = mid + 1;       	//就是之前判断的, 如果arr[mid] < arr[mid+1], 我们往右找, 并且arr[mid+1]也是可能的结果, 所以 l = mid + 1
+				            else r = mid;
+				        }
+				        return l;
+				    }
+				};
+		AcWing 843. n-皇后问题
+		AcWing 901. 滑雪
+		AcWing 1613. 数独简单版
+			注意这道题, dfs是用的bool返回, 因为我们只需要返回一个合法解就好
+			#include <iostream>
+			#include <cstring>
+			#include <algorithm>
+
+			using namespace std;
+
+			const int N = 10;
+
+			char g[N][N];
+			bool row[N][N], col[N][N], cell[3][3][N];       //记录每行、每列、每个九宫格中数字1~9的使用情况
+				row[i][t]: 在第i行里面, 数字t有没有出现过
+				col[j][t]: 在第j列里面, 数字t有没有出现过
+				cell[i/3][j/3][t]:  在下标是{i/3,j/3}的九宫格里, 数字t有没有出现过
+					我们有9个九宫格: 摆放方式是3*3, 对应的下标是{0,1,2}, 所以是从[0,8]/3=[0,2]区间
+					-------------
+					|	|	|	|
+					-------------
+					|	|	|	|
+					-------------
+					|	|	|	|
+					-------------
+
+			bool dfs(int x, int y)
+			{
+			    if (y == 9) x ++ , y = 0;                   //这一行填完，开始下一行
+			    if (x == 9)                                 //最后一行填完，输出结果
+			    {
+			        for (int i = 0; i < 9; i ++ ) cout << g[i] << endl;
+			        return true;	这里是剪枝, 也就是输出了一个答案, 就返回 
+			    }
+
+			    对比:
+			    	全排 : 无脑用 for(int i = 1; i <= 9; i++) 去填写
+			    	指数 : 二选一, 选还是不选当前这个数字u
+			    	这道题: 
+			    		有条件的选还是不选
+			    			1. 如果 != '.', 说明已经有数字, 一定不选
+			    			2. 如果 == '.', 选, 而且是 for(int i = 1; i <= 9; i++) 去填写
+			    if (g[x][y] != '.') return dfs(x, y + 1);   //当前格为数字，不用填，去下一格
+
+			    否则=='.', 可以填写数字 
+			    for (int i = 0; i < 9; i ++ )               //遍历数字1到9，判断当前格能填哪个数
+			        if (!row[x][i] && !col[y][i] && !cell[x / 3][y / 3][i])
+			        {
+			            g[x][y] = i + '1';
+			            row[x][i] = col[y][i] = cell[x / 3][y / 3][i] = true;
+			            if (dfs(x, y + 1)) return true;	也是先递归: dfs(), 如果返回true, 提前剪枝
+			            row[x][i] = col[y][i] = cell[x / 3][y / 3][i] = false; 还原现场 
+			            g[x][y] = '.';
+			        }
+
+			    return false;                               //找不到方案，退回上一层递归
+			}
+
+			int main()
+			{
+			    for (int i = 0; i < 9; i ++ )
+			    {
+			        cin >> g[i];
+			        for (int j = 0; j < 9; j ++ )
+			            if (g[i][j] != '.'){
+			                int t = g[i][j] - '1';	// 存的数字是数字t: 
+			                row[i][t] = col[j][t] = cell[i / 3][j / 3][t] = true;
+			            }
+			    }
+			    dfs(0, 0);                                  //从第0行0列开始
+			    return 0;
+			}
+		AcWing 52. 数组中出现次数超过一半的数字
+			1. 正确但是空间不符合的做法
+				哈希表:
+					时间是 O(n), 但是空间也是 O(n), 不符合要求 
+				排序:
+					存在一段数字, 长度是大于n/2
+					排序好的数字, 最中间的数字就是我们的答案 
+						答案不可能在左边或者右边, 因为答案的个数是>n/2
+					时间是 O(nlogn), 但是空间也是 O(n)因为要存n个数, 不符合要求 
+			2. 
+				class Solution {
+				public:
+				    int moreThanHalfNum_Solution(vector<int>& nums) {
+				        int val, cnt = 0;
+
+				        for (auto x : nums)
+				        {
+				            if (!cnt) val = x, cnt ++ ;     //目标值与其他值刚好配对抵消时，重置计数
+				            else
+				            {
+				                if (x == val) cnt ++ ;
+				                else cnt -- ;
+				            }
+				        }
+
+				        return val;                         //最后剩下的一定是多于半数的目标值
+				    }
+				};
+			3. 这种做法剩余的肯定是答案
+				反证法: 这种做法剩余的肯定不是答案, 意味着答案被其他值给消去了, 但是不可能, 因为答案的个数是最多的, 其他值不可能消得完
+			4. 类似的题目:
+				好人的个数>n/2, 坏人的个数<n/2
+					好人和坏人都知道谁是好人谁是坏人, 就你不知道
+					你询问一个好人: 某人是否是好人, 好人会告诉你真实的某人是否是好人
+					你询问一个坏人: 某人是否是好人, 坏人会随机告诉你 
+					你最多问n次, 然后告诉我们坏人有哪些
+				好机器的个数>n/2, 坏机器的个数<n/2
+					机器之间相互检测, 好机器可以告知对方机器是否是好的, 坏机器会随机说对方机器是否是好的
+					你最多问n次, 然后告诉我们坏机器有哪些
+				狼人杀问题
+	第八讲
+		AcWing 131. 直方图中最大的矩形{单调栈}
+			1. 我们要找的是: 在我左边的第一个比我小的a. 因为在这个a的右边, 是我要保留的{保留的是>我和==我的部分}
+				递增的单调栈, 删掉大的, 因为我们求得是min, 比我大的肯定不要
+				注意是严格比自己小的, 为什么不是<=自己的, 因为==自己的部分是需要的. 如何理解:
+						 -----------
+						|	|	|	|
+					 ---|	|	|	|---
+					|	|	|	|	|	|
+				 0    1   2   3   4   5   6
+				因为是严格比自己小的, 所以l[3] = 1, r[3] = 5
+				但是这个1,5是开区间, 是我们不选的, 所以最后的区间长度是:(1,5) == [2,4], 长度是3 == (5-1-1)
+				逻辑就是, 我周围比我高的没用, 因为我是瓶颈, 周围和我一样高的有用, 我保留下来{如何保留, 找到第一个比我矮的, 但是矮的不要, 矮的右侧就是==我的有用的部分}
+			2. 左右对称, 在我右边的第一个比我小的, 所以实现方法一样
+			3. 哨兵: h[0] = -1, h[n + 1] = -1
+				每个矩形的高度都是>=0的，为了使得每个矩形的两侧都有矮于它的矩形，
+					所以往两侧放了两个-1的矩形h[0] = h[n + 1] = -1;
+				由于有-1矩形的存在，不会有任何矩形的高度 hh 满足 −1>=h−1>=h，所以栈不会空
+					因此可以省略栈中是否有元素的判断条件tt >= 0
+			4. 最后的ind是开区间: (l, r), 所以区间长度是 r[i] - l[i] - 1 
+			5. 2个单调栈: O(2*2n), 因为一个单调栈最多就是一个元素进入再被弹出, 所以操作就是2次, 2个单调栈
+			5. 
+				#include <iostream>
+				using namespace std;
+
+				typedef long long LL;
+
+				const int N = 1e5 + 10;
+
+				int n;
+				int h[N], l[N], r[N];                   //h表示每个矩形高度，l和r分别表示矩形能向左右两侧扩展的边界
+				int q[N];                               //q储存单调栈
+
+				int main()
+				{
+				    while (scanf("%d", &n), n)
+				    {
+				        for (int i = 1; i <= n; i ++ ) scanf("%d", &h[i]);
+				        h[0] = h[n + 1] = -1;           //保证矩形左右两侧一定有小于它高度的矩形，即保证栈非空
+				                                        //可省去判断条件tt >= 0
+				        //求左边界
+				        int tt = -1;                     //tt表示栈顶
+				        q[++t] = 0;
+				        for (int i = 1; i <= n; i ++ )
+				        {
+				            while (h[q[tt]] >= h[i]) tt -- ;    //往左找到第一个比h[i]小的位置为止
+				            l[i] = q[tt];                       //记录第一个比h[i]小的矩形的位置
+				            q[ ++ tt] = i;                      //添加当前矩形到栈中
+				        }
+
+				        //求右边界
+				        tt = -1;
+				        q[++tt] = n + 1;
+				        for (int i = n; i; i -- )
+				        {
+				            while (h[q[tt]] >= h[i]) tt -- ;
+				            r[i] = q[tt];
+				            q[ ++ tt] = i;
+				        }
+
+				        LL res = 0;
+				        for (int i = 1; i <= n; i ++ )
+				            res = max(res, (LL)h[i] * (r[i] - l[i] - 1));       //更新矩形最大值
+
+				        printf("%lld\n", res);
+				    }
+
+				    return 0;
+				}
+		AcWing 152. 城市游戏{单调栈}
+			1. 二维的上一道题, 也是单调栈, O(n^2)
+			2. s[i][j]: 坐标{i,j}的格子, 包括自己在内, 上方有多少个连续的'Q'
+				实现: 
+					如果自己是'F', s[i][j] = 0
+					如果自己是'G', s[i][j] = s[i-1][j] + 1
+			3. 每一行: 都是上一道题目
+			4. 我之前的疑惑: 会不会存在一些'G'自己是最大矩形, 但是这个矩阵的外围是一圈'F', 这种情况下, 上述做法ok吗, 其实是ok的.
+				因为我们遍历每一行的时候, 总能够遍历到这个最大矩形的下边界, 这时候就能得到答案
+			5. 超级简单, 就是填充 s[i][j] + 上一题的代码
+				#include <iostream>
+				using namespace std;
+				const int N = 1010;
+				int n, m;
+				int s[N][N], l[N], r[N];    //h表示每个矩形高度，l和r分别表示矩形能向左右两侧扩展的边界
+				int q[N];                   //q储存单调栈
+				int work(int h[])           //传入直方图的高，这个函数就是131题的原代码
+				{
+				    h[0] = h[m + 1] = -1;   //保证矩形左右两侧一定有小于它高度的矩形，即保证栈非空
+				                            //可省去判断条件tt >= 0
+				    //求左边界
+				    int tt = 0;             //tt表示栈顶
+				    q[0] = 0;
+				    for (int i = 1; i <= m; i ++ )
+				    {
+				        while (h[q[tt]] >= h[i]) tt -- ;    //往左找到第一个比h[i]小的位置为止
+				        l[i] = q[tt];                       //记录第一个比h[i]小的矩形的位置
+				        q[ ++ tt] = i;                      //添加当前矩形到栈中
+				    }
+
+				    //求右边界
+				    tt = 0;
+				    q[0] = m + 1;
+				    for (int i = m; i; i -- )
+				    {
+				        while (h[q[tt]] >= h[i]) tt -- ;
+				        r[i] = q[tt];
+				        q[ ++ tt] = i;
+				    }
+
+				    int res = 0;
+				    for (int i = 1; i <= m; i ++ )
+				        res = max(res, h[i] * (r[i] - l[i] - 1));           //更新矩形最大值
+
+				    return res;
+				}
+
+				int main()
+				{
+				    cin >> n >> m;
+
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 1; j <= m; j ++ )
+				        {
+				            char c;
+				            cin >> c;
+				            if (c == 'F') s[i][j] = s[i - 1][j] + 1;        //累计F及其上方一共有几个F，该步见上图①
+				        }
+
+				    int res = 0;
+				    for (int i = 1; i <= n; i ++ ) res = max(res, work(s[i]));  //当下边界为i时，计算最大面积
+
+				    cout << res * 3 << endl;
+
+				    return 0;
+				}
+		AcWing 1612. 最大正方形{dp}
+			1. 用DP, O(n^2)
+				之前城市游戏是矩形, 这道题是正方形
+				面试官: 直方图中最大的矩形{单调栈+一维} -> 城市游戏{单调栈+二维} -狡猾的面试官-> 最大正方形{dp}
+			2. 其实很简单:
+					例如:
+					_____________
+					|			|			
+					|		 ___|___
+					|	 ____|__|  |		fc > fa, fc > fb
+					|	|	 |  |  |
+					|___|____|__c__b
+						|	 	|
+						|_______a  x
+
+					假设x==1, 那么以x为右下角的最大正方形怎么求?
+						1. 我们已知以a,b,c为右下角的最大正方形的边长了{假设是fa, fb, fc}, 其实以x为右下角的最大正方形就就是 min(fa, fb, fc) + 1
+						2. 为什么, 因为图中的三个正方形里面都是1, 外面都是0, 没错吧, 那么以x为右下角的最大正方形的边长, 最长肯定不超出三者的最小值.
+						3. 你可能会说, 上面只是一个例子, 假设fa, fb很长, 假设长出天际, 那么fc肯定也很长. 不管fa,b,c再怎么长, fc的长度也是: fc + 1 >= fa
+							例如:
+							_________________
+							|	|			|			
+							|	|		 ___|___
+							|	|	     |  |  |
+							|	|		 |  |  |
+							|	|________|__c__b	fc + 1 == fa
+							|			 	|
+							|_______________a  x
+
+							应该不存在的情况:
+								_________________
+								|	____________|
+								|	|			|			
+								|	|		 ___|___
+								|	|	     |  |  |
+								|	|		 |  |  |	因为这种情况 fc完全可以再延长一点 
+								|	|________|__c__b	
+								|			 	|
+								|_______________a  x
+			2. 
+				#include <iostream>
+				using namespace std;
+				const int N = 1010;
+				int n, m;
+				int f[N][N];                            //f[i][j]表示该点所能表示的正方形的最大边长
+				int main()
+				{
+				    int res = 0;
+				    scanf("%d%d", &n, &m);
+				    for (int i = 1; i <= n; i ++ )
+				        for (int j = 1; j <= m; j ++ ){
+				            int w;
+				            scanf("%d", &w);
+				            if (w){                   //只有w等于1的情况下才需要状态计算
+				                f[i][j] = min(f[i - 1][j - 1], min(f[i][j - 1], f[i - 1][j])) + 1;
+				                res = max(res, f[i][j]);
+				            }
+				        }
+				    printf("%d\n", res * res);          //最后输出正方形面积=边长的平方
+				    return 0;
+				}
+		AcWing 1574. 接雨水{单调栈}
+			0. 对比:
+				直方图中最大的矩形/城市游戏:
+					找到最靠近我的那个比我小的: 
+						最靠近: 栈 
+						比我小: 要小的不要大的, 删去大的和等于我的, 栈里剩下小的, 严格单调递增栈
+				本题:
+					找到最靠近我的那个比我大或者等于我的: 
+						最靠近: 栈 
+						比我小: 要比我大或者等于我的, 删去严格小于我的, 栈里剩下和我一样大或者大于我的, 不严格单调递减栈{递减或==}
+			1. 我们要找的是: 在我左边的第一个比我大或者等于我的的a. 因为在这个a的右边, 是我要保留的{保留的小于我的部分, 小于我的才能盛水}
+			2. 但是注意, 最后我自己在被push到栈里的时候, 我要计算我和a之间的距离, 就算是a==我, 我们两个之间也可以盛水, 如果a>我, 我们两个之间更可以盛水了且我是瓶颈
+			3. 这个图片挺好的: https://www.acwing.com/solution/content/34623/
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int n;
+				int h[N], q[N];                                     //h为障碍物高度，q为单调栈
+				int main()
+				{
+				    cin >> n;
+				    for (int i  =0; i < n; i ++ ) cin >> h[i];
+				    int res = 0;
+				    int tt = -1;                                    //tt为栈顶指针，q[tt]为障碍物序号
+				                                                    //h[q[tt]]表示序号为q[tt]的障碍物的高度
+				    for (int i = 0; i < n; i ++ )
+				    {
+				        int last = 0;                               //上一个高度是地板
+				        while (tt >= 0 && h[q[tt]] < h[i])          //判断栈不为空且栈顶元素小于等于当前元素时
+				        {
+				            //在删掉一个较矮的障碍物前，先计算它与前一障碍物的储水量
+				            //两障碍物间雨水容量 = 两障碍物高度差 * 两障碍物距离
+				            res += (h[q[tt]] - last) * (i - q[tt] - 1);     
+				            last = h[q[tt]];
+				            tt -- ;
+				        }
+
+				        if (tt >= 0) res += (h[i] - last) * (i - q[tt] - 1);	这里就是计算: 我自己在被push到栈里的时候, 我要计算我和a之间的距离, 就算是a==我, 我们两个之间也可以盛水, 如果a>我, 我们两个之间更可以盛水了且我是瓶颈
+				        q[ ++ tt] = i;                              //当前障碍物入栈
+				    }
+
+				    cout << res << endl;
+
+				    return 0;
+				}
+		AcWing 1575. 盛水最多的容器{1. 双指针, 2. 单调栈+二分}
+			1. 复杂度: O(n*logn): 可以用单调栈 + 二分来做
+				1. 从左往右枚举节点a, 我们以a为容器的右边框, 那么以a为右边框的最大容器的左边框b就是: 在左侧, 距离a最远的, 比a高的点. 也就是a是容器的瓶颈
+					如何找到b: 需要一个单调递增栈 + 二分 
+					这里的单调递增栈和之前说的单调递增栈不同, 区别:
+						1. 之前说的单调递增栈: 我a, 要pop掉所有比我大的数字, 最后我a一定加入栈. 有pop+push操作
+						2. 这里说的单调递增栈: 我a, 二分获得栈中最左侧的大于我的数字, 至于我加不加入栈, 要看我是否比栈顶大. 没有pop只有push操作
+					证明:
+						为何是栈是单增的: 因为push进栈的数字, 一定是比栈顶大的, 所以栈是单增的.
+						为何距离我a最远的比我a高的b, 是栈中最左侧的大于我a的数字. 因为:
+							你的疑惑, 有没有可能b根本没有插入栈, 没可能, 因为原始数组中b左边的数字: 只能比我小, 不能比我大, 如果b没加入栈, 那么只能是因为b左侧有比b大的数字, 可是b左边的数字都比b小, 所以b一定在栈中
+				2. 对称的, 再从右往左枚举节点a, 我们以a为容器的左边框, 那么以a为左边框的最大容器的右边框b就是: 在右侧, 距离a最远的, 比a高的点. 也就是a是容器的瓶颈
+				3. 代码 
+					#include <iostream>
+					#include <cstdio>
+
+					using namespace std;
+
+					const int N = 100010;
+
+					int n, ans = -1;
+					int h[N], lstack[N], rstack[N]; 
+					int l_size = -1, r_size = -1; 
+
+					int main() {
+					    scanf("%d", &n);
+					    for (int i = 0; i < n; i++) scanf("%d", &h[i]);
+					    
+					    //以a为右边界, lstack为以左边界枚举
+					    lstack[++l_size] = 0;	先把ind==0的元素插入栈中. 栈一定至少有一个元素
+					    for (int i = 1; i < n; i++) {
+					        int l = 0, r = l_size;
+					        while (l < r) {
+					            int mid = l + r >> 1;
+					            if (h[lstack[mid]] >= h[i]) r = mid;
+					            else l = mid + 1;
+					        }
+					        出来while的时候, 要注意:
+					        	1. 出while的时候, l == r
+					        	2. 但是最后的l指向的元素, 不一定是点b. 如果stack中所有的点都小于a, 那么就是一直往右找, 最后的l==r==l_size, 可是之前说了, 我们的栈顶也是小于a的
+					        	3. 所以要判断l指向的元素是否是真的大于a
+					        正确: if (h[lstack[l]] >= h[i]) ans = max(ans, h[i] * (i - lstack[l])); 判断l指向的元素是否是真的大于a
+					        错误: 直接写: ans = max(ans, h[i] * (i - lstack[l]));
+					        if (h[i] > h[lstack[l_size]]) lstack[++l_size] = i;	如果我a大于栈顶, 我也插入 
+					    }
+
+					    //以a为左边界, lstack为以右边界枚举
+					    rstack[++r_size] = n - 1;	先把ind==n-1的元素插入栈中. 栈一定至少有一个元素
+					    for (int i = n - 2; i >= 0; i--) {
+					        int l = 0, r = r_size;
+					        while (l < r) {
+					            int mid = l + r >> 1;
+					            if (h[rstack[mid]] >= h[i]) r = mid;
+					            else l = mid + 1;
+					        }
+					        if (l <= r_size && h[rstack[l]] >= h[i]) ans = max(ans, h[i] * (rstack[l] - i));
+					        // if (l <= r_size) ans = max(ans, h[i] * (rstack[l] - i));
+					        if (h[i] > h[rstack[r_size]]) rstack[++r_size] = i;
+					    }
+					    printf("%d\n", ans);
+					    return 0;
+					}
+			2. 复杂度: O(n): 其实最快的是双指针, 因为两个指针走的步数, 加起来也才n步
+				思路很简单, ij指向两端, 计算容积. 
+				如果谁指向的元素比较矮, 谁就往里面移动.
+					为什么矮的往里面移动呢, 因为矮的往里面移动, 虽然会更矮, 但是还有机会长高. 所以效益是不变或者增加的. 如果一直都是矮的往里面, 那么效益是一直不变或者增加. 最终达到最优.
+						有没有可能最优的被遗漏了, 没可能. 至于为什么, 参见: https://www.acwing.com/solution/content/26658/
+					如果是高的往里面移动, 效益可能会增加,也可能会更差
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int n;
+				int a[N];
+				int main()
+				{
+				    scanf("%d", &n);
+				    for (int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+				    int res = 0;
+				    for (int i = 0, j = n - 1; i < j;)              //双指针首尾逼近遍历，直到两指针相遇i==j, 所以合法状态是i < j
+				    {
+				        res = max(res, (j - i) * min(a[i], a[j]));
+				        if (a[i] < a[j]) i ++ ;                     //右边高，则右指针不动，左指针往右靠
+				        else j -- ;                                 //反之亦然
+				    }
+				    printf("%d\n", res);
+				    return 0;
+				}
+		AcWing 43. 不分行从上往下打印二叉树
+			简单的bfs
+			/**
+			 * Definition for a binary tree node.
+			 * struct TreeNode {
+			 *     int val;
+			 *     TreeNode *left;
+			 *     TreeNode *right;
+			 *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+			 * };
+			 */
+			class Solution {
+			public:
+			    vector<int> printFromTopToBottom(TreeNode* root) {
+			        vector<int> res;
+			        if (!root) return res;
+			        queue<TreeNode*> q;
+			        q.push(root);
+
+			        while (q.size()) {
+			            auto t = q.front();
+			            q.pop();
+			            res.push_back(t->val);
+			            if (t->left) q.push(t->left);
+			            if (t->right) q.push(t->right);
+			        }
+
+			        return res;
+			    }
+			};
+		AcWing 454. 表达式求值
+			0. 其实非常简单, 是个模拟题, 只要把规则记住就好了
+				规则:
+				当前的运算符优先级 小于等于 栈顶的运算符优先级，也可以说， 栈顶的运算符优先级 大于等于 当前的运算符优先级
+					则符号栈弹出一个符号，数字栈弹出两个数字，对运算符和数字进行运算，把结果压入数字栈，再把当前运算符压入符号栈。
+				如果遇到括号：如果是左括号，直接入栈。如果是右括号，弹出栈中第一个左括号前所有的操作符，并将左括号弹出。
+			1. 注意: 
+				(a + b) %c == ((a%c) + (b%c)) %c 
+				(a * b) %c == ((a%c) * (b%c)) %c 
+			2. 
+				#include <iostream>
+				#include <stack>
+
+				using namespace std;
+
+				const int MOD = 10000;
+
+				stack<int> nums;
+				stack<char> ops;
+
+				void eval()                                 //计算数字栈的top两个数字, 然后结果push进入数字栈 
+				{
+				    int b = nums.top(); nums.pop();
+				    int a = nums.top(); nums.pop();
+				    char c = ops.top();  ops.pop();
+
+				    if (c == '+') nums.push((a + b) % MOD);
+				    else nums.push((a * b) % MOD);
+				}
+
+				int main()
+				{
+				    string expr;
+				    cin >> expr;
+
+				    for (int i = 0; expr[i]; i ++ )
+				    {
+				        char c = expr[i];
+				        if (c >= '0' && c <= '9')           //读取数串
+				        {
+				            int v = 0;
+				            int j = i;
+				            while (expr[j] && expr[j] >= '0' && expr[j] <= '9')
+				            {
+				                v = v * 10 + expr[j] - '0';
+				                j ++ ;
+				            }
+				            nums.push(v);
+				            i = j - 1;	因为while出来的时候j指向的是不合法的, 所以我们要还原, 最后其实for里面还是有i++
+				        }
+				        else if (c == '+')
+				        {
+				            while (ops.size()) eval();      //加法优先级最低，当栈中存有其他符号时一起算光
+				            ops.push(c);
+				        }
+				        else
+				        {                                   //当栈中有乘号时先计算上一个乘法运算
+				            while (ops.size() && ops.top() == '*') eval();
+				            ops.push(c);
+				        }
+				    }
+				    while (ops.size()) eval();              //遍历完后清算
+				    cout << nums.top() % MOD << endl;
+				    return 0;
+				}
+		AcWing 151. 表达式计算4
+			1. 其实非常简单, 是个模拟题, 只要把规则记住就好了
+				规则:
+					0. 准备数字栈, 操作栈
+					1. 如果是数字, 就直接push
+					2. 如果是操作符
+						1. 看栈顶的操作符的优先级是否大于等于自己
+							1. 如果大于等于自己: 
+								计算{即取出数字栈的两个数字, 用栈顶操作符计算, 结果插入数字栈}, 然后继续返回第一步, 看栈顶的操作符的优先级是否大于等于自己
+								把自己插入操作栈
+							2. 否则, 直接把自己插入操作栈
+					3. 如果是左括号: 直接插入操作栈
+					4. 如果是右括号: 不停计算, 直到遇见左括号, 最后把左括号pop掉
+
+			如果栈顶的优先级 >= 我的优先级, 栈里的东西先算
+			如果是(, 直接放入, 如果是)就一直弹出运算直到遇到左括号
+
+			对字符串进行预先处理，保证"("数量 >= ")"数量。因为遇到")"，就要弹出一个"("，需要保证总是有"("可弹出来。
+			
+
+			解释151的+, 我们是一直计算到(不存在, 为什么, 因为加法的优先级最低, 所以她遇到什么操作符都要算
+
+		
+	第七讲
+		AcWing 94. 递归实现排列型枚举
+			注意排列可是一个多叉树:
+				第一层:			1		 	 2		 3		4
+				第二层:		   / \\			/\ \ 	/\ \	/ \ \
+							  2   3 4      1  3 4   1  2 4  1 2 3
+				第三层:       /\   /\ /\ 	  /\ /\ /\ /\ /\ /\ /\ /\ /\ 
+							......
+			#include <iostream>
+			using namespace std;
+			const int N = 10;
+			int n;
+			int num[N];
+			bool st[N];
+			void dfs(int u)	现在要在第u个位置填写数字 
+			{
+			    if (u > n)                  //判断是否为叶子节点
+			    {
+			        for (int i = 1; i <= n; i ++ ) cout << num[i] << ' ';
+			        cout << endl;
+			        return;
+			    }
+			    for (int i = 1; i <= n; i ++ )	第u个位置可以填写的数字是1-n, 不过也要看st[i]有没有被填写过
+			        if (!st[i])
+			        {
+			            num[u] = i;         //当前位赋值为i
+			            st[i] = true;
+			            dfs(u + 1);
+			            st[i] = false;      //还原现场,不需要把num[u]的值还原成0,因为每次都会直接覆盖
+			        }
+			}
+			int main()
+			{
+			    cin >> n;
+			    dfs(1);
+			    return 0;
+			}
+		AcWing 1537. 递归实现排列类型枚举 II
+			0. 总结:
+				1. 全排 vs 指数 vs 组合 
+					全排是复杂度最高的, 因为全排是n!, 指数是2^n, 组合是剪枝后的指数 
+					全排是多叉树, 指数是二叉树{但是存在同类问题的质数, 也是多叉树但是树的高度会低一些}, 组合是剪枝的二叉树
+				2. 全排 vs 以前学的什么插入堆的操作
+					全排的时间复杂度: O(n! * n): 因为是整个多叉树的每一条枝杈都要遍历. 一条枝杈的高度是n, 因为打印的长度是n, 一共n!条枝杈{因为有n!种方案}
+					插入堆/排序的时间复杂度: O(logn): 因为只需要找一条路径, 路径的高度只是logn
+			1. 和全排列的逻辑是一样的, 只不过全排列我们排列的是1,2,3,...,n是值
+				这里的1,2,3,...,n是ind, 对应的值是a[1], a[2], ... , a[n]
+				但是, 我们要避免重复. 重复出现的原因: 同一个方案, 用不同的顺序去枚举了
+				 	举例: 
+				 		下标: 0,1,2
+				 		数字: 1,1,2
+				 		我们是全排: 所以可能有的全排有: 下标{0,1,2}, 下标{1,0,2}, 但是这两种方法打印出来的数字都是{1,1,2}: 同一个方案, 用不同的顺序去枚举了
+				一定要排序{或者规定某种固定的顺序}, 这样就是按照固定的顺序来遍历, 这样重复的方案只会用一种顺序遍历
+			2. 
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 10;
+
+				int n;
+				int a[N], nums[N];
+				bool st[N];
+
+				void dfs(int u)
+				{
+				    if (u == n){
+				        for (int i = 0; i < n; i ++ ) cout << nums[i] << ' ';
+				        cout << endl;
+				        return;
+				    }
+				    for (int i = 0; i < n; i ++ )
+				        if (!st[i]){
+				            nums[u] = a[i];		
+				            	nums[u] = a[i]; 第u个数字填上a[i]
+				            	但是我们这里要避免重复, 避免重复的方法: 第u个数字不能再次填上数字a[i], 我们如何保证不在此填上a[i], 那就是i指向!=a[i]的元素: while (i + 1 < n && a[i + 1] == a[i]) i ++ ;
+				            	相当于, 我们的例子中, 只有两类数字{数字1和数字2}, 我们的第u个数字只能是满足: 1. 每一横向的层中, 在这两类中选一个{用while和a[i]代码实现}, 2. 每一条纵向路径中, 这个i在以前没有被选过: st[i] == false
+				            																			这个是区分: 两类数字{数字1和数字2}					这个是区分同一类数字里面的数字, 例如数字1有两个, 一个i==0,一个i==1
+				            st[i] = true;
+				            dfs(u + 1);	这是第u+1层的故事, 这个第u+1个数字可以填上数字a[i], 就像是{1,1,2},第0个下标和第1个下标都是数字1
+				            st[i] = false;
+				            while (i + 1 < n && a[i + 1] == a[i]) i ++ ; 呼应上文的避免重复
+				            	我的很棒的想法:
+				            		求下一个不一样的数字
+				            		你要不一样的, 那我while就和你反着来就很好了, 我就偏while一样的
+				            		那么 while(下一个下标合法 && 下一个数字还是和当前数字一样) 往下看 
+				        }
+				}
+				int main(){
+				    cin >> n;
+				    for (int i = 0; i < n; i ++ ) cin >> a[i];
+				    sort(a, a + n);	输出顺序时，第一个数较小的先输出，第一个数相同时，第二个数较小的先输出
+							所以我们是从小打到排序, dfs的时候, 第一个填入的数字是最小的: nums[0] = a[0]
+				    dfs(0);
+				    return 0;
+				}
+				画图:
+					第一层: 		1 		1{重复了同类,不能考虑}		 2
+					第二层:	  /  \ 								/ \
+							 1    2                            1   1{重复了同类,不能考虑} 注意我们说的重复, 是站在同一颗树下, 所以图中左侧1不算重复, 右侧1才是重复
+					第三层:	/      \                          /
+							2       1  						 1
+		AcWing 92. 递归实现指数型枚举
+			#include <iostream>
+			using namespace std;
+			const int N = 20;
+			int n;
+			bool st[N];
+			void dfs(int u)
+			{
+			    if (u > n)  // 叶子节点
+			    {
+			        for (int i = 1; i <= n; i ++ )
+			            if (st[i])
+			                cout << i << ' ';
+			        cout << endl;
+			        return;
+			    }
+			    对比: 
+			    	全排是每个数字都要来一遍, 所以是 for (int i = 1; i <= n; i ++ ), 限制是横向不能打印同类, 纵向路径不能打印st[i]==true
+			    	指数, 我们的纵向高度都是一样, 每一层只需要考虑自己要不要被打印, 也就是二选一. 注意要恢复现场:
+			    写法1: 简洁 
+				    st[u] = true;
+				    dfs(u + 1);  // 选择当前数的分支
+
+				    st[u] = false;
+				    dfs(u + 1);  // 不选当前数的分支
+				写法2:
+					st[u] = false;      
+				    dfs(u + 1);         //不选当前树的分支
+				    
+				    st[u] = true;
+				    dfs(u + 1);         //选择当前树的分支
+				    st[u] = false;   	恢复现场
+			}
+			int main()
+			{
+			    cin >> n;
+			    dfs(1);
+			    return 0;
+			}
+		AcWing 1572. 递归实现指数型枚举 II
+			如果用上一道题的代码, 是会出问题的. 例如样例: 1,2,2
+				错误输出:
+					1 2 2 
+					1 2 
+					1 2 
+					1 
+					2 2 
+					2 
+					2 2 
+				正确答案:
+					2 2 
+					1 
+					1 2 		重复的原因: 同一个方案, 用不同的顺序去枚举了, 用{ind==0, ind==1},{ind==0, ind==2}去枚举了同一个方案
+					1 2 2 
+			有种感觉: 数字为1的那一类: 多叉树
+				选0个, 然后 dfs(k+1)到下一类
+				选1个, 然后 dfs(k+1)到下一类
+				...
+				选k个, 然后 dfs(k+1)到下一类
+				
+
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 20;
+			int n;
+			int a[N];
+			bool st[N];
+
+			void dfs(int u) //枚举到ind==u开始的一段数，前u-1段已经完成好 
+			{
+			    if (u == n) //到达叶子节点，输出该方案
+			    {
+			        for (int i = 0; i < n; i ++ )
+			            if (st[i])
+			                cout << a[i] << ' ';
+			        cout << endl;
+			        return;
+			    }
+
+			    // 0 1 2 3 4 5
+			    // 1 1 1 1 2 2
+			    // |       |
+			    // u       k
+			    int k = u;
+			    while (k < n && a[k] == a[u]) k ++ ;    //跳过同一段后面的数字
+
+			    因为题目没有要求输出顺序, 所以随意, 从第0个开始选都ok:
+			    选0个: 这样就不需要恢复现场, 因为st依旧是false
+			    dfs(k);                                 //没有标记st直接dfs，即枚举选0个的情况
+			    
+			    选1,2,...,xx=(k-1-u+1)个, 因为[u,k-1]都是相同的数字
+			    for (int i = u; i < k; i ++ )           //将同一段的数逐个设为true然后dfs
+			    {
+			        st[i] = true;	这里是每st[i]=true,就去一个 dfs(k);
+			        dfs(k);                             //从下一段开始枚举
+			    }
+			    for (int i = u; i < k; i ++ ) st[i] = false;    //批量还原现场
+			}
+
+			int main()
+			{
+			    cin >> n;
+			    for (int i = 0; i < n; i ++ ) cin >> a[i];
+			    sort(a, a + n);		一定要排序{或者规定某种固定的顺序}, 这样就是按照固定的顺序来遍历, 这样重复的方案只会用一种顺序遍历
+
+			    dfs(0);
+
+			    return 0;
+			}
+		AcWing 93. 递归实现组合型枚举
+			组合型枚举 == 指数类型枚举 + 剪枝{到了m个就输出}
+			if(u > n) 
+			考虑顺序, 所以先输出 dfs(u+1,s+1)
+			如果更换顺序, 就是大的数字先输出了
+
+			#include <iostream>
+			using namespace std;
+			const int N = 30;
+
+			int n, m;
+			bool st[N];
+			void dfs(int u, int s)                  //s用来记录当前选了几个数
+			{
+			    if (s == m)
+			    {
+			        for (int i = 1; i <= n; i ++ )
+			            if (st[i])
+			                cout << i << ' ';
+			        cout << endl;
+			        return;
+			    }
+
+			    if (u > n) return;					到考虑第u个数字的时候都没选够m个, 不合法, 返回. 
+			    										例如有一条路径, st[xx]全都是false, 那么遍历到底了也不能进入 if(s == m), 那么就要直接返回
+
+			    字典序较小的排在前面: 所以我们希望最小的数字先输出, 所以小数字st[0] = true, 然后再是选择st[0] = false
+			    st[u] = true;
+			    dfs(u + 1, s + 1);                   //第一种情况s + 1，选择当前数
+			    st[u] = false;						//恢复现场
+
+			    st[u] = false;                      //不选这个数字
+			    dfs(u + 1, s);                      //第二种情况s不变，即不选当前数
+			}
+
+			int main()
+			{
+			    cin >> n >> m;
+			    dfs(1, 0); 从数字1开始选. 然后已经选了0个
+			    return 0;
+			}
+		AcWing 1573. 递归实现组合型枚举 II
+			#include <iostream>
+			#include <algorithm>
+			using namespace std;
+			const int N = 30;
+			int n, m;
+			int a[N];
+			bool st[N];
+			void dfs(int u, int s)
+			{
+			    if (s > m) return;                      注意, 这句必须要加, 上一题的dfs下一层只是 dfs(u+1,s+1)/dfs(u+1,s), 这一题的dfs下一层可能就会跳过很多层了:dfs(u+k,s+k), 所以累加的s可能会大于m，为无效方案
+			    if (s == m)                             //选择个数恰好等于m时输出方案
+			    {
+			        for (int i = 0; i < n; i ++ )
+			            if (st[i])
+			                cout << a[i] << ' ';
+			        cout << endl;
+			        return;
+			    }
+
+			    if (u == n) return;                     //合法的u只是[0,n-1], 说明此时已经遍历了所有数，返回
+
+			    字典序较小的排在前面, 所以如果样例是
+			    	6 3
+					1 1 1 1 2 2
+				    正确答案:
+				    	1 1 1 -> 尽可能多输出小的数字
+						1 1 2 
+						1 2 2 
+			    int k = u;
+			    while (k < n && a[k] == a[u]) st[k ++ ] = true, s ++ ;  //先把最小的输出，拉满
+			    小的数字全部输出: dfs(k, s);
+			    然后再慢慢递减, 直到递减到小的数字只输出0个
+			    for (int i = k - 1; i >= u; i -- )      //倒过来恢复现场
+			    {
+			        st[i] = false;
+			        s -- ;
+			        dfs(k, s);
+			    }
+			}
+
+			int main()
+			{
+			    cin >> n >> m;
+			    for (int i = 0; i < n; i ++ ) cin >> a[i];
+			    sort(a, a + n);                         //可重复枚举都要先排序
+			    dfs(0, 0);                              //初始状态：从前0个数中选0个数
+			    return 0;
+			}
 		AcWing 55. 连续子数组的最大和
 			1. 有意思. 一维的dp问题, 优化成一个点了
 			2. 解释:
@@ -13313,90 +14830,7 @@
 				        return res;
 				    }
 				};
-		AcWing 62. 丑数
-
-		AcWing 29. 删除链表中重复的节点
-
 	第六讲
-		todo AcWing 92. 递归实现指数型枚举
-			#include <iostream>
-			using namespace std;
-			const int N = 20;
-			int n;
-			bool st[N];
-			void dfs(int u)
-			{
-			    if (u > n)  // 叶子节点
-			    {
-			        for (int i = 1; i <= n; i ++ )
-			            if (st[i])
-			                cout << i << ' ';
-			        cout << endl;
-			        return;
-			    }
-			    st[u] = true;
-			    dfs(u + 1);  // 选择当前数的分支
-
-			    st[u] = false;
-			    dfs(u + 1);  // 不选当前数的分支
-			}
-			int main()
-			{
-			    cin >> n;
-			    dfs(1);
-			    return 0;
-			}
-		todo AcWing 94. 递归实现排列型枚举
-			1. 和全排列的逻辑是一样的, 只不过全排列我们排列的是1,2,3,...,n是值
-				这里的1,2,3,...,n是ind, 对应的值是a[1], a[2], ... , a[n]
-			2. 
-				#include <iostream>
-				#include <algorithm>
-
-				using namespace std;
-
-				const int N = 10;
-
-				int n;
-				int a[N], nums[N];
-				bool st[N];
-
-				void dfs(int u)
-				{
-				    if (u == n)
-				    {
-				        for (int i = 0; i < n; i ++ ) cout << nums[i] << ' ';
-				        cout << endl;
-				        return;
-				    }
-
-				    for (int i = 0; i < n; i ++ )
-				        if (!st[i])
-				        {
-				            nums[u] = a[i];
-				            st[i] = true;
-				            dfs(u + 1);
-				            st[i] = false;
-				            while (i + 1 < n && a[i + 1] == a[i]) i ++ ;
-				            	我的很棒的想法:
-				            		求下一个不一样的数字
-				            		你要不一样的, 那我while就和你反着来就很好了, 我就偏while一样的
-				            		那么 while(下一个下标合法 && 下一个数字还是和当前数字一样) 往下看 
-				        }
-				}
-
-				int main()
-				{
-				    cin >> n;
-				    for (int i = 0; i < n; i ++ ) cin >> a[i];
-
-				    sort(a, a + n);
-
-				    dfs(0);
-
-				    return 0;
-				}
-		todo AcWing 1537. 递归实现排列类型枚举 II
 		AcWing 145. 超市
 			#include <iostream>
 			#include <algorithm>
@@ -13707,7 +15141,179 @@
 				        return res;
 				    }  
 				};
+		AcWing 62. 丑数
+			0. 真的是会很有意思的题目
+			1. 题意:
+				找到一些丑数x, 丑数x的质因子只有 2,3,5. 注意是只有 2,3,5,不能有其他质因子
+					也就是 丑数x == 2^a * 3^b * 5^c, 其中a>=0, b>=0, c>=0
+			2. 其实是三路归并问题, 丑数x一定在下面的三个序列的其中一个, 或者其中两个, 或者其中三个
+				序列1: 包含质因子2的丑数
+				序列2: 包含质因子3的丑数
+				序列3: 包含质因子5的丑数
+				所以答案是三个序列的合并
+			3. 回忆三路归并, 其实需要两个东西:	
+				1. 知道每个序列里面的数字是多少, 并且序列是从小到大排好序的
+				2. 指针的赛马画面
+			4. 以前的题目, 都是已知每个序列里面的数字是多少
+				举例:
+					序列1: 1	2 3 5 6 7 {排好序了}
+					序列2: 1	4 5 6 6 9 10 {排好序了}
+					序列3: 0	3 4 5 6 10 12 {排好序了}
+				我们就可以直接指针赛跑: ijk指向序列123的元素
+					1. i == 0, j == 0, k == 0
+						找到最小值, 是序列3的数字0, 所以k++
+						res = {0}
+					2. i == 0, j == 0, k == 1
+						找到最小值, 是序列1,2的数字1, 所以i++, j++
+						res = {0, 1}
+					3. i == 1, j == 1, k == 1
+						找到最小值, 是序列1的数字2, 所以i++
+						res = {0, 1, 2}
+					...
+			5. 这道题, 我们其实是不知道每个序列里面的丑数是多少, 但是因为题目说了丑数的质因子只有 2,3,5, 所以丑数是可以从前面已知的丑数中来
+				1. 初始 
+					1. res = {1}
+					2. i == 0, j == 0, k == 0
+						a[i] = res[i] * 2: 一定包含质因数2的丑数a[i], 从前面已知的丑数res[i]{包含质因数235}中来, "来"也就是*2
+						b[j] = res[j] * 3: 一定包含质因数3的丑数b[j], 从前面已知的丑数res[j]{包含质因数235}中来, "来"也就是*3
+						c[k] = res[k] * 5: 一定包含质因数5的丑数c[k], 从前面已知的丑数res[k]{包含质因数235}中来, "来"也就是*5
+					3. 
+						序列1. a: 2
+						序列2. b: 3
+						序列3. c: 5
+						找到赛马{2,3,5}最小值, 是序列1的2, 所以i++
+						res = {1, 2}
+				2. 下一步
+					1. res = {1, 2}
+					2. i == 1, j == 0, k == 0
+						a[i] = res[1] * 2 = 4, 因为已经序列a已经利用过丑数res[0]了, 现在利用res[1]
+						b[j] = res[j] * 3
+						c[k] = res[k] * 5
+					3. 
+						序列1. a: . 4		-> 注意.是表明赛马已经走过的地方, 就不考虑了
+						序列2. b: 3
+						序列3. c: 5
+						找到赛马{4,3,5}最小值, 是序列2的3, 所以j++
+						res = {1, 2, 3}
+				3. 下一步
+					1. res = {1, 2, 3}
+					2. i == 1, j == 1, k == 0
+						a[i] = res[1] * 2 = 4, 因为已经序列a已经利用过丑数res[0]了, 现在利用res[1]
+						b[j] = res[1] * 3 = 6, 因为已经序列b已经利用过丑数res[0]了, 现在利用res[1]
+						c[k] = res[k] * 5
+					3. 
+						序列1. a: . 4		-> 注意.是表明赛马已经走过的地方, 就不考虑了
+						序列2. b: . 6
+						序列3. c: 5
+						找到赛马{4,6,5}最小值, 是序列1的4, 所以i++
+						res = {1, 2, 3, 4}
+				4. 下一步
+					1. res = {1, 2, 3, 4}
+					2. i == 2, j == 1, k == 0
+						a[i] = res[2] * 2 = 6
+						b[j] = res[1] * 3 = 6
+						c[k] = res[k] * 5
+					3. 
+						序列1. a: . . 6		-> 注意.是表明赛马已经走过的地方, 就不考虑了
+						序列2. b: . 6
+						序列3. c: 5
+						找到赛马{6,6,5}最小值, 是序列3的5, 所以k++
+						res = {1, 2, 3, 4, 5}
+				...
+			1. 
+				class Solution {
+				public:
+				    int getUglyNumber(int n) {
 
+				    	错误: vector<int> q(1);		语法: 1个数字, 是数字0
+				        正确: vector<int> q(1, 1);	语法: 1个数字, 是数字1. 也可以写成: vector<int> q = {1};
+
+				        int i = 0, j = 0, k = 0;	从0开始指
+				        while (q.size() < n)		队列是小于n
+				        {
+				            int t = min(q[i] * 2, min(q[j] * 3, q[k] * 5));	找到序列123的赛马的最小值 
+				            q.push_back(t);					队列插入的应该是最小值, 为什么是最小值, 因为我们要不遗漏, 所以从小到大就能保证不遗漏
+				            
+				            把==最小值t的数{可能是q[i],q[j],q[k]}, 注意下面的代码不一定只走了一个if
+				            if (q[i] * 2 == t) i ++ ;
+				            if (q[j] * 3 == t) j ++ ;
+				            if (q[k] * 5 == t) k ++ ;
+				        }
+
+				        return q.back();
+				    }
+				};
+		* AcWing 29. 删除链表中重复的节点
+			1. 链表是排好序的: 即重复的元素是挨在一起的
+			2. 因为可能会把head节点删除, 所以我们用一个dummy指针指向head节点的前面
+			3. 注意题目是如果节点有重复, 就删除全部, 不需要留下一个
+				举例:
+					1->2->3->3->4->4->5
+					答案是: 1->2->5, 不是 1->2->3->4->5
+			4. 这道题还是很有意思的. 一定要精准记忆, 否则一定掉坑里
+				/**
+				 * Definition for singly-linked list.
+				 * struct ListNode {
+				 *     int val;
+				 *     ListNode *next;
+				 *     ListNode(int x) : val(x), next(NULL) {}
+				 * };
+				 */
+				class Solution {
+				public:
+				    ListNode* deleteDuplication(ListNode* head) {
+				        auto dummy = new ListNode(-1);		虚拟节点 
+				        dummy->next = head;					虚拟节点和head连接
+
+				        auto p = dummy;						p的语意: 答案链表{即没有重复元素的链表}的尾节点
+				        									d->1->2->3->3->4->4->5
+				        									↑
+				        									p 初始化是dummy, 说明此时的答案链表为空
+				        while (p->next) {					待测试的是p的下一个节点, 如果p有下一个节点 
+				            auto test = p->next;			走到下一个节点, 也就是待测试的节点test
+				            int v = test->val;				记录test的值v
+
+				            我们要找到和v不同的节点
+				            那么 while()就要反着来: while(该节点的值==v)
+				            while (test && test->val == v) test = test->next;
+				            	先判断节点test, 如果下标合法, 且该节点的值==v, ok 我们就看下一个
+				            	所以这里的思路是: while(此节点ok) test==下一个要测试的
+
+				            	易错的地方, 错写成: while (test->next && test->next->val == v) test = test->next;
+				            		我之前以为这么写没问题, 因为我以前觉得"不需要担心在执行了 test = test->next之后, test == nullptr, 因为我们在while的时候就已经判断了 test->next != nullptr"
+				            		上面说的的确没错, 但是, 我忽略了一点:
+				            			正确写法的逻辑:
+				            				while(此节点ok) test==下一个要测试的
+				            					所以while跳出来后, test其实是非法状态
+				            			但是错误代码的逻辑是:
+				            				while(下一个节点ok) test指向下一个节点
+				            					所以while跳出来后, test其实是合法状态, 因为test->next才是非法状态
+				            				如果真的要写错误代码, 那么后面对应的代码也要改:
+				            					if(test == p->next) p = p->test;
+				            					else p->next = test->next;
+				            					test = test->next;
+
+				            此时跳出while后, test要么 == nullptr, 要么是非重复的第一个节点 
+				            if (test == p->next->next) p = p->next;		注意, 这里的是对比地址, 也就是对比真实的指针, 而不是对比值
+				            	如果test ==  p->next->next, 说明{非重复的第一个节点test}是p的下一个节点的下一个节点, 说明不存在重复元素
+				            	所以, 那个非重复元素可以被加入我们的答案链表. 怎么加, 就是不破坏原有链表的结构, 直接p移动到下一位就好了.
+				            	此时的p依旧是符合语意的: p的语意: 答案链表{即没有重复元素的链表}的尾节点
+
+				            else p->next = test;
+				            	这里一定是表示p后面有重复元素, 为什么, 因为 while (test && test->val == v) test = test->next; 一定会执行一次
+				            	所以test不可能是p的下一个节点. 只能是p的下一个的下一个{但是上面if已经判断过了}, 所以test是p的下一个的下一个的下一个...
+				            	说明有重复元素, 题目是完全抛弃重复元素, 所以我们要破坏原有链表的结构, 直接p的下一位不能是原有链表的下一位, 而是test
+
+				            	如果题目问题的是: 只保留一个重复元素{例如从1->2->3->3->4->4->5变为1->2->3->4->5}, 那么这个else要改为:
+				            		p = p->next;		p指向第一个重复的元素 
+				               		p->next = test;		后面要破坏原有链表的结构, 直接p的下一位不能是原有链表的下一位, 而是test
+
+				            如果执行的是else p->next = test; 那我们还是要测试test指向的是不是也是重复的, 所以之后又跑到开头 while(p->next)
+				        }
+
+				        return dummy->next;
+				    }
+				};
 	第五讲
 		AcWing 104. 货仓选址
 		AcWing 1536. 均分纸牌
@@ -14535,12 +16141,12 @@
 					n个村庄 * k个有商店的村庄 * (一次单元最短路的复杂度)
 			2. 就是那道题!!! 0类点, 到最近的1类点的问题, 求得不是最近的1类点是哪个, 而是最近的距离. 我们用的就是模拟源点
 				1. spfa: O(m边数)
-				2. 堆优化的dijkstra 
+				2. 还可以用堆优化的dijkstra 
 			3. spfa:
 				用了循环队列
 					需要回忆一下, 也就是从队列中出来的话, st[]设置为false, 进入的话设置为true 
 				不存在无解的情况, 也就是所有的村庄都能找到商店, 因为整个图是联通的 
-			4. 
+			4. 需要复习spfa
 				#include <cstdio>
 				#include <cstring>
 				#include <iostream>
