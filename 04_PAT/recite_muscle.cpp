@@ -3939,7 +3939,7 @@
 			错误: const int N = 10;
 			正确: const int N = 20;	注意, 对角线是两倍的行数/列数
 
-			错误: char g[N][N], n; 我的n设置成了char. 那肯定不对啊, TLE
+			错误: char g[N][N], n; 		我的n设置成了char. 那肯定不对啊, TLE
 			正确:
 				char g[N][N];
 				int n;
@@ -8334,6 +8334,9 @@
 			    	判断 f[x][y]是否已经被计算过, 计算过就不是==-1了, 计算过就返回 
 			    	我的疑惑, 为什么f[x][y]被计算过就不能再被计算了 
 			    		理解:
+			    			你可以看看后面我调试的例子, 也就是只有高的能调用低的的dfs, 返回的f[x][y]是服务于高者的
+			    				例如 f[2][1] == 16 是一个很长长度==16的路径, 谁能调用 f[2][1], 那就是比16还高的海拔
+			    		理解:
 			    			如果 f[x][y]被计算过, 那么它就只能为其他人贡献自己的值 f[x][y], 而不能被其他人在更新成最优值 
 			    			因为如果 f[x][y]被计算过, 那么这个 f[x][y]就肯定是最优值
 			    				为什么, 因为这是深搜, 只有遍历完整个路径, 才会计算出 f[x][y]
@@ -9863,7 +9866,8 @@
 			    while(b){   //我们是把b二分, 例如b的二进制是 1110101...0111. 
 			        if(b & 1) res = (res * a) % p;  //末位是1的话, 我们就把幂的加法, 变为底数的乘法: (res * a)
 			        b >>= 1;
-			        a = a * a % p;                  //这是为了准备b的下一位, 因为我们的是分解成了 a^b = a^1 * a^2 * a^4 * a^8 ... * a^32. 
+			        a = a * a % p;                  //这是为了准备b的下一位, 因为我们的是分解成了 a^b = a^(1+2+4+...+32). 
+			        																		// = a^1 * a^2 * a^4 * a^8 ... * a^32. 
 			    }
 			    return res;
 			}
@@ -10991,7 +10995,100 @@
 	todo 20. AcWing 167. 木棒
 	todo 21. AcWing 168. 生日蛋糕
 	-- 22. AcWing 170. 加成序列
-	todo 23. AcWing 171. 送礼物
+	23. AcWing 171. 送礼物
+		#include <algorithm>
+		#include <iostream>
+		#include <vector>
+
+		using namespace std;
+
+		typedef long long LL;
+
+		const int N = 1 << 25;  // k最大是25， 因此最多可能有2^25种方案
+
+		int n, m, k;
+		int g[50];       // 存储所有物品的重量
+		int weights[N];  // weights存储能凑出来的所有的重量
+		int cnt = 0;
+		int ans;  // 用ans来记录一个全局最大值
+
+		// u表示当前枚举到哪个数了， s表示当前的和
+		void dfs(int u, int s)
+		{
+		    // 如果我们当前已经枚举完第k个数（下标从0开始的）了， 就把当前的s， 加到weights中去
+		    递归到底:
+		    if (u == k) {
+		        weights[cnt++] = s;
+		        return;
+		    }
+
+		    底下是递归, 还是分两种: 选和不选
+		    // 枚举当前不选这个物品
+		    dfs(u + 1, s);
+
+		    // 选这个物品, 做一个可行性剪枝
+		    if ((LL)s + g[u] <= m) {  //计算和的时候转成long long防止溢出
+		        dfs(u + 1, s + g[u]);
+		    }
+		}
+
+		void dfs2(int u, int s)
+		{
+			递归到底的时候, 用二分:
+				我们要找的是: 第一段重量weights[mid] + 第二段重量 <=m, 的最大值 
+		    if (u == n) {  // 如果已经找完了n个节点， 那么需要二分一下
+		        int l = 0, r = cnt - 1;
+		        while (l < r) {
+		            int mid = (l + r + 1) >> 1;
+		            if (weights[mid] + s <= m)
+		                l = mid;	说明我们还可以重量大点, 往右找, 其中mid也是候选者
+		            else
+		                r = mid - 1;	
+		        }
+		        ans = max(ans, weights[l] + s);
+		        return;
+		    }
+
+		    没有递归到底, 还是分两种: 选和不选
+		    // 不选择当前这个物品
+		    dfs2(u + 1, s);
+
+		    // 选择当前这个物品
+		    if ((LL)s + g[u] <= m)
+		        dfs2(u + 1, s + g[u]);
+		}
+
+		int main()
+		{
+		    cin >> m >> n;
+		    for (int i = 0; i < n; i++)
+		        cin >> g[i];
+
+		    // 优化搜索顺序（从大到小）
+		    sort(g, g + n);
+		    reverse(g, g + n);
+
+		    k = n / 2 + 2;  // 把前k个物品的重量打一个表, 之所以+2, 是让第一段稍微长一点, 第二段短一点
+		    第一次递归: 从0到k
+		    dfs(0, 0);
+
+		    // 做完之后， 把weights数组从小到大排序
+		    sort(weights, weights + cnt);
+
+		    // 判重
+		    int t = 1;
+		    for (int i = 1; i < cnt; i++)
+		        if (weights[i] != weights[i - 1])
+		            weights[t++] = weights[i];
+		    cnt = t;
+
+		    // 从k开始， 当前的和是0
+		    dfs2(k, 0);
+
+		    cout << ans << endl;
+
+		    return 0;
+		}
 	todo 24. AcWing 180. 排书
 	todo 25. AcWing 181. 回转游戏
 12. 6.2 
@@ -13207,36 +13304,1212 @@
 		AcWing 620. 安全区34人打卡
 		AcWing 628. 美丽的数30人打卡
 		AcWing 76. 和为S的连续正数序列36人打卡
-	第十七讲完成情况：0/7
-		AcWing 591. 国家领导者45人打卡
-		AcWing 587. 吃蛋糕40人打卡
-		AcWing 561. 大按钮35人打卡
-		AcWing 571. 数学编码器35人打卡
+	第十七讲
+		AcWing 591. 国家领导者
+			1.
+				unordered_set: 求出两个字符串中不同字符的数量
+				字典序: 如何返回字典序
+			2. 输入输出
+				getchar(): 过滤掉第一行的回车
+				getline(): 带有空格的字符串如何读入
+				c_str(): string输出
+			3. 时间复杂度
+				O(TN∗20)
+					T是测试数据数量
+					N是候选人数量
+					20是字符串长度
+			#include <iostream>
+			#include <cstring>
+			#include <unordered_set>
+
+			using namespace std;
+
+			bool cmp(string a, string b)	是否a比b好: 1. a的不同字符更多 2. 如果一样多, a的字典序在前
+			{
+			    unordered_set<char> A, B;	会使用set 
+			    for (auto c : a)
+			        if (c != ' ')	这里是说明是否读到了单词末尾
+			            A.insert(c);
+			    for (auto c : b)
+			        if (c != ' ' )
+			            B.insert(c);
+
+			    if (A.size() != B.size()) return A.size() > B.size();	a的不同字符更多
+
+			    走到这里说明不同的字符一样多
+			    return a < b;	a < b == true: a的字典序在前
+			}
+
+			int main()
+			{
+			    int T;
+			    cin >> T;
+
+			    for (int C = 1; C <= T; C ++ )
+			    {
+			        int n;
+			        cin >> n;
+
+			        getchar();  	过滤掉第一行的回车
+			        string leader;
+			        while (n -- )	所以像是打擂台, 一个一个来打
+			        {
+			            string newname;
+			            getline(cin, newname);	
+
+			            if (cmp(newname, leader)) leader = newname;	当第一次leader == ''的时候, B.size() == 0
+			        }
+
+			        printf("Case #%d: %s\n", C, leader.c_str());	注意打印string, 需要给一个char指针
+			    }
+
+			    return 0;
+			}
+		AcWing 587. 吃蛋糕
+			0. 好吧, 这道题好奇怪的逻辑:
+				题目: 惠特利想吃掉的蛋糕的总面积m, 每种蛋糕的面积是 1, 2*2, 3*3, ...., {每种蛋糕的都可以选无限个}问"恰好"吃了m, 最少需要吃几个蛋糕
+				类比: 背包的总体积是m, 每种物体的体积是 1, 2*2, 3*3, ...., {每种物品的都可以选无限个}, 每种物体的价值都是1, 问"恰好"装满背包, 价值最小{价值最小 == 选的物体个数最少}
+					奇怪的地方: 之前都是求价值max, 现在是求价值min
+			1. 这是一个完全背包问题。怎么判断出来的呢？靠的就是题目的第一句话：“它有着无数的蛋糕！”
+				还要注意一点，其实从输入格式里也能注意到的条件“派对上有无限多个边长为任意整数的蛋糕”，这也说明这是一个完全背包问题。
+				那么这道题和别的完全背包不一样在这道题要算面积，但不难，我们一步一步分析
+			2. 首先我们把每组数据中的N（想吃的蛋糕的总面积）看成背包的容积，物品个数为 sqrt(N), 因为边长最多到 sqrt(N)
+			3. 每个物品的体积为当前这个蛋糕的面积,价值为1
+			#include <iostream>
+			#include <cstring>
+			using namespace std;
+			const int N = 10010;
+			int f[N];
+			int main()
+			{
+			    int T;
+			    cin >> T;
+			    for (int C = 1; C <= T; C ++ )
+			    {
+			        int n;
+			        cin >> n;  // 背包容量
+			        memset(f, 0x3f, sizeof f);
+			        f[0] = 0;	背包的容积是0, 需要的物体为0个, 这是一个合法方案 
+			        for (int i = 1; i * i <= n; i ++ )	枚举物品, 第i个物品, 体积是i*i, 因为背包容量是n, 所以i*i不要超过n
+			            for (int j = i * i; j <= n; j ++ )		完全背包, 从左往右枚举, 因为此轮需要左侧{新值}
+			                f[j] = min(f[j], f[j - i * i] + 1);	这里还要再理解一下, 是滚动求min的逻辑, 还是上方,左方的逻辑
+			            }
+			        printf("Case #%d: %d\n", C, f[n]);
+			    }
+			    return 0;
+			}
+		todo AcWing 561. 大按钮
+			如果a是b的前缀, a的字典序比b小 
+			返回该剪掉的序列的数量 
+			两种方法:
+				1. trie 
+					#include <iostream>
+					#include <cstring>
+
+					using namespace std;
+
+					typedef long long LL;
+
+					const int N = 5010;
+
+					int n;
+					int tr[N][2], idx;
+					bool is_end[N];
+					char str[55];
+
+					void insert()
+					{
+					    int p = 0;
+					    for (int i = 0; str[i]; i ++ )
+					    {
+					        int u = str[i] == 'B' ? 0 : 1;
+					        if (tr[p][u] == 0) tr[p][u] = ++ idx;
+					        p = tr[p][u];
+					    }
+
+					    is_end[p] = true;
+					}
+
+					LL dfs(int u, int d)
+					{
+					    if (is_end[u]) return 1ll << (n - d);
+
+					    LL res = 0;
+					    for (int i = 0; i < 2; i ++ )
+					        if (tr[u][i])
+					            res += dfs(tr[u][i], d + 1);
+
+					    return res;
+					}
+
+					int main()
+					{
+					    int T;
+					    scanf("%d", &T);
+
+					    for (int C = 1; C <= T; C ++ )
+					    {
+					        int p;
+					        scanf("%d%d", &n, &p);
+
+					        memset(is_end, 0, sizeof is_end);
+					        memset(tr, 0, sizeof tr);
+					        idx = 0;
+
+					        for (int i = 0; i < p; i ++ )
+					        {
+					            scanf("%s", str);
+					            insert();
+					        }
+
+					        LL res = (1ll << n) - dfs(0, 0);
+
+					        printf("Case #%d: %lld\n", C, res);
+					    }
+
+					    return 0;
+					}
+		AcWing 571. 数学编码器
+			1. 题意: 把一个集合 -某种操作-> 一个数字 
+				1. 把"非空子集"列出来, 注意, 如果有重复元素, 虽然这些元素的值相同, 但是我们依旧看成是不同的元素
+					所以非空子集的个数一定是 2^n - 1, 也就是一个元素选或不选, 抛除全部不选的情况 
+				2. 每个子集, 都有min和max, 他们的差是x
+				3. 把所有子集的x都加起来得到sum
+				4. 这个过程, 就是从集合 -> 数字sum
+			2. 复杂度 
+				最多1w个数字, 数字的值最大也是1w
+				直接做, 就是2^10000 - 1
+			3. 每个数字, 在最终的答案sum中, 被计算了多少次, 即: 贡献的值是多少
+			4. 很不错的思路: 
+				我们其实是一大堆max - 一大堆min
+				所以我们看一个数字a, 他在多少个子集中作为max, 在多少个子集中作为min
+					a在哪些子集中作为max
+						a一定要选, 小于等于a的所有数字, 可选可不选
+						假设a的ind == k, 那么这类子集的个数是: [0, k-1]一共k个数字可选可不选: 2^k
+					a在哪些子集中作为min
+						a一定要选, 大于等于a的所有数字, 可选可不选
+						假设a的ind == k, 那么这类子集的个数是: [k+1, n-1]一共n-1-k个数字可选可不选: 2^(n-1-k)
+				所以对于一个数字a, 他对sum贡献的值是: ak * (2^k - 2^(n-1-k)), 这里的ak就是ind==k个数字的值
+					注意, 这里==a的数字, 没关系不需要特殊看待
+					例如{2,2,2} 不管对于哪个2, 我们的公式都是一样的.
+						因为假设一个子集就是{2,2,2}, 我们规定: max是ind最大的2, min是ind最小的2. 我们上面的公式是符合这个规定的
+				对于每个a我们都要算, 所以最后sum是
+					sum_{k=0}^{k=n-1} ak * (2^k - 2^(n-1-k)), 这里的ak就是ind==k个数字的值
+
+			5. 
+				#include <iostream>
+				#include <cstring>
+				#include <algorithm>
+
+				using namespace std;
+
+				typedef long long LL;
+
+				const int N = 10010, MOD = 1e9 + 7;
+
+				int a[N];
+				int p[N];
+
+				int main()
+				{
+				    int T;
+				    scanf("%d", &T);
+
+				    p[0] = 1;
+				    for (int i = 1; i < N; i ++ ) p[i] = p[i - 1] * 2 % MOD;
+
+				    for (int C = 1; C <= T; C ++ )
+				    {
+				        int n;
+				        scanf("%d", &n);
+				        for(int i = 0; i < n; i ++ ) scanf("%d", &a[i]);
+
+				        sort(a, a + n);
+
+				        int res = 0;
+				        for (int i = 0; i < n; i ++ )
+				            res = (res + (LL)a[i] * (p[i] - p[n - 1 - i])) % MOD;
+
+				        printf("Case #%d: %d\n", C, res);
+				    }
+
+				    return 0;
+				}
 		AcWing 623. 投票30人打卡
 		AcWing 578. 去观光22人打卡
 		AcWing 80. 骰子的点数31人打卡
 	第十六讲
-		AcWing 1768. H 指数50人打卡
-		AcWing 1769. H 指数 II47人打卡
-		AcWing 1158. H指数39人打卡
-		AcWing 1108. 读书37人打卡
-		AcWing 558. 乘积三元组30人打卡
-		AcWing 1060. 墙的重建26人打卡
-		AcWing 53. 最小的k个数39人打卡
+		AcWing 1768. H 指数
+			从大到小排序, 前h篇文章的引用次数>=h, 因为从大到小, 所以第h篇文章的引用次数>=h
+			#include <iostream>
+			#include <algorithm>
+
+			using namespace std;
+
+			const int N = 1e5 + 10;
+
+			int n;
+			int a[N];
+
+			int main()
+			{
+			    cin >> n;
+			    for (int i = 0; i < n; i ++ ) cin >> a[i];
+
+			    sort(a, a + n);
+
+			    int h = 0;
+			    for (int i = n - 1; ~i; i -- )
+			        if (a[i] >= h + 1) h ++ ;       试探值: h+1, 如果倒数第i名的发布量 >= 试探值, 我们h就变成试探值 //从后往前遍历，每有一个数大于h，h就自增1
+
+			    cout << h << endl;
+
+			    return 0;
+			}
+		AcWing 1769. H 指数 II
+			数组已经有序，直接二分即可
+			class Solution {
+			public:
+			    int hIndex(vector<int>& citations) {	小到大排列
+			        int n = citations.size();
+
+			        int l = 0, r = n;
+			        while (l < r)
+			        {
+			            int mid = l + r + 1 >> 1;
+			            if (citations[n - mid] >= mid) l = mid;	如果倒数第mid名的引用量 >= mid, 那么我们往左找的. 注意, 这里的往左, 相当于倒数更大的数, 所以倒数是往右找, l = middle段的第一个节点
+			            											举例, 一共100个人, 倒数第50名的引用 >= 50, 我们希望看正数第25名, 也就是倒数第75名. 所以mid往右找, 同时mid也是候选人
+			            else r = mid - 1;
+			        }
+
+			        return r;
+			    }
+			};
+		AcWing 1158. H指数
+			H指数是单调递增的, 不会减少 
+			类似: 动态中位数, 两个堆, 小根堆+大根堆 
+
+			这里从代码的中间过程开始说起	
+				我们的堆里面已经有了一堆元素,
+					堆是小根堆, 所以堆顶是最小值h. 这个是我们当前的h值, 所以我们可以知道堆的size >= h
+				新来的数字x
+					如果 x < h, 根本就不能够帮我们提升h值, 这个x不插入堆
+					如果 x == h, 根本就不能够帮我们提升h值, 这个x不插入堆
+						为什么, 因为我们的历史论文已经让我们达到h这个水平了, 你要提升h值, 你有再多值==h的论文也没用. 例如1,1,1,1,1.超级多1, 可是h值依旧是1
+					如果 x > h, 能够帮我们提升h值, 插入堆
+				现在看看能不能到达h+1的h值, 首先我们要把堆中所有==h的元素删掉. 因为我们现在目标是h+1了, ==h的已经没用了
+					剩下的就都是>=h+1的元素, 注意啊, 此时堆里的元素不一定都是h+1, 可以是h+一个很大数
+				如果size >= h+1, 那就可以提升h了
+			如果从头说起的话, 我们的h = 0.
+				这样新来一个数字, 都能保证 x > 0, 都能够插入我们的堆
+
+			#include <iostream>
+			#include <queue>
+
+			using namespace std;
+
+			int main()
+			{
+			    int T;
+			    scanf("%d", &T);
+
+			    for (int cases = 1; cases <= T; cases ++ )
+			    {
+			        printf("Case #%d: ", cases);
+
+			        priority_queue<int, vector<int>, greater<int>> heap;    //建小根堆
+
+			        int n;
+			        scanf("%d", &n);
+
+			        int h = 0;
+			        while (n -- )
+			        {
+			            int x;
+			            scanf("%d", &x);
+
+			            if (x > h) heap.push(x);                          
+
+			            //堆内等于h的也要剔除，不然下一步h没法自增
+			            while (heap.size() && heap.top() <= h) heap.pop();    
+
+			            //表示有h篇论文至少引用了h次，h最多每次只能加1
+			            if (heap.size() >= h + 1) h ++ ;                     
+
+			            printf("%d ", h);
+			        }
+
+			        puts("");
+			    }
+
+			    return 0;
+			}
+		AcWing 1108. 读书
+			一个复杂度比较高的算法: O(Q*n), 相当于 O(n^2)
+				每个Ri {Ri是第i个人会间隔Ri页读书}
+					看每一个不缺失的页i
+						如果i是Ri的倍数 res++ 
+				相当于每个人都一页一页的检查是否要看, O(q*n): Q个人, n页书
+			优化: 
+				1. 人以群分, 将Ri相同的那些人的人数记录下来
+				2. 预处理: 将所有可能的Ri值都预处理, 然后看这个Ri值的倍数所代表的的页是否存在 
+				之后解释为什么复杂度是 O(nlogn + Q)
+			复杂度:
+				看上去两重循环是 O(n*n), 但其实是 O(n*ln(n))
+					其他细节: 
+						我们平时说的复杂度 log(n), 都是以2为底的
+						ln(n)是以e为底的, 底数越大, 对数越小
+						因为 e > 2, 所以 ln(n) < log(n)
+				筛质数为什么是 O(nlogn) {准确来说是 O(n*ln(n)) }的复杂度, 因为用到了调和级数的性质 
+					因为当i == 1的时候, 我们内层for需要遍历n次
+					因为当i == 2的时候, 我们内层for需要遍历n/2次, 因为我们是 2*1, 2*2, 2*3, ... 2*(n/2), 一直跳到n就截止了, 只跳了n/2次
+					所以两个for是: (n + n/2 + n/3 + ... + n/k)
+						(n + n/2 + n/3 + ... + n/k) = n*(1 + 1/2 + 1/3 + ... + 1/k) 这个叫做调和级数
+													= n*(ln(n) + c), c是很小的欧拉常数 
+													= O(n*ln(n))
+													= O(nlogn)
+			#include <iostream>
+			#include <cstring>
+
+			using namespace std;
+
+			typedef long long LL;
+
+			const int N = 100010;
+
+			int n, m, q;
+			int p[N], r[N];
+
+			int main()
+			{
+			    int T;
+			    scanf("%d", &T);
+			    for (int cases = 1; cases <= T; cases ++ )
+			    {
+			        scanf("%d%d%d", &n, &m, &q);	 N,M,Q，分别表示书的总页数，残缺页数以及读者数
+			        memset(p, 0, sizeof p);		初始化
+			        memset(r, 0, sizeof r);		初始化
+			        for (int i = 0; i < m; i ++ )
+			        {
+			            int x;
+			            scanf("%d", &x);
+			            p[x] = 1;	代表第x页是残缺的{阳性/残缺: 1}
+			        }
+
+			        for (int i = 0; i < q; i ++ )
+			        {
+			            int x;
+			            scanf("%d", &x);
+			            r[x] ++ ;	每隔x页才看的人数是 r[x]
+			        }
+
+			        LL res = 0;	求的是: 所有读者的实际阅读页数相加的和为多少。这里设置为LL, 因为最坏情况: Q个人, 每个人的Ri是1{也就是每一页都要看}, n页书一页不缺.
+			        													1≤M≤N≤1e5, 1≤Q≤1e5, 所以 N*Q 最多 1e10, 而int最多是 2e9
+			        for (int i = 1; i <= n; i ++ )			这里是看每隔i页看书 
+			            for (int j = i; j <= n; j += i)		j是看的页书是: 1*i, 2*i, 3*i, ... j*i==n,  这里就是调和级数, 因为j的遍历的次数是 n/i
+			                if (!p[j])						如果第j页是存在的 
+			                    res += r[i];				看看有r[i]个人是每隔i页看书, 把人数加到res中. 
+
+			        printf("Case #%d: %lld\n", cases, res);
+			    }
+
+			    return 0;
+			}
+		AcWing 558. 乘积三元组
+			1. 题目是一个数字是另外两个数字的乘积. 至于题目什么 x<y<z 的条件, 我觉得没什么用只是说明这三个数字都是两两不同的
+			2. 两种情况: 3个数字都是非零, 3个数字存在零
+				1. 3个数字都是非零
+					a*b = c, 那么肯定有 c >= b, c >= a
+					这里联想到之前的two sum, 我们枚举所有可能的{a,b}, 然后看看a*b是否已经在set中, 因为c一定更大 
+					所以我们先排序, 先往set中插入的是c
+					所以看a*b是否在set中, 接着ab都插入set中
+				2. 3个数字存在零
+					1. 三个数字都是0: 0*0=0
+					2. 三个数字中2个是0, 1个是非零: 0*x=0. 这里不需要想什么0*0=x的非法情况, 因为题目说三个数只要满足 a*b=c, b*c=a, a*c=b 中任意一种情况就好了
+			#include <iostream>
+			#include <algorithm>
+			#include <cstring>
+
+			using namespace std;
+
+			typedef long long LL;
+
+			const int N = 7010, M = 2e5 + 10;
+
+			int n;
+			int a[N], s[M];  
+				a是读入的数字 
+				s数组模拟哈希表, 因为有数字的值的取值范围是[0, 2e5], 所以开M个
+
+			int main()
+			{
+			    int T;
+			    cin >> T;
+
+			    for (int t = 1; t <= T; t ++ )
+			    {
+			        int n;
+			        cin >> n;
+
+			        for (int i = 0; i < n; i ++ ) cin >> a[i];
+
+			        sort(a, a + n);	从小到大排序 
+			        memset(s, 0, sizeof s);
+
+			        LL res = 0;
+			        int not_zero = 0;                   //表示非0的个数
+
+			        下面具体的做法:
+			        	从大到小遍历大数 a[i]
+			        		对于每个a[i], 遍历它左边的所有小数 a[j]
+			        			如果他们两个的乘积xx在set中, 那么:	res += s[a[i] * a[j]]	注意这个xx可能在set中有好多个, 个数就是 s[a[i] * a[j]]
+			        		最后把 a[i]插入set, 你的疑问, 那a[j]不用插入吗? 不需要, 因为a[j]是将来的a[i], 会被插入. 所以为了保证插入不重复不遗漏, 就按照a[i]的遍历顺序插入
+			        for (int i = n - 1; i >= 0 && a[i] > 0; i -- )  //枚举Ay
+			        {
+			            not_zero ++ ;
+			            for (int j = 0; j < i; j ++ )               //枚举Ax
+			                if ((LL)a[i] * a[j] < M)	为什么是 < M, 因为每个数字的取值范围都是 [0, M = 2e5], 所以乘积最大值也不超过M
+			                    res += s[a[i] * a[j]];  //两个数的乘积在a中能找到对应的数
+			                                            //即：a[j] * a[i] = (a[j] * a[i])满足x < y < z
+			            s[a[i]] ++ ;                    //这一步思路有点像两数之和
+			        }
+
+			        int zero = n - not_zero;
+			        //组合数：从zero个0中选3个, 所以分母是(1*2*3)
+			        res += (LL)zero * (zero - 1) * (zero - 2) / 6;  //0 * 0 = 0
+
+			        //组合数：从zero个0中选两个，not_zero个非0中选一个, 所以分母是(1*2)
+			        res += (LL)not_zero * zero * (zero - 1) / 2;    //0 * A = 0
+
+			        printf("Case #%d: %lld\n", t, res);
+			    }
+
+			    return 0;
+			}
+		AcWing 1060. 墙的重建
+			这道题其实很有意思
+			0. 这道题主要是难在, 要转换题目的意思
+				1. 题目: 如果满足 Ai ≠ Ai+1 的i, 1≤i<N, 的数量不超过 k，他将会十分高兴。问, 最少需要重建多少部分墙面
+				2. 也就是相邻两个墙的高度不同的个数是k, 也就是说, 最多有k+1段不同的高度, 因为例如有3段高度不同的墙, 说明第一段和第二段不同, 第二段和第三段不同, 不同的个数是2
+			1. 因为N很小, 只有100, 所以可以用DP, 因为复杂度 = 状态数量 O(n^2) * 状态转移 O(n) = O(n^3), 也才1e6, 所以dp就够了
+			2. f[i, j]
+				表示的集合: 前i个墙, 最多有j段不同高度的重建方案的集合
+				属性: 集合中, 每个重建方案都有各自的操作次数, 我们选操作次数min的 
+				转移: 
+					划分: 不是说有j段吗, 我们把最后一段单独挑出来
+						那么最后一段区间的起点和终点就是 [k, i], 其中起点可以是1, 也可以是i
+							如果k==1, 最后一段区间的起点和终点就是 [1, i], 也就是只有一段区间, 注意我们的起始点不是0, 而是1
+							如果k==i, 最后一段区间的起点和终点就是 [i, i], 也就是最后一段只是一个点
+						那么前面的最多j-1段, 也就是 f[k-1, j - 1], 也就是"前k-1个墙, 最多有j-1段不同高度的重建方案的集合的最小值"
+						那么最后一段区间要怎么操作呢? 因为最终结果是最后一段的高度都相等, 所以找到高度的众数, 众数不用变高度, 非众数才变高度. 操作次数 == 非众数的墙的个数
+							所以用 g[k, i] 表示区间 [k,i] 非众数的墙的个数
+					f[i, j] = min(f[k-1, j - 1] + g[k, i]), k的取值是 [1, i], k-1的取值是 [0,i-1]
+			3. 
+				#include <iostream>
+				#include <cstring>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 110, M = 1010;
+
+				int n, m;
+				int h[N], s[M];
+				int f[N][N], g[N][N];
+
+				int main()
+				{
+				    int T;
+				    scanf("%d", &T);
+
+				    for (int cases = 1; cases <= T; cases ++ )
+				    {
+				        scanf("%d%d", &n, &m);
+				        for (int i = 1; i <= n; i ++ ) scanf("%d", &h[i]);
+
+				        下面这一段, 我非常喜欢, 求得是 g[i][j] {非众数的个数}, 这里的复杂度是 O(n^2), 注意不是n*n那种正方形, 而是 n+(n-1)+(n-2)+...+1 的n*n/2的三角形 
+				        for (int i = 1; i <= n; i ++ )		枚举起点i
+				        {
+				            memset(s, 0, sizeof s);	更新我们的哈希表 
+				            for (int j = i, maxs = 0; j <= n; j ++ )	枚举终点j
+				            {
+				                s[h[j]] ++ ;					某个值h[j]的个数 
+				                maxs = max(maxs, s[h[j]]);		求最大的个数
+				                g[i][j] = j - i + 1 - maxs;		这里不需要知道众数具体是谁, 只需要知道众数有多大. 非众数个数 == 区间长度 - 众数个数 
+				            }
+				        }
+
+				        memset(f, 0x3f, sizeof f);		因为我们求的是min, 所以初始话是正无穷 
+				        memset(f[0], 0, sizeof f[0]);	也就是 f[0,0] == f[0,1] == f[0,2] == ... == 0: 如果一个墙都没有 {i == 0}, 能重建成最多 j = 0,1,2... 段墙的方案是 0. 连墙都没有, 也就不需要方案了. 因为如果你认为方案数 == 1, 那么你倒是写一个方案出来啊
+
+				        下面是dp: 
+				        for (int i = 1; i <= n; i ++ )			
+				            for (int j = 1; j <= m + 1; j ++ )	题目问的是m个不同, 所以最多是m+1段墙 
+				                for (int k = 1; k <= i; k ++ )	枚举分割点. [1, k-1] and [k, i]
+				                    f[i][j] = min(f[i][j], f[k - 1][j - 1] + g[k][i]);	注意, 这里不是什么左上上方的逻辑, 而是那种滚动求min的逻辑. 也就是在所有的 f[k - 1][j - 1] + g[k][i] 中, 找最小值
+
+				        printf("Case #%d: %d\n", cases, f[n][m + 1]);
+				    }
+
+				    return 0;
+				}
+		AcWing 53. 最小的k个数
+			其实逻辑非常的简单, 那就是如果超出k个数字了, 那就把最大的那个数字剔除, 剩下的总是小的, 而且剩下的总是只有k个, 所以是k个最小的 
+			class Solution {
+			public:
+			    vector<int> getLeastNumbers_Solution(vector<int> input, int k) {
+			        priority_queue<int> heap;
+			        for (auto x : input)
+			        {
+			            if (heap.size() < k || heap.top() > x) heap.push(x);
+			            if (heap.size() > k) heap.pop();
+			        }
+			        vector<int> res;
+			        while (heap.size()) res.push_back(heap.top()), heap.pop();	因为pop出来是从大到小, 所以最后要reverse
+			        reverse(res.begin(), res.end());
+			        return res;
+			    }
+			};
 	第十五讲
-		AcWing 1318. 取石子游戏56人打卡
-		AcWing 1302. 矩阵 A × B54人打卡
-		AcWing 1262. 鱼塘钓鱼42人打卡
-		AcWing 1274. 奶牛排队43人打卡
-		AcWing 1306. 迷路16人打卡
-		AcWing 89. a^b42人打卡
+		AcWing 1318. 取石子游戏
+			如果给的石子个数n是:(k+1)的倍数, 那么先手就是必败的
+			很好理解:
+				n=0的时候, 先手必败, 因为上一个选手刚好拿完了, 上一个选手胜利
+				n=1,2,3...,k的时候, 先手必胜. 为什么, 因为先手拿完就好了
+				n=k+1, 先手必败. 因为不管先手拿的是几{假设拿的是i}, 后手都可以拿完剩下的, 然后后手胜利
+					假设先手拿的是1个, 后手可以拿剩下的k个
+					假设先手拿的是2个, 后手可以拿剩下的k-1个
+					...
+				n=k+2,k+3,...,2k+1. 先手必胜. 为什么, 第一局先手拿x个, 这个x只要使得剩下是k+1个就好, 所以对手遇到了k+1个对手就必败
+				n=2k+2, 先手必败. 
+			#include <iostream>
+			using namespace std;
+			int main()
+			{
+			    int n, k;
+			    cin >> n >> k;
+			    if (n % (k + 1) == 0) puts("2");	先手必败, 所以赢家是后手'2'
+			    else puts("1");
+			    return 0;
+			}
+		AcWing 1302. 矩阵 A × B
+			#include <iostream>
+			#include <algorithm>
+
+			using namespace std;
+
+			const int N = 110;
+
+			int n, m, p;
+			int A[N][N], B[N][N];
+
+			int main()
+			{
+			    cin >> n >> m;
+			    for (int i = 0; i < n; i ++ )
+			        for (int j = 0; j < m; j ++ )
+			            scanf("%d", &A[i][j]);          //读入数组A
+
+			    cin >> p;
+			    for (int i = 0; i < m; i ++ )
+			        for (int j = 0; j < p; j ++ )
+			            scanf("%d", &B[i][j]);          //读入数组B
+
+			    for (int i = 0; i < n; i ++ )
+			    {
+			        for (int j = 0; j < p; j ++ )
+			        {
+			            int res = 0;
+			            for (int k = 0; k < m; k ++ )
+			            {
+			            	A的第i行的所有m个元素, 和B的第j列的所有m个元素, 逐个相乘. 我们遍历m个元素, k从0开始到m-1
+			                res += A[i][k] * B[k][j];   第i行的第k个元素{第k列} * 第j列的第k个元素{第k行}//三重循环输出结果
+			            }
+			            cout << res << ' ';
+			        }
+			        cout << endl;
+			    }
+
+			    return 0;
+			}
+		* AcWing 1262. 鱼塘钓鱼
+			可以转换为多路归并的问题
+			1. 首先能在池塘x钓多少鱼, 并不取决于现在的时间是什么时候, 而是取决于你曾经在这个池塘x呆了多久
+			2. 所以我们不会走回头路, 因为如果你走回头路再去原来的池塘x钓, 那你还不如当初就别往前走就直接在那个池塘x钓够了
+				第1个池塘 	10	8	6	4
+				第2个池塘 	4	3	2	1
+				第3个池塘 	100	90	80	70
+				...
+			3. 所以就变成了多路归并的问题, 我们在所有的数字中, 选规定时间t内前t多的钓鱼个数
+				例如, 如果只在第1,2个池塘钓鱼, 总时间是10分钟, 走到第2个鱼塘需要2分钟, 那就是第1,2个池塘里面, 选前8个最大的个数
+			#include <iostream>
+			#include <cstring>
+
+			using namespace std;
+
+			const int N = 110;
+
+			int a[N], d[N], l[N];
+			int spend[N]; -> spend[i] = xx, 第i个池塘现在是它的第xx分钟 
+
+			int get(int i) 第i个池塘, 当前的top值 
+			{
+			    return max(0, a[i] - d[i] * spend[i]); 	起始值 - 递减值*经历了第spend[i]分钟. 一开始spend[i]==0, 也就是一开始就是起始值. 注意如果减到负数就没意义了, 所以用 max(0,xx)
+			}
+
+			int work(int n, int T)	在前n个池塘多路归并, 剩余时间为T
+			{
+			    memset(spend, 0, sizeof spend); 刚开始, 对于每个池塘, 都是它的第0分钟 
+
+			    int res = 0;
+			    for (int i = 0; i < T; i ++ ) 第i分钟 
+			    {
+			    	以下就是找t的灵魂, t是某个赛道, 这个赛道的top比其他每个赛道的top都要大
+			        int t = 1;
+			        for (int j = 1; j <= n; j ++ )
+			            if (get(j) > get(t))
+			                t = j;
+
+			        res += get(t);	把这个第t个赛道的top加到res
+			        spend[t] ++ ;	第t个赛道的top往右移动
+			    }
+
+			    return res; T分钟之内, 把每个赛道的top都加上了 
+			}
+
+			int main()
+			{
+			    int n, T;
+			    cin >> n;
+			    for (int i = 1; i <= n; i ++ ) cin >> a[i];
+			    for (int i = 1; i <= n; i ++ ) cin >> d[i];
+			    for (int i = 2; i < n; i ++ ) cin >> l[i], l[i] += l[i - 1]; l[i]的意思是从起点{第1个池塘}开始, 到第i个池塘总共需要的时间. 这里是前缀和, 因为我们需要的也是从第1个池塘走到第2,3,,,n个池塘需要时间的总和 
+			    cin >> T;
+
+			    int res = 0;
+			    for (int i = 1; i <= n; i ++ ) res = max(res, work(i, T - l[i]));
+
+			    cout << res << endl;
+
+			    return 0;
+			}
+		AcWing 1274. 奶牛排队
+			考察:
+				st表: 
+					简单的动态规划, 解决的是RMQ{range maximum/minimum question}
+					只能处理静态问题, 但是代码简单
+				线段树: 可以处理动态的询问, 但是面试一般不考线段树 
+
+			st表/DP:
+				属性:
+					f[i,j]: 表示从i开始, 区间长度 == 2^j, 也就是 [i, i + 2^j - 1] 的区间的最大值, 
+				转移:
+					f[i, j] = max(f[i, j - 1], f[i + 2^(j-1), j - 1]) 所以是 max(左边, 左下角)
+					因为: 我们将 [i, i + 2^j - 1] 分为前半段和后半段: [i, i + xx], [i + yy, i + yy + 2^(j-1) - 1]
+						其中前半段的区间长度 == 2^(j-1), 所以 xx = 2^(j-1) - 1
+						其中前半段的区间长度 == 2^(j-1), 区间起点是xx + 1, 所以 yy = 2^(j-1)
+				如何求答案: 假设题目问的是 [L, R] 区间的最大值 
+					区间长度 k == R - L + 1, 那么对应的我们的t{也就是上文中的j}是什么? 
+						其实就是满足 2^t <= k 的最大的t, 也就是说 2^t * 2 > k, 为什么, 因为如果 2^t * 2 < k, 则t并不是满足 2^t <= k 的最大的t, 因为我们完全可以让t++, 
+						为什么t是满足 2^t <= k 的最大的t, 因为这样我们的max就是不会遗漏了
+							因为 2^t > k/2, 所以 f[L, t]代表的前半段其实是大于我们区间长度的一半. 之前前半段是恰好 == 区间长度的一半
+						f[L, R] = max(f[L, t], f[R - 2^t + 1, t]) 其实这里前半段的尾部和后半段的头部是重叠的, 求的是max不怕重叠只怕遗漏, 我们没有遗漏, 所以ok 
+			复杂度: O(nlogn + Q)
+				预处理f[i,j]: nlogn 
+				每次询问: 1, 一共Q次询问
+			代码:
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				typedef pair<int, int> PII;
+				const int N = 5e4 + 10, M = 16;
+				int n, Q;
+				int h[N];
+				int f[N][M], g[N][M];                   //开两个ST表，f表示最大值，g表示最小值
+				int log[N];
+				int main()
+				{
+				    scanf("%d%d", &n, &Q);
+				    for (int i = 1; i <= n; i ++ ) scanf("%d", &h[i]);
+
+				    //枚举法预处理log，且向下取整
+				    首先, 要熟练: 2^(xx + yy) 就可以写成 1 << xx + yy
+						而且要知道我们的加减法的优先级高于 <<, 也就是<<最后算
+				    for (int i = 1; i <= n; i ++ )      
+				        while (1 << log[i] + 1 <= i)		这个就是我解释的, 我们这里是在试探, 因为之前说了, 2^t * 2 > k, 所以我们这里是在试探下一步, 2^(log[i] + 1). 如果不满足 <= k, 那就是 > k, 直接退出while, 不影响我们的合法值t
+				            log[i] ++ ;
+
+				    for (int j = 0; 1 << j <= n; j ++ )         //预处理ST表
+				        for (int i = 1; i + (1 << j) - 1 <= n; i ++ )
+				            if (!j) f[i][j] = g[i][j] = h[i];   //如果长度j==0, 那么最大值和最小值就是h[i]
+				            else
+				            {
+				                f[i][j] = max(f[i][j - 1], f[i + (1 << j - 1)][j - 1]);	这个就是转移函数: f[i, j] = max(f[i, j - 1], f[i + 2^(j-1), j - 1])
+				                g[i][j] = min(g[i][j - 1], g[i + (1 << j - 1)][j - 1]);
+				            }
+
+				    while (Q -- )                               //处理询问
+				    {
+				        int l, r;
+				        scanf("%d%d", &l, &r);
+				        int t = log[r - l + 1];
+				        int maxh = max(f[l][t], f[r - (1 << t) + 1][t]);
+				        int minh = min(g[l][t], g[r - (1 << t) + 1][t]);
+
+				        printf("%d\n", maxh - minh);
+				    }
+
+				    return 0;    
+				}
+		* AcWing 1306. 迷路1
+			面试考过这道题, 快速幂需要掌握
+			f[i,j] 
+				属性: 在时刻j恰好走到点i的路径数量.
+				转移: f[i, j] = sum_{k=0}^{k=n-1} f[k, j - w(k,i)]
+					解释: 
+						1. 从上一个点k来, 上一个点k可以是任意点{只要满足了条件}
+							因为题目有给自环边, 所以k可以是i点本身. 
+							当然k也不是全部的点, 假设点2到点1的距离是'0'{代表没有通路}, 那么当i==1的时候, k就不能是2.
+						2. 所以是在时刻 j - w(k,i) 走到了点k, w(k,i)是 k->i的时间 
+						3. 因为是求路径数量, 所以是无脑加总
+				复杂度: O(N*N*T), T很大
+					状态数量, 也就是f[i,j]的i有N种, j有T个 
+					每个f[i,j], 需要进行N个加法计算, 因为是 sum_{k=0}^{k=n-1}, 所以又有个N
+				套路: O(N*N*logT)
+					矩阵乘法和快速幂对dp进行优化 
+					矩阵乘法:
+						状态转移一次 == 乘一次矩阵A
+						状态转移T次 == 乘T次矩阵A
+					快速幂:
+						因为矩阵满足结合律, 乘T次矩阵A == *A*A*A... = A^T
+						把T次 -> logT次 {看快速幂的题目就好了 }
+				故事:
+					先看看这个转移: f[i, j] = sum_{k=0}^{k=n-1} f[k, j - w(k,i)]
+						求f[i, j], 需要的都是左侧的东西, 左上,正左,左下都有可能
+						这里说的左侧, 只是指左边的9列, 也就是[j-9, j-8, ..., j-1]列的东西 
+						---------------> j 
+						| x
+						|  			x
+						|	   x		o目标点=f[i, j], 也就是只需要左边的9列信息, 至于哪一行, 左上,正左,左下都有可能
+						|	
+						|	x
+						↓  		 x
+						i
+					因为又是加总, 所以我们就能想到用向量乘法, 左边的小星星们 -> f[i,j]
+						什么意思呢? 也就是左侧的 n行*9列 矩阵的信息, 进行矩阵乘法之后, 能够得到右侧那一列的值: f[0,j], f[1,j], ..., f[n-1, j]
+						我们左侧的{n行*9列}矩阵:																目标向量:
+								j-9		j-8		j-7		j-6		j-5		j-4		j-3		j-2		j-1		|	 j
+							0																			|	f[0, j]
+							1																			| 	f[1, j]
+							2																			|	f[2, j]
+							3
+
+							...
+
+							n-1																			|	f[n-1, j]
+					你会发现, 这种关系是可以一步一步往右移动的, 也就是求第j+1列的所有f[xx][j+1]元素的时候, 用到的是它j+1的左侧9列: [j-8, j] 
+						所以我们就用多次矩阵乘法来做这种重复的动作 
+					为了简便起见, 我用简称:
+						1. 题目原始的超大矩阵: n行*T列, 我们称作O个
+						2. 我们分出来的小矩阵: n行*9列, 我们称作m
+					另外, 那个{n行*9列}矩阵m看上去很臃肿, 所以我们把它压成一个向量, 一列一列剥离拼接, 最后横成一个行向量
+						例如上面的矩阵, 我们压成一个向量后, 我们称这个向量叫: F[j], 其中j是指{n行*9列}矩阵m的第一列是j
+							所以F[j]里面的所有东西, 其实是为了求 f[xxx, j + 9] 也就是求第j+9列的所有元素.
+						所以F[j]指代的{n行*9列}矩阵m是:
+								j		j+1		j+2		j+3		j+4		j+5		j+6		j+7		j+8		|	 j+9
+							0																			|	f[0, j+9]
+							1																			| 	f[1, j+9]
+							2																			|	f[2, j+9]
+							3
+
+							...
+
+							n-1																			|	f[n-1, j+9]
+						现在把这个矩阵压成 F[j], 这是一个行向量, 这个向量的元素就是 9*n个 = 90个
+							F[j] = {f[0,j],f[1,j],f[2,j],...,f[n-1,j],	
+									f[0,j+1],f[1,j+1],f[2,j+1],...,f[n-1,j+1],
+									...	
+									f[0,j+8],f[1,j+8],f[2,j+8],...,f[n-1,j+8]}
+							这里有必要说一下映射问题:
+								在矩阵m的下标是 [i,j]的点, 对应 F[j]向量中的ind == j * 行数 + i == j * n + i
+									注意这里j从0开始. 注意这里区别于之前的映射i*列数+j{因为以前的转换, 是一行一行剥离拼接的. 本题是一列一列的}
+							对应的: 
+							F[j+1] = {f[0,j+1],f[1,j+1],f[2,j+1],...,f[n-1,j+1],
+									f[0,j+2],f[1,j+2],f[2,j+2],...,f[n-1,j+2],
+									...	
+									f[0,j+9],f[1,j+9],f[2,j+9],...,f[n-1,j+9]}
+							F[j]和F[j+1]的很多部分都是重叠的, 不是重叠的部分, 也就是我们需要通过F[i]的小星星求 f[xxx, j + 9] 也就是求第j+9列的所有元素.
+							我们从一个向量->另一个向量, 就是需要用矩阵乘法
+								F[j+1] = F[j] * A, 其中A是{90*90}的矩阵 
+								怎么求A, 见后
+							最终的答案是f[n-1][T], 它在 F[T]这个向量中,  是这个向量的ind==n-1的元素 
+								F[T] = F[T-1] * A, 
+								F[T-1] = F[T-2] * A,
+								...
+								F[2] = F[1] * A
+								F[1] = F[0] * A. 
+								所以: F[T] = F[0]*(A^T)
+								所以最后的答案是: f[n-1][T] == F[T][n-1]
+						如何求A:
+							F[j] = {f[0,j],f[1,j],...,f[n-1,j],f[0,j+1],f[1,j+1],...,f[n-1,j+1], ..., f[0,j+8],f[1,j+8],...,f[n-1,j+8]}
+							F[j+1] = {f[0,j+1],f[1,j+1],...,f[n-1,j+1],f[0,j+2],f[1,j+2],...,f[n-1,j+2], ..., f[0,j+9],f[1,j+9],...,f[n-1,j+9]}
+							回想矩阵乘法: F[j+1] = F[j] * A
+								F[j]的一整行, 乘上A的第xx列, 两个向量相乘, 得到的是F[j+1]的第xx个元素 
+									例如: F[j]的一整行, 乘上A的第0列, 两个向量相乘, 得到的是F[j+1]的第0个元素 
+									为了得到 F[j+1]的第xx个元素 , 我们是让F[j]乘上A的第xx列. 
+								那么A的第xx列又有哪些元素起到作用了呢? 例如A的第xx列的第yy个元素 == 0, 对应了F[j]的第yy个元素其实在乘法中是不起作用的
+								所以A[yy][xx]的意思是: 为了获得 F[j+1]的第xx个元素, F[j]的第yy个元素是否做了贡献
+									A[yy][xx]只能是0或者1
+										如果 == 1, 是指为了获得 F[j+1][xx], F[j][yy]做了贡献. 贡献就是 F[j][yy] 的值, 也就是某个f[][]的值 
+										如果 == 0, 是指为了获得 F[j+1][xx], F[j][yy]没做贡献. 
+								乘法: F[j+1][xx] = F[j][y1] * A[y1][xx] +  ... + F[j][yy] * A[yy][xx] 
+							现在知道怎么做了吧?
+								1. 对于重叠的部分, 我们其实就是看真实要找的东西{超大矩阵O中的f[i,j]点}, 在F[j]和F[j+1]的下标是多少
+									f[i,j]在F[j]的下标是: j * n + i
+									f[i,j]在F[j+1]的下标是: (j-1) * n + i
+										举例:
+											i = 0, j = 1
+											f[0,1]在F[0]的下标是: 1 * n + 0 = n {下标从0开始, 所以其实是第n+1个}
+											f[0,1]在F[1]的下标是: (1-1) * n + 0 = 0
+											因为F[0] = {f[0,0],f[1,0],...,f[n-1,0],"f[0,1]",f[1,1],...,f[n-1,8]}
+											因为F[1] = {"f[0,1]",f[1,1],...,f[n-1,1],f[0,2],f[1,2],...,f[n-1,9]}
+										如果真的要我写我可能写不出来, 但是我觉得我可以解释一下
+											首先, f[i,j]在F[j]中的位置, 你是可以想出来的
+											那么现在假设, f[i,j]位置都往左移动了n个单位, 那就是所有的ind都减1
+											也就是之前是0的, 现在是-1了
+											那么坐标就是 j * n + i - n == (j-1) * n + i
+											而这个, 恰恰就是f[i,j]在F[j+1]的位置
+									所以: A[j * n + i][(j - 1) * n + i]
+										在F[j]的第几个元素做贡献	服务于F[j+1]的第几个元素
+								2. 对于小星星部分, 也是看真实要找的东西{矩阵m中的f[i,j]点}, 在F[j]和F[j+1]的下标是多少
+									首先, 对于 F[j+1], 我们要求的是它的最后一列, 所以求的是: f[i,8], 即 8 * n + i
+										我之前的疑惑, 你总不能一直是ind==8的列呀. 我们的超大矩阵很大啊, 对没错, 可是你别忘了我们是要乘T次A, 这里只是乘1次A, 等乘下一次A的时候的ind==8的列, 那其实就是f[i][9]列了 
+									为了求F[j+1]的最后一列, 需要的是F[j]全部9列的信息, 注意而不是F[j+1]的前8列提供信息.
+									那么F[j]的全部9列怎么求?
+										回忆公式: f[i, j] = sum_{k=0}^{k=n-1} f[k, j - w(k,i)]
+										这里 j - w 的范围是 [0,8], 因为F[j]有九列
+										因为w的范围是[1, 9], 所以 j = [0,8] + [9,1] = 9.
+										所以 j - w = 9 - w
+										所以 A[(9 - w) * n + k][8 * n + i];
+										在F[j]的第几个元素做贡献	服务于F[j+1]的第几个元素
+
+			#include <iostream>
+			#include <cstring>
+
+			using namespace std;
+
+			const int N = 110, MOD = 2009;
+
+			int n, T;
+			char w[N][N];
+			int f[N][N], F[N][N], A[N][N];
+
+			void mul(int C[][N], int A[][N], int B[][N])
+			{
+			    static int R[N][N];
+			    memset(R, 0, sizeof R);
+
+			    for (int i = 0; i < n * 9; i ++ )
+			        for (int j = 0; j < n * 9; j ++ )
+			            for (int k = 0; k < n * 9; k ++ )
+			                R[i][j] = (R[i][j] + A[i][k] * B[k][j]) % MOD;
+
+			    memcpy(C, R, sizeof R);	不能写成sizeof C, 这么写是指针大小8字节. 目标, 源, 源长 
+			}
+
+			void qmi()
+			{
+			    while (T)
+			    {
+			        if (T & 1) mul(F, F, A);
+			        mul(A, A, A);
+			        T >>= 1;
+			    }
+			}
+
+			int main()
+			{
+			    cin >> n >> T;
+			    for (int i = 0; i < n; i ++ ) cin >> w[i];
+
+			    f[0][0] = 1;	0时刻在0号点是有一种方案 
+			    for (int j = 1; j <= 8; j ++ )
+			        for (int i = 0; i < n; i ++ )
+			            for (int k = 0; k < n; k ++ )
+			            {
+			                int d = w[k][i] - '0';
+			                if (d)
+			                    f[i][j] = (f[i][j] + f[k][j - d]) % MOD;
+			            }
+
+			    // 初始化 F[0]
+			    for (int j = 0, k = 0; j < 9; j ++ )
+			        for (int i = 0; i < n; i ++, k ++ )
+			            F[0][k] = f[i][j];
+
+			    for (int j = 1; j <= 8; j ++ )
+			        for (int i = 0; i < n; i ++ )
+			            A[j * n + i][(j - 1) * n + i] ++ ;
+
+			        n*9, n是节点个数, 9是两点之间的最大距离
+
+			        F[j] = n*9
+			        A[x][y]
+			        	列下标y: F[j+1]向量中的ind==y的元素
+			        	行下标x: F[j]向量中的ind==x的元素
+			        	其实这两个元素其实在源矩阵中是同一个元素, 假设在原矩阵中该元素的坐标是: [i,j]
+			        	那么这个坐标[i,j]在F[j]向量中的位置是: j * n + i
+			        	那么这个坐标[i,j]在F[j+1]向量中的位置是: (j - 1) * n + i, 因为要从j+1变为j
+			        因为 F[xxx]向量, 也是一个矩阵 n*9{我们称矩阵为m吧}, 压缩过来的, 是剥除一列一列的, 然后横着拼, 拼成行向量 
+			        	原矩阵m的下标是 [i,j]的点, 对应 F[xxx]向量中的ind == j * 行数 + i, 注意这里j从0开始. 注意这里区别于之前的 i*列数+j{因为这个转换, 是一行一行剥离拼接的}
+
+			    for (int i = 0; i < n; i ++ )
+			        for (int k = 0; k < n; k ++ )
+			        {
+			            int d = w[k][i] - '0';
+			            if (d)
+			            {
+			                // f[k][j + 9 - d]
+			                A[(9 - d) * n + k][8 * n + i] ++ ;
+			            }
+			        }
+
+			    qmi();
+
+			    cout << F[0][n - 1] << endl;
+
+			    return 0;
+			}
+		AcWing 89. a^b
+			解释:
+				LL qmi(LL a, LL b, LL p){
+				    LL res = 1;
+				    while(b){   //我们是把b二分, 例如b的二进制是 1110101...0111. 
+				        if(b & 1) res = (res * a) % p;  //末位是1的话, 我们就把幂的加法, 变为底数的乘法: (res * a)
+				        b >>= 1;
+				        a = a * a % p;                  //这是为了准备b的下一位, 因为我们的是分解成了 a^b = a^(1+2+4+...+32). 
+				        																		// = a^1 * a^2 * a^4 * a^8 ... * a^32. 
+				    }
+				    return res;
+				}
+			#include <iostream>
+			using namespace std;
+			int main() {
+			    int a, b, p;
+			    cin >> a >> b >> p;
+
+			    int res = 1 % p;
+			    while (b) {
+			        if (b & 1) res = (long long)res * a % p;
+			        a = (long long)a * a % p;
+			        b >>= 1;
+			    }
+
+			    cout << res << endl;
+
+			    return 0;
+			}
 	第十四讲
-		AcWing 1254. 找树根和孩子57人打卡
-		AcWing 1255. 医院设置55人打卡
-		AcWing 1256. 扩展二叉树53人打卡
-		AcWing 1764. 修塔游戏38人打卡
-		AcWing 1120. 埃及分数33人打卡
-		AcWing 79. 滑动窗口的最大值45人打卡
+		AcWing 1254. 找树根和孩子
+			#include <iostream>
+			#include <vector>
+			#include <algorithm>
+
+			using namespace std;
+
+			const int N = 1010;
+
+			int n, m;
+			bool st[N];                             //判断一个节点是否是子节点
+			vector<int> g[N];                       //储存每个父节点的子节点
+
+			int main()
+			{
+			    cin >> n >> m;
+
+			    for (int i = 0; i < m; i ++ )
+			    {
+			        int father, son;
+			        cin >> father >> son;
+
+			        st[son] = true;
+			        g[father].push_back(son);
+			    }
+
+			    for (int i = 1; i <= 1000; i ++ )   //找根节点
+			        if (g[i].size() && !st[i])      //该节点存在且没有父节点,即是根节点
+			        {
+			                cout << i << endl;
+			                break;
+			        }
+
+			    int p = 1;
+			    for (int i = 2; i <= 1000; i ++ )   //遍历找子节点最多的节点
+			        if (g[i].size() > g[p].size())
+			            p = i;
+
+			    cout << p << endl;
+
+			    sort(g[p].begin(), g[p].end());     //将儿子从小到大排序输出
+
+			    for (auto x : g[p]) cout << x << ' ';
+			    cout << endl;
+
+			    return 0;
+			}
+
+			作者：我要出去乱说
+			链接：https://www.acwing.com/solution/content/36119/
+			来源：AcWing
+			著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+		AcWing 1255. 医院设置{树的中心}
+			可以用bfs/dfs, 因为是树, 没有环
+			复杂度是 O(n^2):
+				枚举每个点a把它当成根节点: O(n)
+					计算树上每个点距离点a的距离: O(n)
+			#include <iostream>
+			#include <cstring>
+
+			using namespace std;
+
+			const int N = 110, M = 2 * N, INF = 1e9;
+
+			int n;
+			int cnt[N];                             //cnt用来存每个村的人口
+			int h[N], e[M], ne[M], idx;             //邻接表
+
+			void add(int a, int b)
+			{
+			    e[idx] = b, ne[idx] = h[a], h[a] = idx ++ ;
+			}
+
+			int dfs(int u, int father, int dist)    //当前为u节点，u节点从哪个节点来，当前节点与根节点的距离
+			{
+			    int sum = cnt[u] * dist;            //当前点的值 = 人数 * 与根节点的距离
+
+			    for (int i = h[u]; ~i; i = ne[i])
+			    {
+			        int j = e[i];
+			        if (j == father) continue;      //不走回头路
+			        sum += dfs(j, u, dist + 1);     //下一节点为j，从u过去，距离加1
+			    }
+
+			    return sum;
+			}
+
+			int main()
+			{
+			    cin >> n;
+
+			    memset(h, -1, sizeof h);
+
+			    for (int i = 1; i <= n; i ++ )
+			    {
+			        int l, r;
+			        cin >> cnt[i] >> l >> r;        //读入每个节点人数、左儿子和右儿子
+
+			        if (l) add(i, l), add(l, i);    //儿子节点不为空才建立无向边
+			        if (r) add(i, r), add(r, i);
+			    }
+
+			    int res = INF;                      //遍历找出最小值
+			    for (int i = 1; i <= n; i ++ ) res = min(res, dfs(i, -1, 0));	枚举每个点i把它当成根节点
+
+			    cout << res << endl;
+
+			    return 0;
+			}
+		AcWing 1256. 扩展二叉树
+			#include <iostream>
+			using namespace std;
+			int k;
+			string pre, in, post;           //分别代表前序中序和后序遍历
+			void dfs()
+			{
+			    char root = pre[k ++ ];
+			    if (root == '.') return;    //空节点直接返回
+			    dfs();                      //进入左子树
+			    in += root;                 //中序遍历: 第一次执行到这里是底部最左侧的节点, 刚好中序遍历打印的第一个节点也是最左边的 
+			    dfs();                      //进入右子树
+			    post += root;               //后序遍历: 第一次执行到这里还是底部最左侧的节点, 为什么, 因为此时还是在底部左侧, 执行第二次dfs()也还是底部, 刚好后序遍历打印的第一个节点也是最左边的 
+			}
+
+			int main()
+			{
+			    cin >> pre;
+			    dfs();
+			    cout << in << endl << post << endl;
+			    return 0;
+			}
+		todo ** AcWing 1764. 修塔游戏
+			桶排序 == 计数排序? 复杂度是 O(n), 将等于某个高度的塔的数量记录下来 
+			#include <iostream>
+
+			using namespace std;
+
+			const int N = 1e4 + 10;
+
+			int n, k;
+			int c[N], s[N];         //c[i]表示高度为i的塔的数量，s[i]表示高度在i以内所有塔的高度之和
+
+			int main()
+			{
+			    scanf("%d%d", &n, &k);
+
+			    int max_cnt = 0;
+			    for (int i = 0; i < n; i ++ )
+			    {
+			        int h;
+			        scanf("%d", &h);
+			        c[h] ++ ;                                   //记录高度为h的塔数量
+			        max_cnt = max(max_cnt, c[h]);               //记录高度相同之塔的最大数量
+			    }
+
+			    for (int i = 1; i <= 1e4; i ++ )                //求前缀和
+			        s[i] = s[i - 1] + i * c[i];                 //高度在i及以内的所有塔高度总和
+			    	高度是i的塔的数量 * 塔的高度 
+
+			    if (max_cnt >= k) puts("0");
+			    else
+			    {
+			        int res = 2e9;                    就算把所有的塔夷为平地, 也不超过20亿步          //遍历塔的高度
+			        for (int i = 1, cnt = 0; i < 1e4; i ++ )    //cnt表示高度小于i的塔的数量
+			        {
+			            int left = cnt * i - s[i - 1];          //左边全变成高度是i所需要的的操作数
+
+			            //right = 所有塔高度和 - 高度在i以内的塔的高度和 - （高度大于i的塔数量） * i
+			            int right = s[10000] - s[i] - (n - cnt - c[i]) * i;
+
+			            //最后left - (~~~)的意思是多出来的相同高度的塔不需要操作
+			            if (cnt + c[i] >= k) res = min(res, left - (cnt + c[i] - k));   //左塔数量>=k
+			            if (n - cnt >= k) res = min(res, right - (n - cnt - k));        //右塔数量>=k
+
+			            res = min(res, left + right - (n - k)); //左边右边都有的情况
+
+			            cnt += c[i];                            //更新该高度内所有塔的数量
+			        }
+
+			        printf("%d\n", res);
+			    }
+
+			    return 0;
+			}
+		todo AcWing 1120. 埃及分数{迭代加深}
+		AcWing 79. 滑动窗口的最大值
+			class Solution {
+			public:
+			    vector<int> maxInWindows(vector<int>& nums, int k) {
+			        vector<int> res;
+			        deque<int> q;       //双端队列存的是下标不是数值
+			        for (int i = 0; i < nums.size(); i ++ ) {
+			            if (q.size() && q.front() < i - k + 1) q.pop_front();          	我们判断最早的那个数字, 是不是在滑动窗口外面, 滑动窗口的右端点是i, 长度是k所以左端点是i-k+1. //弹出滑出窗口的下标
+			            while (q.size() && nums[i] >= nums[q.back()]) q.pop_back(); 	我们要的是最大值, 所以比我小的统统不要, 和我一样的也不要, 因为和我一样大的你, 如果会用到你就一定会用到我因为我比较年轻. 所以有我在你没必要在//弹出比当前插入值小的下标
+			            q.push_back(i);                                 //插入新元素下标
+			            if (i >= k - 1) res.push_back(nums[q.front()]); 双端队列是单调递减的, 所以第一个是最大值 //储存当前窗口最大值
+			        }
+			        return res;
+			    }
+			};
 	第十三讲
 		AcWing 1099. 仙岛求药
 			bfs:
@@ -13245,11 +14518,250 @@
 			状态表示:
 				string 
 				二进制 
-					效率高, 代码短 
+					效率高, 代码短
+			#include <iostream>
+			#include <queue>
+			#include <algorithm>
 
-		AcWing 1102. 移动骑士60人打卡
-		AcWing 1103. 棋盘游戏58人打卡
-		AcWing 1111. 字母60人打卡
+			using namespace std;
+
+			typedef pair<int, int> PII;
+
+			const int N = 310;
+
+			int n, m;
+			char f[N][N];                                                   //f存初始地图
+			int dist[N][N];                                                 //dist存每个点离起点的距离
+			PII st, ed;                                                     //起点，终点坐标
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+			int bfs()
+			{
+			    queue<PII> q;                                               //队列用来放坐标
+			    q.push(st);
+
+			    dist[st.first][st.second] = 0;                              //初始化起点距离
+
+			    while (q.size())
+			    {
+			        auto t = q.front();
+			        q.pop();
+
+			        for (int i = 0; i < 4; i ++ )                           //往上下左右四个方向一步一步尝试
+			        {
+			            int x = t.first + dx[i], y = t.second + dy[i];
+			            if (x >= 0 && x < n && y >= 0 && y < m && f[x][y] != '#')
+			            {
+			                dist[x][y] = dist[t.first][t.second] + 1;       //更新距离
+			                if (f[x][y] == '*') return dist[x][y];          //抵达终点，返回距离
+
+			                f[x][y] =  '#';                                 //走过的地方不再走
+			                q.push({x, y});                                 //加入周围的点
+			            }
+			        }
+			    }
+
+			    return -1;
+			}
+
+			int main()
+			{
+			    while (cin >> n >> m, n || m)                               //n，m同时为0则退出循环
+			    {
+			        for (int i = 0; i < n; i ++ )
+			        {
+			            cin >> f[i];
+			            for (int j = 0; j < m; j ++ )
+			            {
+			                if (f[i][j] == '@') st = {i, j};                //获取起点和终点坐标
+			                if (f[i][j] == '*') ed = {i, j};
+			            }
+			        }
+
+			        cout << bfs() << endl;
+			    }
+
+			    return 0;
+			}
+		AcWing 1102. 移动骑士
+			还是走迷宫问题，可以往八个方向走，分支变多了，思路及模板不变。
+			#include <iostream>
+			#include <algorithm>
+			#include <queue>
+			#include <cstring>
+
+			using namespace std;
+
+			typedef pair<int, int> PII;
+
+			const int N = 310;
+
+			int n;
+			int dist[N][N];
+			PII start, ed;
+			int dx[8] = {1, 2, 2, 1, -1, -2, -2, -1}, dy[8] = {2, 1, -1, -2, -2, -1, 1, 2};
+
+			int bfs()
+			{
+			    if (start == ed) return 0;                                  //起点等于终点的情况
+
+			    queue<PII> q;
+			    q.push(start);
+
+			    memset(dist, -1, sizeof dist);
+			    dist[start.first][start.second] = 0;
+
+			    while (q.size())
+			    {
+			        auto t = q.front();
+			        q.pop();
+
+			        for (int i = 0; i < 8; i ++ )
+			        {
+			            int x = t.first + dx[i], y = t.second + dy[i];
+			            if (x >= 0 && x < n && y >= 0 && y < n && dist[x][y] == -1) //不能走已经走过的格子
+			            {
+			                dist[x][y] = dist[t.first][t.second] + 1;       //一边走一边计算步数
+			                if (ed == make_pair(x, y)) return dist[x][y];   //注意make_pair用法
+			                q.push({x, y});
+			            }
+			        }
+			    }
+			    return -1;
+			}
+
+			int main()
+			{
+			    int T;
+			    cin >> T;
+
+			    while (T -- )
+			    {
+			        cin >> n;
+			        cin >> start.first >> start.second;                     //记录起点与终点坐标
+			        cin >> ed.first >> ed.second;
+
+			        cout << bfs() << endl;
+			    }
+
+			    return 0;
+			}
+		AcWing 1103. 棋盘游戏
+			#include <iostream>
+			#include <cstring>
+			#include <queue>
+
+			using namespace std;
+
+			const int N = 1 << 16;
+
+			int dist[N];
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+			int input()                                     //将模式转换为二进制数
+			{
+			    int state = 0;
+			    for (int i = 0; i < 16; i ++ )
+			    {
+			        char c;
+			        cin >> c;
+			        if (c == '1') state += 1 << i;
+			    }
+
+			    return state;
+			}
+
+			void bit_swap(int &state, int x, int y)         //交换二进制数中的两位
+			{
+			    int a = state >> x & 1, b = state >> y & 1;	第x位是多少, 存在a中. 第y位是多少, 存在b中. 
+			    state -= a << x, state += b << x;	这个就不是我想想中的用 | 来填充1了, 就是无脑的删除第x位数字a, 把数字b加到第x位
+			    state -= b << y, state += a << y;	无脑的删除第y位数字b, 把数字a加到第y位
+			}
+
+			int bfs(int start, int end)
+			{
+			    if (start == end) return 0;
+
+			    queue<int> q;
+			    q.push(start);	里面的元素都是:二进制'0101010'
+
+			    memset(dist, -1, sizeof dist);
+			    dist[start] = 0;
+
+			    while (q.size())
+			    {
+			        int t = q.front();
+			        q.pop();
+
+			        for (int i = 0; i < 4; i ++ )           //枚举横纵坐标及方向
+			            for (int j = 0; j < 4; j ++ )
+			                for (int k = 0; k < 4; k ++ )
+			                {
+			                    int x = i + dx[k], y = j + dy[k];
+			                    if (x >= 0 && x < 4 && y >= 0 && y < 4)
+			                    {
+			                        int state = t;          //交换(i, j)和(x, y)两个格子中的棋子
+			                        bit_swap(state, i * 4 + j, x * 4 + y);	关键就是这一句, 首先state都是二进制'0101010', {i,j},{x,y}是矩阵的坐标. 如何将矩阵坐标 -> 二进制的下标: 行号*列数+列号 == i*4+j
+
+			                        if (dist[state] == -1)
+			                        {
+			                            dist[state] = dist[t] + 1;
+			                            if (state == end) return dist[state];
+			                            q.push(state);
+			                        }
+			                    }
+			                }
+			    }
+
+			    return -1;
+			}
+
+			int main()
+			{
+			    int start = input();
+			    int end = input();
+
+			    cout << bfs(start, end) <<endl;
+
+			    return 0;
+			}
+		AcWing 1111. 字母
+			你可以向上下左右四个方向进行移动，但是不能移出边界，也不能移动到曾经经过的字母
+			#include <iostream>
+			using namespace std;
+			const int N = 25;
+			int r, s, ans;
+			char g[N][N];
+			bool st[26];
+			int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+
+			void dfs(int x, int y, int step)
+			{
+			    for (int i = 0; i < 4; i ++ )
+			    {
+			        int a = x + dx[i], b = y + dy[i];       //判断下个点在范围内且没有走过
+			        if (a >= 0 && a < r && b >= 0 && b < s && !st[g[a][b] - 'A'])
+			        {
+			            st[g[a][b] - 'A'] = true;
+			            dfs(a, b, step + 1);
+			            st[g[a][b] - 'A'] = false;          //恢复现场
+			        }
+			    }
+
+			    ans = max(ans, step);    这里的step就是通过传入的参数来更新.                  //取最大步数
+			}
+
+			int main()
+			{
+			    cin >> r >> s;
+			    for (int i = 0; i < r; i ++ ) cin >> g[i];
+			    st[g[0][0] - 'A'] = true;
+			    dfs(0, 0, 1);           //起点横坐标，起点纵坐标，当前经过的点数量
+
+			    cout << ans << endl;
+
+			    return 0;
+			}
 		AcWing 1114. 棋盘问题
 			#include <iostream>
 			using namespace std;
@@ -13257,14 +14769,12 @@
 			int n, k;
 			char g[N][N];
 			bool col[N];                        //表示哪些列被占用了
-			int dfs(int u, int s)
-			{
-			    if (s == k) return 1;           //已经放够了棋子
-			    if (u == n) return 0;           //棋盘已经放满
-
-			    int res = dfs(u + 1, s);         该行不放棋子的情况. 这里用的是=而不是+=, 因为一上来就 dfs(), 那么第一次回溯的时候, 底部情况是全都不放旗子, 所以执行了: if (u == n) return 0;  , 所以返回的是0, res = 0
+			int dfs(int u, int s){
+			    if (s == k) return 1;           //已经放够了棋子, 这里不管有没有到最后一行, 都返回1, 有一个方案
+			    if (u == n) return 0;           //棋盘已经到了最后一行, 但是棋子没有用完, 返回0, 没有方案
+			    int res = dfs(u + 1, s);         该行不放棋子的情况.{一行只能放一个棋子} 这里用的是=而不是+=, 因为一上来就 dfs(), 那么第一次回溯的时候, 底部情况是全都不放旗子, 所以执行了: if (u == n) return 0;  , 所以返回的是0, res = 0
 			    for (int i = 0; i < n; i ++ )
-			        if (g[u][i] == '#' && !col[i])
+			        if (g[u][i] == '#' && !col[i])	如果这里可以填棋子 && 该列没有棋子
 			        {
 			            col[i] = true;
 			            res += dfs(u + 1, s + 1);
@@ -13273,23 +14783,77 @@
 			    return res;
 			}
 
-			int main()
-			{
-			    while (cin >> n >> k, ~n || ~k)
-			    {
+			int main(){
+			    while (cin >> n >> k, ~n || ~k){	如果n不等于-1 || k不等于-1
 			        for (int i = 0; i < n; i ++ ) cin >> g[i];
-
 			        cout << dfs(0, 0) << endl;      //从第0行开始，当前有0个棋子
 			    }
-
 			    return 0;
-			
-		AcWing 75. 和为S的两个数字59人打卡
+		AcWing 75. 和为S的两个数字
+			class Solution {
+			public:
+			    vector<int> findNumbersWithSum(vector<int>& nums, int target) {
+			        unordered_set<int> S;
+			        for (auto x : nums)
+			        {
+			            if (S.count(target - x)) return {x, target - x}; // if (S.find(target - x) != S.end())
+			            S.insert(x);
+			        }
+			    }
+			};
 	第十二讲
 		AcWing 1051. 最大的和
 			注意s和f, s和g的含义是不一样的
-			s[i]是一定以i为右端点的最大...
-			f[i]是s[0]到s[i]之间的最大值, 所以不一定选择了i为右端点
+			
+			#include <iostream>
+			#include <algorithm>
+
+			using namespace std;
+
+			const int N = 1e5 + 10;
+
+			int n;
+			int w[N], g[N], f[N];
+
+			int main()
+			{
+			    int T;
+			    cin >> T;
+
+			    while (T -- )
+			    {
+			        scanf("%d", &n);
+			        for (int i = 1; i <= n; i ++ ) scanf("%d", &w[i]);
+
+			        g[0] = -1e5;
+			        for (int i = 1, s = 0; i <= n; i ++ )   //从前往后算每个点以前的最大连续子序列
+			        {
+			        	s[i]是一定选了i作为右端点的连续区间的元素和
+			        		所以w[i]是一定包括的, 但是左侧的元素包不包括, 就要看左侧的值是否是 < 0, < 0拖我后腿不要, >= 0可以要
+			            s = max(s, 0) + w[i];               //贪心算法，只要前缀和小于0就丢弃
+			            g[i] = max(s, g[i - 1]);
+			            	g[i]是s[0]到s[i]之间的最大值, 所以不一定选择了i为右端点
+			        }
+
+			        f[n + 1] = -1e5;
+			        for (int i = n, s = 0; i; i -- )        //从后往前算每个点以后的最大连续子序列
+			        {
+			            s = max(s, 0) + w[i];
+			            f[i] = max(s, f[i + 1]);
+			        }
+
+			        int res = -1e5;
+			        for (int i = 1; i < n; i ++ )           //以当前点为分割点的最大连续子序列
+			        {                                       // = 左边的最大连续子序列+右边的最大连续子序列
+			        	两个不重合连续子段, 也就是说两个可以刚好首位相连, 只要不重合就好 
+			            res = max(res, g[i] + f[i + 1]);
+			        }
+
+			        printf("%d\n", res);
+			    }
+
+			    return 0;
+			}
 		AcWing 1026. 乘积最大
 			#include <iostream>
 			using namespace std;
@@ -13322,20 +14886,93 @@
 			    return 0;
 			}
 		AcWing 1698. 余数的最大值{双向dfs + 双指针}
-			1. 背包不行: n*m = 3.4*1e10
-				每个数字, 选或者不选2种方案, 34个数字一共是2^34种方案
-			2. dfs: 
-				dfs也就是暴搜, 他的时间复杂度取决于要遍历的节点个数 
-			3. 这道题因为n很小, 所以用暴搜
-			4. 经常考: 阿里面试题
-				双向搜索/双向dfs : 空间换时间??
-			5. 2^34 -> 2*(2^17)
-			6. 复杂度: 2^17 * log(2^17)
-			的确很棒
-			也就是任意的选法, 都可以看成从左边选+从右边选的组合
-			所以把左边选看成单独的小问题
-			最后两个集合混在一起
-			因为求<m的最大值, 所以用双指针 
+			0. 这道题是任意选择一些数字, 没有什么数字需要连续的规定
+				1. 题目是任意选择一些数字, 所以可以用背包方法, 选或者不选这个背包{数字}
+					但是, 其实背包复杂度太高了, 不能用: n = 34, m = 1e9, n*m = 3.4*1e10
+					每个数字, 选或者不选2种方案, 34个数字一共是2^34种方案
+				2. 可以用双向dfs{注意还不是那种双向bfs相遇在公共点的题, 而是把大问题拆解}
+					这道题可以分成两半的原因: 因为求得是余数
+						(左边半段的余数 + 后边半段的余数) % m 得到的余数, 相当于是: (整段) % m 得到的余数 
+						((A % m) + (B % m)) % m = (A + B) % m 
+					复杂度: 2^34 -> 2*(2^17), 具体的复杂度: 2^17 * log(2^17): 其实我觉得似乎复杂度不是这样? 应该是底下的分析 
+						我觉得dfs: 就是简单的排列组合的"组合", 一共是 2*2^17条路径. 
+						可是我们还有排序: 因为vector里面的每个元素都是一条路径的加和取模, 当然会有重复值, 因为模了之后, 每个元素的值都落在[0, m-1]之间
+						所以vector最多m个元素, 排序的话, nlogn = m*logm = 1e10 * log(1e10)
+			1. 如何把两个小集合的信息利用上, 变为大集合的解
+				1. 因为%m之后, AB的值都会落在:
+					A: [0,m-1]
+					B: [0,m-1]
+				2. 所以 A + B = [0, 2m - 2]
+					我们答案是求: (A + B) % m 的最大值 
+					所以方法是, 有两个候选者, 最后取 max(候选者1, 候选者2)
+						1. 看 A, B的最大值, 他们两个的最大值maxA, maxB
+							候选者1: (maxA + maxB) % m
+								假设maxA == maxB == m-1, 那么候选者1 == m - 2
+								当然maxA,maxB也可能很小, 不过没关系, 我们是 max(候选者1, 候选者2)
+						2. 在所有满足 xA + xB < m 的{xA和xB}中, 找到{xA + xB}的最大值, 用双指针, 找到{xA,xB}和小于m且最接近m
+							候选者2: (xA + xB) % m 
+ 			5. 我的评价: 的确很棒的题
+				也就是任意的选法, 都可以看成从左边选+从右边选的组合
+				所以把左边选看成单独的小问题
+				最后两个集合混在一起
+				因为求<m的最大值, 所以用双指针 
+			6. 其他:
+				dfs也就是俗称的暴搜, 他的时间复杂度取决于要遍历的节点个数 
+				这道题因为n很小, 所以用暴搜
+			7. 经常考: 阿里面试题
+				双向搜索/双向dfs : 空间换时间. 因为我们要储存的东西多了 
+			8. 代码 
+				#include <iostream>
+				#include <algorithm>
+				#include <vector>
+				using namespace std;
+				const int N = 34;
+				int n, m;
+				int w[N];
+				void dfs(int u, int k, int s, vector<int> &way) //当前位置，终点位置，和模上m，储存方案的数组
+				{
+				    if (u == k) way.push_back(s);	所以, s其实就是一路走来, 选或者不选某个数字的组合问题. way只不过是把每种情况都记录下来
+				    								其实我们这里没有记录路径具体是什么样的, 也就是我到底选了哪些数字
+				    								只是单纯把路径上的元素, 加和取模, 把结果s放进way中
+				    else
+				    {
+				    	简单的组合问题:
+				        dfs(u + 1, k, s, way);                  //选择第u个数
+				        dfs(u + 1, k, (s + w[u]) % m, way);     //不选第u个数
+				    }
+				}
+				int main()
+				{
+				    cin >> n >> m;
+				    for (int i = 0; i < n; i ++ ) cin >> w[i];
+
+				    vector<int> A, B;
+				    dfs(0, n / 2, 0, A);                    //双向DFS
+				    dfs(n / 2, n, 0, B);
+
+				    sort(A.begin(), A.end());               //前后方案排序
+				    sort(B.begin(), B.end());
+
+				    候选人1: 
+				    int res = (A.back() + B.back()) % m;    //两段中末尾方案和最接近且小于2 * m
+				    双指针, 求候选人2: A从最小, B从最大开始. 
+				    	双指针一直都是: 一个指针A作为锚点, 另一个指针B用while走多步, 满足了条件之后, 我们希望求满足条件的更优值, 所以指针A在继续走一步
+				    	A先是最左边的, B我们觉得可能会过大, 所以用while
+				    		while(不合法: 和过大) B的指针往左
+				    	跳出while之后, a+b的和就是合法的, a+b<m
+				    	但是是否是最大的<m, 我们就靠A往右来判断了. 
+				    	A再往右走一个, 其实一直都是: A每次往右走一个
+				    	其实最后到哪里终止, 不是二分的那种 当l==r的时候终止, 双指针的终止其实这里的代码还是 for()会执行完, 但是不影响我们求最大值, 因为我们 res = max(res, xx), 最大值是一直都被保留的
+				    for (int i = 0, j = B.size() - 1; i < A.size(); i ++ )  //双指针
+				    {
+				        while (j >= 0 && A[i] + B[j] >= m) j -- ;           //遍历找出最接近且小于m的和
+				        if (j >= 0) res = max(res, (A[i] + B[j]) % m);
+				    }
+
+				    cout << res << endl;
+
+				    return 0;
+				}
 		AcWing 1025. 开餐馆{dp + 双指针}
 			其实这道题, 说难也难说简单也简单
 				1. 难在: 状态表示: f(i) 一定选ind==i的餐厅, 且ind==i之前的餐厅可选可不选的利润最大值 
@@ -13380,7 +15017,7 @@
 			            	j ++ ;					//去j+1的位置
 			                maxf = max(maxf, f[j]); //maxf
 			            }
-			            while出来的时候, j依旧是合法的
+			            while出来的时候, j依旧是合法的. 因为我们在while的j是在试探下一步合不合法, 下一步不合法就退出, 所以不影响j, j还是合法的 
 			            f[i] = maxf + p[i];        
 			        }
 
@@ -13393,36 +15030,39 @@
 			    return 0;
 			}
 		AcWing 1028. 复制书稿
-			一看到题目要求最大值最小，就要条件反射想到二分：
-				一个情况{世界}下存在一个最慢完成的人
-				所有的情况{所有的平行世界}, 总有一个情况{世界}的那个最慢的人速度是最快的
-				二分的就是不同的世界
-			二分的是最慢的那个人需要的时间sum
-				sum越大, 我们划分出来需要的人数也就越小
-				sum越小, 我们划分出来需要的人数也就越多 
-			假设划分出来的需要的人是x
-				如果x小于题目给的k, 说明没有利用全部人, 再利用一点人, 每个人工作量减小, sum减小
-				如果x大于题目给的k, 说明人数不够, 每个人工作量增大, sum增加
-				如果x==题目给的k, 因为题目要的是最小的sum, 所以在危险的边缘再试探试探, sum减小
-			代码
+			1. 二分
+				一看到题目要求最大值最小，就要条件反射想到二分：
+					一个情况{世界}下存在一个最慢完成的人
+					所有的情况{所有的平行世界}, 总有一个情况{世界}的那个最慢的人速度是最快的
+					二分的就是不同的世界
+				二分的是最慢的那个人需要的时间sum
+					sum越大, 我们划分出来的几个组, 每个组里面需要的人数也就越小. 因为每个人做的时间长了
+					sum越小, 我们划分出来的几个组, 每个组里面需要的人数也就越多 
+				假设我们划分出来的几个组, 每个组里面需要的人数是x
+					如果x小于题目给的k, 说明没有利用全部人, 再利用一点人, 每个人工作量减小, sum减小
+					如果x大于题目给的k, 说明人数不够, 每个人工作量增大, sum增加
+					如果x==题目给的k, 因为题目要的是最小的sum, 所以在危险的边缘再试探试探, sum减小
+			2. 如何确定二分边界？
+				l = max(w[i])：因为一本书只能给一个人抄，因此 l 最小取所有书中的最大页数；
+				r = 1e9：题目未给定最大值，如果该值不满足条件，可以改成更大的值。
+			3. 注意（贪心思路）
+				因为题目要求让前面的人尽可能少抄，因此求划分方案时应该从后往前枚举，即让后边的人尽可能多抄，就可以让前面的人少抄。
+			4. 代码
 				#include <iostream>
 				#include <algorithm>
-
 				using namespace std;
-
 				const int N = 510;
-
 				int n, k;
 				int w[N], L[N], R[N];           //L和R记录每个人负责的书目
-
 				bool check(int sum)
 				{
 				    int s = 0, cnt = 1;         //s：某个人它需要的时间，cnt：我们当前是判断第cnt个人
 				    R[cnt] = n;		第1个人的右边界是第n本书
-				    for (int i = n; i; i -- )   //题目要求则尽可能让前面的人少抄写{抄写的书本个数少},所以从后往前枚举
+				    for (int i = n; i; i -- )   	题目要求则尽可能让前面的人少抄写{抄写的书本个数少},所以从后往前枚举
+				    								其实要解释就是, 可能遍历到最后, 发现前面第1个人可能都没分到什么书
 				    {
 				        if (s + w[i] <= sum) s += w[i];	如果加上第i本书之后, 还是没有超过时间sum, 就让这个人再继续抄这本书
-				        else						否则就是超过时间了, 判断下一个人 
+				        else						否则就是超过时间了, 换下一个人 cnt ++ 
 				        {
 				            L[cnt] = i + 1;			第cnt个人的左边界是第i + 1本书, 注意这句话不能再上面的if中写, 因为上面的if还在继续抄书
 				            cnt ++ ;
@@ -13430,44 +15070,33 @@
 				            s = w[i];
 				        }
 				    }
-				    L[cnt] = 1;
-
+				    L[cnt] = 1;		这个要加呀, 对称的
 				    return cnt <= k;            //判断需要的人手是否小于等于给定人手
 				}
-
 				int main()
 				{
 				    cin >> n >> k;
-
 				    int l = 0, r = 1e9;
 				    for (int i = 1; i <= n; i ++ )
 				    {
 				        cin >> w[i];
 				        l = max(l, w[i]);       
 				    }
-
 				    while (l < r)               //二分出最短时间内每个人能抄的最大页数
 				    {
 				        int mid = l + r >> 1;
 				        if (check(mid)) r = mid;    //若k个人每人抄mid页能够抄完，说明还有提升空间
 				        else l = mid + 1;
 				    }
-
-				    check(r);                   首先, 退出while的时候的r肯定是合法的, 但是最后更新一次L和R
-
+				    check(r);                   首先, 退出while的时候的r肯定是合法的
+				    								为什么, 因为我们背诵的二分模板, 退出来的时候 r == l, 就是我们要找的答案. 这道题是一定有答案的, 所以是合法的
+				    								但是怕我们退出while之前最后一次执行 check()会是false, 那里的L和R就是错的, 所以我们要重新计算L和R
+				    								所以最后更新一次L和R: 左边界和右边界
 				    for (int i = k; i; i -- ) cout << L[i] << ' ' << R[i] << endl;
-
 				    return 0;
 				}
-
-				作者：我要出去乱说
-				链接：https://www.acwing.com/solution/content/35776/
-				来源：AcWing
-				著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
-
 		AcWing 1090. 绿色通道
-			1. 在空题长度不超过limit的情况下, 最小需要的时间是t
-			2. 
+			1. 最大值最小: 二分
 				一个情况{世界}下存在很多段空题, 有一段空题长度是最长的
 				所有的情况{所有的平行世界}, 总有一个情况{世界}的那个最长空题是最短的
 				二分的就是不同的世界
@@ -13480,25 +15109,42 @@
 				int n, m;
 				int w[N];
 				int q[N], f[N];
-				bool check(int limit)
+				bool check(int limit)	在空题长度不超过limit的情况下, 最少需要的时间
 				{
-				    int hh = 0, tt = 0;
+				    int hh = 0, tt = -1;
+				    q[++tt] = 0; 
 				    for (int i = 1; i <= n; i ++ )
 				    {
-				        if (q[hh] < i - limit - 1) hh ++ ;
-				        f[i] = f[q[hh]] + w[i];
+				    	我很喜欢下面的: 窗口 + 单调队列{单调递增的, 因为需要的小值{也就是花费时间较小的意思}, 所以把队列中大于自己的都删掉, 剩下的都是小于自己的}
+				    		i-k-1 [i-k, i-1]      i
+							抄     不抄的长度为k     抄
+								  (i-k)+k-1=(i-1)
+							所以距离最长的也必须是第i-k-1个要抄
+								也就是 [i-k, i-1] 你可以抄也可以不吵
+								但是这个ind== i-k-1 就必须要抄了, 否则空题长度就不只是k了 
+
+				        if (q[hh] < i - limit - 1) hh ++ ;		如果ind在必须要抄的{ind== i-k-1}的左边, 我们就往右, 其实这里 if是可以的, 因为我们是一步一步来的, 你用while也可以,更保险 
+				        f[i] = f[q[hh]] + w[i];					f[q[hh]]: 在合法范围内{也就是这个下标能保证我们空题长度不超过k}, f[]是累积值, 而且是累积的最大值 
 				        while (hh <= tt && f[q[tt]] >= f[i]) tt -- ;
+				        	上面这个就是精华, 当队列不空, 我们看一下队尾需要的时间是否比自己花的时间长, 长的话就删除, 等于自己的也删除
+				        	为什么.
+				        		我们看这一句 f[i] = f[q[hh]] + w[i];
+				        			取的是队首的元素, 这个队首的元素: 保证是合法题目下标, 保证做到这道题需要经过的时间是最小的, 
+				        				你的疑问, 有没有可能在它{f[q[hh]]}的左边有需要的时间更小, 没可能, 因为我们就是从左边遍历过来的, 队首就是最小的, 要有更小的却不在队首说明是题目下标不合法
+				        				你的疑问, 有没有可能在它{f[q[hh]]}的右边有需要的时间更小, 没可能, 因为如果右边存在更小, 早就把左边的pop掉了{新值会把队列中大于自己的都删掉, 剩下的都是小于自己的}
+				        				如果有队列中有两个需要时间一样的怎么办, 我们肯定保留右侧的, 为什么, 因为越往右就说明我们要做的题目越少, 越往右说明我们离终点越近{跳的步数越少}
+				        					所以如果有两个需要时间一样的, 我们保留右侧的, 也就是 f[q[tt]] >= f[i], 是>=而不是>. 
+				        			所以队头很厉害对吧	
+				        				队头的元素比原先队列左边的元素需要的做题时间都短
+				        				并且队头如果和原先队列左边的元素需要的做题时间是相等的, 保留队头, 因为队头靠右, 越往右说明我们离终点越近{跳的步数越少}		        		
 				        q[ ++ tt] = i;
 				    }
-				    for (int i = n - limit; i <= n; i ++ )
+				    for (int i = n - limit; i <= n; i ++ )	这里再稍微解释一下, 假设我们最后 limit道题目都不做了, 也就是不做的题目是: [n-limit+1, n], 那么最后一道要做的题目是: ind == n-limit
 				        if (f[i] <= m)
 				            return true;
 				    return false;
 				}
 
-				i-k-1 [i-k, i-1]      i
-				抄     不抄的长度为k     抄
-					  (i-k)+k-1=(i-1)
 
 				int main()
 				{
@@ -13508,132 +15154,270 @@
 				    while (l < r){
 				        int mid = l + r >> 1;		mid是最长的空题长度
 				        if (check(mid)) r = mid;	如果mid这个长度还是可以在规定时间完成所有的题目, 那么我们就再让mid减小, 让老师更满意 
+				        								我之前的疑惑: 不应该往右搜索吗, 不是的
+				        								因为mid可以完成, 如果空题长度更长, 需要的时间就更少了, 也就是更能在m分钟完成, 往右找的话就一定能够在m分钟完成
+				        								所以要往左找, 空题长度减少
+				        								就像是你有m分钟, 你难道不希望自己在m分钟多做一些题吗
 				        else l = mid + 1;			如果mid这个长度已经完不成了, 我们到达极限了, 就退出 
+				        								说明我们空题长度太短了, 做的题太多了, 根本做不完
+				        								所以就对不起老师了, 我再少做点题
 				    }
 				    printf("%d\n", r);
 				    return 0;
 				}
+		AcWing 1089. 烽火传递
+			#include <cstring>
+			#include <iostream>
+			#include <algorithm>
+
+			using namespace std;
+
+			const int N = 2e5 + 10, INF = 1e9;
+
+			int n, m;
+			int w[N], q[N];
+			int f[N];
+
+			int main()
+			{
+			    scanf("%d%d", &n, &m);
+			    for (int i = 1; i <= n; i ++ ) scanf("%d", &w[i]);
+
+			    int hh = 0, tt = -1;
+				q[++tt] = 0;
+			    for (int i = 1; i <= n; i ++ )	
+			    {
+			        if (q[hh] < i - m) hh ++ ;	因为是m个位置必须有一个烽火, 而且第i个必定有烽火, 所以 [i-m+1, i]是无所谓的, 我们后面考虑的是 f[i]从xx状态来, 所以xx最晚的一个合法状态是i-m, [0, i-m]就是非法的了 
+			        f[i] = f[q[hh]] + w[i];		f[i]: 第i个必定有烽火, 前面的随意, 反正从 f[q[hh]]转移过来, 只要保证 q[hh]下标合法就好了
+			        while (hh <= tt && f[q[tt]] >= f[i]) tt -- ;
+			        	因为我们求得是代价最小的放置方法, 所以把大于自己的pop掉
+			        	如果等于自己的话, 自己更好, 因为自己是更右边的点, 更容易到达终点. 所以把等于自己的pop掉 
+			        q[ ++ tt] = i;
+			    }
+
+			    int res = INF;
+			    	因为最后一段 [n-m+1, n] 怎么找都要有一个烽火台, 所以从 n - m + 1 开始判断 
+			    for (int i = n - m + 1; i <= n; i ++ ) res = min(res, f[i]);
+
+			    printf("%d\n", res);
+
+			    return 0;
+			}
 	第十一讲
 		AcWing 48. 复杂链表的复刻{感觉像语法题, 真的非常灵活的考验了链表节点}
-			1. 首先先忽略random指针, 把整个链表复制
-			2. hash表{unordered_map}做映射
-			3. 复制random指针: 
-				假设 a->random = b
-				那么, 我们就将: a的映射点->random = b映射点
-			/**
-			 * Definition for singly-linked list with a random pointer.
-			 * struct ListNode {
-			 *     int val;
-			 *     ListNode *next, *random;
-			 *     ListNode(int x) : val(x), next(NULL), random(NULL) {}
-			 * };
-			 */
-			时间：O(n)， 额外空间：O(n)
-			class Solution {
-			public:
-			    ListNode *copyRandomList(ListNode *head) {
-			        if (!head) return head;
-			        unordered_map<ListNode*, ListNode*> pos;    //哈希表储存映射
+			1.
+				1. 首先先忽略random指针, 把整个链表复制
+				2. hash表{unordered_map}做映射
+				3. 复制random指针: 
+					假设 a->random = b
+					那么, 我们就将: a的映射点->random = b映射点
+				/**
+				 * Definition for singly-linked list with a random pointer.
+				 * struct ListNode {
+				 *     int val;
+				 *     ListNode *next, *random;
+				 *     ListNode(int x) : val(x), next(NULL), random(NULL) {}
+				 * };
+				 */
+				时间：O(n)， 额外空间：O(n)
+				class Solution {
+				public:
+				    ListNode *copyRandomList(ListNode *head) {
+				        if (!head) return head;
+				        unordered_map<ListNode*, ListNode*> pos;    //哈希表储存映射
 
-			        pos[NULL] = NULL;
-			        for (auto p = head; p; p = p->next)
-			            pos[p] = new ListNode(p->val);		左侧p是实际点, 右侧是用值p->val创建映射点 new ListNode(p->val) , pos[p] = xxx, 是映射关系 
+				        pos[NULL] = NULL;
+				        for (auto p = head; p; p = p->next)
+				            pos[p] = new ListNode(p->val);		左侧p是实际点, 右侧是用值p->val创建映射点 new ListNode(p->val) , pos[p] = xxx, 是映射关系 
 
-			        for (auto p = head; p; p = p->next)
-			        {
-			            pos[p]->next = pos[p->next];            p的映射点{pos[p]}的next, 指向p的next的映射点{pos[p->next]}
-			            pos[p]->random = pos[p->random];		p的映射点{pos[p]}的random, 指向p的random的映射点{pos[p->random]}
-			        }
+				        for (auto p = head; p; p = p->next)
+				        {
+				            pos[p]->next = pos[p->next];            p的映射点{pos[p]}的next, 指向p的next的映射点{pos[p->next]}
+				            pos[p]->random = pos[p->random];		p的映射点{pos[p]}的random, 指向p的random的映射点{pos[p->random]}
+				        }
 
-			        return pos[head];	返回的是头结点的映射点. 所以映射点们, 就是我们的复制后的结果
-			    }
-			};
-
-			时间：O(n)， 额外空间：O(1), 时间无法再优化因为最少也要遍历一遍链表, 但是空间可以优化
-			class Solution {
-			public:
-			    ListNode *copyRandomList(ListNode *head) {
-			        for (auto p = head; p;)                     在每个点后面添加一个它的复制:
-			        											5->4->3->2->1->null
-			        											5->'5'->4->'4'->3->'3'->2->'2'->1->'1'->null
-			        {
-			            auto np = new ListNode(p->val);	new一个p的映射点np
-			            auto next = p->next;			随便找个东西, 指向实际点p的next
-			            p->next = np;					我们让p的next从原来的next变为映射点np
-			            np->next = next;				映射点np的next再指向原来实际点p的next
-			            p = next; 						p变为, 原来实际点p的next
-			        }
-
-			        for (auto p = head; p; p = p->next->next)   //复制random指针
-			            if (p->random)	new出的节点的random默认是空, 如果只有当random有值的时候才需要复制 
-			                p->next->random = p->random->next;
-			            		我超级喜欢这一句:
-			            			p的映射点{p->next}的random, 是p的random的映射点{p->random->next}
-
-
-			        题目要求不能修改原链表的结构, 所以我们分离两个链表
-			        auto dummy = new ListNode(-1);
-			        auto cur = dummy;
-			        我们要做的, dummy将所有映射点都串起来, 然后恢复原来的结构: 实际点p的next从映射点改为原来实际点p的next
-			        for (auto p = head; p; p = p->next)
-			        {
-			            cur->next = p->next;		dummy/cur的next指向映射点{p->next}
-			            cur = cur->next;			cur变为映射点
-			            p->next = p->next->next;	实际点p的next从映射点改为原来实际点p的next
-			        }
-
-			        return dummy->next;	返回的就是复制的链表 
-			    }
-			};
-		AcWing 680. 剪绳子
-			1. 类似的题目: 砍树, 怎么砍, 能有M根房梁, 我们房梁最长可以多长
-			2. 很简单, 就是二分长度
-			3. 
-				#include <iostream>
-				#include <algorithm>
-
-				using namespace std;
-
-				const int N = 1e5 + 10;
-
-				int n, m;
-				double maxv;
-				double len[N];
-
-				bool check(double x)
-				{
-				    int res = 0;
-				    for (int i = 0; i < n; i ++ )
-				    {
-				        res += len[i] / x;			这里也是我没有想到的, 那就是直接除法就好了, 也就是第i根绳子的长度, 可以剪出几根长度为x的绳子 
-				        							我之前以为是减法, 然后小段可以拼接, 但是绳子是不能够拼的, 所以直接无脑剪成一样的长度x就好了
-				        							res是指剪出了几条我们要的绳子
-				        if (res >= m) return true;	
+				        return pos[head];	返回的是头结点的映射点. 所以映射点们, 就是我们的复制后的结果
 				    }
+				};
 
+				时间：O(n)， 额外空间：O(1), 时间无法再优化因为最少也要遍历一遍链表, 但是空间可以优化
+				class Solution {
+				public:
+				    ListNode *copyRandomList(ListNode *head) {
+				        for (auto p = head; p;)                     在每个点后面添加一个它的复制:
+				        											5->4->3->2->1->null
+				        											5->'5'->4->'4'->3->'3'->2->'2'->1->'1'->null
+				        {
+				            auto np = new ListNode(p->val);	new一个p的映射点np
+				            auto next = p->next;			随便找个东西, 指向实际点p的next
+				            p->next = np;					我们让p的next从原来的next变为映射点np
+				            np->next = next;				映射点np的next再指向原来实际点p的next
+				            p = next; 						p变为, 原来实际点p的next
+				        }
+
+				        for (auto p = head; p; p = p->next->next)   //复制random指针
+				            if (p->random)	new出的节点的random默认是空, 如果只有当random有值的时候才需要复制 
+				                p->next->random = p->random->next;
+				            		我超级喜欢这一句:
+				            			p的映射点{p->next}的random, 是p的random的映射点{p->random->next}
+
+
+				        题目要求不能修改原链表的结构, 所以我们分离两个链表
+				        auto dummy = new ListNode(-1);
+				        auto cur = dummy;
+				        我们要做的, dummy将所有映射点都串起来, 然后恢复原来的结构: 实际点p的next从映射点改为原来实际点p的next
+				        for (auto p = head; p; p = p->next)
+				        {
+				            cur->next = p->next;		dummy/cur的next指向映射点{p->next}
+				            cur = cur->next;			cur变为映射点
+				            p->next = p->next->next;	实际点p的next从映射点改为原来实际点p的next
+				        }
+
+				        return dummy->next;	返回的就是复制的链表 
+				    }
+				};
+			2. 挺顺利的 
+				/**
+				 * Definition for singly-linked list with a random pointer.
+				 * struct ListNode {
+				 *     int val;
+				 *     ListNode *next, *random;
+				 *     ListNode(int x) : val(x), next(NULL), random(NULL) {}
+				 * };
+				 */
+				class Solution {
+				public:
+				    ListNode *copyRandomList(ListNode *head) {
+				        if(!head) return nullptr;
+
+				        建立每个点的映射点
+				        unordered_map<ListNode*, ListNode*> pos;
+				        for(auto p = head; p; p = p->next){
+				            pos[p] = new ListNode(p->val);
+				        }
+
+				        构建映射点的next和random. 注意他们的next和random也是映射点不是原有点
+				        for(auto p = head; p; p = p->next){
+				            pos[p]->next = pos[p->next];
+				            pos[p]->random = pos[p->random];
+				        }
+				        return pos[head];
+				    }
+				    
+				    ListNode *copyRandomList2(ListNode *head) {
+				        if(!head) return nullptr;
+
+				        每个原有点后面插入一个映射点
+				        for(auto p = head; p;){
+				            auto np = new ListNode(p->val);		创建映射点
+				            auto temp = p->next;				保存原有的下一个点, 存为temp
+				            p->next = np;						下一个点是映射点
+				            np->next = temp;					映射点的下一个点是temp
+				            p = temp;							我们去到temp
+				        }
+
+				        构建映射点的next和random. 注意他们的next和random也是映射点不是原有点
+				        for(auto p = head; p; p = p->next->next){
+				            if(p->random)	必须要加这一行, 否则 p->random->next 可能是 nullptr->next 报错.
+				                p->next->random = p->random->next;  //(p->next)->random == 虚拟点->random, (p->random)->next == random的虚拟点
+				        }
+
+				        分离原有点和映射点, 就是用一个东西, 穿针引线只要映射点
+				        auto dummy = new ListNode(-1);
+				        auto cur = dummy;
+				        for(auto p = head; p; p = p->next){
+				            cur = cur->next = p->next;	byb: 穿针引线只要映射点
+				            p->next = p->next->next;    //因为我们不能修改传入的参数, 所以现在把参数恢复原样
+				        }
+				        auto res = dummy->next;
+				        delete dummy;
+				        return res;
+				    }
+				};
+		AcWing 680. 剪绳子
+			1. 
+				1. 类似的题目: 砍树, 怎么砍, 能有M根房梁, 我们房梁最长可以多长
+				2. 很简单, 就是二分长度
+				3. 
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 1e5 + 10;
+
+					int n, m;
+					double maxv;
+					double len[N];
+
+					bool check(double x)
+					{
+					    int res = 0;
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        res += len[i] / x;			这里也是我没有想到的, 那就是直接除法就好了, 也就是第i根绳子的长度, 可以剪出几根长度为x的绳子 
+					        							我之前以为是减法, 然后小段可以拼接, 但是绳子是不能够拼的, 所以直接无脑剪成一样的长度x就好了
+					        							res是指剪出了几条我们要的绳子
+					        if (res >= m) return true;	
+					    }
+
+					    return false;
+					}
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+
+					    for (int i = 0; i < n; i ++ )
+					    {
+					        scanf("%lf", &len[i]);
+					        maxv = max(maxv, len[i]);	剪完之后的长度的最大值maxv, 不可能长过最长的那根绳子
+					    }
+
+					    double l = 0, r = maxv;         //裁剪最后的长度范围
+					    while (r - l > 1e-6)
+					    {
+					        double mid = (l + r) / 2;
+					        if (check(mid)) l = mid;    小数二分, 是精度的100倍, 例如要求保留小数点的后k=4位, 那我们就保证l和r的差值在 10^(-(k+2)) = 1e-6
+					        else r = mid;
+					    }
+
+					    printf("%.2lf\n", l);
+
+					    return 0;
+					}
+			2. 是很简单, 就是bug很头疼, 总是把 double 写成 int, 要debug半天 
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int n, m;
+				错:  int h[N];
+				对: double h[N];
+				double maxh;
+				错: bool check(int x){
+				对: bool check(double x){   //否则应该是 double x = 2.8125, 写成int的话, 5/2.8125 == 1 就变成了 5/2 == 2
+				    int res = 0;
+				    for(int i = 0; i < n; i++){
+				        res += h[i] / x;
+				        if(res >= m) return true;
+				    }
 				    return false;
 				}
-
-				int main()
-				{
-				    scanf("%d%d", &n, &m);
-
-				    for (int i = 0; i < n; i ++ )
-				    {
-				        scanf("%lf", &len[i]);
-				        maxv = max(maxv, len[i]);	剪完之后的长度的最大值maxv, 不可能长过最长的那根绳子
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 0 ;i < n; i++){
+				        cin >> h[i];
+				        maxh = max(maxh, h[i]);
 				    }
-
-				    double l = 0, r = maxv;         //裁剪最后的长度范围
-				    while (r - l > 1e-6)
-				    {
-				        double mid = (l + r) / 2;
-				        if (check(mid)) l = mid;    小数二分, 是精度的100倍, 例如要求保留小数点的后k=4位, 那我们就保证l和r的差值在 10^(-(k+2)) = 1e-6
+				    错: int l = 0.0, r = maxh;
+				    对: double l = 0.0, r = maxh;
+				    while(l + 1e-6 < r){
+				        错: int mid = l + (r - l) / 2;
+				        对: double mid = l + (r - l) / 2;
+				        if(check(mid)) l = mid;
 				        else r = mid;
 				    }
-
 				    printf("%.2lf\n", l);
-
 				    return 0;
 				}
 		AcWing 1645. 不同的二叉搜索树
@@ -13666,7 +15450,7 @@
 				int main()
 				{
 				    cin >> n;
-				    f[0] = 1;	但是我们不能多此一举写上 f[1] = 1, 虽然的确是如果一棵树只有一个节点, 那么它的形态个数是1.可是我们的递推式子中, 是从i==1开始的, 所以 f[1] = (f[1] + (LL)f[0] * f[0]) % MOD; 就会变为 f[1] = (1 + 1) % mod 
+				    f[0] = 1;	但是我们不能多此一举写上 f[1] = 1, 虽然的确是如果一棵树只有一个节点, 那么它的形态个数是1. 可是我们的递推式子中, 是从i==1开始的, 所以 f[1] = (f[1] + (LL)f[0] * f[0]) % MOD; 就会变为 f[1] = (1 + 1) % mod 
 				    for (int i = 1; i <= n; i ++ )
 				        for (int j = 0; j < i; j ++ )
 				            f[i] = (f[i] + (LL)f[j] * f[i - 1 - j]) % MOD;
@@ -13685,12 +15469,184 @@
 				    cout << f[n] << endl;
 				    return 0;
 				}
-		AcWing 415. 栈
-			1. 23:48 https://www.acwing.com/video/1091/
-			1. 33:05 https://www.acwing.com/video/1091/
-			3. 35:07 https://www.acwing.com/video/1091/
-				两者相通
-		AcWing 50. 序列化二叉树59人打卡
+			4. 很顺利
+				#include <iostream>
+				using namespace std;
+				const int N = 1e3 + 10, MOD = 1e9 + 7;
+				int f[N], n;
+				int main(){
+				    cin >> n;
+				    f[0] = 1;
+				    for(int i = 1; i <= n; i++)
+				        for(int j = 0; j <= i - 1; j++)     // 左子树的大小范围是 [0, i-1]
+				            f[i] = (f[i] + (long long) f[j] * f[i - 1 - j]) % MOD;  //这是滚动加法
+				    cout << f[n] << endl;
+				    return 0;
+				}
+		* AcWing 415. 栈
+			归纳的非常好: https://www.acwing.com/solution/content/35296/
+			1. 这两道题是相通的
+				题目: 给定 n 个 0 和 n 个 1，它们将按照某种顺序排成长度为 2n 的序列，求它们能排列成的所有序列中，能够满足任意前缀序列中 0 的个数都不少于 1 的个数的序列有多少个。
+				原因: push可以看作0，pop可以看作1
+					push多少次 == pop多少次:  n 个 0 和 n 个 1
+					push的操作不可能少于pop的操作，即 前缀序列中 0 的个数都不少于 1 的个数
+			2. 可以转换成矩阵图: 从[0,0]出发, 到达[n,n]的所有路径:
+				其中合法的路径
+					是正方形的右下角, 包括了对角线. 也就是前缀中0的个数 == 1的个数
+				其中不合法的路径: 
+					也就是路径一旦超出了对角线, 路径中一旦有一个点在正方形的左上角, 就是非法路径
+					所有的非法路径, 都可以画成, 从[0,0]出发, 到达[n-1,n+1]的所有路径
+						为什么, 因为我们可以把所有的不合法路径, 做一个映射, 怎么映射, 就是从第一个不合法的那个点开始
+							第一个不合法的点, 是在对角线上方, 距离对角线一个单位的线a, a上面的点有: [0,1], [1, 2]..., [n-1, n]
+						我们一映射, 那么终点[n,n]沿着线a做轴对称, 那就映射到了[n-1,n+1]
+			3. 如何计算合法路径的个数:
+				1. 路径总数A - 非法路径总数B
+				2. A = C_(2n)^(n): 需要执行的命令{0或1}一共有2n个, 而0只能是里面的n个, 所以是2n里面选n个. 剩余的必定是选1所以不考虑如何选1
+				3. B = C_(n+1+n-1)^(n-1) = C_(2n)^(n-1): 需要执行的命令{0或1}一共有2n个, 而0只能是里面的n-1个, 所以是2n里面选n-1个. 剩余的必定是选1所以不考虑如何选1
+				4. "A - B = C_(2n)^(n) / (n + 1)"
+				5. 卡特兰数: f(n) = C_(2n)^(n) / (n + 1)
+					所以如果某个问题是 C_(2n)^(n) / (n + 1), 那就是卡特兰数问题
+			4. 如何计算组合数:
+				1. O(n^2)
+					n如果较小, 用递推{杨辉三角}: C_n^m = C_(n-1)^m + C_(n-1)^(m-1) -> 本题 
+						这个推导有种dp的感觉, 也就是第n个数选还是不选
+							第n个数字不选, 那就是前n-1个数字选m个: C_(n-1)^m
+							第n个数字选, 那就是前n-1个数字选m-1个: C_(n-1)^(m-1)
+				2. O(n*logn)
+					n约等于1e5, 模为质数, 用快速幂求乘法逆元
+				3. O(n*logn)
+					n约等于1e18, 卢卡斯定理
+				4. 高精度:
+					C^m_n = n! / (m! * (n-m)!)
+			5. 
+				#include <cstring>
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				typedef long long LL;
+
+				const int N = 40;
+
+				LL c[N][N];
+
+				int main()
+				{
+				    for (int n = 0; n < N; n ++ )
+				        for (int m = 0; m <= n; m ++ )
+				            if (m == 0) c[n][m] = 1;	因为所有的 C_n^0 都是 == 1
+				            else c[n][m] = c[n - 1][m] + c[n - 1][m - 1];	//也就是有种dp的感觉, 也就是第n个数选还是不选
+				    c[0][0] == 1
+				    c[1][0] == 1
+				    c[1][1] == c[0][1] + c[0][0] == 0 + 1
+				    int t;
+				    cin >> t;
+
+				    cout << c[t * 2][t] / (t + 1) << endl; -> 对应了 A - B = C_(2n)^(n) / (n + 1)
+
+				    return 0;
+				}
+
+				c[i][j]的样子:
+				 		0	1	2	3	4	5	6
+				 		
+				0		0
+				1		1	1
+				2		1	2	1
+				3		1	3	3	1
+				4		1	4	6	4	1
+
+			6. 无语的bug, 还是类型的问题
+				#include <iostream>
+				using namespace std;
+				const int N = 18 * 2 + 10;
+				int n;
+				错: int c[N][N];			因为真的会溢出
+				对: long long c[N][N];
+				int main(){
+				    cin >> n;
+
+				    写法1:
+				    // for(int i = 0; i <= 2*n + 1; i++){
+				    //     for(int j = 0; j <= i; j++){
+				    //         if(j == 0) c[i][0] = 1;
+				    //         else c[i][j] = c[i-1][j] + c[i-1][j-1];
+				    //     }
+				    // }
+				    
+				    写法2:
+				    c[1][0] = c[1][1] = 1;
+				    for(int i = 2; i <= 2*n; i++){
+				        for(int j = 0; j <= i; j++){
+				            if(j == 0) c[i][j] = 1;
+				            else c[i][j] = c[i-1][j] + c[i-1][j-1];
+				        }
+				    }
+				    cout << c[2*n][n] / (n + 1) << endl;
+				}
+
+		AcWing 50. 序列化二叉树
+			这道题就是加密解密, 一道题当做两道题来考, 你不要zuo, 不要加密太难
+			加密: 前序/后序/层序都可以, 要做出来, 就是要给叶子节点按上两个null字符
+			/**
+			 * Definition for a binary tree node.
+			 * struct TreeNode {
+			 *     int val;
+			 *     TreeNode *left;
+			 *     TreeNode *right;
+			 *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+			 * };
+			 */
+			class Solution {
+			public:
+
+			    // Encodes a tree to a single string.
+			    string serialize(TreeNode* root) {
+			        string res;
+			        dfs_s(root, res);
+			        return res;
+			    }
+
+			    void dfs_s(TreeNode *root, string &res)
+			    {
+			        if (!root) {
+			            res += "null ";	叶子节点 
+			            return;
+			        }
+			        res += to_string(root->val) + ' ';	数字->string
+			        dfs_s(root->left, res);
+			        dfs_s(root->right, res);
+			    }
+
+			    // Decodes your encoded data to tree.
+			    TreeNode* deserialize(string data) {
+			        int u = 0;
+			        return dfs_d(data, u);
+			    }
+
+			    TreeNode* dfs_d(string data, int &u)	注意这里是传引用, 我们的每一层的 dfs_d()都是修改同一个u
+			    {
+			        //if (u == data.size()) return NULL;
+			        int k = u;
+			        while (data[k] != ' ') k ++ ;	找到string中的数字 
+			        if (data[u] == 'n') {	如果是"null"字符, 之前的k就会一直是u
+			            u = k + 1;
+			            return NULL;
+			        }
+			        int val = 0, sign = 1;	计算数字是多少 
+			        if (u < k && data[u] == '-') sign = -1, u ++ ;	看一下是否是负数 
+			        for (int i = u; i < k; i ++ ) val = val * 10 + data[i] - '0';	抬高, 然后加上末尾的数字 
+			        val *= sign;
+			        u = k + 1;	
+			        auto root = new TreeNode(val);	新的节点 
+			        root->left = dfs_d(data, u);	dfs: 左右子树
+			        	进一步了解迭代, 你会发现, 从函数的一开始, 到第一次遇到 dfs_d(), 我们会一直重复这一段. 
+			        	然后重复到最后重复不下去的时候, 就是遇到最左边的底部叶子节点的时候, 所以迭代到底, 有一种一条链表{路径}走下去的感觉
+			        root->right = dfs_d(data, u);	dfs: 左右子树
+			        return root;
+			    }
+			};
 		AcWing 60. 礼物的最大价值
 			1. 数字三角形/摘花生
 			2. class Solution {
@@ -13708,309 +15664,807 @@
 				        return f[n][m];
 				    }
 				};
-
 	第十讲
 		AcWing 730. 机器人跳跃问题
-			今日头条: 5题2h, 有点难
-			此题目: 难度刚刚好, 容易出
-			题目的分类:
-				1. 模拟题
-					有确定解, 用数据结构优化等
-				2. 优化题
-					有限集合: dp/贪心/暴搜{dfs}
-					无限集合: 数学, 二分{需要有序}
-			问面试官, 数据范围, 暗示了用什么方法 
-				一般ACM或者笔试题的时间限制是1秒或2秒。
-				在这种情况下，C++代码中的操作次数控制在 10^7∼10^8 为最佳。
-				下面给出在不同数据范围下，代码的时间复杂度和算法该如何选择：
-					n≤30, 指数级别, dfs+剪枝，状态压缩dp
-					n≤100 => O(n^3)，floyd，dp，高斯消元
-					n≤1000 => O(n^2)，O(n^2*logn)，dp，二分，朴素版Dijkstra、朴素版Prim、Bellman-Ford
-					n≤10000 => O(n∗sqrt(n))，块状链表、分块、莫队
-					n≤100000 => O(nlogn) => 各种sort，线段树、树状数组、set/map、heap、拓扑排序、dijkstra+heap、prim+heap、spfa、求凸包、求半平面交、二分、CDQ分治、整体二分
-					n≤1000000 => O(n)O(n), 以及常数较小的 O(nlogn)O(nlogn) 算法 => 单调队列、 hash、双指针扫描、并查集，kmp、AC自动机，常数比较小的 O(nlogn)O(nlogn) 的做法：sort、树状数组、heap、dijkstra、spfa
-					n≤10000000 => O(n)O(n)，双指针扫描、kmp、AC自动机、线性筛素数
-					n≤10^9 => O(sqat(n))，判断质数
-					n≤10^18 => O(logn)O(logn)，最大公约数，快速幂
-					n≤10^1000 => O((logn)^2)，高精度加减乘除
-					n≤10^100000 => O(logk×loglogk)，k表示位数，高精度加减、FFT/NTT
-					链接：https://www.acwing.com/blog/content/32/
-			这道题是经典的二分, 是在初始能量的所有可能值中去二分. 因为具有单调性.
-			具体地说: 
-				如果初始能量分别是 x0, x1, x2. 其中 x0 < x1 < x2, 那么最终能量 y0, y1, y2 的关系也是 y0 < y1 < y2.
-				因为我们的能量计算公式是:
-					初始能量: E0
-					楼高: h0, h1, h2... hn 
-					第一次跳跃后的能量: 2*E0 - h0 
-						解释: 
-							当 E0 < h0, E0 - (h0 - E0) = 2*E0 - h0
-							当 E0 > h0, E0 + (E0 - h0) = 2*E0 - h0
-					同理, 第二次跳跃后的能量: 2*(2*E0 - h0) - h1 
-					...
-					如果某次跳跃之后是负值, 那就一直是负值
-					如果某次跳跃之后的值大于我们 max(h0, h1, ..., hn), 那就一直是正值{也就是我们成功了}
-						解释:
-							因为 E(n+1) = 2En - hn = En + (En - hn), 如果我们的 En > max(h0, h1, ..., hn)
-							那么 E(n+1) = En + 正数 > En > max(h0, h1, ..., hn)
-							同样的道理可以延伸到 E(n+2)也是正数, 总之就是一直是正数 
-				题目问: 机器人至少以多少能量值开始游戏，才可以保证成功完成游戏{成功: 在这个过程中能量值不能为负数个单位}
-					所以我们就是二分初始能量值E0
-					二分的起始范围: [0, max(h0, h1, ..., hn)], 题目说了 1 <= Hi < 1e5, 所以二分的范围就是 [0, 1e5]. 
-					我们希望找到最小的E0, 这个E0能在某次跳跃之后的值大于我们 max(h0, h1, ..., hn), 那就一直是正值{也就是我们成功了}
+			1.
+				今日头条: 5题2h, 有点难
+				此题目: 难度刚刚好, 容易出
+				题目的分类:
+					1. 模拟题
+						有确定解, 用数据结构优化等
+					2. 优化题
+						有限集合: dp/贪心/暴搜{dfs}
+						无限集合: 数学, 二分{需要有序}
+				问面试官, 数据范围, 暗示了用什么方法 
+					一般ACM或者笔试题的时间限制是1秒或2秒。
+					在这种情况下，C++代码中的操作次数控制在 10^7∼10^8 为最佳。
+					下面给出在不同数据范围下，代码的时间复杂度和算法该如何选择：
+						n≤30, 指数级别, dfs+剪枝，状态压缩dp
+						n≤100 => O(n^3)，floyd，dp，高斯消元
+						n≤1000 => O(n^2)，O(n^2*logn)，dp，二分，朴素版Dijkstra、朴素版Prim、Bellman-Ford
+						n≤10000 => O(n∗sqrt(n))，块状链表、分块、莫队
+						n≤100000 => O(nlogn) => 各种sort，线段树、树状数组、set/map、heap、拓扑排序、dijkstra+heap、prim+heap、spfa、求凸包、求半平面交、二分、CDQ分治、整体二分
+						n≤1000000 => O(n)O(n), 以及常数较小的 O(nlogn)O(nlogn) 算法 => 单调队列、 hash、双指针扫描、并查集，kmp、AC自动机，常数比较小的 O(nlogn)O(nlogn) 的做法：sort、树状数组、heap、dijkstra、spfa
+						n≤10000000 => O(n)O(n)，双指针扫描、kmp、AC自动机、线性筛素数
+						n≤10^9 => O(sqat(n))，判断质数
+						n≤10^18 => O(logn)O(logn)，最大公约数，快速幂
+						n≤10^1000 => O((logn)^2)，高精度加减乘除
+						n≤10^100000 => O(logk×loglogk)，k表示位数，高精度加减、FFT/NTT
+						链接：https://www.acwing.com/blog/content/32/
+				这道题是经典的二分, 是在初始能量的所有可能值中去二分. 因为具有单调性.
+				具体地说: 
+					如果初始能量分别是 x0, x1, x2. 其中 x0 < x1 < x2, 那么最终能量 y0, y1, y2 的关系也是 y0 < y1 < y2.
+					因为我们的能量计算公式是:
+						初始能量: E0
+						楼高: h0, h1, h2... hn 
+						第一次跳跃后的能量: "2*E0 - h0"
+							解释: 
+								当 E0 < h0, E0 - (h0 - E0) = 2*E0 - h0
+								当 E0 > h0, E0 + (E0 - h0) = 2*E0 - h0
+						同理, 第二次跳跃后的能量: 2*(2*E0 - h0) - h1 
+						...
+						如果某次跳跃之后是负值, 那就一直是负值
+						如果某次跳跃之后的值大于我们 max(h0, h1, ..., hn), 那就一直是正值{也就是我们成功了}
+							解释:
+								因为 E(n+1) = 2En - hn = En + (En - hn)
+								如果我们的 En > max(h0, h1, ..., hn), 则 En - hn > 0, 也就是 En - hn 是正数
+								那么 E(n+1) = En + 正数 > En > max(h0, h1, ..., hn)
+								同样的道理可以延伸到 E(n+2)也是正数, 总之就是一直是正数 
+					题目问: 机器人至少以多少能量值开始游戏，才可以保证成功完成游戏{成功: 在这个过程中能量值不能为负数个单位}
+						所以我们就是二分初始能量值E0
+						二分的起始范围: [0, max(h0, h1, ..., hn)], 题目说了 1 <= Hi < 1e5, 所以二分的范围就是 [0, 1e5]. 
+						我们希望找到最小的E0, 这个E0能在某次跳跃之后的值大于我们 max(h0, h1, ..., hn), 那就一直是正值{也就是我们成功了}
 
+					#include <iostream>
+					using namespace std;
+					const int N = 1e5 + 10;
+					int n;
+					int h[N];
+					bool check(int e)                       //判断机器人初始能量为e时能否到达N号建筑
+					{
+					    for (int i = 1; i <= n; i ++ )
+					    {
+					        e = e * 2 - h[i];
+					        if (e >= 1e5) return true;      //e只要大于1e5，之后就只会增加不会减少了，故返回true
+					        if (e < 0) return false;        //同理，e只要小于0就只会减少不会增加了，故返回false
+					    }
+					    return true;
+					}
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> h[i];
+					    int l = 0, r = 1e5;                 //经典二分模板
+					    while (l < r)
+					    {
+					        int mid = l + r >> 1;
+					        if (check(mid)) r = mid;	如果是的话, 我们希望往左找, 并且r本身可能是答案
+					        else l = mid + 1;			否则就只往右找
+					    }
+					    cout << l << endl;
+					    return 0;
+					}
+			2. 没想到, 超级顺利!
 				#include <iostream>
 				using namespace std;
 				const int N = 1e5 + 10;
-				int n;
-				int h[N];
-				bool check(int e)                       //判断机器人初始能量为e时能否到达N号建筑
-				{
-				    for (int i = 1; i <= n; i ++ )
-				    {
-				        e = e * 2 - h[i];
-				        if (e >= 1e5) return true;      //e只要大于1e5，之后就只会增加不会减少了，故返回true
-				        if (e < 0) return false;        //同理，e只要小于0就只会减少不会增加了，故返回false
+				int h[N], n, st;
+				bool check(int u){
+				    for(int i = 0; i < n; i++){
+				        u = 2*u - h[i];
+				        if(u >= 1e5) return true;
+				        else if(u < 0) return false;
 				    }
-				    return true;
+				    return true; //也就是结果在 [0, 1e5] 依旧是正数是成功的
 				}
-				int main()
-				{
+				int main(){
 				    cin >> n;
-				    for (int i = 1; i <= n; i ++ ) cin >> h[i];
-				    int l = 0, r = 1e5;                 //经典二分模板
-				    while (l < r)
-				    {
-				        int mid = l + r >> 1;
-				        if (check(mid)) r = mid;	如果是的话, 我们希望往左找, 并且r本身可能是答案
-				        else l = mid + 1;			否则就只往右找
+				    for(int i = 0; i < n; i++) cin >> h[i];
+				    int l = 0, r = 1e5;
+				    while(l < r){
+				        int mid = l + (r - l) / 2;
+				        if(check(mid)) r = mid;
+				        else l = mid + 1;
 				    }
 				    cout << l << endl;
 				    return 0;
 				}
-		AcWing 845. 八数码
-		AcWing 167. 木棒
-			1. 从小到大枚举长木棒的长度, 第一个找到的就是答案
-			2. 剪枝:
-				1. 从大到小, 枚举短木棍, 这样深度浅, 提前结束
-				2. 
+		AcWing 845. 八数码{宏观bfs}
+			1. 
+				#include <iostream>
+				#include <queue>
+				#include <unordered_map>
+				using namespace std;
+
+				const string ending = "12345678x";
+				string start;
+
+				int bfs(){
+				    queue<string> q;
+				    q.push(start);
+				    
+				    unordered_map<string, int> dist;		这里不方便那个 bool st[N], 因为st[N]中的ind是数字, 可是我们现在是string
+				    dist[start] = 0;
+				    
+				    // 主要是怎么从 老string -> 新string
+				    // 0. 知道老'x'在string中的位置: find() -> 老ind
+				    // 1. 找到老'x'的坐标{ox, oy}: /3, %3
+				    // 2. 新'x'的坐标: 4个偏移 + 判断是否出界
+				    // 3. 合法的新x的坐标{x, y}在string的位置: x * 3 + y -> 新ind
+				    // 4. 用swap来处理string: 交换: 老ind, 新ind -> 实现了'x'在string中的转移
+				    
+				    // 总结: 
+				        // 1. find()               -> 老ind
+				        // 2. /3,%3                -> 老坐标{ox, oy}
+				        // 3. 偏移 + 判断合法      -> 新坐标{x, y}
+				        // 4. x*3+y                -> 新ind
+				        // 5. swap(老ind, 新ind)   -> 实现了'x'在string中的转移
+				        
+				    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+				    while(q.size()){
+				        string os = q.front();
+				        q.pop();
+				        
+				        int oind = os.find('x');
+				        int ox = oind / 3, oy = oind % 3;
+				        for(int i = 0; i < 4; i ++){
+				            int x = ox + dx[i], y = oy + dy[i];
+				            string ns = os;
+				            if(0 <= x && x < 3 && 0 <= y && y < 3){
+				                int nind = 3 * x + y;
+				                swap(ns[nind], ns[oind]);
+				                if(!dist.count(ns)) {
+				                    dist[ns] = dist[os] + 1;
+				                    if(ns == ending) return dist[ns];
+				                    q.push(ns);
+				                }
+				            }
+				        }
+				    }
+				    return -1;
+				}
+
+				int main(){
+				    char s[2];
+				    for(int i = 0; i < 9; i++){
+				        scanf("%s", s);
+				        // cin >> s;
+				        start += *s;
+				    }
+				    cout << bfs() << endl;
+				}
+			2. 挺顺利的 
+				//之前: 微观bfs{一张地图的一个点是起点}, 现在: 宏观bfs{不是一个点, 而是整张图的状态是一个起点!}
+				#include <iostream>
+				#include <unordered_map>
+				#include <queue>
+				using namespace std;
+				unordered_map<string, int> dist;    //这里不方便那个 bool st[N], 因为st[N]中的ind是数字, 可是我们现在是string
+				queue<string> q;                    //也不方便用自制的queue
+				string ed = "12345678x";
+				string start;
+				int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};
+				int bfs(){
+				    q.push(start);
+				    dist[start] = 0; //我之前还想了很久, dist里面的起点是哪一个点. 其实不是一个点, 而是整张图!
+				    while(q.size()){
+				        string t = q.front(); q.pop();
+				        int oind = t.find('x');
+				        int ox = oind / 3, oy = oind % 3;
+				        for(int i = 0; i < 4; i++){
+				            int nx = ox + dx[i], ny = oy + dy[i];
+				            if(nx < 0 || nx >= 3 || ny < 0 || ny >= 3) continue;		判断合法
+				            int nind = nx * 3 + ny;
+				            string ns = t;
+				            swap(ns[oind], ns[nind]);
+				            if(dist.count(ns)) continue;		类似之前的 if(st[u]) continue; 因为一旦dist[u]确定了就不会被更新了
+				            dist[ns] = dist[t] + 1;
+				            if(ns == ed) return dist[ns];
+				            q.push(ns);
+				        }
+				    }
+				    错误: 忘写
+				    正确: return -1;		说明不会到达ed的情况
+				}
+				int main(){
+				    char s;
+				    for(int i = 0; i < 9; i++){
+				        cin >> s;
+				        start += s;
+				    }
+				    cout << bfs() << endl;
+				    return 0;
+				}
+		* AcWing 167. 木棒
+			0.
+				这道题用了非常多的优化剪枝的方法
+				一、可行性剪枝：
+					1. 木棒的长度一定要是总长度的约数
+				二、优化搜索顺序剪枝：
+					1. 从小到大枚举长木棒的长度, 第一个找到的就是答案. 因为题目要求的是: 输出原始木棒的可能最小长度
+				三、排除等效冗余：
+					1. 从大到小枚举短木棍, 因为这样深度浅, 提前结束.
+						也就是, 枚举组合数而不是排列数（传一个参数start，表示开始的位置）
+						组合: 不考虑顺序{从大到小枚举短木棍}
+						排列: 考虑顺序
+					2. 如果某一根不行, 那和它长度一样的短木棍都不行, 所以要跳到下一个长度的短木棍
+					3. 如果该短木棍当成某根长木棒的第一根木棍或者当成最后一根木棍都失败了，那么该长度的长木棒一定不合法, 所以看下一个长度
+						其实并不难, 听老师讲的根本听不懂...
+						1. 如果我们现在dfs的状态是: 要把某根短木棍a当成某根长木棒x1的第一根木棍, 但是继续dfs下去{第二根短木棍b}发现行不通, 那我们还要继续尝试另外一条第一根短木棍a2吗?
+							不需要, 为什么. 因为这根短木棍a在哪里都会被排斥, 为什么.
+								因为我们用短木棍装长木棍的顺序,就是长的短木棍排在前面
+								也就是说如果这根短木棍a在其他长木棍x2里面, 它也肯定是排第一个, 不可能有更长的排在它前面
+									为什么, 见代码: if (cur == length) return dfs(u + 1, 0, 0); 第三个参数start就是从哪个短木棍开始找, 也就是从头开始找, 找到第一个没用过的, 那么这个没用过的肯定就是最长的
+									因为短木棍a在长木棒x1中当第一个失败了, 说明a是当前第一个没用过的, 那么第一个没用过的肯定就是最长的
+									那么短木棍a在长木棒x2肯定也是排第一个的, 因为a依旧是第一个没用过的最长的.
+									如果a在x2中成功, 那么在x1也能成功, 可是这次是失败的, 所以a在x2中也会失败, 在任何的x3,x4都会失败. 所以说这根短木棍a在哪里都会被排斥
+						2. 如果我们现在dfs的状态是: 要把某根短木棍a当成某根长木棒x1的最后一根木棍{完美的走完最后一公里}, 但是继续dfs下去{新的长木棒}发现行不通, 那我们还要继续尝试用其他短木棒来填那个新的长木棒吗?
+							不需要, 为什么
+								1. 首先思考现在是什么情况, 也就是最后一公里了: 某根短木棍a填充某根长木棒x1的最后一根木棍
+								2. 如果当前木棒a可以完美的填好这最后一公里, 但是后面的却行不通了. 说明后面行不通完全是因为这最后一公里a选的不好
+									也就是说根本就不应该最后一公里的长度 == a的长度
+								3. 因为如果要成功, 那么我们怎么找都要把这最后一公里填好吧
+									现在填a不行了, 我们就会尝试填其他的, 而且遍历的时候, 一定会换成其他的长度短一些的
+									假设换成了短一点的b和c, 也就是b和c之和恰好是最后一公里的长度, 并且最后所有的长木棍都填满了, 那么我们的a应该会在后面的某根长木棍中
+									我们完全可以把"b+c"和"a"调换, 这个是等价的, 可是这就会失败, 和我们之前假设的成功矛盾, 所以根本就不存在某个:短一点的b和c, 也就是b和c之和恰好是最后一公里的长度
+									所以这最后一公里永远都填不满, 所以这个最后一公里本身长度就不对. 所以我们这个长度就不对!
+			3. 代码 
+				#include <iostream>
+				#include <algorithm>
+				#include <cstring>
+
+				using namespace std;
+
+				const int N = 70;
+				int n;
+				int sticks[N];
+				bool st[N];
+				int sum, length;
+				bool dfs(int u, int cur, int start)                 //u：拼第u根木棒，cur：正在拼的木棒长度
+				{                                                   //start：开始搜索的下标
+				    if (u * length == sum) return true;
+				    if (cur == length) return dfs(u + 1, 0, 0);     //当前长度拼到length了，开始拼下一根
+
+				    for (int i = start; i < n; i ++ )
+				    {
+				        if (st[i]) continue;                        //当前木棒用过了，抬走，下一个
+				        int l = sticks[i];                          //l为第i根木棍长度
+				        if (cur + l <= length)                      //正在拼的木棒长度+当前木棒长度<=目标木棒长度
+				        {
+				            st[i] = true;
+				            if (dfs(u, cur + l, i + 1)) return true;
+				            	进一步了解迭代, 你会发现, 从函数的一开始, 到第一次遇到 dfs_d(), 我们会一直重复这一段. 
+			        			然后重复到最后重复不下去的时候, 就是遇到return true, false 的时候, 我们才会继续往这句话的下面走
+				            st[i] = false;                          //恢复现场
+				        }
+
+				        //走到这一步说明当前拼接已失败，开启失败三重剪枝
+				        if (!cur || cur + l == length) return false;    //剪枝3-3
+
+				        int j = i + 1;                              //剪枝3-1跳过长度相同的木棒
+				        while (j < n && sticks[j] == l) j ++ ;
+				        i = j - 1;
+				    }
+
+				    return false;
+				}
+
+				int main()
+				{
+				    while (cin >> n, n)
+				    {
+				        sum = length = 0;
+				        for (int i = 0; i < n; i ++ )
+				        {
+				            int l;
+				            cin >> l;
+				            sticks[i] = l;
+				            sum += l;
+				            length = max(length, l);                //储存输入木棒的最大长度
+				        }
+
+				        sort(sticks, sticks + n, greater<int>());   //剪枝3-1：木棒长度从大到小排序
+
+				        memset(st, 0, sizeof st);
+				        while (true)
+				        {                                           //搜第0根木棒，当前长度是0，从下标0开始搜
+				            if (sum % length == 0 && dfs(0, 0, 0))  //剪枝2：按木棒长度从小到大枚举
+				            {                                       //剪枝1：木棒的长度一定要是总长度的约数
+				                cout << length << endl;
+				                break;
+				            }
+
+				            length ++ ;
+				        }
+				    }
+
+				    return 0;
+				}
+			4. 还是比较顺利的, 就是很多细节
+				#include <iostream>
+				#include <algorithm>
+				#include <cstring>
+				using namespace std;
+				const int N = 70;   //不超过64节木棍
+				int h[N], n, sum, length;
+				bool st[N];
+				bool dfs(int u, int cur){		我没有用 int start也依旧ac, 这个start的确属于一个剪枝
+				    if(u * length == sum) return true;
+				    错误: if(cur == length) dfs(u + 1, 0);
+				    正确: if(cur == length) return dfs(u + 1, 0);
+				    for(int i = 0; i < n; i++){
+				        if(st[i]) continue;		填过了就不看了 
+				        int l = h[i];
+				        if(cur + l <= length){	要填合法的
+				            st[i] = true;
+				            if(dfs(u, cur + l)) return true;	如果合法, 就直接true, 不合法就继续看下一个高度不同的 h[i+1]{注意不是真的h[i+1]}
+				            st[i] = false;
+				        }
+				        说明h[i]是失败的, 但是如果当前填的是第0个或者最后一个却失败了, 就肯定是失败的
+				        if(!cur || cur + l == length) return false;	
+				        
+				        我们找下一个高度不同的 h[i+1]{注意不是真的h[i+1]}
+				        int j = i;
+				        while(j < n && h[j] == h[i]) j++;
+				        i = j - 1;
+				    }
+				    return false;
+				}
+				int main(){
+				    while(cin >> n, n){
+				        sum = 0, length = 0;
+				        memset(st, 0, sizeof st);
+				        for(int i = 0; i < n; i++){
+				            cin >> h[i];
+				            sum += h[i];
+				            length = max(length, h[i]);
+				        }
+				        
+				        sort(h, h + n, greater<int>());
+				        while(true){
+				            if(sum % length == 0 && dfs(0, 0)){
+				                cout << length << endl; break;
+				            }
+				            length++;
+				        }
+				    }
+				    return 0;
+				}
 		AcWing 731. 毕业旅行问题{哈密顿回路}
-			复杂度: n*n*2^n = 20*20*2^20 = 4*10^8
-				但是因为必须要走0号点北京, 所以1/2的状态是无效的可以删除 
-				另外, 状态i必须要包括j, 且不包括j的必须包括k, 所以又是可以删除一堆状态
-				所以复杂度其实没那么高
-			#include <iostream>
-			#include <cstring>
-			using namespace std;
+			1.
+				f[i][j]:
+					表示对于状态i{i化为二进制后，里面为1的位置表示走过了的城市}
+					且当前到达j城市的最小花费 
+				复杂度: n*n*2^n = 20*20*2^20 = 4*10^8
+					但是因为必须要走0号点北京, 所以1/2的状态是无效的可以删除 
+					另外, 状态i必须要包括j, 且不包括j的必须包括k, 所以又是可以删除一堆状态
+					所以复杂度其实没那么高
+				#include <iostream>
+				#include <cstring>
+				using namespace std;
+				const int N = 20;
+				int n;
+				int w[N][N];
+				int f[1 << N][N];
 
-			const int N = 20;
+				int main()
+				{
+				    cin >> n;
+				    for (int i = 0; i < n; i ++ )
+				        for (int j = 0; j < n; j ++ )
+				            cin >> w[i][j];
 
-			int n;
-			int w[N][N];
-			int f[1 << N][N];
+				    memset(f, 0x3f, sizeof f);          //所有状态初始化为不合法，即无穷大
+				    f[1][0] = 0;                        //最开始在0号城市，而且已经走过了0号城市
 
-			int main()
-			{
-			    cin >> n;
-			    for (int i = 0; i < n; i ++ )
-			        for (int j = 0; j < n; j ++ )
-			            cin >> w[i][j];
+				    //关于为何i += 2，因为要保证状态的最后一位是1而不是0{从北京出发}
+				    for (int i = 1; i < 1 << n; i += 2) 
+				        for (int j = 0; j < n; j ++ )   
+				            if (i >> j & 1)                     //经过的城市中包括j
+				                for (int k = 0; k < n; k ++ )
+				                    if (i - (1 << j) >> k & 1)  //经过的城市中除去j还包括k
+				                        f[i][j] = min(f[i][j], f[i - (1 << j)][k] + w[k][j]);
+				                        //比较 从i到j 和 从i到k再到j 的车票价格
 
-			    memset(f, 0x3f, sizeof f);          //所有状态初始化为不合法，即无穷大
-			    f[1][0] = 0;                        //最开始在0号城市，而且已经走过了0号城市
+				    int res = 0x3f3f3f3f;
 
-			    //关于为何i += 2，因为要保证状态的最后一位是1而不是0{从北京出发}
-			    for (int i = 1; i < 1 << n; i += 2) 
-			        for (int j = 0; j < n; j ++ )   
-			            if (i >> j & 1)                     //经过的城市中包括j
-			                for (int k = 0; k < n; k ++ )
-			                    if (i - (1 << j) >> k & 1)  //经过的城市中除去j还包括k
-			                        f[i][j] = min(f[i][j], f[i - (1 << j)][k] + w[k][j]);
-			                        //比较 从i到j 和 从i到k再到j 的车票价格
+				    //遍历最后一站是i，并从i到起点北京的车票价格的最小值
+				    //这里 (1 << n) - 1 二进制表示为20个1，即经过了所有20个城市当前在i城市，最后从i城市返回北京
+				    for (int i = 1; i < n; i ++ ) res = min(res, f[(1 << n) - 1][i] + w[i][0]);
 
-			    int res = 0x3f3f3f3f;
+				    cout << res << endl;
 
-			    //遍历最后一站是i，并从i到起点北京的车票价格的最小值
-			    //这里 (1 << n) - 1 二进制表示为20个1，即经过了所有20个城市当前在i城市，最后从i城市返回北京
-			    for (int i = 1; i < n; i ++ ) res = min(res, f[(1 << n) - 1][i] + w[i][0]);
-
-			    cout << res << endl;
-
-			    return 0;
-			}
+				    return 0;
+				}
+			2. 很顺利, 就是空间不能开大了, 否则报错
+				#include <iostream>
+				#include <cstring>
+				using namespace std;
+				错: const int N = 25; 爆栈了 int f[1 << 25][N] 太大了
+				const int N = 20;
+				int f[1 << N][N], w[N][N], n;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++) 
+				        for(int j = 0; j < n; j++) cin >> w[i][j];
+				    memset(f, 0x3f, sizeof f);
+				    f[1][0] = 0;
+				    for(int i = 1; i < 1 << n; i += 2){
+				        for(int j = 0; j < n; j++){
+				            if(i >> j & 1){
+				                for(int k = 0; k < n; k++){
+				                    if((i - (1 << j)) >> k & 1)
+				                        f[i][j] = min(f[i][j], f[i - (1 << j)][k] + w[k][j]);   其中 f[i - (1 << j)][k] 是保证状态是经过k的, 因为通过了上面的 if((i - (1 << j)) >> k & 1)
+				                }
+				            }
+				        }
+				    }
+				    int res = 0x3f3f3f3f;
+				    for(int i = 0; i < n; i++) res = min(res, f[(1 << n) - 1][i] + w[i][0]);
+				    cout << res << endl;
+				    return 0;
+				}
 		AcWing 45. 之字形打印二叉树
-			最简洁的做法, 其实主要就是要记录在push下一层之前, queue中存的本层的元素个数
-			reverse()函数是大家都用到的
-			/**
-			 * Definition for a binary tree node.
-			 * struct TreeNode {
-			 *     int val;
-			 *     TreeNode *left;
-			 *     TreeNode *right;
-			 *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
-			 * };
-			 */
-			class Solution {
-			public:
-			    vector<vector<int>> printFromTopToBottom(TreeNode* root) {
-			        vector<vector<int>> res;
-			        if(!root) return res;
-			        queue<TreeNode*> q;
-			        q.push(root); int i = 1;
-			        while(q.size())
-			        {
-			            int len = q.size();
-			            vector<int> lev;
-			            for(int j = 0; j < len; j++)    //队列长度，为该层的节点个数
-			            {
-			                auto t = q.front();
-			                q.pop();
-			                lev.push_back(t->val);
-			                if(t->left) q.push(t->left);
-			                if(t->right) q.push(t->right);                      
-			            }
-			            写法1:
-			            // if(i % 2 == 0) reverse(lev.begin(),lev.end());    //偶数行直接数组倒排就是了！！！
-			            // res.push_back(lev);  
-			            // i++;
+			1. 
+				最简洁的做法, 其实主要就是要记录在push下一层之前, queue中存的本层的元素个数
+				reverse()函数是大家都用到的
+				/**
+				 * Definition for a binary tree node.
+				 * struct TreeNode {
+				 *     int val;
+				 *     TreeNode *left;
+				 *     TreeNode *right;
+				 *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+				 * };
+				 */
+				class Solution {
+				public:
+				    vector<vector<int>> printFromTopToBottom(TreeNode* root) {
+				        vector<vector<int>> res;
+				        if(!root) return res;
+				        queue<TreeNode*> q;
+				        q.push(root); int i = 1;
+				        while(q.size())
+				        {
+				            int len = q.size();
+				            vector<int> lev;
+				            for(int j = 0; j < len; j++)    //队列长度，为该层的节点个数
+				            {
+				                auto t = q.front();
+				                q.pop();
+				                lev.push_back(t->val);
+				                if(t->left) q.push(t->left);
+				                if(t->right) q.push(t->right);                      
+				            }
+				            写法1:
+				            // if(i % 2 == 0) reverse(lev.begin(),lev.end());    //偶数行直接数组倒排就是了！！！
+				            // res.push_back(lev);  
+				            // i++;
 
-			            写法2:
-			            if(i % 2 == 0) res.emplace_back(lev.rbegin(),lev.rend());    ////针对反转情况，可以用vector反转序列迭代器构建匿名对象 这样就不需要单独反转了
-			            else res.push_back(lev);  
-			            i++;
-			        }
-			        return res;
-			    }
-			};
+				            写法2:
+				            if(i % 2 == 0) res.emplace_back(lev.rbegin(),lev.rend());    ////针对反转情况，可以用vector反转序列迭代器构建匿名对象 这样就不需要单独反转了
+				            else res.push_back(lev);  
+				            i++;
+				        }
+				        return res;
+				    }
+				};
+			2. 非常顺利 
+				class Solution {
+				public:
+				    vector<vector<int>> printFromTopToBottom(TreeNode* root) {
+				        vector<vector<int>> res;	为了存答案 
+				        vector<int> level;			每一层的内容
+				        queue<TreeNode*> q;			为了层序遍历这个树
+				        if(!root) return res;
+				        q.push(root);
+				        int i = 0;
+				        while(q.size()){
+				            level.clear();
+				            int cnt = q.size();		这一层有多少个节点 
+
+				            把这一层的所有元素的左右儿子都插入到queue中{作为下一层}
+				            for(int j = 0; j < cnt; j++){
+				                auto t = q.front(); q.pop();
+				                if(t->left) q.push(t->left);
+				                if(t->right) q.push(t->right);
+				                level.push_back(t->val);		把这一层的所有元素的值存下来 
+				            }
+				            if(i & 1) res.emplace_back(level.rbegin(), level.rend());	如果是奇数, 就反着插入res
+				            else res.push_back(level);
+				            i++;
+				        }
+				        return res;
+				    }
+				};
 		AcWing 46. 二叉搜索树的后序遍历序列
-			二叉搜索树: 按顺序排列
-			后序遍历的特点:
-				1. |左子树|右子树|最后一位是root|
-				2. 左子树的点的值都小于root的值, 右子树的点的值都大于root的值
-				3. 所以第一个大于root的数字是右子树的第一个数字 
-			class Solution {
-			public:
-			    vector<int> seq;        //把seq变为全局数组，便于dfs函数调用，否则每次调用dfs都要传一个数组进去
+			1.
+				二叉搜索树: 按顺序排列
+				后序遍历的特点:
+					1. |左子树|右子树|最后一位是root|
+					2. 左子树的点的值都小于root的值, 右子树的点的值都大于root的值
+					3. 所以第一个大于root的数字是右子树的第一个数字 
+				class Solution {
+				public:
+				    vector<int> seq;        //把seq变为全局数组，便于dfs函数调用，否则每次调用dfs都要传一个数组进去
 
-			    bool verifySequenceOfBST(vector<int> sequence) {
-			        seq = sequence;
-			        return dfs(0, seq.size() - 1);
-			    }
+				    bool verifySequenceOfBST(vector<int> sequence) {
+				        seq = sequence;
+				        return dfs(0, seq.size() - 1);
+				    }
 
-			    bool dfs(int l, int r)
-			    {
-			        if (l >= r) return true;                //当数为空时，返回true
-			        int root = seq[r];                      //最后一个元素为根节点
-			        int k = l;
+				    bool dfs(int l, int r)
+				    {
+				        if (l >= r) return true;                //当数为空时，返回true
+				        int root = seq[r];                      //最后一个元素为根节点
+				        int k = l;
 
-			        while (k < r && seq[k] < root) k ++ ;   //从前往后找第一个大于root的元素
+				        while (k < r && seq[k] < root) k ++ ;   //从前往后找第一个大于root的元素
 
-			        for (int i = k; i < r; i ++ )           //判断右子树节点是否都大于根节点
-			            if (seq[i] < root)
-			                return false;                   //若小于则返回false
+				        for (int i = k; i < r; i ++ )           //判断右子树节点是否都大于根节点
+				            if (seq[i] < root)
+				                return false;                   //若小于则返回false
 
-			        return dfs(l, k - 1) && dfs(k, r - 1);  //继续dfs
-			    }
-			};
+				        return dfs(l, k - 1) && dfs(k, r - 1);  //继续dfs
+				    }
+				};
+			2. 小bug, 实在是不应该啊
+				class Solution {
+				public:
+				    vector<int> seq;
+				    bool verifySequenceOfBST(vector<int> sequence) {
+				        seq = sequence;
+				        return dfs(0, seq.size() - 1);
+				    }
+				    
+				    bool dfs(int l, int r){
+				        if(l >= r) return true;
+				        int root = seq[r];
+				        int k = l;
+				        while(k < r && seq[k] < root) k++;
+				        错: for(int i = k; i <= r - 1; i++) if(seq[k] < root) return false;
+				        对: for(int i = k; i <= r - 1; i++) if(seq[i] < root) return false;
+				        错: return dfs(l, k - 1) && dfs(k + 1, r);
+				        对: return dfs(l, k - 1) && dfs(k, r - 1);
+				    }
+				};
 	第九讲
 		AcWing 1611. 寻找峰值
-			这道题我们能调用 query()的次数是有限的, 所以用二分.
-			其实很简单: 两个数字比较: l, r. 题目保证每个数字大小不同
-				1. l < r /
-					那么峰值一定在右边, 为什么, 只有两种情况:
-						1. l < r > rr  /\, 那么r就是峰值 
-						2. l < r < rr, r < rr 等同于情况1 l < r, 我们的峰值一定在r的右边, 极端情况下, 峰值就是全局数组的最右侧的数字
-				2. l > r \ 
-					那么峰值一定在左边, 原因如上, 因为是对称的.
-			代码
-				// Forward declaration of queryAPI.
-				// int query(int x);
-				// return int means nums[x].
+			1.
+				这道题我们能调用 query()的次数是有限的, 所以用二分.
+				其实很简单: 两个数字比较: l, r. 题目保证每个数字大小不同
+					1. l < r /
+						那么峰值一定在右边, 为什么, 只有两种情况:
+							1. l < r > rr  /\, 那么r就是峰值 
+							2. l < r < rr, r < rr 等同于情况1 l < r, 我们的峰值一定在r的右边, 极端情况下, 峰值就是全局数组的最右侧的数字
+					2. l > r \ 
+						那么峰值一定在左边, 原因如上, 因为是对称的.
+				代码
+					// Forward declaration of queryAPI.
+					// int query(int x);
+					// return int means nums[x].
 
+					class Solution {
+					public:
+					    int findPeakElement(int n) {
+					        int l = 0, r = n - 1;
+					        while (l < r)
+					        {
+					            int mid = l + (r - l) / 2;                         		//二分查找
+					            if (query(mid) < query(mid + 1)) l = mid + 1;       	//就是之前判断的, 如果arr[mid] < arr[mid+1], 我们往右找, 并且arr[mid+1]也是可能的结果, 所以 l = mid + 1
+					            else r = mid;
+					        }
+					        return l;
+					    }
+					};
+			2. 很顺利, 就是二分我们的数字
 				class Solution {
 				public:
 				    int findPeakElement(int n) {
 				        int l = 0, r = n - 1;
-				        while (l < r)
-				        {
-				            int mid = l + (r - l) / 2;                         		//二分查找
-				            if (query(mid) < query(mid + 1)) l = mid + 1;       	//就是之前判断的, 如果arr[mid] < arr[mid+1], 我们往右找, 并且arr[mid+1]也是可能的结果, 所以 l = mid + 1
+				        while(l < r){
+				            int mid = l + (r - l) / 2;
+				            if(query(mid) < query(mid + 1)) l = mid + 1;
 				            else r = mid;
 				        }
 				        return l;
 				    }
 				};
 		AcWing 843. n-皇后问题
+			1. 非常顺利: 关键之处: col[c] = diag[r + c] = cdiag[r - c + n] = true;
+				#include <iostream>
+				using namespace std;
+				const int N = 20;
+				char g[N][N];
+				int n, col[N], diag[N], cdiag[N];
+				void dfs(int r){
+				    if(r == n){
+				        for(int i = 0 ; i < n; i++) cout << g[i] << endl;
+				        cout << endl;
+				        return;
+				    }
+				    for(int c = 0; c < n; c ++){
+				        if(!col[c] && !diag[r + c] && !cdiag[r - c + n]){
+				            g[r][c] = 'Q';
+				            col[c] = diag[r + c] = cdiag[r - c + n] = true;
+				            dfs(r + 1);
+				            col[c] = diag[r + c] = cdiag[r - c + n] = false;
+				            g[r][c] = '.';
+				        }
+				    }
+				}
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++){
+				        for(int j = 0; j < n; j++) g[i][j] = '.';	注意这个 g[i][j] 不是cin的 
+				    }
+				    dfs(0);
+				    return 0;
+				}
 		AcWing 901. 滑雪
-		AcWing 1613. 数独简单版
-			注意这道题, dfs是用的bool返回, 因为我们只需要返回一个合法解就好
-			#include <iostream>
-			#include <cstring>
-			#include <algorithm>
+			1. 有点不顺利, 竟然忘了 g[][] 和 f[][] 是两个东西
+				#include <iostream>
+				#include <cstring>
+				using namespace std;
+				const int N = 310;
+				int g[N][N], n, m, res;
+				int f[N][N];
+				int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};
+				int dfs(int x, int y){
+				    // if(g[x][y] != -1) return g[x][y];
+				    // g[x][y] = 1;
+				    if(f[x][y] != -1) return f[x][y];
+				    f[x][y] = 1;						起码长度是1
+				    for(int i = 0; i < 4; i++){
+				        int a = x + dx[i], b = y + dy[i];
+				        if(a < 0 || a >= n || b < 0 || b >= m || g[a][b] >= g[x][y]) continue;	注意是 g[a][b] >= g[x][y], 如果写成 g[a][b] > g[x][y] 就错了 
+				        // g[a][b] = dfs(a, b);
+				        // if(g[a][b] + 1 > g[x][y]) g[x][y] = g[a][b] + 1;    
+				        f[a][b] = dfs(a, b);
+				        if(f[a][b] + 1 > f[x][y]) f[x][y] = f[a][b] + 1;    //我们希望大的值
+				    }
+				    // return g[x][y];
+				    return f[x][y];
+				}
+				int main(){
+				    cin >> n >> m;
+				    // memset(g, -1, sizeof g);
+				    memset(f, -1, sizeof f);
+				    for(int i = 0; i < n; i++){
+				        for(int j = 0; j < m; j++) cin >> g[i][j];
+				    }
+				    for(int i = 0; i < n; i++){
+				        for(int j = 0; j < m; j++) res = max(res, dfs(i, j));
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
+		* AcWing 1613. 数独简单版
+			1. 注意这道题, dfs是用的bool返回, 因为我们只需要返回一个合法解就好
+				#include <iostream>
+				#include <cstring>
+				#include <algorithm>
 
-			using namespace std;
+				using namespace std;
 
-			const int N = 10;
+				const int N = 10;
 
-			char g[N][N];
-			bool row[N][N], col[N][N], cell[3][3][N];       //记录每行、每列、每个九宫格中数字1~9的使用情况
-				row[i][t]: 在第i行里面, 数字t有没有出现过
-				col[j][t]: 在第j列里面, 数字t有没有出现过
-				cell[i/3][j/3][t]:  在下标是{i/3,j/3}的九宫格里, 数字t有没有出现过
-					我们有9个九宫格: 摆放方式是3*3, 对应的下标是{0,1,2}, 所以是从[0,8]/3=[0,2]区间
-					-------------
-					|	|	|	|
-					-------------
-					|	|	|	|
-					-------------
-					|	|	|	|
-					-------------
+				char g[N][N];
+				bool row[N][N], col[N][N], cell[3][3][N];       //记录每行、每列、每个九宫格中数字1~9的使用情况
+					row[i][t]: 在第i行里面, 数字t有没有出现过
+					col[j][t]: 在第j列里面, 数字t有没有出现过
+					cell[i/3][j/3][t]:  在下标是{i/3,j/3}的九宫格里, 数字t有没有出现过
+						我们有9个九宫格: 摆放方式是3*3, 对应的下标是{0,1,2}, 所以是从[0,8]/3=[0,2]区间
+						-------------
+						|	|	|	|
+						-------------
+						|	|	|	|
+						-------------
+						|	|	|	|
+						-------------
 
-			bool dfs(int x, int y)
-			{
-			    if (y == 9) x ++ , y = 0;                   //这一行填完，开始下一行
-			    if (x == 9)                                 //最后一行填完，输出结果
-			    {
-			        for (int i = 0; i < 9; i ++ ) cout << g[i] << endl;
-			        return true;	这里是剪枝, 也就是输出了一个答案, 就返回 
-			    }
+				bool dfs(int x, int y)
+				{
+				    if (y == 9) x ++ , y = 0;                   //这一行填完，开始下一行
+				    if (x == 9)                                 //最后一行填完，输出结果
+				    {
+				        for (int i = 0; i < 9; i ++ ) cout << g[i] << endl;
+				        return true;	这里是剪枝, 也就是输出了一个答案, 就返回 
+				    }
 
-			    对比:
-			    	全排 : 无脑用 for(int i = 1; i <= 9; i++) 去填写
-			    	指数 : 二选一, 选还是不选当前这个数字u
-			    	这道题: 
-			    		有条件的选还是不选
-			    			1. 如果 != '.', 说明已经有数字, 一定不选
-			    			2. 如果 == '.', 选, 而且是 for(int i = 1; i <= 9; i++) 去填写
-			    if (g[x][y] != '.') return dfs(x, y + 1);   //当前格为数字，不用填，去下一格
+				    对比:
+				    	全排 : 无脑用 for(int i = 1; i <= 9; i++) 去填写
+				    	指数 : 二选一, 选还是不选当前这个数字u
+				    	这道题: 
+				    		有条件的选还是不选
+				    			1. 如果 != '.', 说明已经有数字, 一定不选
+				    			2. 如果 == '.', 选, 而且是 for(int i = 1; i <= 9; i++) 去填写
+				    if (g[x][y] != '.') return dfs(x, y + 1);   //当前格为数字，不用填，去下一格
 
-			    否则=='.', 可以填写数字 
-			    for (int i = 0; i < 9; i ++ )               //遍历数字1到9，判断当前格能填哪个数
-			        if (!row[x][i] && !col[y][i] && !cell[x / 3][y / 3][i])
-			        {
-			            g[x][y] = i + '1';
-			            row[x][i] = col[y][i] = cell[x / 3][y / 3][i] = true;
-			            if (dfs(x, y + 1)) return true;	也是先递归: dfs(), 如果返回true, 提前剪枝
-			            row[x][i] = col[y][i] = cell[x / 3][y / 3][i] = false; 还原现场 
-			            g[x][y] = '.';
-			        }
+				    否则=='.', 可以填写数字 
+				    for (int i = 0; i < 9; i ++ )               //遍历数字1到9，判断当前格能填哪个数
+				        if (!row[x][i] && !col[y][i] && !cell[x / 3][y / 3][i])
+				        {
+				            g[x][y] = i + '1';
+				            row[x][i] = col[y][i] = cell[x / 3][y / 3][i] = true;
+				            if (dfs(x, y + 1)) return true;	也是先递归: dfs(), 如果返回true, 提前剪枝
+				            row[x][i] = col[y][i] = cell[x / 3][y / 3][i] = false; 还原现场 
+				            g[x][y] = '.';
+				        }
+				    对比八皇后:
+				    	1. 八皇后: dfs(0)从第一行开始遍历, 为什么是一行一行, 因为一行只能填写一个元素
+				    		for(int c = 0; c < n; c ++){
+						        if(!col[c] && !diag[r + c] && !cdiag[r - c + n]){
+						            g[r][c] = 'Q';
+						            col[c] = diag[r + c] = cdiag[r - c + n] = true;
+						            dfs(r + 1);
+						            col[c] = diag[r + c] = cdiag[r - c + n] = false;
+						            g[r][c] = '.';
+						        }
+						    }
+				    	2. 本题: 是一个格子一个格子的遍历
+				    		八皇后, 每个皇后都是同质的. 同一行一列斜线不能有第二个皇后
+				    		但是本题中, 数字都是不相同的, 同一行一列斜线不能有第二个数字i, 但是可以有其他数字
+				    			也就是9种皇后, 每种皇后都有8个, 也就是9个八皇后问题
+				    		所以本题不能一行一行遍历, {能一行一行, 那是因为上题一行只需要填写一个元素}, 这个一行要填写多种元素
 
-			    return false;                               //找不到方案，退回上一层递归
-			}
+				    return false;                               //找不到方案，退回上一层递归
+				}
 
-			int main()
-			{
-			    for (int i = 0; i < 9; i ++ )
-			    {
-			        cin >> g[i];
-			        for (int j = 0; j < 9; j ++ )
-			            if (g[i][j] != '.'){
-			                int t = g[i][j] - '1';	// 存的数字是数字t: 
-			                row[i][t] = col[j][t] = cell[i / 3][j / 3][t] = true;
-			            }
-			    }
-			    dfs(0, 0);                                  //从第0行0列开始
-			    return 0;
-			}
+				int main()
+				{
+				    for (int i = 0; i < 9; i ++ )
+				    {
+				        cin >> g[i];
+				        for (int j = 0; j < 9; j ++ )
+				            if (g[i][j] != '.'){
+				                int t = g[i][j] - '1';	// 存的数字是数字t: 
+				                row[i][t] = col[j][t] = cell[i / 3][j / 3][t] = true;
+				            }
+				    }
+				    dfs(0, 0);                                  //从第0行0列开始
+				    return 0;
+				}
+			2. bug 一个容易出的错 
+				#include <iostream>
+				using namespace std;
+				const int N = 10;
+				bool row[N][N], col[N][N], box[N][N][N];
+				char g[N][N];
+
+				bool dfs(int r, int c){ 
+				    if(c == 9) r++, c = 0;
+				    if(r == 9){             //这里不需要判断是否已经填满了, 因为我们是一个格子一个格子的填, 而且肯定有一个方案是能够全部格子填满的 
+				        for(int i = 0; i < 9; i ++) cout << g[i] << endl;
+				        return true;
+				    }
+				    //错误: if(g[r][c] != '.') dfs(r, c + 1);
+				    if(g[r][c] != '.') return dfs(r, c + 1);            //我当初的疑惑, 都从这里return了, 那下面的代码怎么执行. 注意if, 所以只有 == 数字的时候我们才会执行这个return
+				    for(int i = 0; i < 9; i++){
+				        if(!row[r][i] && !col[c][i] && !box[r / 3][c / 3][i]){
+				            g[r][c] = '1' + i;
+				            row[r][i] = col[c][i] = box[r / 3][c / 3][i] = true;
+				            if(dfs(r, c + 1)) return true;                          //这一句是经典, 如果成功了才直接返回{剪枝}, 如果失败了就试一试下一个数字
+				            row[r][i] = col[c][i] = box[r / 3][c / 3][i] = false;
+				            g[r][c] = '.';
+				        }
+				    }
+				    return false;
+				}
+
+				int main(){
+				    for(int i = 0; i < 9; i++){
+				        cin >> g[i];
+				        for(int j = 0; j < 9; j ++){
+				            if(g[i][j] != '.'){
+				                int num = g[i][j] - '1';
+				                row[i][num] = col[j][num] = box[i / 3][j / 3][num] = true;
+				            }
+				        }
+				    }
+				    dfs(0, 0);
+				    return 0;
+				}
 		AcWing 52. 数组中出现次数超过一半的数字
 			1. 正确但是空间不符合的做法
 				哈希表:
@@ -14120,14 +16574,46 @@
 
 				    return 0;
 				}
+			6. 一个超级无语的bug: 溢出问题 
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				typedef long long LL;
+				int h[N], l[N], r[N], n, q[N];
+				int main(){
+				    while(cin >> n, n){
+				        h[0] = h[n + 1] = -1;
+				        for(int i = 1; i <= n; i++) cin >> h[i];
+				        int tt = -1;
+				        q[++ tt] = 0; //表示插入 h[0]
+				        for(int i = 1; i <= n; i++){
+				            while(h[q[tt]] >= h[i]) tt--;
+				            错误: l[i] = tt;		tt是q的下标, 我们要的是h的下标
+				            正确: l[i] = q[tt];	对应h的下标
+				            q[++ tt] = i;
+				        }
+				        tt = -1;
+				        q[++ tt] = n + 1; //表示插入 h[n+1]
+				        for(int i = n; i >= 1; i--){
+				            while(h[q[tt]] >= h[i]) tt--;
+				            r[i] = q[tt];
+				            q[++ tt] = i;
+				        }
+				        LL res = 0;
+				        错误: for(int i = 1; i <= n; i++) res = max(res, (LL)(h[i] * (r[i] - l[i] - 1)));	-> 这么写是错的! ()如果先完成括号的乘法, 那就是溢出了, 也就是高位被砍掉了
+				        正确: for(int i = 1; i <= n; i++) res = max(res, (LL)h[i] * (r[i] - l[i] - 1));		-> 这么写才是对的, (LL)h[i]是指, 先留出足够多的空间, 然后再做乘法
+				        cout << res << endl;
+				    }
+				    return 0;
+				}
 		AcWing 152. 城市游戏{单调栈}
 			1. 二维的上一道题, 也是单调栈, O(n^2)
 			2. s[i][j]: 坐标{i,j}的格子, 包括自己在内, 上方有多少个连续的'Q'
 				实现: 
-					如果自己是'F', s[i][j] = 0
-					如果自己是'G', s[i][j] = s[i-1][j] + 1
+					如果自己是'R', s[i][j] = 0
+					如果自己是'R', s[i][j] = s[i-1][j] + 1
 			3. 每一行: 都是上一道题目
-			4. 我之前的疑惑: 会不会存在一些'G'自己是最大矩形, 但是这个矩阵的外围是一圈'F', 这种情况下, 上述做法ok吗, 其实是ok的.
+			4. 我之前的疑惑: 会不会存在一些'F'自己是最大矩形, 但是这个矩阵的外围是一圈'R', 这种情况下, 上述做法ok吗, 其实是ok的.
 				因为我们遍历每一行的时候, 总能够遍历到这个最大矩形的下边界, 这时候就能得到答案
 			5. 超级简单, 就是填充 s[i][j] + 上一题的代码
 				#include <iostream>
@@ -14186,6 +16672,47 @@
 
 				    return 0;
 				}
+			6. 顺利, 注意n和m不要弄混了
+				#include <iostream>
+				using namespace std;
+				const int N = 1e3 + 10;
+				int s[N][N], l[N], r[N], n, m, q[N];
+				int work(int h[]){
+				    h[0] = -1, h[m + 1] = -1;
+				    int tt = -1;
+				    q[++ tt] = 0;
+				    for(int i = 1; i <= m; i++){
+				        while(h[q[tt]] >= h[i]) tt--;
+				        l[i] = q[tt];
+				        q[++ tt] = i;
+				    }
+				    tt = -1;
+				    q[++ tt] = m + 1;
+				    for(int i = m; i >= 1; i--){
+				        while(h[q[tt]] >= h[i]) tt--;
+				        r[i] = q[tt];
+				        q[++ tt] = i;
+				    }
+				    int res = 0;
+				    for(int i = 1; i <= m; i++) res = max(res, h[i] * (r[i] - l[i] - 1));
+				    return res;
+				}
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 1; j <= m; j++){
+				            char c;
+				            cin >> c;
+				            if(c == 'F') s[i][j] = s[i - 1][j] + 1;
+				        }
+				    }
+				    int res = 0;
+				    for(int i = 1; i <= n; i++){
+				        res = max(res, work(s[i])); //传入的s[i]是指针, 所以不用&
+				    }
+				    cout << res * 3 << endl;
+				    return 0;
+				}
 		AcWing 1612. 最大正方形{dp}
 			1. 用DP, O(n^2)
 				之前城市游戏是矩形, 这道题是正方形
@@ -14203,7 +16730,7 @@
 
 					假设x==1, 那么以x为右下角的最大正方形怎么求?
 						1. 我们已知以a,b,c为右下角的最大正方形的边长了{假设是fa, fb, fc}, 其实以x为右下角的最大正方形就就是 min(fa, fb, fc) + 1
-						2. 为什么, 因为图中的三个正方形里面都是1, 外面都是0, 没错吧, 那么以x为右下角的最大正方形的边长, 最长肯定不超出三者的最小值.
+						2. 为什么, 因为图中的三个正方形里面都是1, 外面都是0, 没错吧, 那么以x为右下角的最大正方形的边长, 最长肯定不超出三者的最小值
 						3. 你可能会说, 上面只是一个例子, 假设fa, fb很长, 假设长出天际, 那么fc肯定也很长. 不管fa,b,c再怎么长, fc的长度也是: fc + 1 >= fa
 							例如:
 							_________________
@@ -14225,7 +16752,7 @@
 								|	|________|__c__b	
 								|			 	|
 								|_______________a  x
-			2. 
+			2. 很简单, 就是三边最小值 + 1
 				#include <iostream>
 				using namespace std;
 				const int N = 1010;
@@ -14240,11 +16767,30 @@
 				            int w;
 				            scanf("%d", &w);
 				            if (w){                   //只有w等于1的情况下才需要状态计算
-				                f[i][j] = min(f[i - 1][j - 1], min(f[i][j - 1], f[i - 1][j])) + 1;
+				                f[i][j] = min(f[i - 1][j - 1], min(f[i][j - 1], f[i - 1][j])) + 1;		初始的时候, 第一行和第一列都是0. 我们是从ind==1也就是第二行开始计算实际元素的
 				                res = max(res, f[i][j]);
 				            }
 				        }
 				    printf("%d\n", res * res);          //最后输出正方形面积=边长的平方
+				    return 0;
+				}
+			3. 超级顺利 
+				#include <iostream>
+				using namespace std;
+				const int N = 1e3 + 10;
+				int f[N][N], n, m, x, res;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 1; j <= m; j++){
+				            cin >> x;
+				            if(x){
+				                f[i][j] = min(f[i - 1][j - 1], min(f[i][j - 1], f[i - 1][j])) + 1;
+				                res = max(res, f[i][j]);
+				            }
+				        }
+				    }
+				    cout << res * res << endl;
 				    return 0;
 				}
 		AcWing 1574. 接雨水{单调栈}
@@ -14257,7 +16803,7 @@
 					找到最靠近我的那个比我大或者等于我的: 
 						最靠近: 栈 
 						比我小: 要比我大或者等于我的, 删去严格小于我的, 栈里剩下和我一样大或者大于我的, 不严格单调递减栈{递减或==}
-			1. 我们要找的是: 在我左边的第一个比我大或者等于我的的a. 因为在这个a的右边, 是我要保留的{保留的小于我的部分, 小于我的才能盛水}
+			1. 我们要找的是: 在我左边的最靠近我的比我大或者等于我的的a. 因为在这个a的右边, 是我要保留的{保留的小于我的部分, 小于我的才能盛水}
 			2. 但是注意, 最后我自己在被push到栈里的时候, 我要计算我和a之间的距离, 就算是a==我, 我们两个之间也可以盛水, 如果a>我, 我们两个之间更可以盛水了且我是瓶颈
 			3. 这个图片挺好的: https://www.acwing.com/solution/content/34623/
 				#include <iostream>
@@ -14292,18 +16838,41 @@
 
 				    return 0;
 				}
+			4. 小bug
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int h[N], q[N], n, res;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++) cin >> h[i];
+				    int tt = -1;
+				    q[++ tt] = 0;
+				    错误: for(int i = 0; i < n; i++){	因为上面已经插入了ind==0了, q[++ tt] = 0;
+				    for(int i = 1; i < n; i++){
+				        int last = 0;
+				        while(tt >= 0 && h[q[tt]] < h[i]){
+				            res += (h[q[tt]] - last) * (i - q[tt] - 1);
+				            last = h[q[tt--]];
+				        }
+				        错误: if(tt >= 0) res += (h[q[tt]] - last) * (i - q[tt] - 1);
+				        正确: if(tt >= 0) res += (h[i] - last) * (i - q[tt] - 1);		现在我h[i]是瓶颈
+				        q[++ tt] = i;
+				    }
+				    cout << res << endl;
+				}
 		AcWing 1575. 盛水最多的容器{1. 双指针, 2. 单调栈+二分}
 			1. 复杂度: O(n*logn): 可以用单调栈 + 二分来做
-				1. 从左往右枚举节点a, 我们以a为容器的右边框, 那么以a为右边框的最大容器的左边框b就是: 在左侧, 距离a最远的, 比a高的点. 也就是a是容器的瓶颈
+				1. 从左往右枚举节点a, 我们以a为容器的右边框, 那么以a为右边框的最大容器的左边框b就是: 在左侧, 距离a最远的, 比a高的或者和a一样高点. 也就是a是容器的瓶颈
 					如何找到b: 需要一个单调递增栈 + 二分 
 					这里的单调递增栈和之前说的单调递增栈不同, 区别:
 						1. 之前说的单调递增栈: 我a, 要pop掉所有比我大的数字, 最后我a一定加入栈. 有pop+push操作
-						2. 这里说的单调递增栈: 我a, 二分获得栈中最左侧的大于我的数字, 至于我加不加入栈, 要看我是否比栈顶大. 没有pop只有push操作
+						2. 这里说的单调递增栈: 我a, 二分获得栈中最左侧的大于我或者和我一样大的数字, 至于我加不加入栈, 要看我是否比栈顶大. 没有pop只有push操作
 					证明:
 						为何是栈是单增的: 因为push进栈的数字, 一定是比栈顶大的, 所以栈是单增的.
 						为何距离我a最远的比我a高的b, 是栈中最左侧的大于我a的数字. 因为:
 							你的疑惑, 有没有可能b根本没有插入栈, 没可能, 因为原始数组中b左边的数字: 只能比我小, 不能比我大, 如果b没加入栈, 那么只能是因为b左侧有比b大的数字, 可是b左边的数字都比b小, 所以b一定在栈中
-				2. 对称的, 再从右往左枚举节点a, 我们以a为容器的左边框, 那么以a为左边框的最大容器的右边框b就是: 在右侧, 距离a最远的, 比a高的点. 也就是a是容器的瓶颈
+				2. 对称的, 再从右往左枚举节点a, 我们以a为容器的左边框, 那么以a为左边框的最大容器的右边框b就是: 在右侧, 距离a最远的, 比a高或者和a一样高的点. 也就是a是容器的瓶颈
 				3. 代码 
 					#include <iostream>
 					#include <cstdio>
@@ -14354,12 +16923,54 @@
 					    printf("%d\n", ans);
 					    return 0;
 					}
+				4. 有几个不应该的bug 
+					#include <iostream>
+					using namespace std;
+					const int N = 1e5 + 10;
+					int q[N], lst[N], rst[N], h[N], res, n;
+					int main(){
+					    cin >> n;
+					    for(int i = 0; i < n; i++) cin >> h[i];
+					    int tt = -1;
+					    // q[++ tt] = h[0];		错在不是ind
+					    q[++ tt] = 0;
+					    for(int i = 1; i < n; i++){
+					        int l = 0, r = tt;
+					        while(l < r){
+					            int mid = l + (r - l) / 2;
+					            // if(h[q[mid]] > h[i]) r = mid;	我们==自己的点也是可以的, 也就是我和它一样高, 我们都是瓶颈
+					            if(h[q[mid]] >= h[i]) r = mid;
+					            else l = mid + 1;
+					        }
+					        // if(h[q[l]] > h[i]) res = max(res, h[i] * (i - q[l] - 1));	注意, 这里不需要-1, 例如[1,2]两个点之间的间隔就是1, 刚好也是2-1
+					        if(h[q[l]] >= h[i]) res = max(res, h[i] * (i - q[l]));
+					        if(h[q[tt]] < h[i]) q[++ tt] = i;
+					    }
+					    tt = -1;
+					    // q[++ tt] = h[n - 1];
+					    q[++ tt] = n - 1;
+					    for(int i = n - 2; i >= 0; i--){
+					        int l = 0, r = tt;
+					        while(l < r){
+					            int mid = l + (r - l) / 2;
+					            // if(h[q[mid]] > h[i]) r = mid;
+					            if(h[q[mid]] >= h[i]) r = mid;
+					            else l = mid + 1;
+					        }
+					        // if(h[q[l]] > h[i]) res = max(res, h[i] * (q[l] - i - 1));
+					        if(h[q[l]] >= h[i]) res = max(res, h[i] * (q[l] - i));
+					        if(h[q[tt]] < h[i]) q[++ tt] = i;
+					    }
+					    cout << res << endl;
+					    return 0;
+					}
 			2. 复杂度: O(n): 其实最快的是双指针, 因为两个指针走的步数, 加起来也才n步
 				思路很简单, ij指向两端, 计算容积. 
 				如果谁指向的元素比较矮, 谁就往里面移动.
-					为什么矮的往里面移动呢, 因为矮的往里面移动, 虽然会更矮, 但是还有机会长高. 所以效益是不变或者增加的. 如果一直都是矮的往里面, 那么效益是一直不变或者增加. 最终达到最优.
+					为什么矮的往里面移动呢, 因为矮的往里面移动, 虽然会更矮, 但是还有机会长高. 所以效益可能下降,不变或者增加. 如果增加我们就保存这个值, 所以最终达到最优.
+					如果是高的往里面移动, 效益一定会更差. 效益不可能不变, 更不可能增加.
 						有没有可能最优的被遗漏了, 没可能. 至于为什么, 参见: https://www.acwing.com/solution/content/26658/
-					如果是高的往里面移动, 效益可能会增加,也可能会更差
+					
 				#include <iostream>
 				using namespace std;
 				const int N = 1e5 + 10;
@@ -14379,36 +16990,74 @@
 				    printf("%d\n", res);
 				    return 0;
 				}
+			3. 还是这个简单, 非常顺利 
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int a[N], n, res;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++) cin >> a[i];
+				    for(int i = 0, j = n - 1; i < j; ){
+				        res = max(res, (j - i) * min(a[i], a[j]));
+				        if(a[i] < a[j]) i++;
+				        else j--;
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
 		AcWing 43. 不分行从上往下打印二叉树
-			简单的bfs
-			/**
-			 * Definition for a binary tree node.
-			 * struct TreeNode {
-			 *     int val;
-			 *     TreeNode *left;
-			 *     TreeNode *right;
-			 *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
-			 * };
-			 */
-			class Solution {
-			public:
-			    vector<int> printFromTopToBottom(TreeNode* root) {
-			        vector<int> res;
-			        if (!root) return res;
-			        queue<TreeNode*> q;
-			        q.push(root);
+			1. 简单的bfs
+				/**
+				 * Definition for a binary tree node.
+				 * struct TreeNode {
+				 *     int val;
+				 *     TreeNode *left;
+				 *     TreeNode *right;
+				 *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+				 * };
+				 */
+				class Solution {
+				public:
+				    vector<int> printFromTopToBottom(TreeNode* root) {
+				        vector<int> res;
+				        if (!root) return res;
+				        queue<TreeNode*> q;
+				        q.push(root);
 
-			        while (q.size()) {
-			            auto t = q.front();
-			            q.pop();
-			            res.push_back(t->val);
-			            if (t->left) q.push(t->left);
-			            if (t->right) q.push(t->right);
-			        }
+				        while (q.size()) {
+				            auto t = q.front();
+				            q.pop();
+				            res.push_back(t->val);
+				            if (t->left) q.push(t->left);
+				            if (t->right) q.push(t->right);
+				        }
 
-			        return res;
-			    }
-			};
+				        return res;
+				    }
+				};
+			2. 很顺利
+				其实从上往下打印, 应该就是属于层序遍历.
+				不过我们这里有两种数据结构:
+					vector<int> res;		存答案 
+				    queue<TreeNode*> q;		模拟bfs的步骤 
+
+				class Solution {
+				public:
+				    vector<int> printFromTopToBottom(TreeNode* root) {
+				        vector<int> res;
+				        queue<TreeNode*> q;
+				        if(!root) return res;
+				        q.push(root);
+				        while(q.size()){
+				            auto t = q.front(); q.pop();
+				            res.push_back(t->val);
+				            if(t->left) q.push(t->left);
+				            if(t->right) q.push(t->right);
+				        }
+				        return res;
+				    }
+				};
 		AcWing 454. 表达式求值
 			0. 其实非常简单, 是个模拟题, 只要把规则记住就好了
 				规则:
@@ -14474,7 +17123,7 @@
 				    cout << nums.top() % MOD << endl;
 				    return 0;
 				}
-		AcWing 151. 表达式计算4
+		* AcWing 151. 表达式计算4
 			1. 其实非常简单, 是个模拟题, 只要把规则记住就好了
 				规则:
 					0. 准备数字栈, 操作栈
@@ -14487,58 +17136,192 @@
 							2. 否则, 直接把自己插入操作栈
 					3. 如果是左括号: 直接插入操作栈
 					4. 如果是右括号: 不停计算, 直到遇见左括号, 最后把左括号pop掉
+			2. 
+				#include <iostream>
+				#include <stack>
+				using namespace std;
 
-			如果栈顶的优先级 >= 我的优先级, 栈里的东西先算
-			如果是(, 直接放入, 如果是)就一直弹出运算直到遇到左括号
+				stack<int> nums;
+				stack<char> ops;
 
-			对字符串进行预先处理，保证"("数量 >= ")"数量。因为遇到")"，就要弹出一个"("，需要保证总是有"("可弹出来。
-			
+				void cal(){
+				    int a = nums.top(); nums.pop();
+				    int b = nums.top(); nums.pop();
+				    char c = ops.top(); ops.pop();
+				    int d;
+				    cout << a << " " << b << " " << c << endl;
+				    if (c == '+') d = b + a;
+				    else if (c == '-') d = b - a;
+				    else if (c == '*') d = b * a;
+				    else if (c == '/') d = b / a;
+				    else {
+				        d = 1;
+				        while (a --) d *= b;
+				    }
+				    nums.push(d);
+				}
 
-			解释151的+, 我们是一直计算到(不存在, 为什么, 因为加法的优先级最低, 所以她遇到什么操作符都要算
+				int main(){
+				    string str;
+				    cin >> str;
+				    // cout << str << endl;
+				    if (str[0] == '-') str = '0' + str;
+				    string left;
 
-		
+				    对字符串进行预先处理，保证"("数量 >= ")"数量。因为遇到")"，就要弹出一个"("，需要保证总是有"("可弹出来。
+				    for (int i = 0; i < str.size(); i ++) left += '(';//先加左括号，变成合法前缀
+				    str = left + str + ')'; //加右括号，可以计算最后一步结果, 因为我们的代码是保证遇到右括号就一直算到遇到左括号, 并且我们有足够的左括号 
+				/*
+				    字符是数字
+
+				    字符是其他字符
+				        0. (
+				        1. + -
+				            a. 负号
+				                -(
+				                一般情况
+				            b. + -
+				            符号栈栈顶元素 != '(' 则cal()
+				        2. * /
+				            != * / ^
+				        3. ^
+				            != ^
+				        4. )
+				            !=(
+				            pop
+				        5.invalid operator!
+				*/
+				    for (int i = 0; i < str.size(); i ++){
+				        if (str[i] >= '0' && str[i] <= '9'){//第一个字符是数字开头的话
+				            int j = i, t = 0;
+				            while (str[j] >= '0' && str[j] <= '9'){
+				                t = t * 10 + str[j] - '0';
+				                j ++;
+				            }
+				            nums.push(t);
+				            i = j - 1;
+				        }else{//其他符号开头
+				            char c = str[i];
+				            if (c == '(') ops.push(c);
+				            else if (c == '+' || c == '-'){//如果是 + -
+				                如果是减号的意思是负号: 
+				                	如何判断负号, 其实我们不知道, 但是我们知道减法的左边是啥, 减法的左边是: (数字 || 右括号)
+				                		(1+3)-10
+				                		23123-22312
+				                	所以负号的左边就是 不是数字 并且 不是右括号
+				                	注意为了保险起见, 我们的ind == i - 1 需要是合法的, 所以 i >= 1, 即 if(i)
+
+				                解释:
+				                	i && !(str[i - 1] >= '0' && str[i - 1] <= '9') && str[i - 1] != ')'
+				                	如果有左边		并且左边不是数字 		并且左边不是右括号
+				                if (c == '-' && i && !(str[i - 1] >= '0' && str[i - 1] <= '9') && str[i - 1] != ')'){//-号需要特判，如果这个-表示负数，而不是减号
+				                    if (str[i + 1] == '('){
+				                        nums.push(-1);
+				                        ops.push('*');
+				                    }else{
+				                        int j = i + 1, t = 0;
+				                        while (str[j] >= '0' && str[j] <= '9'){
+				                            t = t * 10 + str[j] - '0';
+				                            j ++;
+				                        }
+				                        nums.push(-t);
+				                        i = j - 1;
+				                    }
+				                }
+				                其他就是加法和减法了
+				                else{//由于+ -优先级最低，如果栈里有其他运算符，直接计算
+				                	遇到+或者-, 我们是一直计算到'('不存在, 为什么, 因为加法的优先级最低, 所以她遇到什么操作符都要算
+				                    while (ops.top() != '(') cal();
+				                    ops.push(c);
+				                }
+				            }
+				            else if (c == '*' || c == '/'){//当前符号是 * /, 
+				                while (ops.top() == '*' || ops.top() == '/' || ops.top() == '^') cal();
+				                ops.push(c);
+				            }
+				            else if (c == '^'){//当前符号是^
+				                while (ops.top() == '^') cal();
+				                ops.push(c);
+				            }
+				            else if (c == ')'){//当前符号是)
+				                while (ops.top() != '(') cal();
+				                ops.pop();
+				            }
+				            else cout << "invalid operator!" << endl;
+				        }
+
+				    }
+				    cout << nums.top() << endl;
+				    return 0;
+				}
 	第七讲
 		AcWing 94. 递归实现排列型枚举
-			注意排列可是一个多叉树:
-				第一层:			1		 	 2		 3		4
-				第二层:		   / \\			/\ \ 	/\ \	/ \ \
-							  2   3 4      1  3 4   1  2 4  1 2 3
-				第三层:       /\   /\ /\ 	  /\ /\ /\ /\ /\ /\ /\ /\ /\ 
-							......
-			#include <iostream>
-			using namespace std;
-			const int N = 10;
-			int n;
-			int num[N];
-			bool st[N];
-			void dfs(int u)	现在要在第u个位置填写数字 
-			{
-			    if (u > n)                  //判断是否为叶子节点
-			    {
-			        for (int i = 1; i <= n; i ++ ) cout << num[i] << ' ';
-			        cout << endl;
-			        return;
-			    }
-			    for (int i = 1; i <= n; i ++ )	第u个位置可以填写的数字是1-n, 不过也要看st[i]有没有被填写过
-			        if (!st[i])
-			        {
-			            num[u] = i;         //当前位赋值为i
-			            st[i] = true;
-			            dfs(u + 1);
-			            st[i] = false;      //还原现场,不需要把num[u]的值还原成0,因为每次都会直接覆盖
-			        }
-			}
-			int main()
-			{
-			    cin >> n;
-			    dfs(1);
-			    return 0;
-			}
+			1.
+				注意排列可是一个多叉树:
+					第一层:			1		 	 2		 3		4
+					第二层:		   / \\			/\ \ 	/\ \	/ \ \
+								  2   3 4      1  3 4   1  2 4  1 2 3
+					第三层:       /\   /\ /\ 	  /\ /\ /\ /\ /\ /\ /\ /\ /\ 
+								......
+				#include <iostream>
+				using namespace std;
+				const int N = 10;
+				int n;
+				int num[N];
+				bool st[N];
+				void dfs(int u)	现在要在第u个位置填写数字 
+				{
+				    if (u > n)                  //判断是否为叶子节点
+				    {
+				        for (int i = 1; i <= n; i ++ ) cout << num[i] << ' ';
+				        cout << endl;
+				        return;
+				    }
+				    for (int i = 1; i <= n; i ++ )	第u个位置可以填写的数字是1-n, 不过也要看st[i]有没有被填写过
+				        if (!st[i])
+				        {
+				            num[u] = i;         //当前位赋值为i
+				            st[i] = true;
+				            dfs(u + 1);
+				            st[i] = false;      //还原现场,不需要把num[u]的值还原成0,因为每次都会直接覆盖
+				        }
+				}
+				int main()
+				{
+				    cin >> n;
+				    dfs(1);
+				    return 0;
+				}
+			2. 很顺利, 超简单
+				#include <iostream>
+				using namespace std;
+				const int N = 10;
+				int a[N], n;
+				bool st[N];
+				void dfs(int u){
+				    if(u == n){
+				        for(int i = 0 ; i < n; i++) cout << a[i] << " ";
+				        cout << endl; return;
+				    }
+				    for(int i = 1; i <= n; i++){
+				        if(!st[i]){
+				            a[u] = i;
+				            st[i] = true;
+				            dfs(u + 1);
+				            st[i] = false;
+				        }
+				    }
+				}
+				int main(){
+				    cin >> n;
+				    dfs(0);
+				    return 0;
+				}
 		AcWing 1537. 递归实现排列类型枚举 II
 			0. 总结:
 				1. 全排 vs 指数 vs 组合 
 					全排是复杂度最高的, 因为全排是n!, 指数是2^n, 组合是剪枝后的指数 
-					全排是多叉树, 指数是二叉树{但是存在同类问题的质数, 也是多叉树但是树的高度会低一些}, 组合是剪枝的二叉树
+					全排是多叉树, 指数是二叉树{但是存在同类问题的指数, 也是多叉树但是树的高度会低一些}, 组合是剪枝的二叉树
 				2. 全排 vs 以前学的什么插入堆的操作
 					全排的时间复杂度: O(n! * n): 因为是整个多叉树的每一条枝杈都要遍历. 一条枝杈的高度是n, 因为打印的长度是n, 一共n!条枝杈{因为有n!种方案}
 					插入堆/排序的时间复杂度: O(logn): 因为只需要找一条路径, 路径的高度只是logn
@@ -14578,8 +17361,10 @@
 				            																			这个是区分: 两类数字{数字1和数字2}					这个是区分同一类数字里面的数字, 例如数字1有两个, 一个i==0,一个i==1
 				            st[i] = true;
 				            dfs(u + 1);	这是第u+1层的故事, 这个第u+1个数字可以填上数字a[i], 就像是{1,1,2},第0个下标和第1个下标都是数字1
+				            	执行到这里, 我的理解, 就是把父亲{第u层}的所有可能的子节点{第u+1层}都遍历完了, 现在第u层还可能是其他父亲, 我们现在看下一个父亲{也就是下一个i}, 下一个父亲的值不能==本父亲的值
 				            st[i] = false;
 				            while (i + 1 < n && a[i + 1] == a[i]) i ++ ; 呼应上文的避免重复
+				            	出来while的时候, i指向==a[i]的最后一个元素, 之后 for()里面的i++会让i指向!=a[i]的第一个元素 
 				            	我的很棒的想法:
 				            		求下一个不一样的数字
 				            		你要不一样的, 那我while就和你反着来就很好了, 我就偏while一样的
@@ -14597,10 +17382,104 @@
 				画图:
 					第一层: 		1 		1{重复了同类,不能考虑}		 2
 					第二层:	  /  \ 								/ \
-							 1    2                            1   1{重复了同类,不能考虑} 注意我们说的重复, 是站在同一颗树下, 所以图中左侧1不算重复, 右侧1才是重复
+							 1a    2                           1b  1{重复了同类,不能考虑} 注意我们说的重复, 是站在同一颗树下, 所以图中左侧1a不算重复, 右侧1b才是重复
 					第三层:	/      \                          /
 							2       1  						 1
+			3. 很顺利 
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 10;
+				int a[N], b[N], n;
+				bool st[N];
+				void dfs(int u){
+				    if(u == n){
+				        for(int i = 0 ; i < n; i ++) cout << b[i] << " ";
+				        cout << endl;
+				        return;
+				    }
+				    for(int i = 0; i < n; i++){
+				        if(!st[i]){
+				           b[u] = a[i];
+				           st[i] = true;
+				           dfs(u + 1);
+				           st[i] = false;
+				           while(i + 1 < n && a[i + 1] == a[i]) i++;
+				        }
+				    }
+				}
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++) cin >> a[i];
+				    sort(a, a + n);
+				    dfs(0);
+				    return 0;
+				}
+			4. 我用来打印树结构的:
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 10;
+
+				int n;
+				int a[N], nums[N];          //a储存排序数组， nums是输出数组
+				bool st[N];
+
+				void myprint1(int u){
+				    for(int i = 0; i < u; i++) cout <<"-";
+				    cout << "enter ";
+				    for (int i = 0; i < n; i ++ ) cout << nums[i] << ' ';
+				    cout << endl;
+				}
+
+				void myprint2(int u){
+				    for(int i = 0; i < u; i++) cout <<"-";
+				    cout << "exit ";
+				    for (int i = 0; i < n; i ++ ) cout << nums[i] << ' ';
+				    cout << endl;
+				}
+
+				void dfs(int u)
+				{
+				    if (u == n)
+				    {
+				        for (int i = 0; i < n; i ++ ) cout << nums[i] << ' ';
+				        cout << endl;
+				        return;
+				    }
+
+				    for (int i = 0; i < n; i ++ )
+				        if (!st[i])
+				        {
+				            nums[u] = a[i];
+				            st[i] = true;
+				            myprint1(u + 1);
+				            dfs(u + 1);         //递归加1
+				            myprint2(u);
+				            st[i] = false;      //还原现场
+
+				            while (i + 1 < n && a[i + 1] == a[i]) i ++ ;        //跳过重复,见下图
+				        }
+				}
+
+				int main()
+				{
+				    cin >> n;
+				    for (int i = 0; i < n; i ++ ) cin >> a[i];
+
+				    sort(a, a + n);     //排序后重复的数字就会排在一起，便于去重
+
+				    dfs(0);
+
+				    return 0;
+				}
 		AcWing 92. 递归实现指数型枚举
+			注意, dfs(int u)的u的语意是不一样的:
+				1. 排列, u的语意是在第u个位置填写数字, 所以一开始是 dfs(0)
+				2. 指数/组合, u的语意是在数字u选还是不选, 所以一开始是 dfs(1), 数字1选还是不选
+					或者ind==u的数字选还是不选
 			#include <iostream>
 			using namespace std;
 			const int N = 20;
@@ -14608,7 +17487,7 @@
 			bool st[N];
 			void dfs(int u)
 			{
-			    if (u > n)  // 叶子节点
+			    if (u == n + 1)  // 叶子节点
 			    {
 			        for (int i = 1; i <= n; i ++ )
 			            if (st[i])
@@ -14622,6 +17501,7 @@
 			    写法1: 简洁 
 				    st[u] = true;
 				    dfs(u + 1);  // 选择当前数的分支
+				    	执行到这里, 我的理解, 就是把父亲{第u层}的所有可能的子节点{第u+1层}都遍历完了, 现在第u层还可能是其他父亲, 所以我们现在看下一个父亲{也就是st[u]==false这样的父亲}
 
 				    st[u] = false;
 				    dfs(u + 1);  // 不选当前数的分支
@@ -14639,79 +17519,159 @@
 			    dfs(1);
 			    return 0;
 			}
+			2. bug, 错的有点离谱啊, 怎么变成多叉树了
+				#include <iostream>
+				using namespace std;
+				const int N = (1 << 15) + 10;
+				int a[N], n;
+				bool st[20];
+
+				错误: 怎么变成多叉树了
+				// void dfs(int u){
+				//     if(u == n){
+				//         for(int i = 1; i <= n; i++){
+				//             if(st[i]) cout << i << " ";
+				//         }
+				//         cout << endl;
+				//         return;
+				//     }
+				//     for(int i = 1; i <= n; i++){
+				//         if(!st[i]){
+				//             st[i] = true;   //第u层父亲st[i]的选择是true
+				//             dfs(u + 1);
+				//             st[i] = false;  //恢复现场, 同时也是: 第u层父亲st[i]的另一个选择是false
+				//             dfs(u + 1);
+				//         }
+				//     }
+				// }
+				正确: 二叉树 
+				void dfs(int u){
+				    if(u == n + 1){
+				        for(int i = 1; i <= n; i++){
+				            if(st[i]) cout << i << " ";		
+				        }
+				        cout << endl;
+				        return;
+				    }
+				    st[u] = true;   //第u层父亲st[i]的选择是true
+				    dfs(u + 1);
+				    st[u] = false;  //恢复现场, 同时也是: 第u层父亲st[i]的另一个选择是false
+				    dfs(u + 1);
+				}
+				int main(){
+				    cin >> n;
+				    dfs(1);
+				    return 0;
+				}
 		AcWing 1572. 递归实现指数型枚举 II
-			如果用上一道题的代码, 是会出问题的. 例如样例: 1,2,2
-				错误输出:
-					1 2 2 
-					1 2 
-					1 2 
-					1 
-					2 2 
-					2 
-					2 2 
-				正确答案:
-					2 2 
-					1 
-					1 2 		重复的原因: 同一个方案, 用不同的顺序去枚举了, 用{ind==0, ind==1},{ind==0, ind==2}去枚举了同一个方案
-					1 2 2 
-			有种感觉: 数字为1的那一类: 多叉树
-				选0个, 然后 dfs(k+1)到下一类
-				选1个, 然后 dfs(k+1)到下一类
-				...
-				选k个, 然后 dfs(k+1)到下一类
-				
+			1.
+				如果用上一道题的代码, 是会出问题的. 例如样例: 1,2,2
+					错误输出:
+						1 2 2 
+						1 2 
+						1 2 
+						1 
+						2 2 
+						2 
+						2 2 
+					正确答案:
+						2 2 
+						1 
+						1 2 		重复的原因: 同一个方案, 用不同的顺序去枚举了, 用{ind==0, ind==1},{ind==0, ind==2}去枚举了同一个方案
+						1 2 2 
+				有种感觉: 数字为1的那一类: 多叉树
+					选0个, 然后 dfs(k+1)到下一类
+					选1个, 然后 dfs(k+1)到下一类
+					...
+					选k个, 然后 dfs(k+1)到下一类
+					
 
-			#include <iostream>
-			#include <algorithm>
-			using namespace std;
-			const int N = 20;
-			int n;
-			int a[N];
-			bool st[N];
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 20;
+				int n;
+				int a[N];
+				bool st[N];
 
-			void dfs(int u) //枚举到ind==u开始的一段数，前u-1段已经完成好 
-			{
-			    if (u == n) //到达叶子节点，输出该方案
-			    {
-			        for (int i = 0; i < n; i ++ )
-			            if (st[i])
-			                cout << a[i] << ' ';
-			        cout << endl;
-			        return;
-			    }
+				void dfs(int u) //枚举到ind==u开始的一段数，前u-1段已经完成好 
+				{
+				    if (u == n) //到达叶子节点，输出该方案
+				    {
+				        for (int i = 0; i < n; i ++ )
+				            if (st[i])
+				                cout << a[i] << ' ';
+				        cout << endl;
+				        return;
+				    }
 
-			    // 0 1 2 3 4 5
-			    // 1 1 1 1 2 2
-			    // |       |
-			    // u       k
-			    int k = u;
-			    while (k < n && a[k] == a[u]) k ++ ;    //跳过同一段后面的数字
+				    // 0 1 2 3 4 5
+				    // 1 1 1 1 2 2
+				    // |       |
+				    // u       k
+				    int k = u;
+				    while (k < n && a[k] == a[u]) k ++ ;    //跳过同一段后面的数字
 
-			    因为题目没有要求输出顺序, 所以随意, 从第0个开始选都ok:
-			    选0个: 这样就不需要恢复现场, 因为st依旧是false
-			    dfs(k);                                 //没有标记st直接dfs，即枚举选0个的情况
-			    
-			    选1,2,...,xx=(k-1-u+1)个, 因为[u,k-1]都是相同的数字
-			    for (int i = u; i < k; i ++ )           //将同一段的数逐个设为true然后dfs
-			    {
-			        st[i] = true;	这里是每st[i]=true,就去一个 dfs(k);
-			        dfs(k);                             //从下一段开始枚举
-			    }
-			    for (int i = u; i < k; i ++ ) st[i] = false;    //批量还原现场
-			}
 
-			int main()
-			{
-			    cin >> n;
-			    for (int i = 0; i < n; i ++ ) cin >> a[i];
-			    sort(a, a + n);		一定要排序{或者规定某种固定的顺序}, 这样就是按照固定的顺序来遍历, 这样重复的方案只会用一种顺序遍历
+				    下面的逻辑是: [u, k-1]这一堆值相同的数字中, 我们选几个, 可以选0个, 1个, ...一直到选完.
+				    
+				    选0个: 这样就不需要恢复现场, 因为st依旧是false. 因为题目没有要求输出顺序, 所以随意, 从第0个开始选都ok:
+				    dfs(k);                                 //没有标记st直接dfs，即枚举选0个的情况
+				    
+				    选1,2,...,xx=(k-1-u+1)个, 因为[u,k-1]都是相同的数字
+				    for (int i = u; i < k; i ++ )           //将同一段的数逐个设为true然后dfs
+				    {
+				        st[i] = true;	这里是每st[i]=true,就去一个 dfs(k);
+				        dfs(k);                             //从下一段开始枚举
+				    }
+				    for (int i = u; i < k; i ++ ) st[i] = false;    //批量还原现场
+				}
 
-			    dfs(0);
+				int main()
+				{
+				    cin >> n;
+				    for (int i = 0; i < n; i ++ ) cin >> a[i];
+				    sort(a, a + n);		一定要排序{或者规定某种固定的顺序}, 这样就是按照固定的顺序来遍历, 这样重复的方案只会用一种顺序遍历
 
-			    return 0;
-			}
+				    dfs(0);	语意是, ind==0的数字选还是不选 
+
+				    return 0;
+				}
+			2. 很顺利 
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 20;
+				int a[N], n;
+				bool st[N];
+				void dfs(int u){
+				    if(u == n){
+				        for(int i = 0; i < n; i++)  if(st[i]) cout << a[i] << " ";
+				        cout << endl;
+				        return;
+				    }
+				    int k = u;
+				    while(k + 1 < n && a[k + 1] == a[u]) k++;   //[u, k]都是相同值的数字
+				    
+				    //选0个:
+				    st[u] = false;
+				    dfs(k + 1);
+				    //选1个,...全都选了
+				    for(int i = u; i <= k; i ++){
+				        st[i] = true;
+				        dfs(k + 1);
+				    }
+				    for(int i = u; i <= k; i++) st[i] = false;
+				}
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++) cin >> a[i];
+				    sort(a, a + n);
+				    dfs(0);
+				    return 0;
+				}
 		AcWing 93. 递归实现组合型枚举
-			组合型枚举 == 指数类型枚举 + 剪枝{到了m个就输出}
+			组合型枚举 == 指数类型枚举 + 剪枝{我后来想了想也不是剪枝吧, 大家都是遍历到底, 只不过==m会输出, <m的不会输出}
 			if(u > n) 
 			考虑顺序, 所以先输出 dfs(u+1,s+1)
 			如果更换顺序, 就是大的数字先输出了
@@ -14751,62 +17711,126 @@
 			    dfs(1, 0); 从数字1开始选. 然后已经选了0个
 			    return 0;
 			}
-		AcWing 1573. 递归实现组合型枚举 II
-			#include <iostream>
-			#include <algorithm>
-			using namespace std;
-			const int N = 30;
-			int n, m;
-			int a[N];
-			bool st[N];
-			void dfs(int u, int s)
-			{
-			    if (s > m) return;                      注意, 这句必须要加, 上一题的dfs下一层只是 dfs(u+1,s+1)/dfs(u+1,s), 这一题的dfs下一层可能就会跳过很多层了:dfs(u+k,s+k), 所以累加的s可能会大于m，为无效方案
-			    if (s == m)                             //选择个数恰好等于m时输出方案
-			    {
-			        for (int i = 0; i < n; i ++ )
-			            if (st[i])
-			                cout << a[i] << ' ';
-			        cout << endl;
-			        return;
-			    }
+			2. 很顺利 
+				#include <iostream>
+				using namespace std;
+				const int N = 30;
+				int a[N], n, m;
+				bool st[N];
+				void dfs(int u, int x){
+				    if(x == m){
+				        for(int i = 1; i <= n; i ++){
+				            if(st[i]) cout << i << " ";
+				        }
+				        cout << endl;
+				        return;
+				    }
+				    if(u == n + 1) return;
+				    st[u] = true;
+				    dfs(u + 1, x + 1);
+				    st[u] = false;
+				    dfs(u + 1, x);
+				}
+				int main(){
+				    cin >> n >> m;
+				    dfs(1, 0); //从数字1开始判断, 填了0个 
+				    return 0;
+				}
+		* AcWing 1573. 递归实现组合型枚举 II
+			1. 
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 30;
+				int n, m;
+				int a[N];
+				bool st[N];
+				void dfs(int u, int s)
+				{
+				    if (s > m) return;                      注意, 这句必须要加, 上一题的dfs下一层只是 dfs(u+1,s+1)/dfs(u+1,s), 这一题的dfs下一层可能就会跳过很多层了:dfs(u+k,s+k), 所以累加的s可能会大于m，为无效方案
+				    if (s == m)                             //选择个数恰好等于m时输出方案
+				    {
+				        for (int i = 0; i < n; i ++ )
+				            if (st[i])
+				                cout << a[i] << ' ';
+				        cout << endl;
+				        return;
+				    }
 
-			    if (u == n) return;                     //合法的u只是[0,n-1], 说明此时已经遍历了所有数，返回
+				    if (u == n) return;                     //合法的u只是[0,n-1], 说明此时已经遍历了所有数，返回
 
-			    字典序较小的排在前面, 所以如果样例是
-			    	6 3
-					1 1 1 1 2 2
-				    正确答案:
-				    	1 1 1 -> 尽可能多输出小的数字
-						1 1 2 
-						1 2 2 
-			    int k = u;
-			    while (k < n && a[k] == a[u]) st[k ++ ] = true, s ++ ;  //先把最小的输出，拉满
-			    小的数字全部输出: dfs(k, s);
-			    然后再慢慢递减, 直到递减到小的数字只输出0个
-			    for (int i = k - 1; i >= u; i -- )      //倒过来恢复现场
-			    {
-			        st[i] = false;
-			        s -- ;
-			        dfs(k, s);
-			    }
-			}
+				    字典序较小的排在前面, 所以如果样例是
+				    	6 3
+						1 1 1 1 2 2
+					    正确答案:
+					    	1 1 1 -> 尽可能多输出小的数字
+							1 1 2 
+							1 2 2 
+				    int k = u;
+				    while (k < n && a[k] == a[u]) st[k ++ ] = true, s ++ ;  //先把最小的输出，拉满
+				    小的数字全部输出: dfs(k, s);
+				    然后再慢慢递减, 直到递减到小的数字只输出0个
+				    for (int i = k - 1; i >= u; i -- )      //倒过来恢复现场
+				    {
+				        st[i] = false;
+				        s -- ;
+				        dfs(k, s);
+				    }
+				}
 
-			int main()
-			{
-			    cin >> n >> m;
-			    for (int i = 0; i < n; i ++ ) cin >> a[i];
-			    sort(a, a + n);                         //可重复枚举都要先排序
-			    dfs(0, 0);                              //初始状态：从前0个数中选0个数
-			    return 0;
-			}
+				int main()
+				{
+				    cin >> n >> m;
+				    for (int i = 0; i < n; i ++ ) cin >> a[i];
+				    sort(a, a + n);                         //可重复枚举都要先排序
+				    dfs(0, 0);                              //初始状态：从前0个数中选0个数
+				    return 0;
+				}
+			2. bug, 遗漏了一些 
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 30;
+				int a[N], n, m;
+				bool st[N];
+				void dfs(int u, int s){
+				    if(s > m) return;
+				    if(s == m){
+				        for(int i = 0; i < n; i ++){
+				            if(st[i]) cout << a[i] << " ";
+				        }
+				        cout << endl;
+				        return;
+				    }
+				    错误: 忘写了
+				    错误: if(u == n + 1) return;
+				    正确: if(u == n) return;
+				    int k = u;
+				    错误: while(k < n && a[k + 1] == a[u]) k ++;		
+				    正确: while(k + 1 < n && a[k + 1] == a[u]) k ++;	[u, k]是true, 也就是 == a[u]的数字, 注意是 k + 1 < n
+				    for(int i = u; i <= k; i++) st[i] = true;
+				    dfs(k + 1, s + (k - u + 1));			因为我们接下来要判断的是ind == k + 1的数字,  [u, k]是true, 所以区间长度是 k - u + 1
+				    for(int i = k; i >= u; i--){
+				        st[i] = false;
+				        错误: dfs(i, s + (i - u + 1));
+				        错误: dfs(k + 1, s + (i - u + 1));
+				        正确: dfs(k + 1, s + (i - u));		因为我们接下来要判断的是ind == k + 1的数字, st[i]已经变成了false, 所以 [u, i-1]才是true, 所以区间长度是 i - u
+				    }
+				}
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 0 ; i < n; i++) cin >> a[i];
+				    sort(a, a + n);
+				    dfs(0, 0);
+				    return 0;
+				}
 		AcWing 55. 连续子数组的最大和
 			1. 有意思. 一维的dp问题, 优化成一个点了
 			2. 解释:
 				f[k]: 
 					集合: 所有 以ind==k为结尾的连续子数组的元素和 的集合 
 					属性: 元素和 
-					状态转移: f[k] = max(0 + a[k], f(k-1) + a[k]) = max(a[k], f(k-1))
+					状态转移: f[k] = max(0 + a[k], f(k-1) + a[k]) = max(0, f(k-1)) + a[k]
 						解释: f[k] 一定选了a[k]元素 
 							f[k]对应的连续子数组:
 								第一种情况: {a[0], a[1], a[], a[k-1], a[k]} 	|
@@ -14832,274 +17856,339 @@
 				};
 	第六讲
 		AcWing 145. 超市
-			#include <iostream>
-			#include <algorithm>
-			#include <queue>
-
-			#define x first
-			#define y second
-
-			using namespace std;
-
-			typedef pair<int, int> PII;
-
-			int main()
-			{
-			    int n;
-			    while (cin >> n)
-			    {
-			        vector<PII> prod(n);
-			        for (int i = 0; i < n; i ++ ) cin >> prod[i].y >> prod[i].x;
-			        sort(prod.begin(), prod.end()); //过期时间排序
-
-			        priority_queue<int, vector<int>, greater<int>> heap; //存的都是要卖的东西, 不在heap中的就是要抛弃的东西
-			        for (auto p : prod) //最早过期的东西先出来
-			        {
-			            heap.push(p.y);
-			         //   写法1:
-			         //   if (p.x >= heap.size()) // 我过期的时间 晚于 要卖的东西{包括我在内}卖光的那天
-			         //   	continue;
-			         //   heap.pop();
-			            
-			         // 写法2: 保守
-			         //   while(heap.size() > p.x) heap.pop();  //如果堆太拥挤了, 就抛弃最没用的, 注意这里抛弃的可能是我, 可是没关系
-			         
-			         // 写法3:
-			            if(heap.size() > p.x) heap.pop();
-			         //   注意过期时间是绝对值, 不是相对值. 也就是大家都从第1天开始, 第p.x天到期, 而不是说自己过了p.x天到期
-			         //   我p已经在堆里面了, 然后我要看看这个堆里面有多少人
-			         //   我是第p.x天到期, 如果堆里面的人超过了p.x个人, 就一定有一个人要被删除了 
-			         //       不用担心说, 之前加入的人, 他们会不会遇到堆里的人多过他们的第p.x天到期
-			         //       因为我这里是在证明我这一环没问题, 因为前面的他们也是和我同样的方法
-			         //       所以我没问题, 他们也没问题. 有种递归的感觉哈
-			         //       我没问题依赖于他们也没问题, 可是, 我没问题可以导致历史的他们也没问题
-			         //   至于删除谁, 不用考虑日期, 因为删掉那个人之后, 大家的日期肯定都是合格的 
-			         //       所以就删除最没用的
-
-			         //   为什么不用while? 因为没必要 
-			         //   很好的故事: 这个题目的确是可以体现贪心思想 
-			         //   	1. 每次往堆里加入一个元素, 如果加入的元素太多, 很挤的话, 我们就删掉一个
-			         //   	2. 删掉对没用的那一个 
-			         //   每次只是往堆里加入一个元素, 所以增加的速度是恒为1
-			         //   我们判断的限制{p.x}, 因为排序好的, 所以增加的速度最少为0, 最大是无穷
-			                 //   我们不考虑过期日期是无穷, 我们考虑最紧张的值, 也就是最晚的过期日期不变, 那也依旧是每次加一个删一个就好了, 用if就好了
-			         //   所以没必要用while, 用if就好了, 用while也可以{更保守}
-			         // 举例
-    			         //加入了第一个元素, 这个元素的过期是第一天, ok, 继续
-    			         //再加入一个元素, 这个元素的过期还是第一天, 删除, 保证堆不拥挤, 还是 heap.size() <= 最晚过期的第一天
-    			         //再加入一个元素, 这个元素的过期还是第一天, 删除, 保证堆不拥挤, 还是 heap.size() <= 最晚过期的第一天
-    			         //所以每次pop一次就够了
-
-			        }
-
-			        int res = 0;
-			        while (heap.size()) res += heap.top(), heap.pop();
-
-			        cout << res << endl;
-			    }
-
-			    return 0;
-			}
-			--
-			贪心策略：
-				在不过期的时间内优先卖出利润更大的产品。
-			新方法:
-				按照价值降序，每次扫描到一个价值，尝试一下在过期之前能不能卖出去；
-				此时可能已经有比它更大价值的产品占用了一些日期，于是从过期时间往前面找，直到找到一个空位置。
-				如果这个空位置大于0，那么就把这个产品安排在这天卖出。
-
-			暴力
-				找位置最坏复杂度可以达到 O(n^2)，所以用并查集优化
-				ff(i)返回的是, 记录他最近的前面的没卖东西的日期是哪天
-					区别于f[i], f[]是并查集, 存的是属于那一个集合. 也就是连续卖出东西的那一段日子
-				第i天: 	0		1		2		3		4		5
-					  	根		卖过		卖过				卖过
-				ff(1) = 0, 说明不能在第1天之前卖东西, 0是特殊值, 表示之前的天数都卖过东西了
-				ff(2) = 0, 说明不能在第2天之前卖东西, 0是特殊值, 表示之前的天数都卖过东西了
-				ff(3) = 3, 说明在第3天之前, 能卖东西的日子, 就是第3天
-				ff(4) = 3, 说明在第4天之前, 能卖东西的日子, 是第3天
-				ff(5) = 3, 说明在第5天之前, 能卖东西的日子, 就是第5天
-
-				更新也非常巧妙:
-					int pos = ff(e);	第e天过期, 那么第e天的前一个可以卖东西的日子是第pos天 
-					f[pos]--;
-					例如, pos == 4
-						刚开始, f[4] = 3, 于是我们在第3天卖东西
-						现在 f[4] --;
-							也就是原先, 第4天的前一个可以卖东西的日子是第3天, 现在第3天卖过了, 可以卖东西的日子就往前推
-							f[4] = 2;
-							你可能会疑惑了, 第2天已经卖了呀. 
-							别忘了, f[4] == 2 并不是说第4天的前一个卖东西的日子是第2天, 而是4的爸爸是2, 也就是4和2属于同一个集合
-							我们 ff(4) == 0
-			实测比优先队列快了三倍
+			1. 方法1:
 				#include <iostream>
-				#include <vector>
 				#include <algorithm>
+				#include <queue>
+
+				#define x first
+				#define y second
+
 				using namespace std;
-				const int INF = 1e4 + 233;
+
 				typedef pair<int, int> PII;
-				vector<PII> a;
-				int f[INF];
-				int ff(int x)	
-				{
-				    if(f[x] == x) return x;
-				    return f[x] = ff(f[x]);
-				}
+
 				int main()
 				{
 				    int n;
-				    while(cin >> n)
+				    while (cin >> n)
 				    {
-				        int ans = 0;
-				        a.clear();
-				        int maxe = 0;
+				        vector<PII> prod(n);
+				        //注意输入, 输入格式非常混乱, 但是我们不怕, cin可以跳过空格和回车 
+				        for (int i = 0; i < n; i ++ ) cin >> prod[i].y >> prod[i].x;	//y: 利润, x: 过期时间
+				        sort(prod.begin(), prod.end()); //过期时间排序
 
-				        for(int i = 1; i <= n; i++)
+				        priority_queue<int, vector<int>, greater<int>> heap; //存的都是要卖的东西, 不在heap中的就是要抛弃的东西
+				        for (auto p : prod) //最早过期的东西先出来
 				        {
-				            int v, e;
-				            scanf("%d%d", &v, &e);
-				            a.push_back({-v, e});
-				            maxe = max(maxe, e);
+				            heap.push(p.y);
+				         //   写法1:
+				         //   if (p.x >= heap.size()) // 我过期的时间 晚于 要卖的东西{包括我在内}卖光的那天
+				         //   	continue;
+				         //   heap.pop();
+				            
+				         // 写法2: 保守
+				         //   while(heap.size() > p.x) heap.pop();  //如果堆太拥挤了, 就抛弃最没用的, 注意这里抛弃的可能是我, 可是没关系
+				         
+				         // 写法3:
+				            if(heap.size() > p.x) heap.pop();
+				         //   注意过期时间是绝对值, 不是相对值. 也就是大家都从第1天开始, 第p.x天到期, 而不是说自己过了p.x天到期
+				         //   我p已经在堆里面了, 然后我要看看这个堆里面有多少人
+				         //   我是第p.x天到期, 如果堆里面的人超过了p.x个人, 就一定有一个人要被删除了 
+				         //       不用担心说, 之前加入的人, 他们会不会遇到堆里的人多过他们的第p.x天到期
+				         //       因为我这里是在证明我这一环没问题, 因为前面的他们也是和我同样的方法
+				         //       所以我没问题, 他们也没问题. 有种递归的感觉哈
+				         //       我没问题依赖于他们也没问题, 可是, 我没问题可以导致历史的他们也没问题
+				         //   至于删除谁, 不用考虑日期, 因为删掉那个人之后, 大家的日期肯定都是合格的 
+				         //       所以就删除最没用的
+
+				         //   为什么不用while? 因为没必要 
+				         //   很好的故事: 这个题目的确是可以体现贪心思想 
+				         //   	1. 每次往堆里加入一个元素, 如果加入的元素太多, 很挤的话, 我们就删掉一个
+				         //   	2. 删掉对没用的那一个 
+				         //   每次只是往堆里加入一个元素, 所以增加的速度是恒为1
+				         //   我们判断的限制{p.x}, 因为排序好的, 所以增加的速度最少为0, 最大是无穷
+				                 //   我们不考虑过期日期是无穷, 我们考虑最紧张的值, 也就是最晚的过期日期不变, 那也依旧是每次加一个删一个就好了, 用if就好了
+				         //   所以没必要用while, 用if就好了, 用while也可以{更保守}
+				         // 举例
+	    			         //加入了第一个元素, 这个元素的过期是第一天, ok, 继续
+	    			         //再加入一个元素, 这个元素的过期还是第一天, 删除, 保证堆不拥挤, 还是 heap.size() <= 最晚过期的第一天
+	    			         //再加入一个元素, 这个元素的过期还是第一天, 删除, 保证堆不拥挤, 还是 heap.size() <= 最晚过期的第一天
+	    			         //所以每次pop一次就够了
+
 				        }
-				        for(int i = 0; i <= maxe; i++) f[i] = i;	第i天的前一个没卖东西的是第i天, 其中f[0]=0是为了表示前面的日子都卖过了
-				        sort(a.begin(), a.end());					价值从大到小排序 
-				        for(int i = 0; i < (int)a.size(); i++)
-				        {
-				            int v = -a[i].first, e = a[i].second;
-				            int pos = ff(e);	第e天过期, 那么第e天的前一个可以卖东西的日子是第pos天 
-				            if(pos != 0) 		如果pos != 0, 说明可以卖东西
-				            {
-				                ans += v;		卖价值最大的
-				                f[pos]--;		这个非常巧妙
-				            }
-				        }
-				        printf("%d\n", ans);
+
+				        int res = 0;
+				        while (heap.size()) res += heap.top(), heap.pop();
+
+				        cout << res << endl;
 				    }
+
+				    return 0;
 				}
-		AcWing 1057. 股票买卖 IV {leetcode的题目:https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iv/}
-			注意:
-				第j笔交易: 买卖一轮算一笔交易
-			代码:
-				#include <cstring>
+			2. bug, 注意数据结构有两个
 				#include <iostream>
+				#include <queue>
+				#include <vector>
 				#include <algorithm>
-
 				using namespace std;
+				typedef pair<int, int> PII;
+				#define x first
+				#define y second
+				int n;
+				int main(){
+				    错误: while(cin >> n, n){	因为最后并不是以0结尾, 而是根本没有输入
+				   	正确: while(cin >> n){		根本没有输入, 就会直接退出 
+				        错误: priority_queue<PII, vector<PII>, greater<PII> heap(n);
+				        正确: vector<PII> prod(n);		记录商品的信息 
+				        for(int i = 0; i < n; i++) cin >> prod[i].y >> prod[i].x;
+				        sort(prod.begin(), prod.end());									按照 过期时间排序. 先过期的在前面. 
+				        错误: priority_queue<PII, vector<PII>, greater<PII>> heap;
+				        正确: priority_queue<int, vector<int>, greater<int>> heap;	记录要卖的商品, 属性是利润
+				        for(int i = 0; i < n; i++){
+				            heap.push(prod[i].y);						把最先过期的商品的利润放进去 
+				            while(heap.size() > prod[i].x) heap.pop();	heappop出来的是利润最低的商品 
+				        }
+				        int res = 0;
+				        while(heap.size()) res += heap.top(), heap.pop();
+				        cout << res << endl;
+				    }
+				    return 0;
+				}
+			3. 方法2: 
+				方法1: 贪心策略：
+					在不过期的时间内优先卖出利润更大的产品。
+				方法2:
+					按照价值降序，每次扫描到一个价值，尝试一下在过期之前能不能卖出去；
+					此时可能已经有比它更大价值的产品占用了一些日期，于是从过期时间往前面找，直到找到一个空位置。
+					如果这个空位置大于0，那么就把这个产品安排在这天卖出。
 
-				const int N = 100010, M = 110, INF = 0x3f3f3f3f;
+				暴力
+					找位置最坏复杂度可以达到 O(n^2)，所以用并查集优化
+					ff(i)返回的是, 记录他最近的前面的没卖东西的日期是哪天
+						区别于f[i], f[]是并查集, 存的是属于那一个集合. 也就是连续卖出东西的那一段日子
+					第i天: 	0		1		2		3		4		5
+						  	根		卖过		卖过				卖过
+					ff(1) = 0, 说明不能在第1天之前卖东西, 0是特殊值, 表示之前的天数都卖过东西了
+					ff(2) = 0, 说明不能在第2天之前卖东西, 0是特殊值, 表示之前的天数都卖过东西了
+					ff(3) = 3, 说明在第3天之前, 能卖东西的日子, 就是第3天
+					ff(4) = 3, 说明在第4天之前, 能卖东西的日子, 是第3天
+					ff(5) = 3, 说明在第5天之前, 能卖东西的日子, 就是第3天
 
-				int n, m;
-				int w[N];
-				int f[N][M][2];
+					更新也非常巧妙:
+						int pos = ff(e);	第e天过期, 那么第e天的前一个可以卖东西的日子是第pos天 
+						f[pos]--;
+						例如, pos == 4
+							刚开始, f[4] = 3, 于是我们在第3天卖东西
+							现在 f[4] --;
+								也就是原先, 第4天的前一个可以卖东西的日子是第3天, 现在第3天卖过了, 可以卖东西的日子就往前推
+								f[4] = 2;
+								你可能会疑惑了, 第2天已经卖了呀. 
+								别忘了, f[4] == 2 并不是说第4天的前一个卖东西的日子是第2天, 而是4的爸爸是2, 也就是4和2属于同一个集合
+								我们 ff(4) == 0
+				实测比优先队列快了三倍
+					#include <iostream>
+					#include <vector>
+					#include <algorithm>
+					using namespace std;
+					const int INF = 1e4 + 233;
+					typedef pair<int, int> PII;
+					vector<PII> a;
+					int f[INF];
+					int ff(int x)	
+					{
+					    if(f[x] == x) return x;
+					    return f[x] = ff(f[x]);
+					}
+						回忆并查集:
+							int find(int x)
+							{
+							    if (p[x] != x) p[x] = find(p[x]);
+							    return p[x];
+							}
+					int main()
+					{
+					    int n;
+					    while(cin >> n)
+					    {
+					        int ans = 0;
+					        a.clear();
+					        int maxe = 0;
 
-				int main()
-				{
-				    scanf("%d%d", &n, &m);
-				    for (int i = 1; i <= n; i ++ ) scanf("%d", &w[i]);
+					        for(int i = 1; i <= n; i++)
+					        {
+					            int v, e;
+					            scanf("%d%d", &v, &e);
+					            a.push_back({-v, e});
+					            maxe = max(maxe, e);
+					        }
+					        for(int i = 0; i <= maxe; i++) f[i] = i;	第i天的前一个没卖东西的是第i天, 其中f[0]=0是为了表示前面的日子都卖过了
+					        sort(a.begin(), a.end());					价值从大到小排序 
+					        for(int i = 0; i < (int)a.size(); i++)
+					        {
+					            int v = -a[i].first, e = a[i].second;
+					            int pos = ff(e);	第e天过期, 那么第e天的前一个可以卖东西的日子是第pos天 
+					            if(pos != 0) 		如果pos != 0, 说明可以卖东西
+					            {
+					                ans += v;		卖价值最大的
+					                f[pos]--;		这个非常巧妙
+					            }
+					        }
+					        printf("%d\n", ans);
+					    }
+					}
+			4. 非常顺利 
+					#include <iostream>
+					#include <algorithm>
+					#include <vector>
+					using namespace std;
+					const int N = 1e4 + 10; //过期日期最大是1e4
+					typedef pair<int, int> PII;
+					#define x first
+					#define y second
+					vector<PII> a;
+					int p[N];
+					int find(int x){
+					    if(x != p[x]) p[x] = find(p[x]);
+					    return p[x];
+					}
+					int main(){
+					    int n;
+					    while(cin >> n){
+					        a.clear();
+					        int maxe = 0;
+					        int v, e;
+					        for(int i = 0; i < n; i++){
+					            cin >> v >> e;
+					            a.push_back({v, e});
+					            maxe = max(maxe, e);
+					        }
+					        for(int i = 1; i <= maxe; i++) p[i] = i;
+					        sort(a.begin(), a.end()); reverse(a.begin(), a.end()); //按照利润, 从大到小排序
+					        int res = 0;
+					        for(auto item : a){
+					            int d = find(item.y);  //看最贵的商品, 对应的日期item.y的最早可以卖的日子是多少
+					            if(d){
+					                res += item.x;
+					                p[d]--;
+					            }
+					        }
+					        cout << res << endl;
+					    }
+					    return 0;
+					}
+		AcWing 1057. 股票买卖 IV {leetcode的题目:https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iv/}
+			1. 
+				注意:
+					第j笔交易: 买卖一轮算一笔交易
+				代码:
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
 
-				    memset(f, -0x3f, sizeof f);
-				    for (int i = 0; i <= n; i ++ ) f[i][0][0] = 0; -> 前0,1,2,...,n天没有进行过股票交易, 没有持有股票的收益 == 0
-				    for (int i = 0; i <= n; i ++ ) f[i][0][1] = 0; -> 这一句写不写都行, 意为, 前0,1,2,...,n天没有进行过股票交易, 持有股票的收益{不可能的事情, 没交易怎么有股票} == 0
-				    	其实是否是0都无所谓, 因为我们求得是max
-				    	不过不能全都是-INF, 至少需要一个0来扩散
+					using namespace std;
 
+					const int N = 100010, M = 110, INF = 0x3f3f3f3f;
+
+					int n, m;
+					int w[N];
+					int f[N][M][2];
+
+					int main()
+					{
+					    scanf("%d%d", &n, &m);
+					    for (int i = 1; i <= n; i ++ ) scanf("%d", &w[i]);
+
+					    memset(f, -0x3f, sizeof f);
+					    for (int i = 0; i <= n; i ++ ) f[i][0][0] = 0; -> 前0,1,2,...,n天没有进行过股票交易, 没有持有股票的收益 == 0
+					    for (int i = 0; i <= n; i ++ ) f[i][0][1] = 0; -> 这一句写不写都行, 意为, 前0,1,2,...,n天没有进行过股票交易, 持有股票的收益{不可能的事情, 没交易怎么有股票} == 0
+					    	其实是否是0都无所谓, 因为我们求得是max
+					    	不过不能全都是-INF, 至少需要一个0来扩散
+
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = 1; j <= m; j ++ )
+					        {
+					            f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
+					            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
+					        }
+
+					    int res = 0;
+					    for (int i = 0; i <= m; i ++ ) res = max(res, f[n][i][0]);
+
+					    printf("%d\n", res);
+
+					    return 0;
+					}
+				核心代码:
 				    for (int i = 1; i <= n; i ++ )
 				        for (int j = 1; j <= m; j ++ )
 				        {
 				            f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
 				            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
 				        }
+			    解释:
+			    	f[i][j][0/1]
+						表示第i天，正在位于或者已经完成了j笔交易{一买一卖}，现在手中有/没有票
+				代码解释:
+					注意, 这里的持有还是不持有, 都是闭市之后的状态
+						所以, 昨天持有, 今天没有{意味着是今天卖出的}
+						所以转移应该是:
+							"[j][1] 	-> 	[j][0]" --> "[j+1][1] -> [j+1][0]"
+							正在位于第j笔交易  完成第j笔	
+					f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
+						第i天, 已经完成第j笔交易, 且手里没有持有股票
+							两种解释, 对应不同的途径来:
+								1. 昨天持有:
+									f[i][j][0]解释为: 卖了第j笔股票
+									所以来源是: f[i - 1][j][1] : 昨天依旧是第j笔股票持有的状态
+								2. 昨天没持有:
+									f[i][j][0]解释为: 没有动股票, 依旧是第j笔交易 
+									所以来源是: f[i - 1][j][0]
+			        f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
+			        	第i天, 闭市之后手里持有股票
+							两种解释, 对应不同的途径来:
+								1. 昨天持有:
+									f[i][j][1]解释为: 没有动股票, 依旧是第j笔交易 
+									所以来源是: f[i - 1][j][1]
+								2. 昨天没持有:
+									f[i][j][1]解释为: 说明今天买的股, 开启了第j笔交易
+									所以来源是: f[i - 1][j - 1][0] : 昨天第j-1笔交易已经结束
+				初始化
+					代码:
+						memset(f, -0x3f, sizeof f); 负无穷
+					    for (int i = 0; i <= n; i ++ ) f[i][0][0] = 0;
 
-				    int res = 0;
-				    for (int i = 0; i <= m; i ++ ) res = max(res, f[n][i][0]);
+					解释:
+						如果一种状态不合法，或者不希望从这个状态转移过来 ，那么就把它设成正无穷或负无穷
+						因为这个题要求最大值，所以把不合法的设成负无穷，也这样这个状态不可能用来更新后来的状态
+						f[i][0][1] = 负无穷
+							例如这道题中f[i][0][1]表示，如果我们处理了0笔股票，并且我们手中居然还有票，这显然是不可能的
+						f[0][j][0]
+							例如这道题中f[0][j][0]表示，第0天就有一笔已经完成的第j个股票, 那难道是第-1天买入的这只股票? 这显然是不可能的
+						如果我们处理了0笔股票并且目前手里没有票，那收入就是0
+							即f[i][0][0] = 0
 
-				    printf("%d\n", res);
-
-				    return 0;
-				}
-			核心代码:
-			    for (int i = 1; i <= n; i ++ )
-			        for (int j = 1; j <= m; j ++ )
-			        {
-			            f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
-			            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
-			        }
-		    解释:
-		    	f[i][j][0/1]
-					表示第i天，正在位于或者已经完成了j笔交易{一买一卖}，现在手中有/没有票
-			代码解释:
-				注意, 这里的持有还是不持有, 都是闭市之后的状态
-					所以, 昨天持有, 今天没有{意味着是今天卖出的}
-					所以转移应该是:
-						"[j][1] 	-> 	[j][0]" --> "[j+1][1] -> [j+1][0]"
-						正在位于第j笔交易  完成第j笔	
-				f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
-					第i天, 已经完成第j笔交易, 且手里没有持有股票
-						两种解释, 对应不同的途径来:
-							1. 昨天持有:
-								f[i][j][0]解释为: 卖了第j笔股票
-								所以来源是: f[i - 1][j][1] : 昨天依旧是第j笔股票持有的状态
-							2. 昨天没持有:
-								f[i][j][0]解释为: 没有动股票, 依旧是第j笔交易 
-								所以来源是: f[i - 1][j][0]
-		        f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
-		        	第i天, 闭市之后手里持有股票
-						两种解释, 对应不同的途径来:
-							1. 昨天持有:
-								f[i][j][1]解释为: 没有动股票, 依旧是第j笔交易 
-								所以来源是: f[i - 1][j][1]
-							2. 昨天没持有:
-								f[i][j][1]解释为: 说明今天买的股, 开启了第j笔交易
-								所以来源是: f[i - 1][j - 1][0] : 昨天第j-1笔交易已经结束
-			初始化
-				代码:
-					memset(f, -0x3f, sizeof f); 负无穷
-				    for (int i = 0; i <= n; i ++ ) f[i][0][0] = 0;
-
-				解释:
-					如果一种状态不合法，或者不希望从这个状态转移过来 ，那么就把它设成正无穷或负无穷
-					因为这个题要求最大值，所以把不合法的设成负无穷，也这样这个状态不可能用来更新后来的状态
-					f[i][0][1] = 负无穷
-						例如这道题中f[i][0][1]表示，如果我们处理了0笔股票，并且我们手中居然还有票，这显然是不可能的
-					f[0][j][0]
-						例如这道题中f[0][j][0]表示，第0天就有一笔已经完成的第j个股票, 那难道是第-1天买入的这只股票? 这显然是不可能的
-					如果我们处理了0笔股票并且目前手里没有票，那收入就是0
-						即f[i][0][0] = 0
-
-			老师的另一种写法:
-				#include <cstring>
+			2. 初始化的bug
 				#include <iostream>
-				#include <algorithm>
-
+				#include <cstring>
 				using namespace std;
-
-				const int N = 100010, M = 110, INF = 0x3f3f3f3f;
-
-				int n, m;
-				int w[N];
-				int f[N][M][2];
-
-				int main()
-				{
-				    scanf("%d%d", &n, &m);
-				    for (int i = 1; i <= n; i ++ ) scanf("%d", &w[i]);
-
-				    memset(f, -0x3f, sizeof f);
-				    f[0][0][0] = 0;
-
-				    for (int i = 1; i <= n; i ++ )
-				        for (int j = 0; j <= m; j ++ )
-				        {
-				            f[i][j][0] = f[i - 1][j][0];
-				            if (j) f[i][j][0] = max(f[i][j][0], f[i - 1][j - 1][1] + w[i]);
-				            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j][0] - w[i]);
+				const int N = 1e5 + 10, M = 110;
+				int w[N], f[N][M][2], n, m;
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 1; i <= n; i++) cin >> w[i];
+				    注意: memset(f, -0x3f, sizeof f); 语法, 可以是 -0x3f, 很神奇
+				    错误: for(int i = 0; i <= m; i++) f[0][i][1] = f[0][i][0] = 0;
+				    正确: for(int i = 0; i <= n; i++) f[i][0][0] = f[i][0][1] = 0; //总之第一列, 也就是j==0的第一列都要是0
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 1; j <= m; j++){
+				            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
+				            f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
 				        }
-
+				    }
 				    int res = 0;
-				    for (int k = 0; k <= m; k ++ ) res = max(res, f[n][k][0]);
-
-				    printf("%d\n", res);
-
+				    for(int i = 1; i <= m; i++) res = max(res, f[n][i][0]);
+				    cout << res << endl;
 				    return 0;
 				}
 		AcWing 36. 合并两个排序的链表
@@ -15141,8 +18230,25 @@
 				        return res;
 				    }  
 				};
+			3. 很顺 
+				class Solution {
+				public:
+				    ListNode* merge(ListNode* l1, ListNode* l2) {
+				        ListNode* dummy = new ListNode(0);
+				        auto cur = dummy;
+				        while(l1 && l2){
+				            if(l1->val < l2->val) cur = cur->next = l1, l1 = l1->next;
+				            else cur = cur->next = l2, l2 = l2->next;
+				        }
+				        if(l1) cur->next = l1;
+				        if(l2) cur->next = l2;
+				        ListNode* res = dummy->next;
+				        delete dummy;
+				        return res;
+				    }
+				};
 		AcWing 62. 丑数
-			0. 真的是会很有意思的题目
+			0. 真的是很有意思的题目
 			1. 题意:
 				找到一些丑数x, 丑数x的质因子只有 2,3,5. 注意是只有 2,3,5,不能有其他质因子
 					也就是 丑数x == 2^a * 3^b * 5^c, 其中a>=0, b>=0, c>=0
@@ -15243,6 +18349,22 @@
 				        return q.back();
 				    }
 				};
+			2. 很顺利 
+				class Solution {
+				public:
+				    int getUglyNumber(int n) {
+				        vector<int> q = {1};
+				        int i = 0, j = 0, k = 0;
+				        while(q.size() < n){
+				            int t = min(q[i] * 2, min(q[j] * 3, q[k] * 5));
+				            q.push_back(t);
+				            if(q[i] * 2 == t) i++;
+				            if(q[j] * 3 == t) j++;
+				            if(q[k] * 5 == t) k++;
+				        }
+				        return q.back();
+				    }
+				};
 		* AcWing 29. 删除链表中重复的节点
 			1. 链表是排好序的: 即重复的元素是挨在一起的
 			2. 因为可能会把head节点删除, 所以我们用一个dummy指针指向head节点的前面
@@ -15314,8 +18436,55 @@
 				        return dummy->next;
 				    }
 				};
+			5. 还挺顺利, 注意下一次别掉坑里
+				class Solution {
+				public:
+				    ListNode* deleteDuplication(ListNode* head) {
+				        ListNode* dummy = new ListNode(0);  //创建虚拟节点
+				        dummy->next = head;                 //虚拟节点连接好head, 也就是把原材料{原始链表}准备好, 好给p来处理
+				        auto p = dummy;                     //p指向答案链表的最后一个节点, 此时p==dummy说明答案链表为空 
+				        while(p->next)  //试探下一步
+				        {
+				            auto test = p->next;        //试探的下一步是test
+				            int val = test->val;        //值是val
+				            while(test && test->val == val) test = test->next;     //我们要找到第一个!=val的test
+				            //出来的时候, test == nullptr 或者 test 指向第一个!=val的test
+				            if(test == p->next->next) p = p->next;  //因为while一定执行了一次, 所以test要么是p的下一个的下一个, 要么就是p的下一个的下一个的下一个的...
+				                                                    //说明p->next这个元素, 的确不是重复的
+				            else p->next = test;                    //注意这里不能够 p = p->next = test; 因为test可能自己也是重复的元素, 所以p还不能指向 p->next
+				                                                    //如果题意是保留一个重复的元素, {例如从1->2->3->3->4->4->5变为1->2->3->4->5} 那么就是 {p = p->next; p->next = test;}
+				            
+				        }
+				         return dummy->next;
+				    }
+				};
 	第五讲
 		AcWing 104. 货仓选址
+			1.
+				就是用不等式 + 首位分组 -> 证明出 中位数是最优解 
+				二维:
+					1. 曼哈顿距离: 同样的算法 
+					2. 欧拉距离: 答案就是费马点, 用随机的方法, 随机点, 然后上下左右试, 往更低值走
+			2. 超级顺: 因为 
+				|xa - n| + |xb - n| >= xb - xa
+				要满足 |xa - n| + |xb - n| == xb - xa, 就要让n在[xa, xb]内部
+				对于所有的[x1, xn], [x2, x_{n-1}], [x_{n/2}, x_{n/2+1}]]都要满足在区间的内部, 在最中间的区间的内部, 就是中位数了
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int q[N], n;
+				long long res;
+				int main(){
+				    scanf("%d", &n);
+				    for(int i = 0 ; i < n; i++) scanf("%d", &q[i]);
+				    sort(q, q + n);
+				    for(int i = 0 ; i < n; i++){
+				        res += abs(q[i] - q[n / 2]);	q[n / 2]就是中位数 
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
 		AcWing 1536. 均分纸牌
 			1. 这道题有意思, 画面就跟, 起伏的海浪, 最后都是根据势能, 逐个向左回落或者上涨, 最后海面恢复平静
 				//每一堆牌只会受相邻的牌影响，因此从左开始，每一堆牌为了达到平均值，就得向右边的牌索取（或给予），并且步数+1
@@ -15350,6 +18519,30 @@
 				a[4] += a[3] - 10 
 					 += 14 - 10 = 4
 					 == 6 + 4 == 10
+			4. bug, 小bug
+				#include <iostream>
+				using namespace std;
+				const int N = 110;
+				int a[N], n, avg, res;
+				int main(){
+				    cin >> n;
+				    for(int i = 0; i < n; i++){
+				        cin >> a[i];
+				        avg += a[i];
+				    }
+				    avg /= n;
+				    for(int i = 0 ; i < n; i ++){
+				        错误: res += abs(a[i] - avg);		完全理解错了题目的意思...
+				        正确:
+					        if(a[i] != avg){				注意 a[n-1]一定==avg, 否则题目就是矛盾的
+					            错误: a[i + 1] -= (a[i] - avg);
+					            正确: a[i + 1] -= (avg - a[i]);	是a[i]为了达到目标avg, 要从a[i+1]拿多少个
+					            res ++;		拿多少个, 不管拿了多少个, 都是拿了一次, res++.
+					        }
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
 		* AcWing 122. 糖果传递
 			1. 本题+上题: 微软出过, 答对就special offer
 			2. 推导:
@@ -15434,6 +18627,30 @@
 
 				    return 0;
 				}
+			4. 背下来公式, 就很简单
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 1e6 + 10;
+				typedef long long LL;
+				int S[N], c[N], n;
+				LL res, avg;
+				int main(){
+				    scanf("%d", &n);
+				    for(int i = 1; i <= n; i++){
+				        int a;
+				        scanf("%d", &a);
+				        S[i] = S[i-1] + a;
+				        avg += a;
+				    }
+				    avg /= n;
+				    for(int i = 2; i <= n; i++) c[i] = (i - 1) * avg - (S[i] - S[1]);		公式就是: cn = (n-1) * avg - (S[n] - a[1])
+				    sort(c + 1, c + 1 + n); 	//c[1]到c[n]的数字都排序, 因为c[0] == 0所以不用管
+				    int mid = c[(n + 1) / 2];	//注意因为我们的c[0]是无效的, 所以[1, n]的中位数就是 (n + 1)/2. 对比之前的 [0,n-1]的中位数是(n/2)
+				    for(int i = 1; i <= n; i++) res += abs(c[i] - mid);
+				    printf("%lld\n", res);
+				    return 0;
+				}
 		AcWing 106. 动态中位数
 			0. 非常智慧的一道题
 			1. 对顶堆
@@ -15516,6 +18733,39 @@
 				        if (cnt % 10) puts("");
 				    }
 
+				    return 0;
+				}
+			3. 非常无语但是很可能出现的bug
+				#include <iostream>
+				错误: #include <priority_queue>
+				#include <queue>
+				using namespace std;
+				const int N = 1e4 + 10;
+				int p, id, n, x;
+				int main(){
+				    scanf("%d", &p);
+				    while(p--){
+				        scanf("%d %d", &id, &n);
+				        printf("%d %d\n", id, (n + 1) / 2); //数据集的编号以及输出中位数的个数（应为数据个数加一的二分之一），数据之间用空格隔开。
+				        priority_queue<int> left;
+				        priority_queue<int, vector<int>, greater<int>> right;
+				        for(int i = 1; i <= n; i++){
+				            scanf("%d", &x);
+				            if(left.empty() || x <= left.top()) left.push(x);
+				            else right.push(x);
+				            cout << left.size() << "-----" << right.size() << endl;
+				            错误: if(left.size() - right.size() >= 2)
+				            正确: if(left.size() >= right.size() + 2)	左比右边大2个
+				                right.push(left.top()), left.pop();
+				            错误: if(right.size() - left.size() >= 1)	因为 0 - 1 == -1 == 0xfffffff > 1 所以其实 -1应该<1, 但是变成>=1了
+				            正确: if(right.size() >= left.size() + 1)	右比左边大1个
+				                left.push(right.top()), right.pop();
+				            if(i & 1){
+				                printf("%d ", left.top());
+				                if(i % 20 == 0) puts("");	每20个打印, 因为i是20的时候, 只打印了10个
+				            }
+				        }
+				    }
 				    return 0;
 				}
 		* AcWing 146. 序列
@@ -15660,16 +18910,55 @@
 
 				    return 0;
 				}
+			4. bug 还挺顺利, 有个无语的小bug
+				#include <iostream>
+				#include <queue>
+				#include <algorithm>
+				#include <cstring>
+				using namespace std;
+				const int N = 2010;
+				typedef pair<int, int> PII;
+				#define x first
+				#define y second
+				int T, n, m;
+				int a[N], b[N], temp[N];
+				void merge(){
+				    priority_queue<PII, vector<PII>, greater<PII>> heap;
+				    for(int i = 0; i < n; i++) heap.push({b[i] + a[0], 0});
+				    for(int i = 0; i < n; i++){
+				        auto t = heap.top(); heap.pop();
+				        temp[i] = t.x;
+				        heap.push({t.x - a[t.y] + a[t.y + 1], t.y + 1});
+				    }
+				    错误: memcpy(a, temp, n);
+				    正确: memcpy(a, temp, sizeof temp);
+				}
+				int main(){
+				    cin >> T;
+				    while(T--){
+				        cin >> m >> n;
+				        for(int i = 0; i < n; i ++) cin >> a[i];
+				        sort(a, a + n);
+				        for(int i = 0; i < m - 1; i++){
+				            错误: for(int j = 0; j < n; j++) cin >> b[i];	不是i啊!
+				            正确: for(int j = 0; j < n; j++) cin >> b[j];
+				            merge();
+				        }
+				        for(int i = 0; i < n; i++) cout << a[i] << " ";
+				        cout << endl;
+				    }
+				    return 0;
+				}
 		AcWing 33. 链表中倒数第k个节点
 			0. 熟练:
 				1. 倒数第k个数, 就是ind == n-k的数字
 					很简单, 倒数第1个数 == 最后一个数 == ind是n-1
 				2. for()找到链表的第i个节点, 假设头结点的ind == 0
 					去第i个节点, 需要走i条边, for(遍历边数i)
-					去ind==1个节点, 需要走1条边, for(遍历边数), 即 for(int i = 0 ; i < 1; i++)
+					举例: 去ind==1个节点, 需要走1条边, for(遍历边数), 即 for(int i = 0 ; i < 1; i++)
 				3. 总结
 					去倒数第k个数, 就是ind == n-k的数字
-					去ind==n-k个节点, 需要走n-k条边, for(遍历边数), 即 for(int i = 0 ; i < n-k; i++)
+					举例: 去ind==n-k个节点, 需要走n-k条边, for(遍历边数), 即 for(int i = 0 ; i < n-k; i++)
 				4. 宏观: 链表和数组是一模一样的:
 					数组: 访问ind==n-k个节点, arr[n-k]
 					链表: 访问ind==n-k个节点, for(int i = 0 ; i < n-k; i++) p = p->next; 最后的p就是
@@ -15694,47 +18983,76 @@
 				        return p;
 				    }
 				};
+			2. 很顺利 
+				class Solution {
+				public:
+				    ListNode* findKthToTail(ListNode* pListHead, int k) {
+				        int n = 0;
+				        for(auto p = pListHead; p; p = p->next) n++;
+				        if(k > n) return nullptr;
+				        auto p = pListHead;
+				        for(int i = 0; i < n - k; i ++) p = p->next;
+				        return p;
+				    }
+				};
 		AcWing 786. 第k个数: 快排的应用 
+			很顺利
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int q[N], n, k;
+				int quicksort(int q[], int l, int r, int k){
+				    if(l >= r) return q[l];
+				    int val = q[l + rand() % (r - l + 1)];	找到靶子
+				    int i = l - 1, j = r + 1;
+				    while(i < j){
+				        do i++; while(q[i] < val);
+				        do j--; while(q[j] > val);
+				        if(i < j) swap(q[i], q[j]);
+				    }
+				    if(k <= (j - l + 1)) return quicksort(q, l, j, k);		[l, j]的元素都是 < [j + 1, r]的元素
+				    else return quicksort(q, j + 1, r, k - (j - l + 1));
+				}
+				int main(){
+				    cin >> n >> k;
+				    for(int i = 0 ; i < n; i++) cin >> q[i];
+				    cout << quicksort(q, 0, n - 1, k) << endl;
+				    return 0;
+				}
 	第四讲
 		AcWing 1490. 最长上升子串 
 			1. 子串 != 子序列 
 			2. 有限集合的最值问题: 方案的个数是有限的, 在所有的方案中找min/max
-			3. 思路:
-				#include <cstdio>
-				#include <cstring>
+			3. 这道题:
+				子串: 是连续的 
+				但是注意, 这道题的意思是: 删除一个数字a之后的最大子串, 说明了:
+					删除之前, 有两个子串, 他们分别在数字a的左侧和右侧, 删除数字a之后, 这两个子串合并, 可能形成更长的子串
+				思路:
+					r[i]表示以i结尾的连续上升字串长度，l[i]表示以i开头的连续上升字串长度。
+					若删除a[i]后还满足a[i−1]<a[i+1]，则说明删除第i个数后，连续上升子串长度为r[i−1]+l[i+1]
+					若不满足，则说明删除后，前后连续子串是独立的，即 max(l[i−1],r[i+1])
+			3. 代码, 比较顺利, 就是从右往左稍微思考一下就好了, 不难的 
 				#include <iostream>
-				#include <algorithm>
-
 				using namespace std;
-
-				const int N = 100010;
-
-				int n;
-				int a[N], f[N], g[N];
-
-				int main()
-				{
-				    scanf("%d", &n);
-				    for (int i = 1; i <= n; i ++ ) scanf("%d", &a[i]);
-
-				    // 预处理f[i]：以i结尾的单调上升子串的最大长度
-				    for (int i = 1; i <= n; i ++ )
-				        if (a[i] > a[i - 1]) f[i] = f[i - 1] + 1;
-				        else f[i] = 1;
-
-				    // 预处理g[i]：以i开头的单调上升子串的最大长度
-				    for (int i = n; i; i -- )
-				        if (a[i] < a[i + 1]) g[i] = g[i + 1] + 1;
-				        else g[i] = 1;
-
+				const int N = 1e5 + 10;
+				int a[N], r[N], l[N], n;
+				int main(){
+				    cin >> n;
+				    for(int i = 1; i <= n; i++) cin >> a[i];
+				    for(int i = 1; i <= n; i++){					预处理r[i]：以i结尾的单调上升子串的最大长度. 注意, 存的是长度
+				        if(a[i - 1] < a[i]) r[i] = r[i - 1] + 1;	如果我比左边的大, 那么长度+1, 前辈信息是 r[i - 1]
+				        else r[i] = 1;
+				    }
+				    for(int i = n; i > 0; i--){						预处理l[i]：以i开头的单调上升子串的最大长度
+				        if(a[i] < a[i + 1]) l[i] = l[i + 1] + 1;	如果我比右边的小, 那么长度+1, 前辈信息是 l[i + 1], 因为是从i==n开始算的, 所以前辈信息在右侧 
+				        else l[i] = 1;								也就相当于我作为我左侧孩子的前辈了
+				    }
 				    int res = 0;
-				    // 枚举删除哪个数
-				    for (int i = 1; i <= n; i ++ )
-				        if (a[i - 1] >= a[i + 1]) res = max(res, max(f[i - 1], g[i + 1]));	如果 a[i - 1], a[i + 1] 不能拼为上升子串, 取两段的max
-				        else res = max(res, f[i - 1] + g[i + 1]);							如果 a[i - 1], a[i + 1] 能拼为上升子串, 将两段合并 
-
-				    printf("%d\n", res);
-
+				    for(int i = 1; i <= n; i++){	枚举删除哪个数
+				        if(a[i - 1] < a[i + 1]) res = max(res, r[i - 1] + l[i + 1]);	如果 a[i - 1], a[i + 1] 能拼为上升子串, 将两段合并 
+				        else res = max(res, max(r[i - 1], l[i + 1]));					如果 a[i - 1], a[i + 1] 不能拼为上升子串, 取两段的max
+				    }
+				    cout << res << endl;
 				    return 0;
 				}
 		* AcWing 1259. 二叉树遍历{面试题中属于较难的题, 的确, 厉害了}
@@ -15748,9 +19066,7 @@
 				3. 
 					#include <iostream>
 					#include <unordered_map>
-
 					using namespace std;
-
 					struct Node
 					{
 					    char val;
@@ -15780,9 +19096,9 @@
 					    Node* q[30];		我们的结果存在队列q里面, q其实是保存的是层序遍历的顺序
 
 					    q[0] = new Node(level[0]);	根节点: 层序数组的第0个
-					    for (int i = 0, j = 1; j < level.size();)  // 按成遍历，i是当前这层的起点，j是下一层的起点
-					    	i: 看成指针, 指向level层序数组的, i遍历的每一层
-					    	j: 看成指针, 指向level层序数组的, j是指向下一层的起点{也就是这一层的终点} 
+					    for (int i = 0, j = 1; j < level.size();)  // 按层遍历，i是当前这层的起点，j是下一层的起点
+					    	i: 看成指针, 指向level"层序"数组的, i遍历的每一层
+					    	j: 看成指针, 指向level"层序"数组的, j是指向下一层的起点{也就是这一层的终点} 
 					    {
 					    	外层for: 遍历不同的层, 由j确定每一层的起点在哪里
 					    	内层for: 遍历某一层中的每个元素, 由i指向每个元素
@@ -15804,7 +19120,7 @@
 					            							找到层序数组的第i个元素, 在中序数组中的下标p
 					            st[p] = true;				标记一下中序数组的这个下标是看过的		
 					            							如果层序数组的第i个元素, 有左右儿子, 那么中序数组的下标p-1就是左儿子, 下标p+1就是右儿子	
-					            if (p - 1 > 0 && !st[p - 1])			如果p-1下标合法, 并且中序数组的这个下标是没有看过, 说明左儿子存在 
+					            if (p - 1 >= 0 && !st[p - 1])			如果p-1下标合法, 并且中序数组的这个下标是没有看过, 说明左儿子存在 
 					            {
 					                q[i]-> left = new Node(level[j]);	q保存的是层序遍历的顺序, 所以q[i]对应的就是level[i]
 					                									注意, 因为第一次执行这段代码时候, i == 0, 我们初始化的时候 q[0] = new Node(level[0]);
@@ -15828,6 +19144,54 @@
 
 					    cout << res << endl;
 
+					    return 0;
+					}
+				4. bug, 还是有点容易错的 
+					#include <iostream>
+					#include <unordered_map>
+					using namespace std;
+					unordered_map<char, int> pos;
+					string inorder, level, res;
+					bool st[30];
+					struct Node{
+					    char val;
+					    // Node* left, right;
+					    Node *left, *right;
+					    Node(char v): val(v), left(nullptr), right(nullptr){}
+					};
+					Node* q[30];
+					void dfs(Node* node){
+					    if(!node) return;
+					    res += node->val;
+					    dfs(node->left);
+					    dfs(node->right);
+					}
+					int main(){
+					    cin >> inorder >> level;
+					    for(int i = 0; i < inorder.size(); i++) pos[inorder[i]] = i;
+					    q[0] = new Node(level[0]);
+					    for(int i = 0, j = 1; j < inorder.size();){
+					        for(int end = j; i < end; i++){
+					            int t = pos[level[i]];
+					            错误: 忘记写st[t] = true;
+					            st[t] = true;
+					            错误: if(t - 1 > 0 && !st[t - 1]){ 
+					            正确: if(t - 1 >= 0 && !st[t - 1]){
+					                错误: q[i]->left = new Node(inorder[t - 1]);	我的理解: t - 1 >= 0只是证明有左儿子, 至于左儿子的ind是多少, 不一定是inorder的[t-1]
+					                正确: q[i]->left = new Node(level[j]);
+					                q[j++] = q[i]->left;
+					                错误:  st[t - 1] = true;	我们的st只是记录t点是根节点的时候是否被遍历过 
+					            }
+					            if(t + 1 < inorder.size() && !st[t + 1]){
+					                错误: q[i]->right = new Node(inorder[t + 1]);
+					                正确: q[i]->right = new Node(level[j]);
+					                q[j++] = q[i]->right;
+					                错误: st[t + 1] = true;
+					            }
+					        }
+					    }
+					    dfs(q[0]);
+					    cout << res << endl;
 					    return 0;
 					}
 		AcWing 1491. 圆桌座位
@@ -15868,7 +19232,7 @@
 				const int N = 10;
 				int path[N], n;
 
-				void dfs(int size, int state){
+				void dfs(int size, int state){		我的理解, 这里的state, 无非是替代了 bool st[N]来记录每个数字是否被用过 
 				    if(size == n){
 				        for(int i = 0; i < n; i++) printf("%d ", path[i]);
 				        puts("");
@@ -15896,6 +19260,7 @@
 
 				int n, m;
 				bool g[N][N], st[N];    g表示朋友关系, st表示人是否使用过的状态
+					语法: 如果st是局部变量, 就要 bool st[N] = {0}; 也就是初始化为false
 				int pos[N];             圆桌上每个位置上是谁
 
 				int dfs(int u)	现在要往圆桌的ind==u的地方开始填人, u从0开始
@@ -15934,6 +19299,44 @@
 
 				    cout << dfs(1) << endl;				现在要往圆桌的ind == 1的地方开始填人	
 
+				    return 0;
+				}
+			2. bug, res是局部变量
+				#include <iostream>
+				using namespace std;
+				const int N = 15;
+				bool g[N][N], st[N];
+				int pos[N];
+				错误: int res;
+				int n, m;
+				int dfs(int u){
+				    if(u == n) {
+				        if(!g[pos[n - 1]][pos[0]]) return 1;
+				        else return 0;
+				    } 
+				    正确: int res = 0;	语意应该是, 从这个节点u下去, 的所有子路径的数目, 注意不考虑u的上面的节点 
+				    for(int i = 1; i <= n; i++){
+				        if(!st[i] && !g[i][pos[u - 1]]){
+				            pos[u] = i;
+				            st[i] = true;
+				            res += dfs(u + 1);
+				            st[i] = false;
+				            //pos[u]不需要恢复现场, 因为会被其他值覆盖 
+				        }
+				    }
+				    正确: return res; 
+				}
+				int main(){
+				    cin >> n >> m;
+				    for(int i = 0; i < m; i++){
+				        int a, b;
+				        cin >> a >> b;
+				        g[a][b] = true;
+				        g[b][a] = true;
+				    }
+				    pos[0] = 1;     //因为之后判断 g[pos[u]][pos[u - 1]] 的时候, 我们的 pos[u - 1]总需要有值把
+				    st[1] = true; 
+				    cout << dfs(1) << endl;
 				    return 0;
 				}
 		todo 难 AcWing 30. 正则表达式匹配
@@ -16065,13 +19468,36 @@
 				        		区间长度是 k - 1 - il + 1 == k - il 
 				        		前序数组的起点是: pl + 1, 所以终点是 pl + 1 + (k - il) - 1 == pl + k - il
 				        	我以前学的时候的解释: 差相等
-								? - pl == (k - 1) - (il) 	
+								? - (pl + 1) == (k - 1) - (il) 	
 				        auto right = dfs(pl + k - il + 1, pr, k + 1, ir);
 				        root->left = left, root->right = right;
 				        return root;
 				    }
 				};
-		AcWing 19. 二叉树的下一个节点
+			2. bug{小bug}
+				class Solution {
+				public:
+				    unordered_map<int, int> pos;
+				    vector<int> preorder, inorder;
+				    TreeNode* buildTree(vector<int>& _preorder, vector<int>& _inorder) {
+				        preorder = _preorder, inorder = _inorder;
+				        for(int i = 0; i < inorder.size(); i++) pos[inorder[i]] = i;
+				        return build(0, preorder.size() - 1, 0, inorder.size() - 1);
+				    }
+				    
+				    TreeNode* build(int pl, int pr, int il, int ir){
+				        错误: if(pl >= pr) return nullptr;
+				        正确: if(pl > pr) return nullptr;
+				        错误: TreeNode* root = preorder[pl];
+				        正确: TreeNode* root = new TreeNode(preorder[pl]);
+				        int k = pos[preorder[pl]];
+				        TreeNode* left = build(pl + 1, k - il + pl, il, k - 1);
+				        TreeNode* right = build(k - il + pl + 1, pr, k + 1, ir);
+				        root->left = left, root->right = right;
+				        return root;
+				    }
+				};
+		* AcWing 19. 二叉树的下一个节点
 			1. 分情况:
 				1. 如果当前节点a有右儿子r
 					则右子树中最左侧的节点rl就是当前节点a的后继。
@@ -16120,20 +19546,170 @@
 				        我们的目标是: 找到自己是爸爸的左儿子的自己
 				        实现: while(自己由父亲 && 自己是父节点的右儿子) 则一直往上找, 直到自己是爸爸的左儿子
 				        while (p->father && p == p->father->right) p = p->father;
-				        最后答案就是爸爸:
-				        return p->father;
+				        出来while的时候, 就是我没有父亲 || 我是父亲的左儿子. 最后答案就是爸爸:
+				        return p->father;			如果我没有父亲, return nullptr; 有父亲答案就是父亲
+				    }
+				};
+			3. 非常顺利
+				class Solution {
+				public:
+				    TreeNode* inorderSuccessor(TreeNode* p) {
+				        if(p->right){
+				            p = p->right;
+				            while(p->left) p = p->left;		如果我有左儿子, 我就去左儿子
+				            return p;						如果我没左儿子, 我就是左儿子{最底下的}
+				        }
+				        while(p->father && p == p->father->right) p = p->father;	出来while的时候, 就是我没有父亲 || 我是父亲的左儿子 
+				        return p->father;											如果我没有父亲, return nullptr; 有父亲答案就是父亲
 				    }
 				};
 	第三讲
 		AcWing 1056. 股票买卖 III
+			0. 你最多可以完成两笔交易。注意: 你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）
 			1. 您看我是否哪个细节描述的不清楚, 我再描述一遍
-			2. g和f的区间, 其中 g[0] == f[n] == 0, 最后 g[i] + f[i + 1]
+			2. g和f的区间, 其中 g[1] == f[n] == 0, 最后 g[i] + f[i + 1]
 			3. 样例: 严格递增/递减 
+
+			4. 
+				#include <iostream>
+				#include <algorithm>
+
+				using namespace std;
+
+				const int N = 1e5 + 10;
+
+				int n;
+				int p[N], g[N], f[N];   //p股票价格, g前i天, f存后n-i天
+
+				int main()
+				{
+				    scanf("%d", &n);
+				    for (int i = 1; i <= n; i ++ ) scanf("%d", &p[i]);
+
+				    //求g[i]:在1 ~ i中买卖一次的最大收益
+				    	g[i]是指在第i天卖出, 最早是第i=2天卖出, 因为最早只能第1天买入 
+				    for (int i = 2, minv = p[1]; i <= n; i ++ )    遍历的天数是[2,n] 因为可以第2天卖出, 第n天卖出 //在第一天买入卖出的收益是0,故从2开始
+				    {
+				        g[i] = max(g[i - 1], p[i] - minv); 如果第i天卖出, 假设我们是在历史最低点买入的, 利润就是 p[i] - minv
+				        minv = min(minv, p[i]);	记录历史最低的买价
+				    }
+
+				    //求f[i]:在i ~ n中买卖一次的最大收益
+				    	f[i]是指在第i天买入, 最晚是第i=n-1天买入, 因为最晚是第i=n天卖出,
+				    for (int i = n - 1, maxv = p[n]; i >= 1; i -- )	遍历的天数是[1,n-1] 因为可以第1天买入, 第n-1天买入
+				    {
+				        f[i] = max(f[i + 1], maxv - p[i]);
+				        maxv = max(maxv, p[i]);
+				    }
+					    上面的两个for, 其实是为了让: g[1] == f[n] == 0, 也就是g[1]是指, 不进行第一笔交易, f[n]是指不进行第二笔交易
+					    如果我们的样子是 严格递增, 1,2,3,4,5, 就只交易一笔, 然后第一天买入第5天卖出: g[5]代表在最低价买入第五天卖出, f[1]代表在最高价卖出在第一天买入
+					    	g[0] + f[1] = 0 + 4 = 4 
+							g[1] + f[2] = 0 + 3 = 3 
+							g[2] + f[3] = 1 + 2 = 3 
+							g[3] + f[4] = 2 + 1 = 3 
+							g[4] + f[5] = 3 + 0 = 3 
+							g[5] + f[6] = 4 + 0 = 4 
+						如果是严格递减: 5,4,3,2,1, 就什么都别买
+							g[0] + f[1] = 0 + 0 = 0 
+							g[1] + f[2] = 0 + 0 = 0 
+							g[2] + f[3] = 0 + 0 = 0 
+							g[3] + f[4] = 0 + 0 = 0 
+							g[4] + f[5] = 0 + 0 = 0 
+							g[5] + f[6] = 0 + 0 = 0
+					// for(int i = 0; i <= n; i++) printf("g[%d] + f[%d] = %d + %d = %d \n", i, i + 1, g[i], f[i + 1], g[i] + f[i + 1]);
+
+				    int res = 0;    
+				    for (int i = 2; i <= n; i ++ ) 	不需要担心什么会遍历到 f[n+1]这个是0, 加上0不怕的
+				        res = max(res, g[i] + f[i + 1]);    //g[i]表示在前i天完成一次交易最大收益
+				    printf("%d\n", res);                    //f[i+1]表示从第i+1天到第n天完成一次交易的最大收益
+				    return 0;
+				}
+			5. bug: 一开始错得离谱, 其实这个是 dp问题 
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int a[N], g[N], f[N], n;
+				int main(){
+				    cin >> n;
+				    for(int i = 1; i <= n; i++) cin >> a[i];
+				    int minv = a[1];
+				    for(int i = 1; i <= n; i++){
+				    	错误: g[i] = a[i] - minv;					这个是个dp问题, g[i]是 在1 ~ i中买卖一次的最大收益, 也就是前i天的最大收益 
+				        正确: g[i] = max(g[i - 1], a[i] - minv);		前i天的最大收益 = max(前i-1天的最大收益, 第i天卖出的收益)
+				        minv = min(minv, a[i]);
+				    }
+				    int maxv = a[n];
+				    for(int i = n; ~i; i--){
+				        f[i] = max(f[i + 1], maxv - a[i]);
+				        maxv = max(maxv, a[i]);
+				    }
+				    错误: int res = -1;	如果一个股票都不买, 收益==0
+				    int res = 0;
+				    for(int i = 1; i <= n; i++){
+				        res = max(res, g[i] + f[i + 1]);
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
 		AcWing 1487. 取硬币
 			1. 复习一下01/完全的朴素版
+				1. 完全, 从左往右, 因为要新值: 	for (int j = p; j <= m; j ++ ) f[j] = (f[j] + f[j - p]) % MOD;
+				2. 01, 从右往左: 				for (int j = m; j >= p; j -- ) f[j] = (f[j] + f[j - p]) % MOD;
+				3. 因为是求方案数, 所以是无脑加
 			2. 为什么能够无差异的衔接? 01把完全的值作为前辈信息
 				混着算也没有影响, 先谁都没影响 
 				最多可以开: 64M / 4字节 = 1.6 x 1e6 个int
+			3. 
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5 + 10, MOD = 1e9 + 7;
+
+				int n1, n2, m;
+				int f[N];
+
+				int main()
+				{
+				    cin >> n1 >> n2 >> m;
+
+				    f[0] = 1;   //状态初始化:没有硬币即什么都不选的选法
+				    for (int i = 1; i <= n1; i ++ )     //普通硬币:完全背包
+				    {
+				        int p;              //f[i][j]表示只取前i个硬币能组成j的组合数
+				        cin >> p;           //未优化的二维状态转移方程:f[i][j] = f[i - 1][j] + f[i][j - p]: 上, 左
+				        for (int j = p; j <= m; j ++ ) f[j] = (f[j] + f[j - p]) % MOD;  //可以重复:从前往后遍历
+				    }
+
+				    for (int i = 1; i <= n2; i ++ )     //纪念硬币:0-1背包
+				    {
+				        int p;
+				        cin >> p;           //未优化的二维状态转移方程:f[i][j] = f[i - 1][j] + f[i - 1][j - p]: 上, 左上
+				        for (int j = m; j >= p; j -- ) f[j] = (f[j] + f[j - p]) % MOD;  //不能重复:从后往前遍历
+				    }
+
+				    cout << f[m] << endl;
+
+				    return 0;
+				}
+			4. 很顺利
+				#include <iostream>
+				using namespace std;
+				const int N = 1e5, MOD = 1e9 + 7;
+				int f[N];
+				int main(){
+				    int n1, n2, m, v;
+				    cin >> n1 >> n2 >> m;
+				    f[0] = 1;
+				    for(int i = 1; i <= n1; i++){   //完全背包: 前 n1 种为普通币，可以取任意枚
+				        cin >> v;
+				        for(int j = v; j <= m; j++) f[j] = (f[j] + f[j - v]) % MOD;
+				    }
+				    for(int i = 1; i <= n2; i++){
+				        cin >> v;
+				        for(int j = m; j >= v; j--) f[j] = (f[j] + f[j - v]) % MOD;
+				    }
+				    cout << f[m] << endl;
+				    return 0;
+				}
 		AcWing 1488. 最短距离
 			0. 面试, 算法题写对了一半也是可以的. 可以让面试官提示自己
 			1. 最暴力:
@@ -16142,93 +19718,88 @@
 			2. 就是那道题!!! 0类点, 到最近的1类点的问题, 求得不是最近的1类点是哪个, 而是最近的距离. 我们用的就是模拟源点
 				1. spfa: O(m边数)
 				2. 还可以用堆优化的dijkstra 
-			3. spfa:
-				用了循环队列
-					需要回忆一下, 也就是从队列中出来的话, st[]设置为false, 进入的话设置为true 
+			3. spfa: 需要回忆一下, 也就是从队列中出来的话, st[]设置为false, 进入的话设置为true 
 				不存在无解的情况, 也就是所有的村庄都能找到商店, 因为整个图是联通的 
-			4. 需要复习spfa
-				#include <cstdio>
-				#include <cstring>
+			4. 
 				#include <iostream>
-				#include <algorithm>
-
+				#include <cstring>
+				#include <queue>
 				using namespace std;
-
-				const int N = 100010, M = 300010;
-
-				int n, m;
-				int h[N], e[M], w[M], ne[M], idx;
-				int dist[N], q[N];
+				错误: const int N = 1e5 + 10;
+				正确: const int N = 1e5 + 10, M = 3e5 + 10;	
+				错误:  int h[N], e[N], w[N], ne[N], ind;
+				正确: int h[N], e[M], w[M], ne[M], ind;
+				int dist[N], q[M], n, m, k, Q;
 				bool st[N];
-
-				void add(int a, int b, int c)
-				{
-				    e[idx] = b, w[idx] = c, ne[idx] = h[a], h[a] = idx ++ ;
+				void add(int a, int b, int c){
+				    e[ind] = b, w[ind] = c, ne[ind] = h[a], h[a] = ind ++;
 				}
-
-				void spfa()
-				{
-				    int hh = 0, tt = 1;
+				注意, 因为spfa的q是要不停的放入东西的, 所以用自创q可能会下标不够用:
+					1. 要么用std的queue<int>	
+					2. 要么自创q用循环队列		->老师用的方法
+					3. 要么自创q就是下标开大点 	->我用的方法
+				void spfa(){
 				    memset(dist, 0x3f, sizeof dist);
 				    dist[0] = 0;
-				    st[0] = 0;
-
-				    while (hh != tt)
-				    {
-				        int t = q[hh ++ ];
-				        if (hh == N) hh = 0;
-
+				    int hh = 0, tt = -1;
+				    q[++ tt] = 0;
+				    st[0] = true;
+				    while(hh <= tt){
+				        int t = q[hh ++];
 				        st[t] = false;
-				        for (int i = h[t]; ~i; i = ne[i])
-				        {
+				        for(int i = h[t]; ~i; i = ne[i]){
 				            int j = e[i];
-				            if (dist[j] > dist[t] + w[i])
-				            {
+				            if(dist[t] + w[i] < dist[j]){
 				                dist[j] = dist[t] + w[i];
-				                if (!st[j])
-				                {
+				                if(!st[j]){
+				                    q[++ tt] = j;
 				                    st[j] = true;
-				                    q[tt ++ ] = j;
-				                    if (tt == N) tt = 0;
 				                }
 				            }
 				        }
 				    }
 				}
 
-				int main()
-				{
+				int main(){
 				    scanf("%d%d", &n, &m);
-
 				    memset(h, -1, sizeof h);
-				    while (m -- )
-				    {
+				    for(int i = 0; i < m; i++){
 				        int a, b, c;
 				        scanf("%d%d%d", &a, &b, &c);
-				        add(a, b, c), add(b, a, c);
+				        add(a, b, c);
+				        add(b, a, c);
 				    }
-
-				    scanf("%d", &m);
-				    while (m -- )
-				    {
-				        int v;
-				        scanf("%d", &v);
-				        add(0, v, 0);
+				    scanf("%d", &k);
+				    for(int i = 0; i < k; i++){
+				        int a;
+				        scanf("%d", &a);
+				        add(0, a, 0);
+				        错误: 不应该加 add(a, 0, 0); 因为这样的话我觉得a的bfs就又会返回虚拟源点了 
 				    }
-
 				    spfa();
-
-				    scanf("%d", &m);
-				    while (m -- )
-				    {
-				        int v;
-				        scanf("%d", &v);
-				        printf("%d\n", dist[v]);
+				    scanf("%d", &Q);
+				    while(Q--){
+				        int a;
+				        scanf("%d", &a);
+				        cout << dist[a] << endl;
 				    }
-
 				    return 0;
 				}
-		semi AcWing 1489. 田忌赛马
+		AcWing 1489. 田忌赛马
+			0. 故事简洁版:
+				1.
+					f1 <-----> s1
+						f1是我的最强, s1是我的最弱
+					f2 <-----> s2
+						f2是对手的最强, s2是对手的最弱
+				2. 两种选择: 比谁都要死就死得其所, 能赢一场是一场.
+					1. 先看弱的, 三种情况:
+						1. s1 < s2: 比谁都要死就死得其所, s1 vs f2
+						2. s1 > s2: 能赢一场是一场, s1 vs s2
+						3. s1 == s2: 就要看强的了, 三种情况:
+							1. f1 < f2: 比谁都要死或平就死得其所, s1 vs f2
+							2. f1 > f2: 能赢一场是一场, f1 vs s2
+							3. f1 == f2: 比谁都要死或平就死得其所, s1 vs f2. 也就是完全田忌赛马的例子
 			0. 故事是这样的:
 				1. 
 					f1 <-----> s1
@@ -16269,7 +19840,38 @@
 												就完完全全是田忌赛马的例子: 我1比对3, 我2比对1, 我3比对2
 										特殊的情况是 f1 == s1 == f2 == s2, 也就是大家全都一样 
 											这种情况 选择1 == 选择2
-			1. 
+			2. 代码{超级顺利}
+				#include <iostream>
+				#include <algorithm>
+				using namespace std;
+				const int N = 1010;
+				int a[N], b[N], n;
+				int judge(int s1, int s2){
+				    if(a[s1] < b[s2]) return -1;
+				    if(a[s1] > b[s2]) return 1;
+				    return 0;
+				}
+				int main(){
+				    while(cin >> n, n){
+				        for(int i = 0; i < n; i ++) cin >> a[i];
+				        for(int i = 0; i < n; i ++) cin >> b[i];
+				        sort(a, a + n);
+				        sort(b, b + n);
+				        int f1 = n - 1, f2 = n - 1, s1 = 0, s2 = 0, res = 0;
+				        while(s1 <= f1){
+				            int s12 = judge(s1, s2);
+				            if(s12 == 1) res ++, s1 ++, s2 ++;			能赢一场是一场
+				            else if(s12 == -1) res--, s1 ++, f2--;		比谁都要死就死得其所
+				            else{
+				                int f12 = judge(f1, f2);
+				                if(f12 == 1) res ++, f1 --, f2--;		能赢一场是一场
+				                else res += judge(s1, f2), s1++, f2--;	比谁都要死就死得其所
+				            }
+				        }
+				        cout << res * 200 << endl;
+				    }
+				}
+			3. 别人的
 				#include <iostream>
 				#include <algorithm>
 
@@ -16323,7 +19925,7 @@
 
 				    return 0;
 				}
-		semi AcWing 77. 翻转单词顺序
+		AcWing 77. 翻转单词顺序
 			1. 两种解法 
 				1. 
 					1.使用vector来存储一个个单词
@@ -16353,7 +19955,7 @@
 					        return res ;                         //返回结果
 					    }
 					};
-				2.
+				2. 我更喜欢这个, 简洁
 					1.反转整个单词 （reverse函数实现）//所有单词顺序反转，每个单词本身也反转了 例：abc def 变成 fed cba
 					2.用双指针算法来找到一个个单词    //让单词本身反转 例：fed cba 变成 def abc 题目解决
 						1.用快慢指针找出一个单词
@@ -16372,15 +19974,88 @@
 					        return s;
 					    }
 					};
-		semi AcWing 851. spfa求最短路
-			1. 做过
+				3. 代码, 方法2. 注意小bug
+					class Solution {
+					public:
+					    string reverseWords(string s) {
+					        reverse(s.begin(), s.end());
+					        for(int i = 0; i < s.size();){
+					            int j = i;
+					            正确: while(j < s.size() && s[j] != ' ') j++; 	错误: while(s[j] != " ") j++; 注意是char' '
+					            reverse(s.begin() + i, s.begin() + j);
+					            i = j + 1;
+					        }
+					        return s;
+					    }
+					};
+		AcWing 851. spfa求最短路
+			1. 还算顺利, 一个小bug
+				#include <iostream>
+				#include <queue>
+				#include <cstring>
+				using namespace std;
+				const int N = 1e5 + 10;
+				int h[N], e[N], w[N], ne[N], ind;
+				int dist[N], n, m;
+				bool st[N];
+				queue<int> q;
+				void add(int a, int b, int c){
+				    e[ind] = b, w[ind] = c, ne[ind] = h[a], h[a] = ind++;
+				}
+				void spfa(){
+				    dist[1] = 0;
+				    st[1] = true;
+				    q.push(1);
+				    while(q.size()){
+				        int t = q.front();
+				        q.pop();
+				        错误: 忘写了
+				        正确: st[t] = false;
+				        for(int i = h[t]; ~i; i = ne[i]){
+				            int j = e[i];
+				            if(dist[t] + w[i] < dist[j]){
+				                dist[j] = dist[t] + w[i];
+				                if(!st[j]){
+				                    st[j] = true;
+				                    q.push(j);
+				                }
+				            }
+				        }
+				    }
+				}
+				int main(){
+				    memset(h, -1, sizeof h);
+				    memset(dist, 0x3f, sizeof dist);
+				    cin >> n >> m;
+				    while (m -- ){
+				        int a, b, c;
+				        cin >> a >> b >> c;
+				        add(a, b, c);
+				        错误: 不应该加 add(b, a, c);	这是有向图...
+				    }
+				    spfa();
+				    if(dist[n] > 0x3f3f3f3f / 2) puts("impossible");
+				    else cout << dist[n] << endl;
+				    return 0;
+				}
 	第二讲
 		AcWing 35. 反转链表
-			1. bug
+			0. 总结: 返回tail节点
+				1. while方法
+					ListNode* gettail(ListNode* node){  
+				        while(node->next) node = node->next;    如果我有尾巴, 我就去尾巴
+				        return node;                            如果我没尾巴, 我就是尾巴
+				    }
+				2. 迭代:
+					ListNode* gettail(ListNode* head) {
+				        if(!head || !head->next) return head;	
+				        return gettail(head->next);			
+				    }
+			1. bug!!!
 				ListNode* reverseList(ListNode* head) {
 				        if(!head || !head->next) return head; 
-				        错误: ListNode* tail = reverseList(head);  TLE, 因为这样就是永远的: reverseList(head) 调用 reverseList(head)
-				        正确: ListNode* tail = reverseList(head->next);  
+				        错误2次: ListNode* tail = reverseList(head);  TLE, 因为这样就是永远的: reverseList(head) 调用 reverseList(head)
+				        正确: ListNode* tail = reverseList(head->next);  	也就是函数的参数 {head->next}, 帮我们实现了移动
 						head->next->next = head;
 				        head->next = nullptr;
 				        return tail; 
@@ -16399,6 +20074,14 @@
 				            //意思是, 我们一进入 reverseList()就有一个 reverseList()函数
 				            //也就是一进来就是递归到底, 递归到底之后, 执行的第一段代码, 就是我们底下的代码
 				            //递归到底的时候: 找到最末尾的节点
+
+				        	//我第二次做这道题的感受, 为什么 ListNode* tail = reverseList(head->next); 加在这里
+				        	//因为
+				        	// 1. 我们下面这两句代码是要改变 head和head->next两个节点之间的关系
+				        	// 2. 那么我们就从最末尾的两个节点开始改变, 然后逐个往回 {这是回溯的天然过程}
+				        	// 3. 上面的这一句, ListNode* tail = reverseList(head->next); 能保证我们第一次执行 head->next->next = head; 的时候, 是在最末尾执行的 
+				        	// 	说到这里, 是不是越来越明白了
+				        	// 	递归函数以下的代码, 第一次执行, 都是递归到最底层的时候才执行的
 				        head->next->next = head;
 				        head->next = nullptr;
 				        return tail; 
@@ -16484,7 +20167,7 @@
 				        return tail;
 				    }
 				};
-		AcWing 1453. 移掉K位数字
+		* AcWing 1453. 移掉K位数字
 			0. 小总结:
 				其实很简单, 你不需要知道为什么, 记住怎么做就好了:
 					0. 我们的原始数字, 很长, 用 string num. 
@@ -16515,6 +20198,34 @@
 						答案: 0
 
 			1. bug
+				#include <iostream>
+				using namespace std;
+				int main(){
+				    string q;
+				    string res = "";
+				    int k;
+				    cin >> q >> k;
+				    for(int i = 0; i < q.size(); i++){
+				        while(k && res.size() && res.back() > q[i]){
+				            res.pop_back();
+				            k--;
+				        }
+				        res += q[i];
+				    }
+				    while(k) {
+				        res.pop_back();
+				        k--;
+				    }
+				    int i = 0;
+				    错误:
+				    	while(res[i] == "0") i++;
+				    	cout << res.substr(i) << endl;
+				    正确:
+					    while(i < res.size() && res[i] == '0') i++;
+					    if(i == res.size()) puts("0");
+					    else cout << res.substr(i) << endl;
+				    return 0;
+				}
 			2. ok{非常顺}
 				#include <iostream>
 				using namespace std;
@@ -16563,11 +20274,449 @@
 				    else cout << res.substr(i) << endl;			从i开始打印 
 				    return 0;
 				}
-		semi AcWing 1454. 异或和是质数的子集数
-		semi AcWing 1455. 招聘
-		semi AcWing 797. 差分
-		semi AcWing 173. 矩阵距离
-	第一讲完成情况：4/6
+		AcWing 1454. 异或和是质数的子集数
+			1. 笔记
+				分析:
+					1. 状态表示 f[i,j]:
+						1. 集合: 从前i个数中选, 且异或和是j的所有方案的集合 
+						2. 属性: 方案的数量 
+					2. 状态转移:
+						1. 不选第i个数: f[i-1, j]
+						2. 选第i个数: f[i-1, j ^ a[i]]
+							怎么理解?
+							选第i个数所代表的的集合是 f(i,j) 集合的一个部分
+								这个没错吧: f(i,j)集合 == {不选第i个数}的集合 + {选第i个数}的集合 
+							假设这个集合是:
+								第1种选法: 1, 3, 4, 6, ..., ai
+								第2种选法: 1, 2, 5, 7, ..., ai
+								...
+								以上的所有选法, 前面是我乱写的, 但是我们要保证最后一定选了一个数字ai
+							那么前面的乱写, 要满足一个什么条件的, 条件是, 这些乱写的数字的异或和是: j ^ ai 
+								为什么, 因为包括ai在内的所有数字的异或和是j, 那么除去ai的所有数字的异或和就是 j ^ ai 
+									因为 j ^ ai ^ ai == j, 你可以用计算机随便验证 
+							所以选第i个数其实就是可以用之前前辈的信息: f[i-1, j ^ a[i]] 前i-1个数字中选, 异或和== j ^ ai 的选法的集合的选法个数 
+						3. 因为是求方案数量, 所以 
+							f[i,j] = f[i-1, j] + f[i-1, j ^ a[i]]
+				需要的空间: 从 5k * 8k -> 2 * 8k
+					异或和的状态数: M = 2^13 - 1 == 8191
+						因为, 我们的数字最大是 5000, 假设就是5000, 那么 5000 = 1 0011 1000 1000, 一共13位
+						注意 2^12 = 4096, 注意!!! 我一直理解错了, 2^12 = 1 0000 0000 0000 == 4096 == 13位, 5000 只是比4096大一点, 所以5000是13位 
+						那么我们数字异或和的最大值就是 1 1111 1111 1111 = 2^13 - 1 == 8192 - 1 == 8191
+							注意 2^13 == 10 0000 0000 0000, 一共14位 
+					前n个数: 我们的数字有5000个, 但是不需要开辟5000行, 2行就够 
+						0. 不用滚动数组就会 MLE: 5000 x 8192 x 4 = 163840000 / 1024 / 1024 = 83 MB > 64MB
+						1. 因为 f[i, xx] 只需要上一行 f[i-1, yy], 不需要5k行
+						2. 但是也不能只有一行, 因为只有一行的情况, 只适用于 
+							因为 j 不是从小到大或者从大到小
+								 因为 j ^ a[i] 你不知道在哪里
+								 所以上一行要整行保留 
+						3. 所以只保留2行就够, 我们用滚动算法, 010101的来 
+				为什么是 f[0][0] = 1? https://www.acwing.com/video/888/ 的18:14
+					f[0][0] = 1
+						0个数字, 想要异或出数字'0', 方案是1个???
+					f[0][1] = f[0][2] = ... = f[0][n] = 0
+						0个数字, 想要异或出数字'1,2,...,n', 方案是不存在
+					还是需要思考一下, f[0][0]应该不是说0个数字, 我怀疑是1个数字: 1个数字, 想要异或出数字'0', 方案是1个
+						因为老师的这一句: f[i & 1][j] = f[i - 1 & 1][j];
+							我们首先是从 f[1 & 1][0] = f[0 & 1][0] = f[0][0] 开始的
+						我的理解: 应该是 f[1][0] = 1, 但是为了统一使用这一行代码 f[i & 1][j] = f[i - 1 & 1][j]; 我们就初始化 f[0][0] = 1
+						总之背下来
+				为什么 j ^ a[i] 可能 > M? 打印一下 
+					我打印了, 根本没有出现  j ^ a[i] > M的情况 
+				复杂度:
+					时间复杂度
+							dp过程的时间复杂度：
+								状态数是 O(n·m)
+								状态计算是 O(1)
+							试除法的时间复杂度是 O(m·sqrt(m))
+						故总的时间复杂度为: O(n·m)+O(m·sqrt(m))
+					空间复杂度
+						状态表示需要开二维数组, O(2·m)
+			2. 比较顺利
+				注意两个地方:
+					<<, ^的优先级是最低的
+					所以:
+						正确: M = (1 << 13) - 1; 即 2^13 - 1
+						错误: M = 1 << 13 - 1; 即 2^12
+					所以:
+						正确: if ((j ^ a[i]) < M) 
+						错误: if (j ^ a[i] < M) 
+				还有非常容易措的地方: 初始化 
+					正确: f[0][0] = 1;
+					错误: f[1][0] = 1; 输出永远是0
+				#include <iostream>
+				using namespace std;
+				const int N = 5010, M = (1 << 13) - 1, MOD = 1e9 + 7;
+				int f[2][M], a[N], n;
+				bool is_prime(int x){
+				    for(int i = 2; i * i <= x; i++)
+				        if(x % i == 0) return false;
+				    return true;
+				}
+				int main(){
+				    cin >> n;
+				    for(int i = 1; i <= n; i++) cin >> a[i];
+				    正确: f[0][0] = 1;
+					错误: f[1][0] = 1;
+				    for(int i = 1; i <= n; i++){
+				        for(int j = 0; j < M; j++){
+				            f[i & 1][j] = (f[i - 1 & 1][j] + f[i - 1 & 1][j ^ a[i]]) % MOD;
+				        }
+				    }
+				    int res = 0;
+				    for(int j = 2; j < M; j++){
+				        if(is_prime(j)) res = (res + f[n & 1][j]) % MOD;
+				    }
+				    cout << res << endl;
+				    return 0;
+				}
+			2. 注释
+				朴素写法: 但是MLE 空间超出
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 5010, M = 8192, MOD = 1e9 + 7;
+
+					int n;
+					int a[N];
+					int f[N][M];
+
+					bool is_prime(int x)
+					{
+					    for (int i = 2; i * i <= x; i ++ )
+					        if (x % i == 0)
+					            return false;
+					    return true;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> a[i];
+
+					    f[0][0] = 1;
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = 0; j < M; j ++ )	我们要枚举所有的异或和, j == 从 0 到 1111 1111 1111
+					        {
+					            if ((j ^ a[i]) < M) f[i][j] = (f[i - 1][j] + f[i - 1][j ^ a[i]]) % MOD;	没问题吧, 就是公式 f[i,j] = f[i-1, j] + f[i-1, j ^ a[i]]
+					            else f[i][j] = f[i - 1][j];
+					        }
+
+					    int res = 0;
+					    for (int i = 2; i < M; i ++ )	最后挑出是质数的异或和j
+					        if (is_prime(i))
+					            res = (res + f[n][i]) % MOD;	前n个数字中选, 异或和j是质数的所有选法的集合, 所以是直接无脑加法, 记得每次都要mod
+
+					    cout << res << endl;
+
+					    return 0;
+					}
+				优化空间:
+					#include <cstring>
+					#include <iostream>
+					#include <algorithm>
+
+					using namespace std;
+
+					const int N = 5010, M = 8192, MOD = 1e9 + 7;
+
+					int n;
+					int a[N];
+					int f[2][M];
+
+					bool is_prime(int x)
+					{
+					    for (int i = 2; i * i <= x; i ++ )
+					        if (x % i == 0)
+					            return false;
+					    return true;
+					}
+
+					int main()
+					{
+					    cin >> n;
+					    for (int i = 1; i <= n; i ++ ) cin >> a[i];
+
+					    f[0][0] = 1;
+					    for (int i = 1; i <= n; i ++ )
+					        for (int j = 0; j < M; j ++ )
+					        {
+					            if ((j ^ a[i]) < M) f[i & 1][j] = (f[i - 1 & 1][j] + f[i - 1 & 1][j ^ a[i]]) % MOD;
+					            else f[i & 1][j] = f[i - 1 & 1][j];
+					        }
+
+					    int res = 0;
+					    for (int i = 2; i < M; i ++ )
+					        if (is_prime(i))
+					            res = (res + f[n & 1][i]) % MOD;
+
+					    cout << res << endl;
+
+					    return 0;
+					}
+		AcWing 1455. 招聘
+			1. 笔记
+				这个是约瑟夫环的问题
+					f(n, k): 集合是: 有n个人, 报数 A(k)次, 属性是: 返回被删除的人的{调整过的, 非真实的}ind
+					举例:
+						n == 4
+						A(k) == {3, 2}
+						第一次报数: 
+							报数的真实ind: 0, 1, "2"
+							报数的数学ind: 0, ..., Ak - 1 
+							删除的人是 ind == "2", 删除的人是第 Ak - 1 个人 
+						第二次报数: 等价于 f(n - 1, k + 1): 有n-1个人, 从 A(k+1)开始报数 
+							报数的真实ind: 3, "0" == {(Ak + A(k+1) - 1) % n == (3 + 2 - 1) % 4 == 0}
+							报数的数学ind: Ak, Ak + 1, Ak + 2, ..., xx 
+											其中 xx == (起点 + 区间长度 - 1) % n == ( Ak + A(k+1) - 1 ) % n
+											别忘了 xx 需要是合法的ind, 所以要模n
+							删除的人是 ind == "0", 删除的人是第 xx 个人 
+							
+							我们希望是从0开始: 0, 1
+							所以ind的偏移是: -Ak == -3
+										3, 0 
+									-3: 0, 1
+						所以 f(n, k) 的值 - 3 == f(n - 1, k + 1) 
+						即 f(n, k) == f(n - 1, k + 1) + Ak, 为了保证ind合法, 需要 %n, 于是得到状态的转移:
+					状态的转移:
+						f(n, k) = { f(n - 1, k + 1) + Ak } % n 						注意 % n中的n也是变量
+						f(n - 1, k + 1) = { f(n - 2, k + 2) + A(k+1) } % (n - 1)	现在是 % (n - 1)
+							传统的约瑟夫环问题, Ak都是同一个常数
+					初始化:
+						f(1, xx) = 0	也就是, 只剩下n==1个人的时候, 从Axx开始报数, 返回的{调整过的, 非真实的}ind == 0
+						但是xx是多少? xx == (n-1) % m, 我们可以从末尾来看:
+							f(n, 0) : 	有n个人, 从A0开始报数 
+							f(n-1, 1):	有n-1个人, 从A1开始报数 
+							f(n-2, 2):	有n-2个人, 从A2开始报数 
+							...
+							f(1, (n-1) % m):	有n-1个人, 从A{(n-1) % m} 开始报数 
+								n-1没错, 但是我们的Ak中, k的取值是[0,m-1], 所以保证合法性, 需要模m
+					具体求法:
+						初始化: f(1, (n-1) % m) = 0	
+							用递归会爆栈{segmentation fault}
+							所以用迭代: 从前往后计算 
+								先有 f(1, (n-1) % m) == 0
+								然后有 f(2, (n-2) % m) = (f(1, (n-1) % m) + A_{(n-2) % m} ) % 2
+								f(3, (n-3) % m) = ....
+								...
+								f(n, 0) = ...
+						最后我们要的答案: f(n, 0)
+
+					空间复杂度:
+						空间数量看似是 n * m == 10^7 * 10^3
+						但是每一行只有一个状态会被遍历, 一共n行, 所以只会用到的空间数量 == n 
+							例如: f(n, 0), f(n - 1, 1), f(n - 2, 2) ...
+					其他:
+						int f[1e7] == 40M空间, 因为 int == 4字节, 1e7 == 10 * 1e6 == 10M {其实1e6不准确, 应该是1024*1024=1048576>1e6}		
+			2. 注释
+				#include <cstdio>
+
+				using namespace std;
+
+				const int N = 1010;
+
+				int n, m;
+				int a[N];
+
+				int main()
+				{
+				    int T;
+				    scanf("%d", &T);
+				    while (T -- )
+				    {
+				        scanf("%d%d", &n, &m);
+				        for (int i = 0; i < m; i ++ ) scanf("%d", &a[i]);
+
+				        int res = 0;								这里相当于: res == f(1, k) = 0, 其中k == (n-1) % m
+
+				    	下面的代码
+				    		1. k从: (n-1) % m开始
+				    			我们之后 k --
+				    		2. i是我们的第一维度, i从1开始, 之后i++
+				        for (int i = 1, k = (n - 1) % m; i < n;)
+				        {
+				            i ++ ;					这里是从 a[]
+				            k -- ;					这里状态是从 k + 1 到 k, 并且使用了 a[k] 
+				            if (k < 0) k = m - 1;	这里似乎不能用那个 k = (k + 1) % m. 因为是减法.
+				            res = (res + a[k]) % i;	相当于; f(n, k) = { f(n - 1, k + 1) + Ak } % n 
+				            								新res  = (旧res + a[k]) % n
+				        }
+				        最后出来的时候, 就是 res就是: f(n, 0)
+				        printf("%d\n", res);
+				    }
+
+				    return 0;
+				}
+			3. 再看一次: 
+				#include <iostream>
+				using namespace std;
+				const int N = 1e7 + 10, M = 1e3 + 10; //最多是1e7个人, 一共1e3种喊的方式
+				int a[M], T, n, m;
+				int main(){
+				    scanf("%d", &T);
+				    while(T--){
+				        scanf("%d%d", &n, &m);
+				        for(int i = 0; i < m; i++) scanf("%d", &a[i]);
+				        int res = 0;            // f[1, xx] = 0. 其中xx = (n-1)%m. 因为: f[n, 0] -> f[1, xx], 则 xx = (n-1), 因为要保证在m范围内, 所以%m
+				        //接下来是: f[2, (n - 2) % m], 因为k是k--, 负数%m还是负数, 我们不要负数. 所以我们需要 ((k - 1) + m) % m
+				        for(int i = 2, k = ((n - 2) + m) % m; i <= n; i ++, k = ((k - 1) + m) % m){
+				            res = (res + a[k]) % i; //公式: f(i, k) = { f{i - 1, k + 1) + A(k) } % i      注意是 % i!!
+				        }
+				        cout << res << endl;
+				    }
+				    return 0;
+				}
+				--{很顺}
+				#include <iostream>
+				using namespace std;
+				const int N = 1e7 + 10, M = 1e3 + 10;
+				int a[M], T, n, m;
+				int main(){
+				    scanf("%d", &T);
+				    while(T--){
+				        scanf("%d%d", &n, &m);
+				        for(int i = 0; i < m; i++) scanf("%d", &a[i]);
+				        int res = 0;
+				        for(int i = 2, k = (n - 2 + m) % m; i <= n; i ++, k = (k - 1 + m) % m){
+				            res = (res + a[k]) % i;
+				        }
+				        cout << res << endl;
+				    }
+				    return 0;
+				}
+		AcWing 797. 差分
+			超级简单
+			#include <iostream>
+			using namespace std;
+			const int N = 1e5 + 10;
+			int a[N], b[N];
+			int n, m, l, r, k;
+			void insert(int l, int r, int v){
+			    b[l] += v;
+			    b[r + 1] -= v;
+			}
+			int main(){
+			    cin >> n >> m;
+			    for(int i = 1; i <= n; i++){
+			        cin >> a[i];
+			        insert(i, i, a[i]);		预处理b[]
+			    }
+			    while(m--){
+			        cin >> l >> r >> k;
+			        insert(l, r, k);
+			    }
+			    for(int i = 1; i <= n; i++){
+			        a[i] = a[i-1] + b[i];
+			        cout << a[i] << " ";
+			    }
+			    return 0;
+			}
+		AcWing 173. 矩阵距离
+			1. bug
+				#include <iostream>
+				#include <cstring>
+				using namespace std;
+				typedef pair<int, int> PII;
+				#define x first     
+				#define y second
+				const int N = 1010, M = N * N;
+				xxxxxxxx-> string g[N][N];	是char 
+				xxxxxxxx-> PII dist[N];		根本不熟这样好嘛
+				oooooooo-> char g[N][N];
+				oooooooo-> int dist[N][N]; //dist[i][j] 这是0类点{i,j}距离最近的1类点的最近距离
+				PII q[M];
+				bool st[N][N];
+				int n, m;
+				int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};
+				void bfs(){
+				    memset(dist, 0x3f, sizeof dist);
+				    int hh = 0, tt = -1;
+				    for(int i = 0; i < n; i++){
+				        for(int j = 0 ; j < m; j++){
+				            if(g[i][j] == '1'){
+				                q[++ tt] = {i, j};
+				                dist[i][j] = 0;
+				                st[i][j] = true;
+				            }
+				        }
+				    }
+				    while(hh <= tt){
+				        PII t = q[hh ++];
+				        for(int i = 0; i < 4; i++){
+				            int a = t.x + dx[i], b = t.y + dy[i];
+				            if(a < 0 || a >= n || b < 0 || b >= m || g[a][b] == '1' || st[a][b]) continue;
+				            dist[a][b] = dist[t.x][t.y] + 1;
+				            st[a][b] = true;
+				            q[++ tt] = {a, b};
+				        }
+				    }
+				    return;
+				}
+				int main(){
+				    写法1:
+				    	cin >> n >> m;
+				    	for(int i = 0 ; i < n; i++) cin >> g[i];
+				    写法2:
+						scanf("%d%d", &n, &m);
+					    for(int i = 0; i < n; i++) scanf("%s", g[i]);
+				    bfs();
+				    for(int i = 0; i < n; i++){
+				        for(int j = 0; j < m; j++) cout << dist[i][j] << " ";
+				        cout << endl;
+				    }
+				    return 0;
+				}
+			2. 
+				#include <iostream>
+				using namespace std;
+				const int N = 1010, M = N * N;
+				typedef pair<int, int> PII;
+				#define x first
+				#define y second
+				char g[N][N];
+				PII q[M];
+				bool st[N][N];
+				int dist[N][N]; //dist[i][j] 这是0类点{i,j}距离最近的1类点的最近距离
+				int n, m;
+				int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
+				void bfs(){
+				    int hh = 0, tt = -1;
+				    for(int i = 0 ; i < n; i++){
+				        for(int j = 0; j < m; j++){
+				            if(g[i][j] == '1'){
+				                q[++ tt] = {i, j};
+				                st[i][j] = true;
+				            }
+				        }
+				    }
+				    while(hh <= tt){
+				        auto t = q[hh ++];
+				        for(int i = 0 ; i < 4; i ++){
+				            int a = t.x + dx[i], b = t.y + dy[i];
+				            if(a < 0 || a >= n || b < 0 || b >= m) continue;
+				            if(st[a][b] || g[a][b] == '1') continue; //如果这个点已经被遍历过, 或者这个点是1类点{我们要去的终点是0类点, 所以不要理会1类点}, 就跳过
+				            dist[a][b] = dist[t.x][t.y] + 1; //这个就是1类点的连通块, bfs层序遍历, 先遍历到的距离最近, 因为每个dis == 1 
+				            q[++ tt] = {a, b};
+				            st[a][b] = true;
+				        }
+				    }
+				}
+				int main(){
+				    scanf("%d%d", &n, &m);
+				    for(int i = 0; i < n; i++) scanf("%s", g[i]);
+				    bfs();
+				    for(int i = 0; i < n; i++){
+				        for(int j = 0 ; j < m; j++){
+				            cout << dist[i][j] << " ";
+				        }
+				        cout << endl;
+				    }
+				    return 0;
+				}
+	第一讲
 		AcWing 756. 蛇形矩阵
 			1. bug
 				1. {错的离谱}
@@ -16658,8 +20807,40 @@
 				            cout << endl;
 				    }
 				}	
+				--
+				#include <iostream>
+				using namespace std;
+				const int N = 110;
+				int g[N][N];
+				int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};
+				int main(){
+				    int n, m;
+				    cin >> n >> m;
+				    int a = 0, b = 0, d = 0;
+				    for(int k = 1; k <= n * m; k++){
+				        g[a][b] = k;
+				        int ta = a + dx[d], tb = b + dy[d];
+				        if(ta < 0 || ta >= n || tb < 0 || tb >= m || g[ta][tb])
+				        {
+				            d = (d + 1) % 4;
+				            a = a + dx[d], b = b + dy[d];
+				        }else {
+				            a = ta, b = tb;
+				        }
+				    }
+				    for(int i = 0; i < n; i++){
+				        for(int j = 0; j < m; j++) cout << g[i][j] << " ";
+				        cout << endl;
+				    }
+				    return 0;
+				}
 		AcWing 1451. 单链表快速排序
 			0. 小总结:
+				-1. 递归和回溯
+					其实上面递归的过程, 就是筛选分类{起到了排序的效果}. 
+				    后面的回溯, 只是把排好序的东西拼接. 
+
+				    什么时候写递归函数也就是调用自己, 就是递归要干的事情都做了
 				1.
 					for(起始; 合法状态; 如何去下一个)
 					while(合法状态)
@@ -16822,6 +21003,42 @@
 						    return 0;
 						}
 			1. bug
+				class Solution {
+				public:
+				    ListNode* gettail(ListNode* node){  
+				        while(node->next) node = node->next;    如果我有尾巴, 我就去尾巴
+				        return node;                            如果我没尾巴, 我就是尾巴
+				    }
+				    ListNode* quickSortList(ListNode* head) {
+				        if(!head || !head->next) return head;
+				        ListNode* l = new ListNode(-1);
+				        ListNode* m = new ListNode(-1);
+				        ListNode* r = new ListNode(-1);
+				        auto lt = l, mt = m, rt = r;
+				        int v = head->val;
+				        // for(auto cur = head; !cur ; cur = cur->next){
+				        for(auto cur = head; cur ; cur = cur->next){
+				            if(cur->val < v) lt = lt->next = cur;
+				            else if(cur->val == v) mt = mt->next = cur;
+				            else rt = rt->next = cur;
+				        }
+				        lt->next = nullptr, mt->next = nullptr, rt->next = nullptr;
+				        l->next = quickSortList(l->next);   
+				        r->next = quickSortList(r->next);
+				        其实上面递归的过程, 就是筛选分类{起到了排序的效果}. 
+				        后面的回溯, 只是把排好序的东西拼接. 
+
+				        正确:
+					        gettail(l)->next = m->next; 	注意不能用 gettail(l->next)->next, 因为遍历到最底层的时候, l->next == nullptr
+					        gettail(l)->next = r->next;
+					    错误:
+					    	gettail(l->next)->next = m->next;
+					        gettail(l->next)->next = r->next;
+				        auto res = l->next;
+				        delete l, r, m;
+				        return res;
+				    }
+				};
 			2. ok{超级顺}
 				/**
 				 * Definition for singly-linked list.
@@ -16905,6 +21122,32 @@
 				        return res;
 				    }
 				};
+				--class Solution {
+				public:
+				    ListNode* gettail(ListNode* node){
+				        while(node->next) node = node->next;
+				        return node;
+				    }
+				    ListNode* quickSortList(ListNode* head) {
+				        if(!head || !head->next) return head;
+				        auto l = new ListNode(-1), m = new ListNode(-1), r = new ListNode(-1);
+				        auto lt = l, mt = m, rt = r;
+				        int v = head->val;
+				        for(auto cur = head; cur ; cur = cur->next){
+				            if(cur->val == v) mt = mt->next = cur;
+				            else if(cur->val < v) lt = lt->next = cur;
+				            else rt = rt->next = cur;
+				        }
+				        lt->next = mt->next = rt->next = nullptr;
+				        l->next = quickSortList(l->next);
+				        r->next = quickSortList(r->next);
+				        gettail(l)->next = m->next;
+				        gettail(l)->next = r->next;
+				        auto res = l->next;
+				        delete l, m, r;
+				        return res;
+				    }
+				};
 		AcWing 1452. 寻找矩阵的极小值
 			1. bug
 				无语的bug:
@@ -16914,7 +21157,59 @@
 		            正确:
 			            if(left < min) r = mid - 1;
 			            else l = mid + 1;
-			2. ok{非常顺}
+			2. ok{非常顺, 背下来老师的代码, 超级优雅}
+				class Solution {
+				public:
+				    vector<int> getMinimumValue(int n) {
+				        int l = 0, r = n - 1;
+				        typedef long long LL;
+				        const LL INF = 1e10; //矩阵中的整数在int范围内
+				        while(l < r){
+				            int mid = l + (r - l) / 2;
+				            
+				            写的极不优雅
+				            /* int min = 310, minrow = -1;
+				            for(int row = 0; row < n; row ++){
+				                if(query(row, mid) < min){
+				                    min = query(row, mid);
+				                    minrow = row;
+				                }
+				            }
+				            if(mid - 1 < 0) if(query(minrow, mid + 1) > min) return {minrow, mid};
+				            else if(mid + 1 >= n) if(query(minrow, mid - 1) > min) return {minrow, mid};
+				            else if(query(minrow, mid - 1) > min && query(minrow, mid + 1) > min) return {minrow, mid};
+				            
+				            if(mid - 1 > 0 && query(minrow, mid + )) */
+
+				            LL v = INF;
+				            int ind = -1;
+				            for(int i = 0; i < n; i++){
+				                int t = query(i, mid);
+				                if(t < v) {
+				                    v = t;
+				                    ind = i;
+				                }
+				            }
+				            超级优雅:
+				            LL left = mid - 1 < 0 ? INF : query(ind, mid - 1);
+				            LL right = mid + 1 >= n ? INF : query(ind, mid + 1);
+				            if(v < left && v < right) return {ind, mid};
+				            if(left < v) r = mid - 1;
+				            else l = mid + 1;
+				        }
+				        LL v = INF;
+				        int ind = -1;
+				        for(int i = 0; i < n; i++){
+				            int t = query(i, l);
+				            if(t < v) {
+				                v = t;
+				                ind = i;
+				            }
+				        }
+				        return {ind, l};
+				    }
+				};
+				--
 				// Forward declaration of queryAPI.
 				// int query(int x, int y);
 				// return int means matrix[x][y].
@@ -17009,6 +21304,8 @@
 					push:
 						如果 minstack 为空, 可以直接push
 						如果新的元素比 minstack 的最上面的元素 相等或者小于, 可以直接push
+							因为他如果比我大, 则根本不会用到他
+							如果他和我==或者比我小, 因为他距离顶部更近, 肯定会用到他
 					pop:
 						如果要删除的元素 == minstack, 就直接pop
 					top:
@@ -17042,6 +21339,33 @@
 					getmin:
 						依旧是: minstack.top() == 4
 			1. bug
+				class MinStack {
+				public:
+				    /** initialize your data structure here. */
+				    stack<int> st;
+				    stack<int> minst;
+				    MinStack() {
+				        
+				    }
+				    
+				    void push(int x) {
+				        st.push(x);
+				        if(minst.empty() || x <= minst.top()) minst.push(x);	注意是 x <= , 而不是 x < 
+				    }
+				    
+				    void pop() {
+				        if(minst.size() && st.size() && minst.top() == st.top()) minst.pop();	谨慎起见: 需要 minst.size() && st.size() &&
+				        st.pop();
+				    }
+				    
+				    int top() {
+				        return st.top();
+				    }
+				    
+				    int getMin() {
+				        return minst.top();
+				    }
+				};
 			2. ok{很顺} 
 				class MinStack {
 				public:
